@@ -1764,17 +1764,9 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
         
-        // Enable offline persistence but with error handling
-        db.enablePersistence({
-            synchronizeTabs: true
-        }).catch((err) => {
-            if (err.code == 'failed-precondition') {
-                console.log('Persistence failed: Multiple tabs open');
-            } else if (err.code == 'unimplemented') {
-                console.log('Persistence not supported');
-            }
-        });
-
+        // Disable persistence to avoid permission issues
+        // db.disableNetwork() // Don't use this
+        
         // Global variables
         let currentUser = null;
         let userData = null;
@@ -1830,7 +1822,7 @@
                 } catch (error) {
                     console.error('Error loading user data:', error);
                     // If user document doesn't exist, create it
-                    if (error.code === 'permission-denied') {
+                    if (error.code === 'permission-denied' || error.message.includes('permission')) {
                         await createUserDocument(user);
                     }
                 }
@@ -1847,7 +1839,7 @@
                     email: user.email,
                     role: 'user',
                     wallet: 0,
-                    active: true, // Auto-activate for testing
+                    active: true,
                     verified: user.emailVerified,
                     membershipPaid: false,
                     membershipStatus: 'pending',
@@ -1931,9 +1923,11 @@
             if (tab === 'tasks') {
                 tabs[0].classList.add('active');
                 document.getElementById('adminTasksPanel').classList.add('active');
+                loadAdminTasks();
             } else if (tab === 'users') {
                 tabs[1].classList.add('active');
                 document.getElementById('adminUsersPanel').classList.add('active');
+                loadAdminUsers();
             } else if (tab === 'memberships') {
                 tabs[2].classList.add('active');
                 document.getElementById('adminMembershipsPanel').classList.add('active');
@@ -2013,7 +2007,7 @@
                     email: user.email,
                     role: 'user',
                     wallet: 0,
-                    active: true, // Auto-activate for testing
+                    active: true,
                     verified: false,
                     membershipPaid: false,
                     membershipStatus: 'pending',
@@ -2417,7 +2411,7 @@
                     row.innerHTML = `
                         <td>${withdrawal.createdAt ? new Date(withdrawal.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
                         <td>$${withdrawal.amount?.toFixed(2)}</td>
-                        <td>${usdToKes(withdrawal.amount || 0)} KES</td>
+                        <td>${withdrawal.amountKES || usdToKes(withdrawal.amount || 0)} KES</td>
                         <td>${withdrawal.method?.toUpperCase()}</td>
                         <td>${escapeHtml(withdrawal.phone)}</td>
                         <td><span class="status-badge ${withdrawal.status === 'paid' ? 'status-approved' : 'status-pending'}">${withdrawal.status}</span></td>
@@ -2515,15 +2509,25 @@
             }
 
             try {
-                // Add submission
-                await db.collection('submissions').add({
+                // Get task details first
+                const taskDoc = await db.collection('tasks').doc(selectedTaskId).get();
+                const task = taskDoc.data();
+
+                // Add submission with all necessary fields
+                const submissionData = {
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     taskId: selectedTaskId,
+                    taskTitle: task.title,
                     workText: workText,
                     status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+
+                console.log('Submitting work:', submissionData);
+
+                await db.collection('submissions').add(submissionData);
 
                 // Update task submission count
                 const taskRef = db.collection('tasks').doc(selectedTaskId);
@@ -2583,7 +2587,7 @@
             }
 
             try {
-                await db.collection('withdrawals').add({
+                const withdrawalData = {
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     amount: amount,
@@ -2591,8 +2595,13 @@
                     method: method,
                     phone: phone,
                     status: 'pending',
+                    requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+
+                console.log('Requesting withdrawal:', withdrawalData);
+
+                await db.collection('withdrawals').add(withdrawalData);
 
                 showWithdrawMessage('Withdrawal requested!', 'success');
                 
@@ -2819,7 +2828,7 @@
                     <td>${escapeHtml(sub.workText.substring(0, 100))}${sub.workText.length > 100 ? '...' : ''}</td>
                     <td><span class="status-badge status-${sub.status}">${sub.status}</span></td>
                     <td>${sub.score ? sub.score + '%' : '-'}</td>
-                    <td>${sub.createdAt ? new Date(sub.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
+                    <td>${sub.submittedAt ? new Date(sub.submittedAt.toDate()).toLocaleString() : sub.createdAt ? new Date(sub.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td>
                         ${sub.status === 'pending' ? `
                             <button class="action-btn btn-approve" onclick="openReviewModal('${sub.id}', '${sub.userId}', '${escapeHtml(sub.userEmail)}', '${escapeHtml(sub.taskTitle)}', '${escapeHtml(sub.workText)}')">
@@ -2865,7 +2874,7 @@
                     <td>${withdrawal.method?.toUpperCase()}</td>
                     <td>${escapeHtml(withdrawal.phone)}</td>
                     <td><span class="status-badge ${withdrawal.status === 'paid' ? 'status-approved' : 'status-pending'}">${withdrawal.status}</span></td>
-                    <td>${withdrawal.createdAt ? new Date(withdrawal.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
+                    <td>${withdrawal.requestedAt ? new Date(withdrawal.requestedAt.toDate()).toLocaleString() : withdrawal.createdAt ? new Date(withdrawal.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td>
                         ${withdrawal.status === 'pending' ? `
                             <button class="action-btn btn-pay" onclick="markAsPaid('${withdrawal.id}', '${withdrawal.userId}', ${withdrawal.amount})">✓ Mark Paid</button>
@@ -3075,11 +3084,15 @@
             }
 
             try {
-                await db.collection('messages').add({
+                const messageData = {
                     userId: userId,
                     message: message,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+
+                console.log('Sending message:', messageData);
+
+                await db.collection('messages').add(messageData);
 
                 showAdminMessage('messageAdminMessage', 'Message sent!', 'success');
                 document.getElementById('adminMessageText').value = '';
@@ -3129,14 +3142,18 @@
 
                 const earned = (task.reward * score) / 100;
 
-                await db.collection('submissions').doc(selectedSubmissionId).update({
+                const updateData = {
                     status: 'approved',
                     score: score,
                     review: feedback,
                     earned: earned,
                     earnedKES: usdToKes(earned),
                     reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+
+                console.log('Submitting review:', updateData);
+
+                await db.collection('submissions').doc(selectedSubmissionId).update(updateData);
 
                 await db.collection('users').doc(submission.userId).update({
                     wallet: firebase.firestore.FieldValue.increment(earned)
@@ -3163,9 +3180,14 @@
 
         async function markAsPaid(withdrawalId, userId, amount) {
             try {
-                await db.collection('withdrawals').doc(withdrawalId).update({
-                    status: 'paid'
-                });
+                const updateData = {
+                    status: 'paid',
+                    paidAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                console.log('Marking as paid:', updateData);
+
+                await db.collection('withdrawals').doc(withdrawalId).update(updateData);
 
                 await db.collection('transactions').add({
                     userId: userId,
