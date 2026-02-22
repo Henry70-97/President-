@@ -411,6 +411,14 @@
             background: #c53929;
         }
 
+        .btn-resend {
+            background: var(--info);
+            color: white;
+            margin-top: 10px;
+            font-size: 14px;
+            padding: 10px;
+        }
+
         /* Tabs */
         .tabs {
             display: flex;
@@ -731,6 +739,32 @@
             position: relative;
         }
 
+        /* Verification Banner */
+        .verification-banner {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            border-left: 5px solid var(--info);
+        }
+
+        .verification-banner button {
+            background: var(--info);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .verification-banner button:hover {
+            background: #3182ce;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .navbar {
@@ -781,7 +815,7 @@
                 </div>
                 
                 <button class="btn btn-google" onclick="googleSignIn()">
-                    Continue with Google
+                    <i class="fab fa-google"></i> Continue with Google
                 </button>
             </div>
 
@@ -815,6 +849,21 @@
         </div>
     </div>
 
+    <!-- Email Verification View -->
+    <div id="verificationView" style="display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 20px;">
+        <div class="auth-card" style="text-align: center;">
+            <h2 style="color: var(--primary); margin-bottom: 20px;">📧 Verify Your Email</h2>
+            <div class="verification-banner" style="margin-bottom: 20px;">
+                <p style="margin-bottom: 15px;">We've sent a verification email to <strong id="verificationEmail"></strong></p>
+                <p style="margin-bottom: 20px;">Please check your inbox and click the verification link to continue.</p>
+                <button onclick="resendVerificationEmail()" class="btn-resend" style="width: auto; display: inline-block;">Resend Verification Email</button>
+            </div>
+            <button class="btn btn-primary" onclick="checkEmailVerification()" style="margin-top: 10px;">I've Verified My Email</button>
+            <button class="btn btn-logout" onclick="logout()" style="margin-top: 10px; background: var(--danger);">Back to Login</button>
+            <div id="verificationMessage" class="message" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
     <!-- User Dashboard View -->
     <div id="userDashboard" class="dashboard-container">
         <nav class="navbar">
@@ -828,7 +877,7 @@
 
         <!-- Warning Banner -->
         <div id="userWarningBanner" class="warning-banner">
-            <strong>⚠️ Account Restricted:</strong> Your account needs to be verified and activated by an admin before you can submit tasks or withdraw funds.
+            <strong>⚠️ Account Restricted:</strong> Your account needs to be activated by an admin before you can submit tasks or withdraw funds.
         </div>
 
         <!-- Stats Grid -->
@@ -1087,10 +1136,10 @@
             if (user) {
                 currentUser = user;
                 
-                // Check email verification for non-Google users
-                if (!user.emailVerified && !user.providerData.some(p => p.providerId === 'google.com')) {
-                    showAuthMessage('Please verify your email before continuing. Check your inbox.', 'error');
-                    showView('auth');
+                // Check if email is verified (for email/password users)
+                if (!user.emailVerified && user.providerData[0]?.providerId === 'password') {
+                    showView('verification');
+                    document.getElementById('verificationEmail').textContent = user.email;
                     return;
                 }
 
@@ -1115,12 +1164,15 @@
         // View management
         function showView(view) {
             document.getElementById('authView').style.display = 'none';
+            document.getElementById('verificationView').style.display = 'none';
             document.getElementById('userDashboard').style.display = 'none';
             document.getElementById('adminDashboard').style.display = 'none';
             document.body.classList.remove('admin-mode');
 
             if (view === 'auth') {
                 document.getElementById('authView').style.display = 'flex';
+            } else if (view === 'verification') {
+                document.getElementById('verificationView').style.display = 'flex';
             } else if (view === 'user') {
                 document.getElementById('userDashboard').style.display = 'block';
             } else if (view === 'admin') {
@@ -1159,12 +1211,17 @@
                 tabs[0].classList.remove('active');
                 tabs[1].classList.add('active');
             }
+            clearAuthMessage();
         }
 
         function showAuthMessage(text, type) {
             const messageDiv = document.getElementById('authMessage');
             messageDiv.textContent = text;
             messageDiv.className = `message ${type}`;
+        }
+
+        function clearAuthMessage() {
+            document.getElementById('authMessage').className = 'message';
         }
 
         async function register() {
@@ -1191,8 +1248,10 @@
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
+                // Send email verification
                 await user.sendEmailVerification();
 
+                // Create user profile in Firestore
                 await db.collection('users').doc(user.uid).set({
                     email: user.email,
                     role: 'user',
@@ -1202,12 +1261,14 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                showAuthMessage('Registration successful! Please check your email for verification link.', 'success');
+                showAuthMessage('Registration successful! Verification email sent. Please check your inbox.', 'success');
                 
+                // Clear form
                 document.getElementById('regEmail').value = '';
                 document.getElementById('regPassword').value = '';
                 document.getElementById('regConfirmPassword').value = '';
                 
+                // Switch to login tab after 3 seconds
                 setTimeout(() => switchAuthTab('login'), 3000);
             } catch (error) {
                 showAuthMessage(error.message, 'error');
@@ -1224,14 +1285,8 @@
             }
 
             try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-
-                if (!user.emailVerified) {
-                    await auth.signOut();
-                    showAuthMessage('Please verify your email before logging in.', 'error');
-                    return;
-                }
+                await auth.signInWithEmailAndPassword(email, password);
+                // Auth state will handle the rest
             } catch (error) {
                 showAuthMessage(error.message, 'error');
             }
@@ -1241,24 +1296,78 @@
             const provider = new firebase.auth.GoogleAuthProvider();
             
             try {
-                const result = await auth.signInWithPopup(provider);
-                const user = result.user;
+                // Use signInWithRedirect instead of popup to avoid popup blockers
+                await auth.signInWithRedirect(provider);
+                // The result will be handled after redirect
+            } catch (error) {
+                console.error('Google Sign-In error:', error);
+                showAuthMessage(error.message, 'error');
+            }
+        }
 
+        // Handle redirect result for Google Sign-In
+        auth.getRedirectResult().then(async (result) => {
+            if (result.user) {
+                const user = result.user;
+                
+                // Check if user exists in Firestore
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 
                 if (!userDoc.exists) {
+                    // Create new user profile for Google users (auto-verified)
                     await db.collection('users').doc(user.uid).set({
                         email: user.email,
                         role: 'user',
                         wallet: 0,
                         active: false,
-                        verified: true,
+                        verified: true, // Google users are auto-verified
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
-            } catch (error) {
+            }
+        }).catch((error) => {
+            console.error('Redirect result error:', error);
+            if (document.getElementById('authView').style.display !== 'none') {
                 showAuthMessage(error.message, 'error');
             }
+        });
+
+        // Email verification functions
+        async function resendVerificationEmail() {
+            if (currentUser) {
+                try {
+                    await currentUser.sendEmailVerification();
+                    showVerificationMessage('Verification email sent! Please check your inbox.', 'success');
+                } catch (error) {
+                    showVerificationMessage(error.message, 'error');
+                }
+            }
+        }
+
+        async function checkEmailVerification() {
+            if (currentUser) {
+                try {
+                    await currentUser.reload();
+                    if (currentUser.emailVerified) {
+                        // Update user document
+                        await db.collection('users').doc(currentUser.uid).update({
+                            verified: true
+                        });
+                        showView('user');
+                        await loadUserDashboard();
+                    } else {
+                        showVerificationMessage('Email not verified yet. Please check your inbox and click the verification link.', 'error');
+                    }
+                } catch (error) {
+                    showVerificationMessage(error.message, 'error');
+                }
+            }
+        }
+
+        function showVerificationMessage(text, type) {
+            const messageDiv = document.getElementById('verificationMessage');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
         }
 
         async function logout() {
@@ -1298,7 +1407,7 @@
             const warningBanner = document.getElementById('userWarningBanner');
             const withdrawBtn = document.getElementById('withdrawBtn');
             
-            if (!userData.verified || !userData.active) {
+            if (!userData.active) {
                 warningBanner.classList.add('active');
                 withdrawBtn.disabled = true;
             } else {
@@ -1332,10 +1441,10 @@
                     const taskCard = document.createElement('div');
                     taskCard.className = 'task-card';
                     taskCard.innerHTML = `
-                        <div class="task-title">${task.title}</div>
-                        <div class="task-desc">${task.description}</div>
+                        <div class="task-title">${escapeHtml(task.title)}</div>
+                        <div class="task-desc">${escapeHtml(task.description)}</div>
                         <div class="task-reward">$${task.reward?.toFixed(2)}</div>
-                        <button class="submit-work-btn" onclick="openTaskModal('${taskId}', '${task.title}')" ${!userData?.verified || !userData?.active ? 'disabled' : ''}>
+                        <button class="submit-work-btn" onclick="openTaskModal('${taskId}', '${escapeHtml(task.title)}')" ${!userData?.active ? 'disabled' : ''}>
                             Submit Work
                         </button>
                     `;
@@ -1345,6 +1454,16 @@
             } catch (error) {
                 console.error('Error loading tasks:', error);
             }
+        }
+
+        // Helper function to escape HTML
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
 
         async function loadUserStats() {
@@ -1366,8 +1485,8 @@
         }
 
         function openTaskModal(taskId, taskTitle) {
-            if (!userData.verified || !userData.active) {
-                alert('Your account must be verified and activated to submit tasks.');
+            if (!userData.active) {
+                alert('Your account must be activated by an admin to submit tasks.');
                 return;
             }
             
@@ -1380,6 +1499,7 @@
         function closeModal() {
             document.getElementById('taskModal').classList.remove('active');
             selectedTaskId = null;
+            document.getElementById('modalMessage').className = 'message';
         }
 
         async function submitWork() {
@@ -1411,10 +1531,6 @@
             const messageDiv = document.getElementById('modalMessage');
             messageDiv.textContent = text;
             messageDiv.className = `message ${type}`;
-            
-            setTimeout(() => {
-                messageDiv.className = 'message';
-            }, 5000);
         }
 
         async function requestWithdrawal() {
@@ -1437,8 +1553,8 @@
                 return;
             }
 
-            if (!userData.verified || !userData.active) {
-                showWithdrawMessage('Your account must be verified and activated to withdraw.', 'error');
+            if (!userData.active) {
+                showWithdrawMessage('Your account must be activated to withdraw.', 'error');
                 return;
             }
 
@@ -1522,7 +1638,7 @@
             users.forEach(user => {
                 const row = tbody.insertRow();
                 row.innerHTML = `
-                    <td>${user.email}</td>
+                    <td>${escapeHtml(user.email)}</td>
                     <td>$${user.wallet?.toFixed(2) || '0.00'}</td>
                     <td><span class="status-badge ${user.verified ? 'status-approved' : 'status-pending'}">${user.verified ? '✓ Verified' : '✗ Unverified'}</span></td>
                     <td><span class="status-badge ${user.active ? 'status-approved' : 'status-pending'}">${user.active ? '✓ Active' : '✗ Inactive'}</span></td>
@@ -1560,7 +1676,7 @@
                 
                 const row = tbody.insertRow();
                 row.innerHTML = `
-                    <td>${task.title}</td>
+                    <td>${escapeHtml(task.title)}</td>
                     <td>$${task.reward?.toFixed(2)}</td>
                     <td><span class="status-badge ${task.active ? 'status-approved' : 'status-pending'}">${task.active ? 'Active' : 'Inactive'}</span></td>
                     <td>${submissionsSnapshot.size}</td>
@@ -1609,9 +1725,9 @@
             submissions.forEach(sub => {
                 const row = tbody.insertRow();
                 row.innerHTML = `
-                    <td>${sub.userEmail}</td>
-                    <td>${sub.taskTitle}</td>
-                    <td>${sub.workText.substring(0, 50)}${sub.workText.length > 50 ? '...' : ''}</td>
+                    <td>${escapeHtml(sub.userEmail)}</td>
+                    <td>${escapeHtml(sub.taskTitle)}</td>
+                    <td>${escapeHtml(sub.workText.substring(0, 50))}${sub.workText.length > 50 ? '...' : ''}</td>
                     <td><span class="status-badge status-${sub.status}">${sub.status}</span></td>
                     <td>${sub.createdAt ? new Date(sub.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td>
@@ -1652,10 +1768,10 @@
             withdrawals.forEach(withdrawal => {
                 const row = tbody.insertRow();
                 row.innerHTML = `
-                    <td>${withdrawal.userEmail}</td>
+                    <td>${escapeHtml(withdrawal.userEmail)}</td>
                     <td>$${withdrawal.amount?.toFixed(2)}</td>
                     <td>${withdrawal.method?.toUpperCase()}</td>
-                    <td>${withdrawal.phone}</td>
+                    <td>${escapeHtml(withdrawal.phone)}</td>
                     <td><span class="status-badge ${withdrawal.status === 'paid' ? 'status-approved' : 'status-pending'}">${withdrawal.status}</span></td>
                     <td>${withdrawal.createdAt ? new Date(withdrawal.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td>
