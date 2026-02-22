@@ -154,6 +154,10 @@
             font-size: 14px;
         }
 
+        .membership-badge.paid {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
         .nav-btn {
             padding: 8px 20px;
             border: none;
@@ -207,6 +211,18 @@
             margin-bottom: 5px;
         }
 
+        .membership-banner .price-tag {
+            font-size: 28px;
+            font-weight: 700;
+            color: #f59e0b;
+            margin: 10px 0;
+        }
+
+        .membership-banner .price-tag small {
+            font-size: 16px;
+            color: #92400e;
+        }
+
         .btn-pay {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: white;
@@ -224,6 +240,21 @@
         .btn-pay:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Withdrawal Warning */
+        .withdrawal-warning {
+            background: #fff5f5;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--danger);
+            display: none;
+        }
+
+        .withdrawal-warning.active {
+            display: block;
         }
 
         /* Payment Modal */
@@ -264,6 +295,11 @@
             font-weight: 700;
             color: var(--primary);
             margin: 20px 0;
+        }
+
+        .payment-content .price small {
+            font-size: 18px;
+            color: #718096;
         }
 
         .payment-content .btn-pay-now {
@@ -439,6 +475,11 @@
             border-radius: 25px;
             font-weight: 700;
             font-size: 18px;
+        }
+
+        .task-reward small {
+            font-size: 12px;
+            margin-left: 5px;
         }
 
         .task-status {
@@ -1292,18 +1333,21 @@
         <!-- Membership Banner (shown if not paid) -->
         <div id="membershipBanner" class="membership-banner">
             <div>
-                <h3>🔓 Unlock Full Access - One Time Fee $3</h3>
-                <p>To start withdrawing and submitting tasks, you need to activate your membership.</p>
-                <p>✅ Submit unlimited tasks</p>
-                <p>✅ Withdraw earnings anytime</p>
+                <h3>🔓 One-Time Membership Fee</h3>
+                <p>To withdraw your earnings, you need to pay a one-time membership fee.</p>
+                <div class="price-tag">
+                    $3 <small>USD</small> = 387 KES
+                </div>
+                <p>✅ Submit unlimited tasks (free)</p>
+                <p>✅ Withdraw earnings anytime (after payment)</p>
                 <p>✅ Priority support</p>
             </div>
-            <button class="btn-pay" onclick="openPaymentModal()">Pay $3 Now</button>
+            <button class="btn-pay" onclick="openPaymentModal()">Pay Now</button>
         </div>
 
-        <!-- Warning Banner -->
-        <div id="userWarningBanner" class="warning-banner">
-            <strong>⚠️ Account Restricted:</strong> Your account needs to be activated by an admin after membership payment.
+        <!-- Withdrawal Warning -->
+        <div id="withdrawalWarning" class="withdrawal-warning">
+            <strong>⚠️ Withdrawals Locked:</strong> You need to pay the one-time membership fee of $3 (387 KES) to withdraw your earnings. You can still submit tasks and earn money!
         </div>
 
         <!-- Stats Grid -->
@@ -1349,10 +1393,15 @@
         <!-- Withdrawals Panel -->
         <div id="userWithdrawalsPanel" class="tab-panel">
             <h2 class="section-title">💰 Request Withdrawal</h2>
+            <div id="withdrawalMessageBanner" class="withdrawal-warning" style="margin-bottom: 20px;"></div>
             <div class="form-container">
                 <div class="form-group">
                     <label>Amount ($)</label>
                     <input type="number" id="withdrawAmount" min="1" step="0.01" placeholder="Enter amount to withdraw">
+                </div>
+                <div class="form-group">
+                    <label>Amount (KES)</label>
+                    <input type="text" id="withdrawAmountKES" readonly placeholder="Amount in Kenyan Shillings">
                 </div>
                 <div class="form-group">
                     <label>Payment Method</label>
@@ -1375,7 +1424,8 @@
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Amount</th>
+                            <th>Amount (USD)</th>
+                            <th>Amount (KES)</th>
                             <th>Method</th>
                             <th>Phone</th>
                             <th>Status</th>
@@ -1451,6 +1501,10 @@
                     <input type="number" id="taskReward" min="0.01" step="0.01" placeholder="Enter reward amount">
                 </div>
                 <div class="form-group">
+                    <label>Reward Amount (KES)</label>
+                    <input type="text" id="taskRewardKES" readonly placeholder="Amount in Kenyan Shillings">
+                </div>
+                <div class="form-group">
                     <label>Status</label>
                     <select id="taskActive">
                         <option value="true">Active</option>
@@ -1470,7 +1524,8 @@
                     <thead>
                         <tr>
                             <th>Title</th>
-                            <th>Reward</th>
+                            <th>Reward (USD)</th>
+                            <th>Reward (KES)</th>
                             <th>Status</th>
                             <th>Submissions</th>
                             <th>Created</th>
@@ -1493,7 +1548,8 @@
                     <thead>
                         <tr>
                             <th>Email</th>
-                            <th>Wallet</th>
+                            <th>Wallet ($)</th>
+                            <th>Wallet (KES)</th>
                             <th>Verified</th>
                             <th>Active</th>
                             <th>Membership</th>
@@ -1568,7 +1624,8 @@
                     <thead>
                         <tr>
                             <th>User</th>
-                            <th>Amount</th>
+                            <th>Amount ($)</th>
+                            <th>Amount (KES)</th>
                             <th>Method</th>
                             <th>Phone</th>
                             <th>Status</th>
@@ -1620,7 +1677,10 @@
     <div id="paymentModal" class="payment-modal">
         <div class="payment-content">
             <h2>💰 One Time Membership Fee</h2>
-            <div class="price">$3.00</div>
+            <div class="price">
+                $3 <small>USD</small>
+                <div style="font-size: 24px; color: #718096;">= 387 KES</div>
+            </div>
             <p style="margin-bottom: 20px;">Click below to pay via Lipana.dev</p>
             <button class="btn-pay-now" onclick="redirectToPayment()">Pay Now via Lipana.dev</button>
             <p style="margin: 20px 0;">After payment, paste the confirmation message below:</p>
@@ -1635,7 +1695,7 @@
     <div id="messageModal" class="modal">
         <div class="modal-content">
             <h3>💬 Message from Admin</h3>
-            <div id="messageContent" style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <div id="messageContent" style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0; white-space: pre-wrap;">
                 Loading...
             </div>
             <button class="btn" onclick="closeMessageModal()">Close</button>
@@ -1649,7 +1709,7 @@
             <div id="modalTaskDetails" class="modal-task-details">
                 <p><strong>📝 Description:</strong></p>
                 <p id="modalTaskDescription" style="white-space: pre-wrap;"></p>
-                <p style="margin-top: 20px;"><strong>💰 Reward:</strong> $<span id="modalTaskReward"></span></p>
+                <p style="margin-top: 20px;"><strong>💰 Reward:</strong> $<span id="modalTaskReward"></span> USD (≈ <span id="modalTaskRewardKES"></span> KES)</p>
             </div>
             <textarea id="workText" placeholder="Paste your work here..."></textarea>
             <div class="modal-buttons">
@@ -1691,17 +1751,14 @@
             appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase with custom settings to handle permissions
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-
-        // Enable persistence
-        db.enablePersistence()
-            .catch((err) => {
-                console.log('Persistence error:', err);
-            });
-
+        
+        // Disable persistence to avoid permission issues
+        // db.disableNetwork() // Don't use this - it disables completely
+        
         // Global variables
         let currentUser = null;
         let userData = null;
@@ -1713,6 +1770,14 @@
         let allWithdrawals = [];
         let allMembershipPayments = [];
         let allMessages = [];
+
+        // Exchange rate
+        const USD_TO_KES = 129; // $1 = 129 KES (approximate)
+
+        // Helper function to convert USD to KES
+        function usdToKes(usd) {
+            return (usd * USD_TO_KES).toFixed(0);
+        }
 
         // Check auth state
         auth.onAuthStateChanged(async (user) => {
@@ -1983,17 +2048,40 @@
             }
         }
 
+        // Currency conversion for inputs
+        document.getElementById('withdrawAmount')?.addEventListener('input', function(e) {
+            const usd = parseFloat(e.target.value) || 0;
+            document.getElementById('withdrawAmountKES').value = usdToKes(usd) + ' KES';
+        });
+
+        document.getElementById('taskReward')?.addEventListener('input', function(e) {
+            const usd = parseFloat(e.target.value) || 0;
+            document.getElementById('taskRewardKES').value = usdToKes(usd) + ' KES';
+        });
+
         // Membership functions
         function checkMembershipStatus() {
             const membershipBanner = document.getElementById('membershipBanner');
             const membershipBadge = document.getElementById('membershipBadge');
+            const withdrawalWarning = document.getElementById('withdrawalWarning');
+            const withdrawalMessageBanner = document.getElementById('withdrawalMessageBanner');
             
             if (userData.membershipPaid) {
                 membershipBanner.style.display = 'none';
                 membershipBadge.style.display = 'inline-block';
+                membershipBadge.classList.add('paid');
+                withdrawalWarning.classList.remove('active');
+                if (withdrawalMessageBanner) {
+                    withdrawalMessageBanner.classList.remove('active');
+                }
             } else {
                 membershipBanner.style.display = 'flex';
                 membershipBadge.style.display = 'none';
+                withdrawalWarning.classList.add('active');
+                if (withdrawalMessageBanner) {
+                    withdrawalMessageBanner.innerHTML = '<strong>⚠️ Withdrawals Locked:</strong> You need to pay the one-time membership fee of $3 (387 KES) to withdraw your earnings. You can still submit tasks and earn money!';
+                    withdrawalMessageBanner.classList.add('active');
+                }
             }
         }
 
@@ -2004,11 +2092,12 @@
         function closePaymentModal() {
             document.getElementById('paymentModal').classList.remove('active');
             document.getElementById('paymentMessage').value = '';
+            document.getElementById('paymentMessageDiv').className = 'message';
         }
 
         function redirectToPayment() {
             // Open Lipana.dev payment page in new tab
-            window.open('https://lipana.dev/pay/3', '_blank');
+            window.open('https://lipana.dev/pay/387', '_blank');
         }
 
         async function submitPaymentProof() {
@@ -2020,11 +2109,18 @@
             }
 
             try {
+                // Check if user is logged in
+                if (!currentUser) {
+                    showPaymentMessage('You must be logged in', 'error');
+                    return;
+                }
+
                 await db.collection('membershipPayments').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     message: message,
                     amount: 3,
+                    amountKES: 387,
                     status: 'pending',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -2035,7 +2131,8 @@
                     closePaymentModal();
                 }, 3000);
             } catch (error) {
-                showPaymentMessage(error.message, 'error');
+                console.error('Error submitting payment:', error);
+                showPaymentMessage('Error: ' + error.message, 'error');
             }
         }
 
@@ -2131,11 +2228,11 @@
                         <div class="task-title">${escapeHtml(title)}</div>
                         <div class="task-desc">${escapeHtml(description.substring(0, 150))}${description.length > 150 ? '...' : ''}</div>
                         <div class="task-meta">
-                            <span class="task-reward">$${reward.toFixed(2)}</span>
+                            <span class="task-reward">$${reward.toFixed(2)} <small>≈ ${usdToKes(reward)} KES</small></span>
                             <span class="task-status">📊 ${submissionsCount} submitted</span>
                         </div>
-                        <button class="view-details-btn" onclick="openTaskDetails('${task.id}')" ${!userData?.membershipPaid || !userData?.active ? 'disabled' : ''}>
-                            ${!userData?.membershipPaid ? 'Pay Membership First' : !userData?.active ? 'Account Inactive' : 'View Details & Submit'}
+                        <button class="view-details-btn" onclick="openTaskDetails('${task.id}')">
+                            View Details & Submit
                         </button>
                     `;
                     
@@ -2207,7 +2304,7 @@
                             <div class="submission-review">
                                 <div class="review-score">
                                     <span class="score-badge">${submission.score}%</span>
-                                    <span class="earned-amount">+$${submission.earned?.toFixed(2) || '0.00'}</span>
+                                    <span class="earned-amount">+$${submission.earned?.toFixed(2) || '0.00'} (≈ ${usdToKes(submission.earned || 0)} KES)</span>
                                 </div>
                                 <div class="review-feedback">${escapeHtml(submission.review)}</div>
                             </div>
@@ -2260,6 +2357,7 @@
                     row.innerHTML = `
                         <td>${withdrawal.createdAt ? new Date(withdrawal.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
                         <td>$${withdrawal.amount?.toFixed(2)}</td>
+                        <td>${usdToKes(withdrawal.amount || 0)} KES</td>
                         <td>${withdrawal.method?.toUpperCase()}</td>
                         <td>${escapeHtml(withdrawal.phone)}</td>
                         <td><span class="status-badge ${withdrawal.status === 'paid' ? 'status-approved' : 'status-pending'}">${withdrawal.status}</span></td>
@@ -2305,6 +2403,7 @@
                 });
             } catch (error) {
                 console.error('Error loading messages:', error);
+                document.getElementById('messagesContainer').innerHTML = '<div class="empty-state error"><p>Error loading messages.</p></div>';
             }
         }
 
@@ -2319,17 +2418,6 @@
 
         // Task details modal
         async function openTaskDetails(taskId) {
-            if (!userData.membershipPaid) {
-                alert('Please pay the membership fee first to access tasks.');
-                openPaymentModal();
-                return;
-            }
-
-            if (!userData.active) {
-                alert('Your account must be activated by an admin after membership payment.');
-                return;
-            }
-
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 if (!taskDoc.exists) {
@@ -2343,6 +2431,7 @@
                 document.getElementById('modalTaskTitle').textContent = task.title || 'Untitled Task';
                 document.getElementById('modalTaskDescription').textContent = task.description || 'No description';
                 document.getElementById('modalTaskReward').textContent = (task.reward || 0).toFixed(2);
+                document.getElementById('modalTaskRewardKES').textContent = usdToKes(task.reward || 0);
                 document.getElementById('workText').value = '';
                 document.getElementById('taskDetailsModal').classList.add('active');
             } catch (error) {
@@ -2387,7 +2476,8 @@
                     switchUserTab('submissions');
                 }, 2000);
             } catch (error) {
-                showModalMessage(error.message, 'error');
+                console.error('Error submitting work:', error);
+                showModalMessage('Error: ' + error.message, 'error');
             }
         }
 
@@ -2398,8 +2488,9 @@
         }
 
         async function requestWithdrawal() {
+            // Check membership first
             if (!userData.membershipPaid) {
-                alert('Please pay the membership fee first to withdraw.');
+                showWithdrawMessage('Please pay the membership fee of $3 (387 KES) first to withdraw.', 'error');
                 openPaymentModal();
                 return;
             }
@@ -2432,6 +2523,7 @@
                 await db.collection('withdrawals').add({
                     userId: currentUser.uid,
                     amount: amount,
+                    amountKES: usdToKes(amount),
                     method: method,
                     phone: phone,
                     status: 'pending',
@@ -2442,10 +2534,12 @@
                 
                 document.getElementById('withdrawAmount').value = '';
                 document.getElementById('withdrawPhone').value = '';
+                document.getElementById('withdrawAmountKES').value = '';
                 
                 await loadWithdrawalsHistory();
             } catch (error) {
-                showWithdrawMessage(error.message, 'error');
+                console.error('Error requesting withdrawal:', error);
+                showWithdrawMessage('Error: ' + error.message, 'error');
             }
         }
 
@@ -2518,6 +2612,7 @@
                 row.innerHTML = `
                     <td>${escapeHtml(user.email)}</td>
                     <td>$${user.wallet?.toFixed(2) || '0.00'}</td>
+                    <td>${usdToKes(user.wallet || 0)} KES</td>
                     <td><span class="status-badge ${user.verified ? 'status-approved' : 'status-pending'}">${user.verified ? '✓' : '✗'}</span></td>
                     <td><span class="status-badge ${user.active ? 'status-approved' : 'status-pending'}">${user.active ? '✓' : '✗'}</span></td>
                     <td><span class="status-badge ${user.membershipPaid ? 'status-approved' : 'status-pending'}">${user.membershipPaid ? 'Paid' : 'Pending'}</span></td>
@@ -2558,6 +2653,7 @@
                     row.innerHTML = `
                         <td>${escapeHtml(task.title || 'Untitled')}</td>
                         <td>$${(task.reward || 0).toFixed(2)}</td>
+                        <td>${usdToKes(task.reward || 0)} KES</td>
                         <td><span class="status-badge ${task.active ? 'status-approved' : 'status-pending'}">${task.active ? 'Active' : 'Inactive'}</span></td>
                         <td>${submissionsSnapshot.size}</td>
                         <td>${task.createdAt ? new Date(task.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
@@ -2606,7 +2702,7 @@
                 row.innerHTML = `
                     <td>${escapeHtml(payment.userEmail)}</td>
                     <td>${escapeHtml(payment.message.substring(0, 50))}...</td>
-                    <td>$${payment.amount}</td>
+                    <td>$${payment.amount} (${payment.amountKES} KES)</td>
                     <td>${payment.createdAt ? new Date(payment.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td><span class="status-badge ${payment.status === 'approved' ? 'status-approved' : 'status-pending'}">${payment.status}</span></td>
                     <td>
@@ -2698,6 +2794,7 @@
                 row.innerHTML = `
                     <td>${escapeHtml(withdrawal.userEmail)}</td>
                     <td>$${withdrawal.amount?.toFixed(2)}</td>
+                    <td>${withdrawal.amountKES || usdToKes(withdrawal.amount || 0)} KES</td>
                     <td>${withdrawal.method?.toUpperCase()}</td>
                     <td>${escapeHtml(withdrawal.phone)}</td>
                     <td><span class="status-badge ${withdrawal.status === 'paid' ? 'status-approved' : 'status-pending'}">${withdrawal.status}</span></td>
@@ -2781,7 +2878,6 @@
             const title = document.getElementById('taskTitle').value.trim();
             const description = document.getElementById('taskDescription').value.trim();
             const reward = parseFloat(document.getElementById('taskReward').value);
-            const active = document.getElementById('taskActive').value === 'true';
 
             if (!title || !description || !reward) {
                 showAdminMessage('taskMessage', 'Please fill all fields', 'error');
@@ -2793,7 +2889,8 @@
                     title,
                     description,
                     reward,
-                    active,
+                    rewardKES: usdToKes(reward),
+                    active: true,
                     submissionsCount: 0,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -2803,9 +2900,11 @@
                 document.getElementById('taskTitle').value = '';
                 document.getElementById('taskDescription').value = '';
                 document.getElementById('taskReward').value = '';
+                document.getElementById('taskRewardKES').value = '';
                 
                 await loadAdminTasks();
             } catch (error) {
+                console.error('Error creating task:', error);
                 showAdminMessage('taskMessage', error.message, 'error');
             }
         }
@@ -2853,6 +2952,7 @@
                     userId: userId,
                     type: numAmount > 0 ? 'credit' : 'debit',
                     amount: Math.abs(numAmount),
+                    amountKES: usdToKes(Math.abs(numAmount)),
                     reason: 'Admin adjustment',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -2897,7 +2997,7 @@
 
                 await db.collection('messages').add({
                     userId: userId,
-                    message: 'Your membership payment has been approved! You can now access all features.',
+                    message: 'Your membership payment of $3 (387 KES) has been approved! You can now withdraw your earnings.',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -2945,7 +3045,8 @@
                 document.getElementById('adminMessageText').value = '';
                 await loadAdminMessages();
             } catch (error) {
-                showAdminMessage('messageAdminMessage', error.message, 'error');
+                console.error('Error sending message:', error);
+                showAdminMessage('messageAdminMessage', 'Error: ' + error.message, 'error');
             }
         }
 
@@ -2993,6 +3094,7 @@
                     score: score,
                     review: feedback,
                     earned: earned,
+                    earnedKES: usdToKes(earned),
                     reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -3008,7 +3110,8 @@
                     loadAdminStats();
                 }, 2000);
             } catch (error) {
-                showReviewMessage(error.message, 'error');
+                console.error('Error submitting review:', error);
+                showReviewMessage('Error: ' + error.message, 'error');
             }
         }
 
@@ -3028,6 +3131,7 @@
                     userId: userId,
                     type: 'debit',
                     amount: amount,
+                    amountKES: usdToKes(amount),
                     reason: 'Withdrawal paid',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
