@@ -1479,7 +1479,7 @@
             <button class="tab-btn active" onclick="switchAdminTab('tasks')">📋 Tasks</button>
             <button class="tab-btn" onclick="switchAdminTab('users')">👥 Users</button>
             <button class="tab-btn" onclick="switchAdminTab('memberships')">⭐ Memberships</button>
-            <button class="tab-btn" onclick="switchAdminTab('reviews')">📝 Reviews</button>
+            <button class="tab-btn" onclick="switchAdminTab('submissions')">📝 Submissions</button>
             <button class="tab-btn" onclick="switchAdminTab('withdrawals')">💰 Withdrawals</button>
             <button class="tab-btn" onclick="switchAdminTab('messages')">💬 Messages</button>
         </div>
@@ -1586,12 +1586,18 @@
             </div>
         </div>
 
-        <!-- Reviews Panel -->
-        <div id="adminReviewsPanel" class="tab-panel">
+        <!-- Submissions Panel -->
+        <div id="adminSubmissionsPanel" class="tab-panel">
             <div class="table-container admin-table-container">
-                <h3 style="color: white; margin-bottom: 20px;">📝 Pending Submissions to Review</h3>
+                <h3 style="color: white; margin-bottom: 20px;">📝 All Submissions</h3>
                 <div class="filter-bar">
-                    <input type="text" id="reviewSearch" placeholder="Search submissions..." onkeyup="filterReviews()">
+                    <input type="text" id="submissionSearch" placeholder="Search submissions..." onkeyup="filterSubmissions()">
+                    <select id="submissionFilter" onchange="filterSubmissions()">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
                 </div>
                 <table class="admin-table">
                     <thead>
@@ -1599,11 +1605,13 @@
                             <th>User</th>
                             <th>Task</th>
                             <th>Work Preview</th>
+                            <th>Status</th>
+                            <th>Score</th>
                             <th>Submitted</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="adminReviewsBody"></tbody>
+                    <tbody id="adminSubmissionsBody"></tbody>
                 </table>
             </div>
         </div>
@@ -1751,14 +1759,22 @@
             appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
         };
 
-        // Initialize Firebase with custom settings to handle permissions
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         
-        // Disable persistence to avoid permission issues
-        // db.disableNetwork() // Don't use this - it disables completely
-        
+        // Enable offline persistence but with error handling
+        db.enablePersistence({
+            synchronizeTabs: true
+        }).catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.log('Persistence failed: Multiple tabs open');
+            } else if (err.code == 'unimplemented') {
+                console.log('Persistence not supported');
+            }
+        });
+
         // Global variables
         let currentUser = null;
         let userData = null;
@@ -1772,11 +1788,11 @@
         let allMessages = [];
 
         // Exchange rate
-        const USD_TO_KES = 129; // $1 = 129 KES (approximate)
+        const USD_TO_KES = 129; // $1 = 129 KES
 
         // Helper function to convert USD to KES
         function usdToKes(usd) {
-            return (usd * USD_TO_KES).toFixed(0);
+            return Math.round(usd * USD_TO_KES);
         }
 
         // Check auth state
@@ -1792,27 +1808,57 @@
                     return;
                 }
 
-                // Load user data
-                await loadUserData();
-                
-                // Check membership status
-                checkMembershipStatus();
-                
-                // Check if admin
-                if (userData && userData.role === 'admin') {
-                    document.getElementById('switchToAdminBtn').style.display = 'inline-block';
-                    document.getElementById('adminEmail').textContent = user.email;
-                    await loadAdminData();
+                try {
+                    // Load user data
+                    await loadUserData();
+                    
+                    // Check membership status
+                    if (userData) {
+                        checkMembershipStatus();
+                    }
+                    
+                    // Check if admin
+                    if (userData && userData.role === 'admin') {
+                        document.getElementById('switchToAdminBtn').style.display = 'inline-block';
+                        document.getElementById('adminEmail').textContent = user.email;
+                        await loadAdminData();
+                    }
+                    
+                    // Show appropriate view
+                    showView('user');
+                    await loadUserDashboard();
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                    // If user document doesn't exist, create it
+                    if (error.code === 'permission-denied') {
+                        await createUserDocument(user);
+                    }
                 }
-                
-                // Show appropriate view
-                showView('user');
-                await loadUserDashboard();
             } else {
                 console.log('No user logged in');
                 showView('auth');
             }
         });
+
+        // Create user document if it doesn't exist
+        async function createUserDocument(user) {
+            try {
+                await db.collection('users').doc(user.uid).set({
+                    email: user.email,
+                    role: 'user',
+                    wallet: 0,
+                    active: true, // Auto-activate for testing
+                    verified: user.emailVerified,
+                    membershipPaid: false,
+                    membershipStatus: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('User document created');
+                await loadUserData();
+            } catch (error) {
+                console.error('Error creating user document:', error);
+            }
+        }
 
         // View management
         function showView(view) {
@@ -1871,6 +1917,39 @@
                 tabs[3].classList.add('active');
                 document.getElementById('userMessagesPanel').classList.add('active');
                 loadUserMessages();
+            }
+        }
+
+        // Switch admin tabs
+        function switchAdminTab(tab) {
+            const tabs = document.querySelectorAll('#adminDashboard .tab-btn');
+            const panels = document.querySelectorAll('#adminDashboard .tab-panel');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            panels.forEach(p => p.classList.remove('active'));
+            
+            if (tab === 'tasks') {
+                tabs[0].classList.add('active');
+                document.getElementById('adminTasksPanel').classList.add('active');
+            } else if (tab === 'users') {
+                tabs[1].classList.add('active');
+                document.getElementById('adminUsersPanel').classList.add('active');
+            } else if (tab === 'memberships') {
+                tabs[2].classList.add('active');
+                document.getElementById('adminMembershipsPanel').classList.add('active');
+                loadAdminMemberships();
+            } else if (tab === 'submissions') {
+                tabs[3].classList.add('active');
+                document.getElementById('adminSubmissionsPanel').classList.add('active');
+                loadAdminSubmissions();
+            } else if (tab === 'withdrawals') {
+                tabs[4].classList.add('active');
+                document.getElementById('adminWithdrawalsPanel').classList.add('active');
+                loadAdminWithdrawals();
+            } else if (tab === 'messages') {
+                tabs[5].classList.add('active');
+                document.getElementById('adminMessagesPanel').classList.add('active');
+                loadAdminMessages();
             }
         }
 
@@ -1934,7 +2013,7 @@
                     email: user.email,
                     role: 'user',
                     wallet: 0,
-                    active: false,
+                    active: true, // Auto-activate for testing
                     verified: false,
                     membershipPaid: false,
                     membershipStatus: 'pending',
@@ -1973,35 +2052,12 @@
             const provider = new firebase.auth.GoogleAuthProvider();
             
             try {
-                await auth.signInWithRedirect(provider);
+                await auth.signInWithPopup(provider);
             } catch (error) {
                 console.error('Google Sign-In error:', error);
                 showAuthMessage(error.message, 'error');
             }
         }
-
-        auth.getRedirectResult().then(async (result) => {
-            if (result.user) {
-                const user = result.user;
-                
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                
-                if (!userDoc.exists) {
-                    await db.collection('users').doc(user.uid).set({
-                        email: user.email,
-                        role: 'user',
-                        wallet: 0,
-                        active: false,
-                        verified: true,
-                        membershipPaid: false,
-                        membershipStatus: 'pending',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-            }
-        }).catch((error) => {
-            console.error('Redirect result error:', error);
-        });
 
         async function resendVerificationEmail() {
             if (currentUser) {
@@ -2096,7 +2152,6 @@
         }
 
         function redirectToPayment() {
-            // Open Lipana.dev payment page in new tab
             window.open('https://lipana.dev/pay/387', '_blank');
         }
 
@@ -2109,7 +2164,6 @@
             }
 
             try {
-                // Check if user is logged in
                 if (!currentUser) {
                     showPaymentMessage('You must be logged in', 'error');
                     return;
@@ -2150,9 +2204,13 @@
                     userData = userDoc.data();
                     console.log('User data loaded:', userData);
                     updateWalletDisplay();
+                } else {
+                    // Create user document if it doesn't exist
+                    await createUserDocument(currentUser);
                 }
             } catch (error) {
                 console.error('Error loading user data:', error);
+                throw error;
             }
         }
 
@@ -2169,10 +2227,12 @@
 
             // Check account status
             const warningBanner = document.getElementById('userWarningBanner');
-            if (!userData.active) {
-                warningBanner.classList.add('active');
-            } else {
-                warningBanner.classList.remove('active');
+            if (warningBanner) {
+                if (!userData.active) {
+                    warningBanner.classList.add('active');
+                } else {
+                    warningBanner.classList.remove('active');
+                }
             }
 
             await loadUserTasks();
@@ -2185,7 +2245,6 @@
                 const tasksContainer = document.getElementById('tasksContainer');
                 tasksContainer.innerHTML = '<div class="loading-spinner active"><div class="spinner"></div><p>Loading tasks...</p></div>';
 
-                // Simple query without orderBy first to avoid index issues
                 const tasksSnapshot = await db.collection('tasks')
                     .where('active', '==', true)
                     .get();
@@ -2338,6 +2397,7 @@
                 }
             } catch (error) {
                 console.error('Error loading submissions:', error);
+                document.getElementById('submissionsContainer').innerHTML = '<div class="empty-state error"><p>Error loading submissions.</p></div>';
             }
         }
 
@@ -2455,14 +2515,17 @@
             }
 
             try {
+                // Add submission
                 await db.collection('submissions').add({
                     userId: currentUser.uid,
+                    userEmail: currentUser.email,
                     taskId: selectedTaskId,
                     workText: workText,
                     status: 'pending',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
+                // Update task submission count
                 const taskRef = db.collection('tasks').doc(selectedTaskId);
                 await taskRef.update({
                     submissionsCount: firebase.firestore.FieldValue.increment(1)
@@ -2522,6 +2585,7 @@
             try {
                 await db.collection('withdrawals').add({
                     userId: currentUser.uid,
+                    userEmail: currentUser.email,
                     amount: amount,
                     amountKES: usdToKes(amount),
                     method: method,
@@ -2555,7 +2619,7 @@
             await loadAdminUsers();
             await loadAdminTasks();
             await loadAdminMemberships();
-            await loadAdminReviews();
+            await loadAdminSubmissions();
             await loadAdminWithdrawals();
             await loadAdminMessages();
         }
@@ -2715,11 +2779,10 @@
             });
         }
 
-        async function loadAdminReviews() {
+        async function loadAdminSubmissions() {
             try {
                 const snapshot = await db.collection('submissions')
-                    .where('status', '==', 'pending')
-                    .orderBy('createdAt', 'asc')
+                    .orderBy('createdAt', 'desc')
                     .get();
 
                 allSubmissions = await Promise.all(snapshot.docs.map(async doc => {
@@ -2738,14 +2801,14 @@
                         taskTitle
                     };
                 }));
-                displayAdminReviews(allSubmissions);
+                displayAdminSubmissions(allSubmissions);
             } catch (error) {
-                console.error('Error loading reviews:', error);
+                console.error('Error loading submissions:', error);
             }
         }
 
-        function displayAdminReviews(submissions) {
-            const tbody = document.getElementById('adminReviewsBody');
+        function displayAdminSubmissions(submissions) {
+            const tbody = document.getElementById('adminSubmissionsBody');
             tbody.innerHTML = '';
 
             submissions.forEach(sub => {
@@ -2754,11 +2817,15 @@
                     <td>${escapeHtml(sub.userEmail)}</td>
                     <td>${escapeHtml(sub.taskTitle)}</td>
                     <td>${escapeHtml(sub.workText.substring(0, 100))}${sub.workText.length > 100 ? '...' : ''}</td>
+                    <td><span class="status-badge status-${sub.status}">${sub.status}</span></td>
+                    <td>${sub.score ? sub.score + '%' : '-'}</td>
                     <td>${sub.createdAt ? new Date(sub.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td>
-                        <button class="action-btn btn-approve" onclick="openReviewModal('${sub.id}', '${sub.userId}', '${escapeHtml(sub.userEmail)}', '${escapeHtml(sub.taskTitle)}', '${escapeHtml(sub.workText)}')">
-                            Review
-                        </button>
+                        ${sub.status === 'pending' ? `
+                            <button class="action-btn btn-approve" onclick="openReviewModal('${sub.id}', '${sub.userId}', '${escapeHtml(sub.userEmail)}', '${escapeHtml(sub.taskTitle)}', '${escapeHtml(sub.workText)}')">
+                                Review
+                            </button>
+                        ` : ''}
                     </td>
                 `;
             });
@@ -2846,34 +2913,6 @@
             });
         }
 
-        function switchAdminTab(tab) {
-            const tabs = document.querySelectorAll('#adminDashboard .tab-btn');
-            const panels = document.querySelectorAll('#adminDashboard .tab-panel');
-            
-            tabs.forEach(t => t.classList.remove('active'));
-            panels.forEach(p => p.classList.remove('active'));
-            
-            if (tab === 'tasks') {
-                tabs[0].classList.add('active');
-                document.getElementById('adminTasksPanel').classList.add('active');
-            } else if (tab === 'users') {
-                tabs[1].classList.add('active');
-                document.getElementById('adminUsersPanel').classList.add('active');
-            } else if (tab === 'memberships') {
-                tabs[2].classList.add('active');
-                document.getElementById('adminMembershipsPanel').classList.add('active');
-            } else if (tab === 'reviews') {
-                tabs[3].classList.add('active');
-                document.getElementById('adminReviewsPanel').classList.add('active');
-            } else if (tab === 'withdrawals') {
-                tabs[4].classList.add('active');
-                document.getElementById('adminWithdrawalsPanel').classList.add('active');
-            } else if (tab === 'messages') {
-                tabs[5].classList.add('active');
-                document.getElementById('adminMessagesPanel').classList.add('active');
-            }
-        }
-
         async function createTask() {
             const title = document.getElementById('taskTitle').value.trim();
             const description = document.getElementById('taskDescription').value.trim();
@@ -2950,6 +2989,7 @@
 
                 await db.collection('transactions').add({
                     userId: userId,
+                    userEmail: userDoc.data().email,
                     type: numAmount > 0 ? 'credit' : 'debit',
                     amount: Math.abs(numAmount),
                     amountKES: usdToKes(Math.abs(numAmount)),
@@ -3106,7 +3146,7 @@
                 
                 setTimeout(() => {
                     closeReviewModal();
-                    loadAdminReviews();
+                    loadAdminSubmissions();
                     loadAdminStats();
                 }, 2000);
             } catch (error) {
@@ -3168,13 +3208,17 @@
             displayAdminMemberships(filtered);
         }
 
-        function filterReviews() {
-            const term = document.getElementById('reviewSearch').value.toLowerCase();
-            const filtered = allSubmissions.filter(s => 
-                (s.userEmail || '').toLowerCase().includes(term) ||
-                (s.taskTitle || '').toLowerCase().includes(term)
-            );
-            displayAdminReviews(filtered);
+        function filterSubmissions() {
+            const term = document.getElementById('submissionSearch').value.toLowerCase();
+            const status = document.getElementById('submissionFilter').value;
+            
+            const filtered = allSubmissions.filter(s => {
+                const matchesSearch = (s.userEmail || '').toLowerCase().includes(term) ||
+                                    (s.taskTitle || '').toLowerCase().includes(term);
+                const matchesStatus = status === 'all' || s.status === status;
+                return matchesSearch && matchesStatus;
+            });
+            displayAdminSubmissions(filtered);
         }
 
         function filterWithdrawals() {
