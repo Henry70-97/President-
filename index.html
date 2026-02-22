@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskEarn Pro - Trusted Task Platform</title>
+    <title>NextGen Academy  Pro - Advanced Task Platform</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -12,6 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Moment.js for Date Formatting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -43,6 +47,11 @@
             --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
             --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            
+            /* TV Colors */
+            --tv-blue: #3b82f6;
+            --tv-purple: #8b5cf6;
+            --tv-pink: #ec4899;
         }
 
         body {
@@ -58,6 +67,139 @@
 
         body.menu-open {
             overflow: hidden;
+        }
+
+        /* TV Screens Container */
+        .tv-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Mini TV Screen */
+        .mini-tv {
+            width: 200px;
+            height: 150px;
+            background: #1a1a1a;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 3px solid;
+            animation: tvGlow 3s infinite;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .mini-tv:hover {
+            transform: scale(1.05);
+        }
+
+        .mini-tv:nth-child(1) {
+            border-color: var(--tv-blue);
+            animation: tvGlowBlue 3s infinite;
+        }
+
+        .mini-tv:nth-child(2) {
+            border-color: var(--tv-purple);
+            animation: tvGlowPurple 3s infinite;
+        }
+
+        .mini-tv:nth-child(3) {
+            border-color: var(--tv-pink);
+            animation: tvGlowPink 3s infinite;
+        }
+
+        @keyframes tvGlowBlue {
+            0% { box-shadow: 0 0 5px var(--tv-blue); }
+            50% { box-shadow: 0 0 20px var(--tv-blue), 0 0 40px var(--tv-blue); }
+            100% { box-shadow: 0 0 5px var(--tv-blue); }
+        }
+
+        @keyframes tvGlowPurple {
+            0% { box-shadow: 0 0 5px var(--tv-purple); }
+            50% { box-shadow: 0 0 20px var(--tv-purple), 0 0 40px var(--tv-purple); }
+            100% { box-shadow: 0 0 5px var(--tv-purple); }
+        }
+
+        @keyframes tvGlowPink {
+            0% { box-shadow: 0 0 5px var(--tv-pink); }
+            50% { box-shadow: 0 0 20px var(--tv-pink), 0 0 40px var(--tv-pink); }
+            100% { box-shadow: 0 0 5px var(--tv-pink); }
+        }
+
+        .mini-tv video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .tv-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(0,0,0,0.3), rgba(255,255,255,0.1));
+            pointer-events: none;
+        }
+
+        .tv-screen-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(255, 255, 255, 0.05) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+            animation: scanlines 10s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+
+        .tv-antenna {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 20px;
+            background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+            border-radius: 5px 5px 0 0;
+        }
+
+        .tv-antenna::before,
+        .tv-antenna::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            width: 2px;
+            height: 15px;
+            background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+        }
+
+        .tv-antenna::before {
+            left: 5px;
+            transform: rotate(-15deg);
+        }
+
+        .tv-antenna::after {
+            right: 5px;
+            transform: rotate(15deg);
         }
 
         /* Trust Badges */
@@ -825,41 +967,77 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: white;
+            border: 2px solid rgba(255,255,255,0.2);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 0 20px #3b82f6, 0 0 40px #8b5cf6;
         }
 
         .btn-success {
-            background: linear-gradient(135deg, var(--success), var(--success-light));
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
+            border: 2px solid rgba(255,255,255,0.2);
         }
 
         .btn-success:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 0 20px #10b981;
         }
 
         .btn-google {
-            background: #dc2626;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
             margin-top: 16px;
+            border: 2px solid rgba(255,255,255,0.2);
         }
 
         .btn-google:hover {
-            background: #b91c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px #ef4444;
         }
 
         .btn-resend {
-            background: var(--info);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
             margin-top: 12px;
             font-size: 14px;
             padding: 12px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-resend:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px #3b82f6;
+        }
+
+        /* Login/Register Tab Buttons */
+        #authView .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        #authView .tab-btn.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 0 20px #3b82f6;
+        }
+
+        #authView .tab-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
         }
 
         /* Tabs - Desktop */
@@ -1586,6 +1764,15 @@
             .payment-content .price {
                 font-size: 48px;
             }
+
+            .tv-container {
+                gap: 10px;
+            }
+
+            .mini-tv {
+                width: 150px;
+                height: 112px;
+            }
         }
 
         @media (min-width: 769px) {
@@ -1636,6 +1823,37 @@
     </style>
 </head>
 <body>
+    <!-- TV Screens at Top -->
+    <div class="tv-container">
+        <div class="mini-tv" onclick="toggleVideo(this)">
+            <video loop muted autoplay playsinline>
+                <source src="video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="tv-overlay"></div>
+            <div class="tv-screen-effect"></div>
+            <div class="tv-antenna"></div>
+        </div>
+        <div class="mini-tv" onclick="toggleVideo(this)">
+            <video loop muted autoplay playsinline>
+                <source src="video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="tv-overlay"></div>
+            <div class="tv-screen-effect"></div>
+            <div class="tv-antenna"></div>
+        </div>
+        <div class="mini-tv" onclick="toggleVideo(this)">
+            <video loop muted autoplay playsinline>
+                <source src="video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="tv-overlay"></div>
+            <div class="tv-screen-effect"></div>
+            <div class="tv-antenna"></div>
+        </div>
+    </div>
+
     <!-- Authentication View -->
     <div id="authView" class="auth-container">
         <div class="auth-card">
@@ -1643,7 +1861,7 @@
                 <i class="fas fa-shield-alt"></i>
                 <span>Secure & Trusted Platform</span>
             </div>
-            <h2 style="text-align: center; margin-bottom: 32px; font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🚀 TaskEarn Pro</h2>
+            <h2 style="text-align: center; margin-bottom: 32px; font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🚀 NextGen Academy  Pro</h2>
             
             <div class="tabs" style="background: transparent; padding: 0; margin-bottom: 24px;">
                 <button class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
@@ -1736,7 +1954,7 @@
         <nav class="navbar">
             <div class="logo">
                 <i class="fas fa-tasks"></i>
-                TaskEarn Pro
+                NextGen Academy  Pro
             </div>
             
             <!-- Hamburger Menu -->
@@ -1936,7 +2154,7 @@
                     <div class="support-card" onclick="openSupportModal('issue')">
                         <i class="fas fa-exclamation-triangle"></i>
                         <h4>Report Issue</h4>
-<p>Report any technical issues, payment problems, or account concerns.</p>
+                        <p>Report any technical issues, payment problems, or account concerns.</p>
                     </div>
 
                     <div class="support-card" onclick="openSupportModal('general')">
@@ -1954,7 +2172,7 @@
         <nav class="navbar admin-navbar">
             <div class="logo admin-logo">
                 <i class="fas fa-cog"></i>
-                TaskEarn Pro <span>Admin</span>
+                NextGen Academy  Pro <span>Admin</span>
             </div>
             
             <!-- Hamburger Menu for Admin -->
@@ -2322,7 +2540,7 @@
 
     <!-- Footer -->
     <div class="footer">
-        <p>© 2024 TaskEarn Pro. All rights reserved. | <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a> | <a href="#">Contact Us</a></p>
+        <p>© 2026 NextGen Academy  Pro. All rights reserved. | <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a> | <a href="#">Contact Us</a></p>
         <p style="margin-top: 8px; font-size: 12px;">Secure payments • 24/7 Support • Verified Platform</p>
     </div>
 
@@ -2387,6 +2605,16 @@
                 return 0; // No reward for scores below 50
             }
             return (reward * score) / 100; // Score percentage of reward
+        }
+
+        // Toggle video play/pause
+        function toggleVideo(tvElement) {
+            const video = tvElement.querySelector('video');
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
         }
 
         // Toggle mobile menu
@@ -2884,7 +3112,7 @@
         }
 
         function redirectToPayment() {
-            window.open('https://lipana.dev/pay/387', '_blank');
+            window.open('https://lipana.dev/pay/nextgen-membership', '_blank');
         }
 
         async function submitPaymentProof() {
