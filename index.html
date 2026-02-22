@@ -2315,7 +2315,7 @@
                 let scoredCount = 0;
                 submissionsSnapshot.docs.forEach(doc => {
                     if (doc.data().score) {
-                        totalScore += doc.data().score;
+                        totalScore += parseInt(doc.data().score); // Convert string to number
                         scoredCount++;
                     }
                 });
@@ -2357,7 +2357,7 @@
                             <div class="submission-review">
                                 <div class="review-score">
                                     <span class="score-badge">${submission.score}%</span>
-                                    <span class="earned-amount">+$${submission.earned?.toFixed(2) || '0.00'} (≈ ${usdToKes(submission.earned || 0)} KES)</span>
+                                    <span class="earned-amount">+$${parseFloat(submission.earned || 0).toFixed(2)} (≈ ${usdToKes(parseFloat(submission.earned || 0))} KES)</span>
                                 </div>
                                 <div class="review-feedback">${escapeHtml(submission.review)}</div>
                             </div>
@@ -2372,6 +2372,9 @@
                         `;
                     }
 
+                    // Handle both field naming conventions (WorkText vs workText)
+                    const workText = submission.workText || submission.WorkText || 'No work submitted';
+                    
                     card.innerHTML = `
                         <div class="submission-header">
                             <span class="submission-task-title">${escapeHtml(task?.title || 'Unknown Task')}</span>
@@ -2379,7 +2382,7 @@
                         </div>
                         <div class="submission-work">
                             <strong>Your work:</strong><br>
-                            ${escapeHtml(submission.workText.substring(0, 200))}${submission.workText.length > 200 ? '...' : ''}
+                            ${escapeHtml(workText.substring(0, 200))}${workText.length > 200 ? '...' : ''}
                         </div>
                         ${reviewHtml}
                         <div style="margin-top: 10px; font-size: 12px; color: #a0aec0;">
@@ -2391,7 +2394,7 @@
                 }
             } catch (error) {
                 console.error('Error loading submissions:', error);
-                document.getElementById('submissionsContainer').innerHTML = '<div class="empty-state error"><p>Error loading submissions.</p></div>';
+                document.getElementById('submissionsContainer').innerHTML = '<div class="empty-state error"><p>Error loading submissions. Please refresh.</p></div>';
             }
         }
 
@@ -2410,8 +2413,8 @@
                     const row = tbody.insertRow();
                     row.innerHTML = `
                         <td>${withdrawal.createdAt ? new Date(withdrawal.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
-                        <td>$${withdrawal.amount?.toFixed(2)}</td>
-                        <td>${withdrawal.amountKES || usdToKes(withdrawal.amount || 0)} KES</td>
+                        <td>$${parseFloat(withdrawal.amount || 0).toFixed(2)}</td>
+                        <td>${withdrawal.amountKES || usdToKes(parseFloat(withdrawal.amount || 0))} KES</td>
                         <td>${withdrawal.method?.toUpperCase()}</td>
                         <td>${escapeHtml(withdrawal.phone)}</td>
                         <td><span class="status-badge ${withdrawal.status === 'paid' ? 'status-approved' : 'status-pending'}">${withdrawal.status}</span></td>
@@ -2424,6 +2427,7 @@
 
         async function loadUserMessages() {
             try {
+                console.log('Loading user messages...');
                 const snapshot = await db.collection('messages')
                     .where('userId', '==', currentUser.uid)
                     .orderBy('createdAt', 'desc')
@@ -2439,6 +2443,8 @@
 
                 snapshot.forEach(doc => {
                     const message = doc.data();
+                    console.log('Message found:', message);
+                    
                     const card = document.createElement('div');
                     card.className = 'submission-card';
                     card.style.cursor = 'pointer';
@@ -2457,7 +2463,7 @@
                 });
             } catch (error) {
                 console.error('Error loading messages:', error);
-                document.getElementById('messagesContainer').innerHTML = '<div class="empty-state error"><p>Error loading messages.</p></div>';
+                document.getElementById('messagesContainer').innerHTML = '<div class="empty-state error"><p>Error loading messages. Please refresh.</p></div>';
             }
         }
 
@@ -2513,13 +2519,14 @@
                 const taskDoc = await db.collection('tasks').doc(selectedTaskId).get();
                 const task = taskDoc.data();
 
-                // Add submission with all necessary fields
+                // Add submission with all necessary fields - using both naming conventions for compatibility
                 const submissionData = {
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     taskId: selectedTaskId,
                     taskTitle: task.title,
-                    workText: workText,
+                    workText: workText,        // lowercase for code
+                    WorkText: workText,        // capitalized for existing database
                     status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2684,8 +2691,8 @@
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${escapeHtml(user.email)}</td>
-                    <td>$${user.wallet?.toFixed(2) || '0.00'}</td>
-                    <td>${usdToKes(user.wallet || 0)} KES</td>
+                    <td>$${parseFloat(user.wallet || 0).toFixed(2)}</td>
+                    <td>${usdToKes(parseFloat(user.wallet || 0))} KES</td>
                     <td><span class="status-badge ${user.verified ? 'status-approved' : 'status-pending'}">${user.verified ? '✓' : '✗'}</span></td>
                     <td><span class="status-badge ${user.active ? 'status-approved' : 'status-pending'}">${user.active ? '✓' : '✗'}</span></td>
                     <td><span class="status-badge ${user.membershipPaid ? 'status-approved' : 'status-pending'}">${user.membershipPaid ? 'Paid' : 'Pending'}</span></td>
@@ -2725,8 +2732,8 @@
                     const row = tbody.insertRow();
                     row.innerHTML = `
                         <td>${escapeHtml(task.title || 'Untitled')}</td>
-                        <td>$${(task.reward || 0).toFixed(2)}</td>
-                        <td>${usdToKes(task.reward || 0)} KES</td>
+                        <td>$${parseFloat(task.reward || 0).toFixed(2)}</td>
+                        <td>${usdToKes(parseFloat(task.reward || 0))} KES</td>
                         <td><span class="status-badge ${task.active ? 'status-approved' : 'status-pending'}">${task.active ? 'Active' : 'Inactive'}</span></td>
                         <td>${submissionsSnapshot.size}</td>
                         <td>${task.createdAt ? new Date(task.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
@@ -2821,17 +2828,20 @@
             tbody.innerHTML = '';
 
             submissions.forEach(sub => {
+                // Handle both field naming conventions
+                const workText = sub.workText || sub.WorkText || 'No work submitted';
+                
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${escapeHtml(sub.userEmail)}</td>
                     <td>${escapeHtml(sub.taskTitle)}</td>
-                    <td>${escapeHtml(sub.workText.substring(0, 100))}${sub.workText.length > 100 ? '...' : ''}</td>
+                    <td>${escapeHtml(workText.substring(0, 100))}${workText.length > 100 ? '...' : ''}</td>
                     <td><span class="status-badge status-${sub.status}">${sub.status}</span></td>
                     <td>${sub.score ? sub.score + '%' : '-'}</td>
                     <td>${sub.submittedAt ? new Date(sub.submittedAt.toDate()).toLocaleString() : sub.createdAt ? new Date(sub.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td>
                         ${sub.status === 'pending' ? `
-                            <button class="action-btn btn-approve" onclick="openReviewModal('${sub.id}', '${sub.userId}', '${escapeHtml(sub.userEmail)}', '${escapeHtml(sub.taskTitle)}', '${escapeHtml(sub.workText)}')">
+                            <button class="action-btn btn-approve" onclick="openReviewModal('${sub.id}', '${sub.userId}', '${escapeHtml(sub.userEmail)}', '${escapeHtml(sub.taskTitle)}', '${escapeHtml(workText)}')">
                                 Review
                             </button>
                         ` : ''}
@@ -2869,8 +2879,8 @@
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${escapeHtml(withdrawal.userEmail)}</td>
-                    <td>$${withdrawal.amount?.toFixed(2)}</td>
-                    <td>${withdrawal.amountKES || usdToKes(withdrawal.amount || 0)} KES</td>
+                    <td>$${parseFloat(withdrawal.amount || 0).toFixed(2)}</td>
+                    <td>${withdrawal.amountKES || usdToKes(parseFloat(withdrawal.amount || 0))} KES</td>
                     <td>${withdrawal.method?.toUpperCase()}</td>
                     <td>${escapeHtml(withdrawal.phone)}</td>
                     <td><span class="status-badge ${withdrawal.status === 'paid' ? 'status-approved' : 'status-pending'}">${withdrawal.status}</span></td>
