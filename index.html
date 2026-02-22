@@ -145,6 +145,15 @@
             font-weight: 600;
         }
 
+        .membership-badge {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
         .nav-btn {
             padding: 8px 20px;
             border: none;
@@ -172,6 +181,125 @@
 
         .btn-switch:hover {
             background: var(--primary-dark);
+        }
+
+        /* Membership Banner */
+        .membership-banner {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 5px solid #f59e0b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .membership-banner h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .membership-banner p {
+            margin-bottom: 5px;
+        }
+
+        .btn-pay {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-pay:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Payment Modal */
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .payment-modal.active {
+            display: flex;
+        }
+
+        .payment-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .payment-content h2 {
+            color: var(--dark);
+            margin-bottom: 20px;
+        }
+
+        .payment-content .price {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .payment-content .btn-pay-now {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .payment-content textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 14px;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .payment-content .btn-verify {
+            background: var(--success);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
         }
 
         /* Cards */
@@ -688,12 +816,14 @@
         }
 
         .status-approved,
-        .status-paid {
+        .status-paid,
+        .status-success {
             background: #c6f6d5;
             color: #22543d;
         }
 
-        .status-rejected {
+        .status-rejected,
+        .status-failed {
             background: #fed7d7;
             color: #742a2a;
         }
@@ -732,6 +862,21 @@
 
         .btn-pay {
             background: #9f7aea;
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-failed {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-message {
+            background: var(--info);
             color: white;
         }
 
@@ -853,27 +998,6 @@
         .modal-buttons button:last-child:hover {
             background: #cbd5e0;
             transform: translateY(-2px);
-        }
-
-        /* Review Modal */
-        .review-score-input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            margin: 15px 0;
-            font-size: 16px;
-        }
-
-        .review-feedback-input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            margin: 15px 0;
-            font-size: 15px;
-            min-height: 120px;
-            resize: vertical;
         }
 
         /* Messages */
@@ -1159,14 +1283,27 @@
             <div class="logo">💰 TaskEarn</div>
             <div class="user-info">
                 <button id="switchToAdminBtn" class="nav-btn btn-switch" onclick="switchToAdmin()" style="display: none;">Admin Panel</button>
+                <div id="membershipBadge" class="membership-badge" style="display: none;">⭐ Member</div>
                 <div class="wallet-badge" id="walletDisplay">$0.00</div>
                 <button class="nav-btn btn-logout" onclick="logout()">Logout</button>
             </div>
         </nav>
 
+        <!-- Membership Banner (shown if not paid) -->
+        <div id="membershipBanner" class="membership-banner">
+            <div>
+                <h3>🔓 Unlock Full Access - One Time Fee $3</h3>
+                <p>To start withdrawing and submitting tasks, you need to activate your membership.</p>
+                <p>✅ Submit unlimited tasks</p>
+                <p>✅ Withdraw earnings anytime</p>
+                <p>✅ Priority support</p>
+            </div>
+            <button class="btn-pay" onclick="openPaymentModal()">Pay $3 Now</button>
+        </div>
+
         <!-- Warning Banner -->
         <div id="userWarningBanner" class="warning-banner">
-            <strong>⚠️ Account Restricted:</strong> Your account needs to be activated by an admin before you can submit tasks.
+            <strong>⚠️ Account Restricted:</strong> Your account needs to be activated by an admin after membership payment.
         </div>
 
         <!-- Stats Grid -->
@@ -1194,6 +1331,7 @@
             <button class="tab-btn active" onclick="switchUserTab('available')">📋 Available Tasks</button>
             <button class="tab-btn" onclick="switchUserTab('submissions')">📝 My Submissions</button>
             <button class="tab-btn" onclick="switchUserTab('withdrawals')">💰 Withdrawals</button>
+            <button class="tab-btn" onclick="switchUserTab('messages')">💬 Messages</button>
         </div>
 
         <!-- Available Tasks Panel -->
@@ -1247,6 +1385,12 @@
                 </table>
             </div>
         </div>
+
+        <!-- Messages Panel -->
+        <div id="userMessagesPanel" class="tab-panel">
+            <h2 class="section-title">💬 Messages from Admin</h2>
+            <div id="messagesContainer" class="submissions-grid"></div>
+        </div>
     </div>
 
     <!-- Admin Dashboard View -->
@@ -1267,8 +1411,8 @@
                 <div class="stat-value admin-stat-value" id="adminTotalUsers">0</div>
             </div>
             <div class="stat-card admin-stat-card">
-                <div class="stat-title admin-stat-title">Pending Activations</div>
-                <div class="stat-value admin-stat-value" id="adminPendingActivations">0</div>
+                <div class="stat-title admin-stat-title">Pending Memberships</div>
+                <div class="stat-value admin-stat-value" id="adminPendingMemberships">0</div>
             </div>
             <div class="stat-card admin-stat-card">
                 <div class="stat-title admin-stat-title">Pending Reviews</div>
@@ -1284,8 +1428,10 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchAdminTab('tasks')">📋 Tasks</button>
             <button class="tab-btn" onclick="switchAdminTab('users')">👥 Users</button>
-            <button class="tab-btn" onclick="switchAdminTab('reviews')">⭐ Pending Reviews</button>
+            <button class="tab-btn" onclick="switchAdminTab('memberships')">⭐ Memberships</button>
+            <button class="tab-btn" onclick="switchAdminTab('reviews')">📝 Reviews</button>
             <button class="tab-btn" onclick="switchAdminTab('withdrawals')">💰 Withdrawals</button>
+            <button class="tab-btn" onclick="switchAdminTab('messages')">💬 Messages</button>
         </div>
 
         <!-- Tasks Panel -->
@@ -1350,6 +1496,7 @@
                             <th>Wallet</th>
                             <th>Verified</th>
                             <th>Active</th>
+                            <th>Membership</th>
                             <th>Role</th>
                             <th>Joined</th>
                             <th>Actions</th>
@@ -1360,10 +1507,33 @@
             </div>
         </div>
 
+        <!-- Memberships Panel -->
+        <div id="adminMembershipsPanel" class="tab-panel">
+            <div class="table-container admin-table-container">
+                <h3 style="color: white; margin-bottom: 20px;">⭐ Pending Membership Payments</h3>
+                <div class="filter-bar">
+                    <input type="text" id="membershipSearch" placeholder="Search payments..." onkeyup="filterMemberships()">
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Payment Message</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminMembershipsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Reviews Panel -->
         <div id="adminReviewsPanel" class="tab-panel">
             <div class="table-container admin-table-container">
-                <h3 style="color: white; margin-bottom: 20px;">⭐ Pending Submissions to Review</h3>
+                <h3 style="color: white; margin-bottom: 20px;">📝 Pending Submissions to Review</h3>
                 <div class="filter-bar">
                     <input type="text" id="reviewSearch" placeholder="Search submissions..." onkeyup="filterReviews()">
                 </div>
@@ -1409,6 +1579,66 @@
                     <tbody id="adminWithdrawalsBody"></tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- Messages Panel -->
+        <div id="adminMessagesPanel" class="tab-panel">
+            <div class="form-container admin-form">
+                <h3 style="color: white; margin-bottom: 20px;">💬 Send Message to User</h3>
+                <div class="form-group">
+                    <label>Select User</label>
+                    <select id="messageUserSelect">
+                        <option value="">Choose a user...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="adminMessageText" placeholder="Type your message here..." rows="4"></textarea>
+                </div>
+                <button class="btn btn-success" onclick="sendMessage()">Send Message</button>
+                <div id="messageAdminMessage" class="message admin-message"></div>
+            </div>
+
+            <div class="table-container admin-table-container">
+                <h3 style="color: white; margin-bottom: 20px;">📋 Message History</h3>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminMessagesBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="payment-modal">
+        <div class="payment-content">
+            <h2>💰 One Time Membership Fee</h2>
+            <div class="price">$3.00</div>
+            <p style="margin-bottom: 20px;">Click below to pay via Lipana.dev</p>
+            <button class="btn-pay-now" onclick="redirectToPayment()">Pay Now via Lipana.dev</button>
+            <p style="margin: 20px 0;">After payment, paste the confirmation message below:</p>
+            <textarea id="paymentMessage" placeholder="Paste the payment confirmation message here..."></textarea>
+            <button class="btn-verify" onclick="submitPaymentProof()">Submit for Verification</button>
+            <button class="btn" style="margin-top: 10px; background: #e2e8f0;" onclick="closePaymentModal()">Cancel</button>
+            <div id="paymentMessageDiv" class="message"></div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <h3>💬 Message from Admin</h3>
+            <div id="messageContent" style="background: #f8fafc; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                Loading...
+            </div>
+            <button class="btn" onclick="closeMessageModal()">Close</button>
         </div>
     </div>
 
@@ -1466,14 +1696,10 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Enable Firestore persistence for offline support
+        // Enable persistence
         db.enablePersistence()
             .catch((err) => {
-                if (err.code == 'failed-precondition') {
-                    console.log('Multiple tabs open, persistence disabled');
-                } else if (err.code == 'unimplemented') {
-                    console.log('Browser doesn\'t support persistence');
-                }
+                console.log('Persistence error:', err);
             });
 
         // Global variables
@@ -1485,6 +1711,8 @@
         let allTasks = [];
         let allSubmissions = [];
         let allWithdrawals = [];
+        let allMembershipPayments = [];
+        let allMessages = [];
 
         // Check auth state
         auth.onAuthStateChanged(async (user) => {
@@ -1501,6 +1729,9 @@
 
                 // Load user data
                 await loadUserData();
+                
+                // Check membership status
+                checkMembershipStatus();
                 
                 // Check if admin
                 if (userData && userData.role === 'admin') {
@@ -1562,7 +1793,7 @@
             if (tab === 'available') {
                 tabs[0].classList.add('active');
                 document.getElementById('availableTasksPanel').classList.add('active');
-                loadUserTasks(); // Reload tasks when tab is opened
+                loadUserTasks();
             } else if (tab === 'submissions') {
                 tabs[1].classList.add('active');
                 document.getElementById('mySubmissionsPanel').classList.add('active');
@@ -1571,6 +1802,10 @@
                 tabs[2].classList.add('active');
                 document.getElementById('userWithdrawalsPanel').classList.add('active');
                 loadWithdrawalsHistory();
+            } else if (tab === 'messages') {
+                tabs[3].classList.add('active');
+                document.getElementById('userMessagesPanel').classList.add('active');
+                loadUserMessages();
             }
         }
 
@@ -1628,27 +1863,25 @@
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
-                // Send email verification
                 await user.sendEmailVerification();
 
-                // Create user profile in Firestore
                 await db.collection('users').doc(user.uid).set({
                     email: user.email,
                     role: 'user',
                     wallet: 0,
                     active: false,
                     verified: false,
+                    membershipPaid: false,
+                    membershipStatus: 'pending',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                showAuthMessage('Registration successful! Verification email sent. Please check your inbox.', 'success');
+                showAuthMessage('Registration successful! Verification email sent.', 'success');
                 
-                // Clear form
                 document.getElementById('regEmail').value = '';
                 document.getElementById('regPassword').value = '';
                 document.getElementById('regConfirmPassword').value = '';
                 
-                // Switch to login tab after 3 seconds
                 setTimeout(() => switchAuthTab('login'), 3000);
             } catch (error) {
                 showAuthMessage(error.message, 'error');
@@ -1666,7 +1899,6 @@
 
             try {
                 await auth.signInWithEmailAndPassword(email, password);
-                // Auth state will handle the rest
             } catch (error) {
                 showAuthMessage(error.message, 'error');
             }
@@ -1683,39 +1915,34 @@
             }
         }
 
-        // Handle redirect result for Google Sign-In
         auth.getRedirectResult().then(async (result) => {
             if (result.user) {
                 const user = result.user;
                 
-                // Check if user exists in Firestore
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 
                 if (!userDoc.exists) {
-                    // Create new user profile for Google users (auto-verified)
                     await db.collection('users').doc(user.uid).set({
                         email: user.email,
                         role: 'user',
                         wallet: 0,
                         active: false,
                         verified: true,
+                        membershipPaid: false,
+                        membershipStatus: 'pending',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
             }
         }).catch((error) => {
             console.error('Redirect result error:', error);
-            if (document.getElementById('authView').style.display !== 'none') {
-                showAuthMessage(error.message, 'error');
-            }
         });
 
-        // Email verification functions
         async function resendVerificationEmail() {
             if (currentUser) {
                 try {
                     await currentUser.sendEmailVerification();
-                    showVerificationMessage('Verification email sent! Please check your inbox.', 'success');
+                    showVerificationMessage('Verification email sent!', 'success');
                 } catch (error) {
                     showVerificationMessage(error.message, 'error');
                 }
@@ -1733,7 +1960,7 @@
                         showView('user');
                         await loadUserDashboard();
                     } else {
-                        showVerificationMessage('Email not verified yet. Please check your inbox and click the verification link.', 'error');
+                        showVerificationMessage('Email not verified yet.', 'error');
                     }
                 } catch (error) {
                     showVerificationMessage(error.message, 'error');
@@ -1756,6 +1983,68 @@
             }
         }
 
+        // Membership functions
+        function checkMembershipStatus() {
+            const membershipBanner = document.getElementById('membershipBanner');
+            const membershipBadge = document.getElementById('membershipBadge');
+            
+            if (userData.membershipPaid) {
+                membershipBanner.style.display = 'none';
+                membershipBadge.style.display = 'inline-block';
+            } else {
+                membershipBanner.style.display = 'flex';
+                membershipBadge.style.display = 'none';
+            }
+        }
+
+        function openPaymentModal() {
+            document.getElementById('paymentModal').classList.add('active');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.getElementById('paymentMessage').value = '';
+        }
+
+        function redirectToPayment() {
+            // Open Lipana.dev payment page in new tab
+            window.open('https://lipana.dev/pay/3', '_blank');
+        }
+
+        async function submitPaymentProof() {
+            const message = document.getElementById('paymentMessage').value.trim();
+            
+            if (!message) {
+                showPaymentMessage('Please paste the payment confirmation message', 'error');
+                return;
+            }
+
+            try {
+                await db.collection('membershipPayments').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    message: message,
+                    amount: 3,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showPaymentMessage('Payment proof submitted! Admin will verify shortly.', 'success');
+                
+                setTimeout(() => {
+                    closePaymentModal();
+                }, 3000);
+            } catch (error) {
+                showPaymentMessage(error.message, 'error');
+            }
+        }
+
+        function showPaymentMessage(text, type) {
+            const messageDiv = document.getElementById('paymentMessageDiv');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+        }
+
         // User dashboard functions
         async function loadUserData() {
             try {
@@ -1764,8 +2053,6 @@
                     userData = userDoc.data();
                     console.log('User data loaded:', userData);
                     updateWalletDisplay();
-                } else {
-                    console.log('No user document found');
                 }
             } catch (error) {
                 console.error('Error loading user data:', error);
@@ -1801,9 +2088,9 @@
                 const tasksContainer = document.getElementById('tasksContainer');
                 tasksContainer.innerHTML = '<div class="loading-spinner active"><div class="spinner"></div><p>Loading tasks...</p></div>';
 
+                // Simple query without orderBy first to avoid index issues
                 const tasksSnapshot = await db.collection('tasks')
                     .where('active', '==', true)
-                    .orderBy('createdAt', 'desc')
                     .get();
 
                 console.log('Tasks snapshot:', tasksSnapshot.size, 'tasks found');
@@ -1811,20 +2098,30 @@
                 tasksContainer.innerHTML = '';
 
                 if (tasksSnapshot.empty) {
-                    tasksContainer.innerHTML = '<div class="empty-state"><i>📭</i><p>No tasks available at the moment. Check back later!</p></div>';
+                    tasksContainer.innerHTML = '<div class="empty-state"><i>📭</i><p>No tasks available at the moment.</p></div>';
                     return;
                 }
 
+                // Sort manually
+                const tasks = [];
                 tasksSnapshot.forEach(doc => {
-                    const task = doc.data();
-                    const taskId = doc.id;
-                    
-                    console.log('Task data:', taskId, task);
-                    
+                    tasks.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                // Sort by createdAt descending
+                tasks.sort((a, b) => {
+                    if (!a.createdAt) return 1;
+                    if (!b.createdAt) return -1;
+                    return b.createdAt.toDate() - a.createdAt.toDate();
+                });
+
+                tasks.forEach(task => {
                     const taskCard = document.createElement('div');
                     taskCard.className = 'task-card';
                     
-                    // Ensure all fields exist with defaults
                     const title = task.title || 'Untitled Task';
                     const description = task.description || 'No description provided';
                     const reward = task.reward || 0;
@@ -1837,8 +2134,8 @@
                             <span class="task-reward">$${reward.toFixed(2)}</span>
                             <span class="task-status">📊 ${submissionsCount} submitted</span>
                         </div>
-                        <button class="view-details-btn" onclick="openTaskDetails('${taskId}')" ${!userData?.active ? 'disabled' : ''}>
-                            ${userData?.active ? 'View Details & Submit' : 'Account Inactive'}
+                        <button class="view-details-btn" onclick="openTaskDetails('${task.id}')" ${!userData?.membershipPaid || !userData?.active ? 'disabled' : ''}>
+                            ${!userData?.membershipPaid ? 'Pay Membership First' : !userData?.active ? 'Account Inactive' : 'View Details & Submit'}
                         </button>
                     `;
                     
@@ -1846,7 +2143,7 @@
                 });
             } catch (error) {
                 console.error('Error loading tasks:', error);
-                document.getElementById('tasksContainer').innerHTML = '<div class="empty-state error"><p>Error loading tasks. Please refresh the page.</p></div>';
+                document.getElementById('tasksContainer').innerHTML = '<div class="empty-state error"><p>Error loading tasks. Please refresh.</p></div>';
             }
         }
 
@@ -1864,7 +2161,6 @@
                 ).length;
                 document.getElementById('approvedTasks').textContent = approvedSubmissions;
 
-                // Calculate average score
                 let totalScore = 0;
                 let scoredCount = 0;
                 submissionsSnapshot.docs.forEach(doc => {
@@ -1893,7 +2189,7 @@
                 submissionsContainer.innerHTML = '';
 
                 if (snapshot.empty) {
-                    submissionsContainer.innerHTML = '<div class="empty-state"><i>📝</i><p>You haven\'t submitted any tasks yet.</p></div>';
+                    submissionsContainer.innerHTML = '<div class="empty-state"><i>📝</i><p>No submissions yet.</p></div>';
                     return;
                 }
 
@@ -1919,7 +2215,7 @@
                     } else if (submission.status === 'rejected' && submission.review) {
                         reviewHtml = `
                             <div class="submission-review">
-                                <div class="review-feedback" style="background: #fff5f5; border-left-color: var(--danger);">
+                                <div class="review-feedback" style="background: #fff5f5;">
                                     <strong>Feedback:</strong> ${escapeHtml(submission.review)}
                                 </div>
                             </div>
@@ -1970,14 +2266,67 @@
                     `;
                 });
             } catch (error) {
-                console.error('Error loading withdrawals history:', error);
+                console.error('Error loading withdrawals:', error);
             }
+        }
+
+        async function loadUserMessages() {
+            try {
+                const snapshot = await db.collection('messages')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                const container = document.getElementById('messagesContainer');
+                container.innerHTML = '';
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="empty-state"><i>💬</i><p>No messages yet.</p></div>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const message = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'submission-card';
+                    card.style.cursor = 'pointer';
+                    card.onclick = () => showMessage(message.message);
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="font-weight: 600;">📩 Message from Admin</span>
+                            <span style="font-size: 12px; color: #718096;">${message.createdAt ? new Date(message.createdAt.toDate()).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                        <div class="submission-work" style="max-height: 100px;">
+                            ${escapeHtml(message.message.substring(0, 150))}${message.message.length > 150 ? '...' : ''}
+                        </div>
+                        <div style="margin-top: 10px; color: var(--info); font-size: 12px;">Click to read full message</div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        function showMessage(message) {
+            document.getElementById('messageContent').textContent = message;
+            document.getElementById('messageModal').classList.add('active');
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').classList.remove('active');
         }
 
         // Task details modal
         async function openTaskDetails(taskId) {
+            if (!userData.membershipPaid) {
+                alert('Please pay the membership fee first to access tasks.');
+                openPaymentModal();
+                return;
+            }
+
             if (!userData.active) {
-                alert('Your account must be activated by an admin to submit tasks.');
+                alert('Your account must be activated by an admin after membership payment.');
                 return;
             }
 
@@ -1992,12 +2341,12 @@
 
                 selectedTaskId = taskId;
                 document.getElementById('modalTaskTitle').textContent = task.title || 'Untitled Task';
-                document.getElementById('modalTaskDescription').textContent = task.description || 'No description provided';
+                document.getElementById('modalTaskDescription').textContent = task.description || 'No description';
                 document.getElementById('modalTaskReward').textContent = (task.reward || 0).toFixed(2);
                 document.getElementById('workText').value = '';
                 document.getElementById('taskDetailsModal').classList.add('active');
             } catch (error) {
-                console.error('Error loading task details:', error);
+                console.error('Error loading task:', error);
                 alert('Error loading task details');
             }
         }
@@ -2025,7 +2374,6 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Update task submission count
                 const taskRef = db.collection('tasks').doc(selectedTaskId);
                 await taskRef.update({
                     submissionsCount: firebase.firestore.FieldValue.increment(1)
@@ -2036,7 +2384,7 @@
                 setTimeout(() => {
                     closeTaskModal();
                     loadUserStats();
-                    switchUserTab('submissions'); // Switch to submissions tab to see the new submission
+                    switchUserTab('submissions');
                 }, 2000);
             } catch (error) {
                 showModalMessage(error.message, 'error');
@@ -2050,27 +2398,33 @@
         }
 
         async function requestWithdrawal() {
+            if (!userData.membershipPaid) {
+                alert('Please pay the membership fee first to withdraw.');
+                openPaymentModal();
+                return;
+            }
+
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             const phone = document.getElementById('withdrawPhone').value;
 
             if (!amount || amount <= 0) {
-                showWithdrawMessage('Please enter a valid amount.', 'error');
+                showWithdrawMessage('Enter valid amount', 'error');
                 return;
             }
 
             if (amount > userData.wallet) {
-                showWithdrawMessage('Insufficient balance.', 'error');
+                showWithdrawMessage('Insufficient balance', 'error');
                 return;
             }
 
             if (!phone) {
-                showWithdrawMessage('Please enter your phone number.', 'error');
+                showWithdrawMessage('Enter phone number', 'error');
                 return;
             }
 
             if (!userData.active) {
-                showWithdrawMessage('Your account must be activated to withdraw.', 'error');
+                showWithdrawMessage('Account must be activated', 'error');
                 return;
             }
 
@@ -2084,7 +2438,7 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                showWithdrawMessage('Withdrawal request submitted successfully!', 'success');
+                showWithdrawMessage('Withdrawal requested!', 'success');
                 
                 document.getElementById('withdrawAmount').value = '';
                 document.getElementById('withdrawPhone').value = '';
@@ -2099,10 +2453,6 @@
             const messageDiv = document.getElementById('withdrawMessage');
             messageDiv.textContent = text;
             messageDiv.className = `message ${type}`;
-            
-            setTimeout(() => {
-                messageDiv.className = 'message';
-            }, 5000);
         }
 
         // Admin functions
@@ -2110,8 +2460,10 @@
             await loadAdminStats();
             await loadAdminUsers();
             await loadAdminTasks();
+            await loadAdminMemberships();
             await loadAdminReviews();
             await loadAdminWithdrawals();
+            await loadAdminMessages();
         }
 
         async function loadAdminStats() {
@@ -2119,20 +2471,17 @@
                 const usersSnapshot = await db.collection('users').get();
                 document.getElementById('adminTotalUsers').textContent = usersSnapshot.size;
 
-                const pendingActivations = usersSnapshot.docs.filter(doc => 
-                    doc.data().active === false && doc.data().verified === true
-                ).length;
-                document.getElementById('adminPendingActivations').textContent = pendingActivations;
+                const pendingMemberships = (await db.collection('membershipPayments')
+                    .where('status', '==', 'pending').get()).size;
+                document.getElementById('adminPendingMemberships').textContent = pendingMemberships;
 
-                const pendingReviewsSnapshot = await db.collection('submissions')
-                    .where('status', '==', 'pending')
-                    .get();
-                document.getElementById('adminPendingReviews').textContent = pendingReviewsSnapshot.size;
+                const pendingReviews = (await db.collection('submissions')
+                    .where('status', '==', 'pending').get()).size;
+                document.getElementById('adminPendingReviews').textContent = pendingReviews;
 
-                const pendingWithdrawalsSnapshot = await db.collection('withdrawals')
-                    .where('status', '==', 'pending')
-                    .get();
-                document.getElementById('adminPendingWithdrawals').textContent = pendingWithdrawalsSnapshot.size;
+                const pendingWithdrawals = (await db.collection('withdrawals')
+                    .where('status', '==', 'pending').get()).size;
+                document.getElementById('adminPendingWithdrawals').textContent = pendingWithdrawals;
             } catch (error) {
                 console.error('Error loading stats:', error);
             }
@@ -2146,6 +2495,15 @@
                     ...doc.data()
                 }));
                 displayAdminUsers(allUsers);
+                
+                // Populate user select for messages
+                const select = document.getElementById('messageUserSelect');
+                select.innerHTML = '<option value="">Choose a user...</option>';
+                allUsers.forEach(user => {
+                    if (user.role !== 'admin') {
+                        select.innerHTML += `<option value="${user.id}">${escapeHtml(user.email)}</option>`;
+                    }
+                });
             } catch (error) {
                 console.error('Error loading users:', error);
             }
@@ -2160,8 +2518,9 @@
                 row.innerHTML = `
                     <td>${escapeHtml(user.email)}</td>
                     <td>$${user.wallet?.toFixed(2) || '0.00'}</td>
-                    <td><span class="status-badge ${user.verified ? 'status-approved' : 'status-pending'}">${user.verified ? '✓ Verified' : '✗ Unverified'}</span></td>
-                    <td><span class="status-badge ${user.active ? 'status-approved' : 'status-pending'}">${user.active ? '✓ Active' : '✗ Inactive'}</span></td>
+                    <td><span class="status-badge ${user.verified ? 'status-approved' : 'status-pending'}">${user.verified ? '✓' : '✗'}</span></td>
+                    <td><span class="status-badge ${user.active ? 'status-approved' : 'status-pending'}">${user.active ? '✓' : '✗'}</span></td>
+                    <td><span class="status-badge ${user.membershipPaid ? 'status-approved' : 'status-pending'}">${user.membershipPaid ? 'Paid' : 'Pending'}</span></td>
                     <td><span class="status-badge" style="background: ${user.role === 'admin' ? '#9f7aea' : '#4a5568'}">${user.role || 'user'}</span></td>
                     <td>${user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
                     <td>
@@ -2181,7 +2540,6 @@
                     id: doc.id,
                     ...doc.data()
                 }));
-                console.log('Admin tasks loaded:', allTasks);
                 displayAdminTasks(allTasks);
             } catch (error) {
                 console.error('Error loading tasks:', error);
@@ -2211,9 +2569,54 @@
                         </td>
                     `;
                 } catch (error) {
-                    console.error('Error displaying task:', task.id, error);
+                    console.error('Error displaying task:', error);
                 }
             }
+        }
+
+        async function loadAdminMemberships() {
+            try {
+                const snapshot = await db.collection('membershipPayments')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                allMembershipPayments = await Promise.all(snapshot.docs.map(async doc => {
+                    const data = doc.data();
+                    const userDoc = await db.collection('users').doc(data.userId).get();
+                    const userEmail = userDoc.exists ? userDoc.data().email : 'Unknown';
+                    
+                    return {
+                        id: doc.id,
+                        ...data,
+                        userEmail
+                    };
+                }));
+                displayAdminMemberships(allMembershipPayments);
+            } catch (error) {
+                console.error('Error loading memberships:', error);
+            }
+        }
+
+        function displayAdminMemberships(payments) {
+            const tbody = document.getElementById('adminMembershipsBody');
+            tbody.innerHTML = '';
+
+            payments.forEach(payment => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${escapeHtml(payment.userEmail)}</td>
+                    <td>${escapeHtml(payment.message.substring(0, 50))}...</td>
+                    <td>$${payment.amount}</td>
+                    <td>${payment.createdAt ? new Date(payment.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
+                    <td><span class="status-badge ${payment.status === 'approved' ? 'status-approved' : 'status-pending'}">${payment.status}</span></td>
+                    <td>
+                        ${payment.status === 'pending' ? `
+                            <button class="action-btn btn-success" onclick="approveMembership('${payment.id}', '${payment.userId}')">✓ Approve</button>
+                            <button class="action-btn btn-failed" onclick="rejectMembership('${payment.id}')">✗ Reject</button>
+                        ` : ''}
+                    </td>
+                `;
+            });
         }
 
         async function loadAdminReviews() {
@@ -2308,6 +2711,44 @@
             });
         }
 
+        async function loadAdminMessages() {
+            try {
+                const snapshot = await db.collection('messages')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                allMessages = await Promise.all(snapshot.docs.map(async doc => {
+                    const data = doc.data();
+                    const userDoc = await db.collection('users').doc(data.userId).get();
+                    const userEmail = userDoc.exists ? userDoc.data().email : 'Unknown';
+                    
+                    return {
+                        id: doc.id,
+                        ...data,
+                        userEmail
+                    };
+                }));
+                displayAdminMessages(allMessages);
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        function displayAdminMessages(messages) {
+            const tbody = document.getElementById('adminMessagesBody');
+            tbody.innerHTML = '';
+
+            messages.forEach(msg => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${escapeHtml(msg.userEmail)}</td>
+                    <td>${escapeHtml(msg.message.substring(0, 100))}${msg.message.length > 100 ? '...' : ''}</td>
+                    <td>${msg.createdAt ? new Date(msg.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
+                    <td><span class="status-badge status-approved">Sent</span></td>
+                `;
+            });
+        }
+
         function switchAdminTab(tab) {
             const tabs = document.querySelectorAll('#adminDashboard .tab-btn');
             const panels = document.querySelectorAll('#adminDashboard .tab-panel');
@@ -2321,13 +2762,18 @@
             } else if (tab === 'users') {
                 tabs[1].classList.add('active');
                 document.getElementById('adminUsersPanel').classList.add('active');
-            } else if (tab === 'reviews') {
+            } else if (tab === 'memberships') {
                 tabs[2].classList.add('active');
-                document.getElementById('adminReviewsPanel').classList.add('active');
-                loadAdminReviews();
-            } else if (tab === 'withdrawals') {
+                document.getElementById('adminMembershipsPanel').classList.add('active');
+            } else if (tab === 'reviews') {
                 tabs[3].classList.add('active');
+                document.getElementById('adminReviewsPanel').classList.add('active');
+            } else if (tab === 'withdrawals') {
+                tabs[4].classList.add('active');
                 document.getElementById('adminWithdrawalsPanel').classList.add('active');
+            } else if (tab === 'messages') {
+                tabs[5].classList.add('active');
+                document.getElementById('adminMessagesPanel').classList.add('active');
             }
         }
 
@@ -2337,52 +2783,29 @@
             const reward = parseFloat(document.getElementById('taskReward').value);
             const active = document.getElementById('taskActive').value === 'true';
 
-            if (!title) {
-                showAdminMessage('taskMessage', 'Please enter a task title', 'error');
-                return;
-            }
-
-            if (!description) {
-                showAdminMessage('taskMessage', 'Please enter a task description', 'error');
-                return;
-            }
-
-            if (!reward || reward <= 0) {
-                showAdminMessage('taskMessage', 'Please enter a valid reward amount', 'error');
+            if (!title || !description || !reward) {
+                showAdminMessage('taskMessage', 'Please fill all fields', 'error');
                 return;
             }
 
             try {
-                const taskData = {
-                    title: title,
-                    description: description,
-                    reward: reward,
-                    active: active,
+                await db.collection('tasks').add({
+                    title,
+                    description,
+                    reward,
+                    active,
                     submissionsCount: 0,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
+                });
 
-                console.log('Creating task with data:', taskData);
-
-                await db.collection('tasks').add(taskData);
-
-                showAdminMessage('taskMessage', 'Task created successfully!', 'success');
+                showAdminMessage('taskMessage', 'Task created!', 'success');
                 
-                // Clear form
                 document.getElementById('taskTitle').value = '';
                 document.getElementById('taskDescription').value = '';
                 document.getElementById('taskReward').value = '';
                 
-                // Reload tasks
                 await loadAdminTasks();
-                await loadAdminStats();
-                
-                // Show success message and clear after 3 seconds
-                setTimeout(() => {
-                    document.getElementById('taskMessage').className = 'message admin-message';
-                }, 3000);
             } catch (error) {
-                console.error('Error creating task:', error);
                 showAdminMessage('taskMessage', error.message, 'error');
             }
         }
@@ -2420,7 +2843,7 @@
                 const newWallet = currentWallet + numAmount;
 
                 if (newWallet < 0) {
-                    alert('Insufficient balance for deduction');
+                    alert('Insufficient balance');
                     return;
                 }
 
@@ -2437,7 +2860,6 @@
                 await loadAdminUsers();
             } catch (error) {
                 console.error('Error adjusting wallet:', error);
-                alert('Error adjusting wallet: ' + error.message);
             }
         }
 
@@ -2451,13 +2873,79 @@
         }
 
         async function deleteTask(taskId) {
-            if (!confirm('Are you sure you want to delete this task?')) return;
+            if (!confirm('Delete this task?')) return;
             
             try {
                 await db.collection('tasks').doc(taskId).delete();
                 await loadAdminTasks();
             } catch (error) {
                 console.error('Error deleting task:', error);
+            }
+        }
+
+        // Membership approval
+        async function approveMembership(paymentId, userId) {
+            try {
+                await db.collection('membershipPayments').doc(paymentId).update({
+                    status: 'approved'
+                });
+
+                await db.collection('users').doc(userId).update({
+                    membershipPaid: true,
+                    membershipStatus: 'approved'
+                });
+
+                await db.collection('messages').add({
+                    userId: userId,
+                    message: 'Your membership payment has been approved! You can now access all features.',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await loadAdminMemberships();
+                await loadAdminStats();
+            } catch (error) {
+                console.error('Error approving membership:', error);
+            }
+        }
+
+        async function rejectMembership(paymentId) {
+            try {
+                await db.collection('membershipPayments').doc(paymentId).update({
+                    status: 'rejected'
+                });
+                await loadAdminMemberships();
+            } catch (error) {
+                console.error('Error rejecting membership:', error);
+            }
+        }
+
+        // Send message to user
+        async function sendMessage() {
+            const userId = document.getElementById('messageUserSelect').value;
+            const message = document.getElementById('adminMessageText').value.trim();
+
+            if (!userId) {
+                showAdminMessage('messageAdminMessage', 'Select a user', 'error');
+                return;
+            }
+
+            if (!message) {
+                showAdminMessage('messageAdminMessage', 'Enter a message', 'error');
+                return;
+            }
+
+            try {
+                await db.collection('messages').add({
+                    userId: userId,
+                    message: message,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showAdminMessage('messageAdminMessage', 'Message sent!', 'success');
+                document.getElementById('adminMessageText').value = '';
+                await loadAdminMessages();
+            } catch (error) {
+                showAdminMessage('messageAdminMessage', error.message, 'error');
             }
         }
 
@@ -2475,7 +2963,6 @@
         function closeReviewModal() {
             document.getElementById('reviewModal').classList.remove('active');
             selectedSubmissionId = null;
-            document.getElementById('reviewMessage').className = 'message';
         }
 
         async function submitReview() {
@@ -2483,28 +2970,24 @@
             const feedback = document.getElementById('reviewFeedback').value.trim();
 
             if (!score || score < 0 || score > 100) {
-                showReviewMessage('Please enter a valid score between 0 and 100.', 'error');
+                showReviewMessage('Enter score 0-100', 'error');
                 return;
             }
 
             if (!feedback) {
-                showReviewMessage('Please enter feedback for the user.', 'error');
+                showReviewMessage('Enter feedback', 'error');
                 return;
             }
 
             try {
-                // Get submission details
                 const submissionDoc = await db.collection('submissions').doc(selectedSubmissionId).get();
                 const submission = submissionDoc.data();
 
-                // Get task details for reward
                 const taskDoc = await db.collection('tasks').doc(submission.taskId).get();
                 const task = taskDoc.data();
 
-                // Calculate earned amount based on score percentage
                 const earned = (task.reward * score) / 100;
 
-                // Update submission
                 await db.collection('submissions').doc(selectedSubmissionId).update({
                     status: 'approved',
                     score: score,
@@ -2513,21 +2996,11 @@
                     reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Credit user wallet
                 await db.collection('users').doc(submission.userId).update({
                     wallet: firebase.firestore.FieldValue.increment(earned)
                 });
 
-                // Record transaction
-                await db.collection('transactions').add({
-                    userId: submission.userId,
-                    type: 'credit',
-                    amount: earned,
-                    reason: `Task reward (${score}% score)`,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                showReviewMessage('Review submitted successfully!', 'success');
+                showReviewMessage('Review submitted!', 'success');
                 
                 setTimeout(() => {
                     closeReviewModal();
@@ -2535,7 +3008,6 @@
                     loadAdminStats();
                 }, 2000);
             } catch (error) {
-                console.error('Error submitting review:', error);
                 showReviewMessage(error.message, 'error');
             }
         }
@@ -2563,51 +3035,58 @@
                 await loadAdminWithdrawals();
                 await loadAdminStats();
             } catch (error) {
-                console.error('Error marking withdrawal as paid:', error);
+                console.error('Error marking as paid:', error);
             }
         }
 
         // Filter functions
         function filterUsers() {
-            const searchTerm = document.getElementById('userSearch').value.toLowerCase();
-            const filtered = allUsers.filter(user => 
-                user.email.toLowerCase().includes(searchTerm)
-            );
+            const term = document.getElementById('userSearch').value.toLowerCase();
+            const filtered = allUsers.filter(u => u.email.toLowerCase().includes(term));
             displayAdminUsers(filtered);
         }
 
         function filterTasks() {
-            const searchTerm = document.getElementById('taskSearch').value.toLowerCase();
-            const filtered = allTasks.filter(task => 
-                (task.title || '').toLowerCase().includes(searchTerm) ||
-                (task.description || '').toLowerCase().includes(searchTerm)
+            const term = document.getElementById('taskSearch').value.toLowerCase();
+            const filtered = allTasks.filter(t => 
+                (t.title || '').toLowerCase().includes(term) ||
+                (t.description || '').toLowerCase().includes(term)
             );
             displayAdminTasks(filtered);
         }
 
+        function filterMemberships() {
+            const term = document.getElementById('membershipSearch').value.toLowerCase();
+            const filtered = allMembershipPayments.filter(p => 
+                (p.userEmail || '').toLowerCase().includes(term) ||
+                (p.message || '').toLowerCase().includes(term)
+            );
+            displayAdminMemberships(filtered);
+        }
+
         function filterReviews() {
-            const searchTerm = document.getElementById('reviewSearch').value.toLowerCase();
-            const filtered = allSubmissions.filter(sub => 
-                (sub.userEmail || '').toLowerCase().includes(searchTerm) ||
-                (sub.taskTitle || '').toLowerCase().includes(searchTerm)
+            const term = document.getElementById('reviewSearch').value.toLowerCase();
+            const filtered = allSubmissions.filter(s => 
+                (s.userEmail || '').toLowerCase().includes(term) ||
+                (s.taskTitle || '').toLowerCase().includes(term)
             );
             displayAdminReviews(filtered);
         }
 
         function filterWithdrawals() {
-            const searchTerm = document.getElementById('withdrawalSearch').value.toLowerCase();
-            const statusFilter = document.getElementById('withdrawalFilter').value;
+            const term = document.getElementById('withdrawalSearch').value.toLowerCase();
+            const status = document.getElementById('withdrawalFilter').value;
             
             const filtered = allWithdrawals.filter(w => {
-                const matchesSearch = (w.userEmail || '').toLowerCase().includes(searchTerm) ||
-                                    (w.phone || '').includes(searchTerm);
-                const matchesStatus = statusFilter === 'all' || w.status === statusFilter;
+                const matchesSearch = (w.userEmail || '').toLowerCase().includes(term) ||
+                                    (w.phone || '').includes(term);
+                const matchesStatus = status === 'all' || w.status === status;
                 return matchesSearch && matchesStatus;
             });
             displayAdminWithdrawals(filtered);
         }
 
-        // Helper function to escape HTML
+        // Escape HTML
         function escapeHtml(unsafe) {
             if (!unsafe) return '';
             return String(unsafe)
@@ -2617,22 +3096,6 @@
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
         }
-
-        // Debug function to check tasks in database
-        async function debugCheckTasks() {
-            try {
-                const snapshot = await db.collection('tasks').get();
-                console.log('All tasks in database:', snapshot.size);
-                snapshot.forEach(doc => {
-                    console.log('Task:', doc.id, doc.data());
-                });
-            } catch (error) {
-                console.error('Error checking tasks:', error);
-            }
-        }
-
-        // Call debug function on load
-        setTimeout(debugCheckTasks, 2000);
     </script>
 </body>
 </html>
