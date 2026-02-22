@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NextGen Academy  Pro - Trusted Task Platform</title>
+    <title>TaskEarn Pro - Trusted Task Platform</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -1643,7 +1643,7 @@
                 <i class="fas fa-shield-alt"></i>
                 <span>Secure & Trusted Platform</span>
             </div>
-            <h2 style="text-align: center; margin-bottom: 32px; font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🚀 NextGen Academy  Pro</h2>
+            <h2 style="text-align: center; margin-bottom: 32px; font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🚀 TaskEarn Pro</h2>
             
             <div class="tabs" style="background: transparent; padding: 0; margin-bottom: 24px;">
                 <button class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
@@ -1736,7 +1736,7 @@
         <nav class="navbar">
             <div class="logo">
                 <i class="fas fa-tasks"></i>
-                NextGen Academy  Pro
+                TaskEarn Pro
             </div>
             
             <!-- Hamburger Menu -->
@@ -1936,7 +1936,7 @@
                     <div class="support-card" onclick="openSupportModal('issue')">
                         <i class="fas fa-exclamation-triangle"></i>
                         <h4>Report Issue</h4>
-                        <p>Report any technical issues, payment problems, or account concerns.</p>
+<p>Report any technical issues, payment problems, or account concerns.</p>
                     </div>
 
                     <div class="support-card" onclick="openSupportModal('general')">
@@ -1954,7 +1954,7 @@
         <nav class="navbar admin-navbar">
             <div class="logo admin-logo">
                 <i class="fas fa-cog"></i>
-                NextGen Academy  Pro <span>Admin</span>
+                TaskEarn Pro <span>Admin</span>
             </div>
             
             <!-- Hamburger Menu for Admin -->
@@ -2322,7 +2322,7 @@
 
     <!-- Footer -->
     <div class="footer">
-        <p>© 2026 NextGen Academy  Pro. All rights reserved. | <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a> | <a href="#">Contact Us</a></p>
+        <p>© 2024 TaskEarn Pro. All rights reserved. | <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a> | <a href="#">Contact Us</a></p>
         <p style="margin-top: 8px; font-size: 12px;">Secure payments • 24/7 Support • Verified Platform</p>
     </div>
 
@@ -2371,6 +2371,14 @@
         // Helper function to convert USD to KES
         function usdToKes(usd) {
             return Math.round(usd * USD_TO_KES);
+        }
+
+        // Helper function to truncate text to specific number of words
+        function truncateWords(text, wordLimit) {
+            if (!text) return '';
+            const words = text.split(/\s+/);
+            if (words.length <= wordLimit) return text;
+            return words.slice(0, wordLimit).join(' ');
         }
 
         // Calculate earnings based on score
@@ -2876,7 +2884,7 @@
         }
 
         function redirectToPayment() {
-            window.open('https://lipana.dev/pay/nextgen-membership', '_blank');
+            window.open('https://lipana.dev/pay/387', '_blank');
         }
 
         async function submitPaymentProof() {
@@ -3118,7 +3126,7 @@
                         </div>
                         <div class="submission-work">
                             <strong>Your work:</strong><br>
-                            ${escapeHtml(workText.substring(0, 200))}${workText.length > 200 ? '...' : ''}
+                            ${escapeHtml(truncateWords(workText, 50))}${workText.split(/\s+/).length > 50 ? '...' : ''}
                         </div>
                         ${reviewHtml}
                         <div style="margin-top: 12px; font-size: 12px; color: var(--gray); display: flex; justify-content: space-between;">
@@ -3193,7 +3201,7 @@
                             <span style="font-size: 12px; color: var(--gray);"><i class="far fa-clock"></i> ${message.createdAt ? new Date(message.createdAt.toDate()).toLocaleDateString() : 'N/A'}</span>
                         </div>
                         <div class="submission-work" style="max-height: 100px;">
-                            ${escapeHtml(message.message.substring(0, 150))}${message.message.length > 150 ? '...' : ''}
+                            ${escapeHtml(truncateWords(message.message, 30))}${message.message.split(/\s+/).length > 30 ? '...' : ''}
                         </div>
                         <div style="margin-top: 12px; color: var(--info); font-size: 12px;"><i class="fas fa-hand-pointer"></i> Click to read full message</div>
                     `;
@@ -3531,7 +3539,7 @@
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${escapeHtml(payment.userEmail)}</td>
-                    <td>${escapeHtml(payment.message.substring(0, 50))}...</td>
+                    <td>${escapeHtml(truncateWords(payment.message, 20))}${payment.message.split(/\s+/).length > 20 ? '...' : ''}</td>
                     <td>$${payment.amount} (${payment.amountKES} KES)</td>
                     <td>${payment.createdAt ? new Date(payment.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td><span class="status-badge ${payment.status === 'approved' ? 'status-approved' : 'status-pending'}">${payment.status}</span></td>
@@ -3583,18 +3591,25 @@
                 const workText = sub.workText || sub.WorkText || 'No work submitted';
                 const earned = parseFloat(sub.earned || 0);
                 
+                // Truncate for preview (first 30 words)
+                const previewText = truncateWords(workText, 30);
+                // Escape for safe HTML display
+                const escapedPreviewText = escapeHtml(previewText);
+                // Escape the full text for the modal data attribute
+                const escapedFullText = escapeHtml(workText).replace(/'/g, "\\'");
+                
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${escapeHtml(sub.userEmail)}</td>
                     <td>${escapeHtml(sub.taskTitle)}</td>
-                    <td>${escapeHtml(workText.substring(0, 100))}${workText.length > 100 ? '...' : ''}</td>
+                    <td>${escapedPreviewText}${workText.split(/\s+/).length > 30 ? '...' : ''}</td>
                     <td><span class="status-badge status-${sub.status}">${sub.status}</span></td>
                     <td>${sub.score ? sub.score + '%' : '-'}</td>
                     <td>${earned > 0 ? '$' + earned.toFixed(2) : (sub.status === 'approved' ? 'No reward' : '-')}</td>
                     <td>${sub.submittedAt ? new Date(sub.submittedAt.toDate()).toLocaleString() : sub.createdAt ? new Date(sub.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td>
                         ${sub.status === 'pending' ? `
-                            <button class="action-btn btn-approve" onclick="openReviewModal('${sub.id}', '${sub.userId}', '${escapeHtml(sub.userEmail)}', '${escapeHtml(sub.taskTitle)}', '${escapeHtml(workText)}', ${sub.taskReward})">
+                            <button class="action-btn btn-approve" onclick='openReviewModal("${sub.id}", "${sub.userId}", "${escapeHtml(sub.userEmail)}", "${escapeHtml(sub.taskTitle)}", "${escapedFullText}", ${sub.taskReward})'>
                                 <i class="fas fa-star"></i> Review
                             </button>
                         ` : ''}
@@ -3678,7 +3693,7 @@
                 const row = tbody.insertRow();
                 row.innerHTML = `
                     <td>${escapeHtml(msg.userEmail)}</td>
-                    <td>${escapeHtml(msg.message.substring(0, 100))}${msg.message.length > 100 ? '...' : ''}</td>
+                    <td>${escapeHtml(truncateWords(msg.message, 30))}${msg.message.split(/\s+/).length > 30 ? '...' : ''}</td>
                     <td>${msg.createdAt ? new Date(msg.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                     <td><span class="status-badge status-approved">Sent</span></td>
                 `;
