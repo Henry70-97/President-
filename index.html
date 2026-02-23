@@ -163,7 +163,7 @@
         }
 
         .progress-bar.pending {
-            background: linear-gradient(90deg, var(--accent-yellow), #fbbf24);
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
         }
 
         .progress-bar.approved {
@@ -171,11 +171,11 @@
         }
 
         .progress-bar.rejected {
-            background: linear-gradient(90deg, var(--accent-red), #f87171);
+            background: linear-gradient(90deg, #ef4444, #f87171);
         }
 
         .progress-bar.withdrawal {
-            background: linear-gradient(90deg, var(--accent-blue), #60a5fa);
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
         }
 
         /* Toast Notifications */
@@ -207,15 +207,15 @@
         }
 
         .toast.error {
-            border-left-color: var(--accent-red);
+            border-left-color: #ef4444;
         }
 
         .toast.info {
-            border-left-color: var(--accent-blue);
+            border-left-color: #3b82f6;
         }
 
         .toast.warning {
-            border-left-color: var(--accent-yellow);
+            border-left-color: #f59e0b;
         }
 
         .toast-icon {
@@ -227,15 +227,15 @@
         }
 
         .toast.error .toast-icon {
-            color: var(--accent-red);
+            color: #ef4444;
         }
 
         .toast.info .toast-icon {
-            color: var(--accent-blue);
+            color: #3b82f6;
         }
 
         .toast.warning .toast-icon {
-            color: var(--accent-yellow);
+            color: #f59e0b;
         }
 
         .toast-content {
@@ -295,9 +295,8 @@
         }
 
         .action-feedback.info {
-            background: var(--accent-blue);
-            color: white;
-            opacity: 0.1;
+            background: #dbeafe;
+            color: #1e40af;
         }
 
         .action-feedback i {
@@ -591,7 +590,7 @@
         }
 
         .membership-badge {
-            background: var(--accent-yellow);
+            background: #f59e0b;
             color: white;
             padding: 8px 20px;
             border-radius: 40px;
@@ -639,7 +638,7 @@
 
         /* Membership Banner */
         .membership-banner {
-            background: var(--accent-yellow);
+            background: #f59e0b;
             color: var(--text-primary);
             padding: 24px;
             border-radius: 16px;
@@ -693,7 +692,7 @@
             padding: 16px;
             border-radius: 12px;
             margin-bottom: 24px;
-            border-left: 4px solid var(--accent-red);
+            border-left: 4px solid #ef4444;
             display: none;
             font-weight: 500;
         }
@@ -961,7 +960,7 @@
         }
 
         .submission-card.pending {
-            border-left-color: var(--accent-yellow);
+            border-left-color: #f59e0b;
         }
 
         .submission-card.approved {
@@ -969,7 +968,7 @@
         }
 
         .submission-card.rejected {
-            border-left-color: var(--accent-red);
+            border-left-color: #ef4444;
         }
 
         .submission-header {
@@ -1077,7 +1076,7 @@
         .no-reward {
             font-size: 0.85rem;
             font-weight: 600;
-            color: var(--accent-red);
+            color: #ef4444;
             background: var(--status-rejected-bg);
             padding: 4px 12px;
             border-radius: 40px;
@@ -1306,9 +1305,19 @@
         }
 
         .btn-reject {
-            background: var(--accent-red);
+            background: #ef4444;
             color: white;
             border: none;
+        }
+
+        .btn-pay {
+            background: #3b82f6;
+            color: white;
+            border: none;
+        }
+
+        .btn-pay:hover {
+            background: #2563eb;
         }
 
         /* Modal */
@@ -1535,7 +1544,7 @@
         .message.error {
             background: var(--status-rejected-bg);
             color: var(--status-rejected-text);
-            border: 1px solid var(--accent-red);
+            border: 1px solid #ef4444;
         }
 
         .message.info {
@@ -2227,7 +2236,6 @@
 
     <!-- Admin Dashboard View -->
     <div id="adminDashboard" class="admin-container">
-        <!-- Admin dashboard content (same as before) -->
         <nav class="navbar">
             <div class="logo">
                 <i class="fas fa-cog"></i>
@@ -3412,14 +3420,14 @@
                     if (latestPending) {
                         const date = latestPending.data().createdAt?.toDate();
                         if (date) {
-                            document.getElementById('latestWithdrawalTime').textContent = `Latest: ${date.toLocaleDateString()}`;
+                            document.getElementById('latestWithdrawalTime').textContent = `Latest: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
                         }
                     }
                     
                     if (latestPaid) {
                         const date = latestPaid.data().paidAt?.toDate() || latestPaid.data().createdAt?.toDate();
                         if (date) {
-                            document.getElementById('lastPaidTime').textContent = `Last: ${date.toLocaleDateString()}`;
+                            document.getElementById('lastPaidTime').textContent = `Last: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
                         }
                     }
                 }
@@ -3532,7 +3540,7 @@
                     progressCell.appendChild(progressContainer);
                     
                     row.innerHTML = `
-                        <td>${w.createdAt ? new Date(w.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
+                        <td>${w.createdAt ? new Date(w.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                         <td>$${parseFloat(w.amount || 0).toFixed(2)}</td>
                         <td>${w.amountKES || usdToKes(w.amount || 0)} KES</td>
                         <td>${w.method?.toUpperCase()}</td>
@@ -3540,7 +3548,7 @@
                         <td><span class="status-badge ${w.status === 'paid' ? 'status-approved' : 'status-pending'}">${w.status}</span></td>
                     `;
                     
-                    row.cells[6].appendChild(progressContainer);
+                    row.appendChild(progressCell);
                 });
             } catch (error) {
                 console.error('Error loading withdrawals:', error);
@@ -3573,7 +3581,7 @@
                     card.innerHTML = `
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;"><i class="fas fa-user-shield"></i> Admin</span>
-                            <span class="text-small">${message.createdAt ? new Date(message.createdAt.toDate()).toLocaleDateString() : ''}</span>
+                            <span class="text-small">${message.createdAt ? new Date(message.createdAt.toDate()).toLocaleString() : ''}</span>
                         </div>
                         <div class="submission-work" style="max-height: 100px;">
                             ${escapeHtml(truncateWords(message.message, 20))}${message.message.split(/\s+/).length > 20 ? '...' : ''}
@@ -3998,7 +4006,7 @@
                     <td>${w.requestedAt ? new Date(w.requestedAt.toDate()).toLocaleString() : w.createdAt ? new Date(w.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
                 `;
                 
-                row.cells[7].appendChild(progressContainer);
+                row.appendChild(progressCell);
                 
                 const actionsCell = document.createElement('td');
                 if (w.status === 'pending') {
