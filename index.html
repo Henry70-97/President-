@@ -2339,6 +2339,13 @@
         let allMessages = [];
         let currentSupportType = '';
 
+        // Admin emails list - Add your admin emails here
+        const ADMIN_EMAILS = [
+            'admin@example.com',
+            'wanyoike755@gmail.com', // Replace with your actual email
+            'hankwane1@gmail.com'
+        ];
+
         // Exchange rate
         const USD_TO_KES = 129;
 
@@ -2356,6 +2363,11 @@
         function calculateEarnings(reward, score) {
             if (score < 50) return 0;
             return (reward * score) / 100;
+        }
+
+        // Check if user is admin by email
+        function isAdminEmail(email) {
+            return ADMIN_EMAILS.includes(email);
         }
 
         // Toggle video play/pause
@@ -2470,7 +2482,9 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
+                console.log('User logged in:', user.email);
                 
+                // Check if email is verified (for email/password users)
                 if (!user.emailVerified && user.providerData[0]?.providerId === 'password') {
                     showView('verification');
                     document.getElementById('verificationEmail').textContent = user.email;
@@ -2478,12 +2492,27 @@
                 }
 
                 try {
+                    // Load user data
                     await loadUserData();
+                    
+                    // Check membership status
                     if (userData) {
                         checkMembershipStatus();
                     }
                     
-                    if (userData && userData.role === 'admin') {
+                    // Check if admin (based on email or role)
+                    const isAdmin = userData?.role === 'admin' || isAdminEmail(user.email);
+                    
+                    if (isAdmin) {
+                        console.log('Admin detected:', user.email);
+                        // Update user document to ensure admin role is set
+                        if (userData?.role !== 'admin') {
+                            await db.collection('users').doc(user.uid).update({
+                                role: 'admin'
+                            });
+                            userData.role = 'admin';
+                        }
+                        
                         document.getElementById('switchToAdminBtn').style.display = 'inline-block';
                         document.getElementById('mobileSwitchToAdminBtn').style.display = 'inline-block';
                         document.getElementById('adminEmail').textContent = user.email;
@@ -2491,23 +2520,29 @@
                         await loadAdminData();
                     }
                     
+                    // Show appropriate view
                     showView('user');
                     await loadUserDashboard();
                 } catch (error) {
+                    console.error('Error in auth state:', error);
                     if (error.code === 'permission-denied') {
                         await createUserDocument(user);
                     }
                 }
             } else {
+                console.log('No user logged in');
                 showView('auth');
             }
         });
 
         async function createUserDocument(user) {
             try {
+                // Determine if this user should be admin
+                const isAdmin = isAdminEmail(user.email);
+                
                 await db.collection('users').doc(user.uid).set({
                     email: user.email,
-                    role: 'user',
+                    role: isAdmin ? 'admin' : 'user',
                     wallet: 0,
                     active: true,
                     verified: user.emailVerified,
@@ -2515,6 +2550,7 @@
                     membershipStatus: 'pending',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                console.log('User document created with role:', isAdmin ? 'admin' : 'user');
                 await loadUserData();
             } catch (error) {
                 console.error('Error creating user document:', error);
@@ -2539,9 +2575,11 @@
         }
 
         function switchToAdmin() {
-            if (userData && userData.role === 'admin') {
+            if (userData && (userData.role === 'admin' || isAdminEmail(currentUser?.email))) {
                 showView('admin');
                 loadAdminData();
+            } else {
+                showAuthMessage('You do not have admin privileges', 'error');
             }
         }
 
@@ -2656,9 +2694,12 @@
 
                 await user.sendEmailVerification();
 
+                // Check if this email should be admin
+                const isAdmin = isAdminEmail(email);
+
                 await db.collection('users').doc(user.uid).set({
                     email: user.email,
-                    role: 'user',
+                    role: isAdmin ? 'admin' : 'user',
                     wallet: 0,
                     active: true,
                     verified: false,
@@ -2699,8 +2740,42 @@
             const provider = new firebase.auth.GoogleAuthProvider();
             
             try {
-                await auth.signInWithPopup(provider);
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                
+                // Check if user exists in Firestore
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                
+                if (!userDoc.exists) {
+                    // Check if this email should be admin
+                    const isAdmin = isAdminEmail(user.email);
+                    
+                    // Create new user profile
+                    await db.collection('users').doc(user.uid).set({
+                        email: user.email,
+                        role: isAdmin ? 'admin' : 'user',
+                        wallet: 0,
+                        active: true,
+                        verified: true,
+                        membershipPaid: false,
+                        membershipStatus: 'pending',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    console.log('New user created with role:', isAdmin ? 'admin' : 'user');
+                } else {
+                    // Check if user should be admin but isn't
+                    const userData = userDoc.data();
+                    if (isAdminEmail(user.email) && userData.role !== 'admin') {
+                        await db.collection('users').doc(user.uid).update({
+                            role: 'admin'
+                        });
+                        console.log('User role upgraded to admin');
+                    }
+                }
+                
+                // No need to redirect - auth state will handle it
             } catch (error) {
+                console.error('Google Sign-In error:', error);
                 showAuthMessage(error.message, 'error');
             }
         }
