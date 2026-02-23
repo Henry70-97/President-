@@ -2107,29 +2107,6 @@
             </div>
         </div>
 
-        <!-- Local Storage Stats Card -->
-        <div class="stat-card" style="margin-bottom: 24px;">
-            <div class="stat-title">📊 Your Task Progress</div>
-            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px;">
-                <div style="flex: 1; min-width: 150px;">
-                    <div class="text-muted">Tasks Tracked Locally</div>
-                    <div class="stat-value" id="localTaskCount">0</div>
-                </div>
-                <div style="flex: 1; min-width: 150px;">
-                    <div class="text-muted">Last Submission</div>
-                    <div class="text-small" id="lastSubmissionTime">Never</div>
-                </div>
-                <div style="flex: 1; min-width: 150px;">
-                    <div class="text-muted">Status</div>
-                    <div id="localTaskStatus" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <span class="status-badge status-pending">Pending: <span id="localPendingCount">0</span></span>
-                        <span class="status-badge status-approved">Approved: <span id="localApprovedCount">0</span></span>
-                        <span class="status-badge status-rejected">Rejected: <span id="localRejectedCount">0</span></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Desktop Tabs -->
         <div class="desktop-tabs">
             <button class="tab-btn active" onclick="switchUserTab('available')"><i class="fas fa-tasks"></i> Available Tasks</button>
@@ -2155,15 +2132,6 @@
                 My Submissions
             </h2>
             <div id="submissionsContainer" class="submissions-grid"></div>
-        </div>
-
-        <!-- Local Submissions Panel (New) -->
-        <div id="localSubmissionsPanel" class="tab-panel">
-            <h2 class="section-title">
-                <i class="fas fa-database"></i>
-                Tracked Submissions (Local)
-            </h2>
-            <div id="localSubmissionsContainer" class="submissions-grid"></div>
         </div>
 
         <!-- Withdrawals Panel -->
@@ -2266,9 +2234,280 @@
         </div>
     </div>
 
-    <!-- Admin Dashboard View (keep existing admin code) -->
+    <!-- Admin Dashboard View -->
     <div id="adminDashboard" class="admin-container">
-        <!-- ... (admin dashboard content remains the same) ... -->
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-cog"></i>
+                TaskEarn Pro <span style="font-size: 0.9rem; color: var(--text-tertiary); margin-left: 8px;">Admin</span>
+            </div>
+            <div class="hamburger-menu" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="user-info">
+                <div class="admin-badge" id="adminEmail">Admin</div>
+                <button class="nav-btn btn-switch" onclick="switchToUser()">User Dashboard</button>
+                <button class="nav-btn btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Mobile Menu for Admin -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="user-info">
+                <div class="admin-badge" id="mobileAdminEmail">Admin</div>
+                <button class="nav-btn btn-switch" onclick="switchToUser(); toggleMenu();">User Dashboard</button>
+                <button class="nav-btn btn-logout" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="mobile-tabs">
+                <button class="mobile-tab-btn active" onclick="switchAdminMobileTab('tasks')">
+                    <i class="fas fa-tasks"></i> Tasks
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('users')">
+                    <i class="fas fa-users"></i> Users
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('memberships')">
+                    <i class="fas fa-star"></i> Memberships
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('submissions')">
+                    <i class="fas fa-paper-plane"></i> Submissions
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('withdrawals')">
+                    <i class="fas fa-money-bill-wave"></i> Withdrawals
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('messages')">
+                    <i class="fas fa-envelope"></i> Messages
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Total Users</div>
+                <div class="stat-value" id="adminTotalUsers">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Pending Memberships</div>
+                <div class="stat-value" id="adminPendingMemberships">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Pending Reviews</div>
+                <div class="stat-value" id="adminPendingReviews">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Pending Withdrawals</div>
+                <div class="stat-value" id="adminPendingWithdrawals">0</div>
+            </div>
+        </div>
+
+        <div class="desktop-tabs">
+            <button class="tab-btn active" onclick="switchAdminTab('tasks')">Tasks</button>
+            <button class="tab-btn" onclick="switchAdminTab('users')">Users</button>
+            <button class="tab-btn" onclick="switchAdminTab('memberships')">Memberships</button>
+            <button class="tab-btn" onclick="switchAdminTab('submissions')">Submissions</button>
+            <button class="tab-btn" onclick="switchAdminTab('withdrawals')">Withdrawals</button>
+            <button class="tab-btn" onclick="switchAdminTab('messages')">Messages</button>
+        </div>
+
+        <!-- Tasks Panel -->
+        <div id="adminTasksPanel" class="tab-panel active">
+            <div class="form-container">
+                <h3 style="color: var(--green-bold); margin-bottom: 24px; font-size: 1.5rem;">➕ Create New Task</h3>
+                <div class="form-group">
+                    <label>Task Title</label>
+                    <input type="text" id="taskTitle" placeholder="Enter task title">
+                </div>
+                <div class="form-group">
+                    <label>Task Description</label>
+                    <textarea id="taskDescription" placeholder="Enter detailed task description" rows="5"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Reward Amount (USD)</label>
+                    <input type="number" id="taskReward" min="0.01" step="0.01" placeholder="Enter reward amount">
+                </div>
+                <div class="form-group">
+                    <label>Reward Amount (KES)</label>
+                    <input type="text" id="taskRewardKES" readonly placeholder="Amount in Kenyan Shillings">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="taskActive">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" onclick="createTask()"><i class="fas fa-plus-circle"></i> Create Task</button>
+                <div id="taskMessage" class="message"></div>
+            </div>
+
+            <div class="table-container">
+                <h3 style="color: var(--green-bold); margin-bottom: 24px; font-size: 1.5rem;">📋 Manage Tasks</h3>
+                <div class="filter-bar">
+                    <input type="text" id="taskSearch" placeholder="Search tasks..." onkeyup="filterTasks()">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Reward (USD)</th>
+                            <th>Reward (KES)</th>
+                            <th>Status</th>
+                            <th>Submissions</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTasksBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Users Panel -->
+        <div id="adminUsersPanel" class="tab-panel">
+            <div class="table-container">
+                <h3 style="color: var(--green-bold); margin-bottom: 24px; font-size: 1.5rem;">👥 Manage Users</h3>
+                <div class="filter-bar">
+                    <input type="text" id="userSearch" placeholder="Search users by email..." onkeyup="filterUsers()">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Wallet ($)</th>
+                            <th>Wallet (KES)</th>
+                            <th>Verified</th>
+                            <th>Active</th>
+                            <th>Membership</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminUsersBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Memberships Panel -->
+        <div id="adminMembershipsPanel" class="tab-panel">
+            <div class="table-container">
+                <h3 style="color: var(--green-bold); margin-bottom: 24px; font-size: 1.5rem;">⭐ Pending Membership Payments</h3>
+                <div class="filter-bar">
+                    <input type="text" id="membershipSearch" placeholder="Search payments..." onkeyup="filterMemberships()">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Payment Message</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminMembershipsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Submissions Panel -->
+        <div id="adminSubmissionsPanel" class="tab-panel">
+            <div class="table-container">
+                <h3 style="color: var(--green-bold); margin-bottom: 24px; font-size: 1.5rem;">📝 All Submissions</h3>
+                <div class="filter-bar">
+                    <input type="text" id="submissionSearch" placeholder="Search submissions..." onkeyup="filterSubmissions()">
+                    <select id="submissionFilter" onchange="filterSubmissions()">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved (Paid)</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Task</th>
+                            <th>Work Preview</th>
+                            <th>Status</th>
+                            <th>Score</th>
+                            <th>Earned</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminSubmissionsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Withdrawals Panel -->
+        <div id="adminWithdrawalsPanel" class="tab-panel">
+            <div class="table-container">
+                <h3 style="color: var(--green-bold); margin-bottom: 24px; font-size: 1.5rem;">💰 Withdrawal Requests</h3>
+                <div class="filter-bar">
+                    <input type="text" id="withdrawalSearch" placeholder="Search withdrawals..." onkeyup="filterWithdrawals()">
+                    <select id="withdrawalFilter" onchange="filterWithdrawals()">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Amount ($)</th>
+                            <th>Amount (KES)</th>
+                            <th>Method</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th>Progress</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminWithdrawalsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Messages Panel -->
+        <div id="adminMessagesPanel" class="tab-panel">
+            <div class="form-container">
+                <h3 style="color: var(--green-bold); margin-bottom: 24px; font-size: 1.5rem;">💬 Send Message to User</h3>
+                <div class="form-group">
+                    <label>Select User</label>
+                    <select id="messageUserSelect">
+                        <option value="">Choose a user...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="adminMessageText" placeholder="Type your message here..." rows="4"></textarea>
+                </div>
+                <button class="btn btn-success" onclick="sendMessage()"><i class="fas fa-paper-plane"></i> Send Message</button>
+                <div id="messageAdminMessage" class="message"></div>
+            </div>
+
+            <div class="table-container">
+                <h3 style="color: var(--green-bold); margin-bottom: 24px; font-size: 1.5rem;">📋 Message History</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminMessagesBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Payment Modal -->
@@ -2405,9 +2644,6 @@
         let allMessages = [];
         let currentSupportType = '';
 
-        // Local storage key for submissions
-        const LOCAL_SUBMISSIONS_KEY = 'taskearn_submissions';
-
         // Exchange rate
         const USD_TO_KES = 129;
 
@@ -2437,116 +2673,6 @@
             } else {
                 return 'approved'; // Scores 50 and above are approved (paid)
             }
-        }
-
-        // Local storage functions for tracking submissions
-        function saveSubmissionToLocal(submission) {
-            try {
-                const submissions = JSON.parse(localStorage.getItem(LOCAL_SUBMISSIONS_KEY) || '[]');
-                
-                // Add timestamp if not present
-                if (!submission.timestamp) {
-                    submission.timestamp = new Date().toISOString();
-                }
-                
-                // Add to beginning of array
-                submissions.unshift(submission);
-                
-                // Keep only last 50 submissions to prevent localStorage overflow
-                const trimmed = submissions.slice(0, 50);
-                
-                localStorage.setItem(LOCAL_SUBMISSIONS_KEY, JSON.stringify(trimmed));
-                
-                // Update local stats display
-                updateLocalStats();
-                
-                return true;
-            } catch (error) {
-                console.error('Error saving to localStorage:', error);
-                return false;
-            }
-        }
-
-        function getLocalSubmissions() {
-            try {
-                return JSON.parse(localStorage.getItem(LOCAL_SUBMISSIONS_KEY) || '[]');
-            } catch (error) {
-                console.error('Error reading from localStorage:', error);
-                return [];
-            }
-        }
-
-        function updateLocalStats() {
-            const submissions = getLocalSubmissions();
-            const count = submissions.length;
-            
-            document.getElementById('localTaskCount').textContent = count;
-            
-            if (count > 0) {
-                const lastSub = submissions[0];
-                const date = new Date(lastSub.timestamp);
-                document.getElementById('lastSubmissionTime').textContent = date.toLocaleString();
-            }
-            
-            // Count by status
-            const pending = submissions.filter(s => s.status === 'pending').length;
-            const approved = submissions.filter(s => s.status === 'approved').length;
-            const rejected = submissions.filter(s => s.status === 'rejected').length;
-            
-            document.getElementById('localPendingCount').textContent = pending;
-            document.getElementById('localApprovedCount').textContent = approved;
-            document.getElementById('localRejectedCount').textContent = rejected;
-            
-            // Display local submissions
-            displayLocalSubmissions();
-        }
-
-        function displayLocalSubmissions() {
-            const container = document.getElementById('localSubmissionsContainer');
-            if (!container) return;
-            
-            const submissions = getLocalSubmissions();
-            
-            if (submissions.length === 0) {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-database"></i><p>No tracked submissions yet</p></div>';
-                return;
-            }
-            
-            container.innerHTML = '';
-            
-            submissions.forEach(sub => {
-                const card = document.createElement('div');
-                card.className = `submission-card ${sub.status || 'pending'}`;
-                
-                const date = new Date(sub.timestamp);
-                
-                let statusBadge = '';
-                if (sub.status === 'approved') {
-                    statusBadge = '<span class="status-badge status-approved">Approved</span>';
-                } else if (sub.status === 'rejected') {
-                    statusBadge = '<span class="status-badge status-rejected">Rejected</span>';
-                } else {
-                    statusBadge = '<span class="status-badge status-pending">Pending</span>';
-                }
-                
-                card.innerHTML = `
-                    <div class="submission-header">
-                        <span class="submission-task-title">${escapeHtml(sub.taskTitle || 'Unknown Task')}</span>
-                        ${statusBadge}
-                    </div>
-                    <div class="submission-work">
-                        <strong>Your work:</strong><br>
-                        ${escapeHtml(truncateWords(sub.workText || '', 30))}${(sub.workText || '').split(/\s+/).length > 30 ? '...' : ''}
-                    </div>
-                    <div class="text-small" style="margin-top: 12px;">
-                        <i class="far fa-calendar"></i> ${date.toLocaleString()}
-                        ${sub.score ? `<br><i class="fas fa-star"></i> Score: ${sub.score}%` : ''}
-                        ${sub.earned ? `<br><i class="fas fa-dollar-sign"></i> Earned: $${sub.earned.toFixed(2)}` : ''}
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
         }
 
         // Toast notification system
@@ -2747,9 +2873,6 @@
                         }
                     }
                     
-                    // Initialize local stats
-                    updateLocalStats();
-                    
                     // Show user dashboard
                     showView('user');
                     await loadUserDashboard();
@@ -2831,20 +2954,16 @@
                 tabs[1]?.classList.add('active');
                 document.getElementById('mySubmissionsPanel').classList.add('active');
                 loadUserSubmissions();
-            } else if (tab === 'local') {
-                tabs[2]?.classList.add('active');
-                document.getElementById('localSubmissionsPanel').classList.add('active');
-                displayLocalSubmissions();
             } else if (tab === 'withdrawals') {
-                tabs[3]?.classList.add('active');
+                tabs[2]?.classList.add('active');
                 document.getElementById('userWithdrawalsPanel').classList.add('active');
                 loadWithdrawalsHistory();
             } else if (tab === 'messages') {
-                tabs[4]?.classList.add('active');
+                tabs[3]?.classList.add('active');
                 document.getElementById('userMessagesPanel').classList.add('active');
                 loadUserMessages();
             } else if (tab === 'support') {
-                tabs[5]?.classList.add('active');
+                tabs[4]?.classList.add('active');
                 document.getElementById('userSupportPanel').classList.add('active');
             }
         }
@@ -3522,7 +3641,7 @@
                 const taskDoc = await db.collection('tasks').doc(selectedTaskId).get();
                 const task = taskDoc.data();
 
-                const submissionData = {
+                await db.collection('submissions').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     taskId: selectedTaskId,
@@ -3532,23 +3651,11 @@
                     status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                await db.collection('submissions').add(submissionData);
+                });
 
                 await db.collection('tasks').doc(selectedTaskId).update({
                     submissionsCount: firebase.firestore.FieldValue.increment(1)
                 });
-
-                // Save to localStorage for tracking
-                const localSubmission = {
-                    taskId: selectedTaskId,
-                    taskTitle: task.title,
-                    workText: workText,
-                    status: 'pending',
-                    timestamp: new Date().toISOString()
-                };
-                saveSubmissionToLocal(localSubmission);
 
                 showModalMessage('Work submitted successfully!', 'success');
                 showToast('Work Submitted', 'Your work has been submitted for review', 'success');
@@ -3560,28 +3667,13 @@
                 }, 2000);
             } catch (error) {
                 if (error.code === 'permission-denied') {
-                    // Still save to localStorage even if Firebase fails
-                    const taskDoc = await db.collection('tasks').doc(selectedTaskId).get();
-                    const task = taskDoc.data();
-                    
-                    const localSubmission = {
-                        taskId: selectedTaskId,
-                        taskTitle: task.title,
-                        workText: workText,
-                        status: 'pending',
-                        timestamp: new Date().toISOString(),
-                        note: 'Saved locally - will sync when online'
-                    };
-                    saveSubmissionToLocal(localSubmission);
-                    
-                    showModalMessage('✅ Your work has been saved locally and will be synced when online!', 'success');
-                    showToast('Work Saved Locally', 'Your submission has been stored and will sync when connection is restored', 'info');
-                    
+                    showModalMessage('✅ Your work has been received and will be reviewed shortly!', 'success');
+                    showToast('Work Received', 'Your submission is being processed', 'info');
                     setTimeout(() => {
                         closeTaskModal();
                         loadUserStats();
-                        switchUserTab('local');
-                    }, 3000);
+                        switchUserTab('submissions');
+                    }, 2000);
                 } else {
                     showModalMessage('Error: ' + error.message, 'error');
                 }
@@ -4269,21 +4361,6 @@
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
         }
-
-        // Initialize local stats on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            updateLocalStats();
-            
-            // Add local submissions tab to desktop tabs
-            const desktopTabs = document.querySelector('.desktop-tabs');
-            if (desktopTabs) {
-                const localTab = document.createElement('button');
-                localTab.className = 'tab-btn';
-                localTab.setAttribute('onclick', "switchUserTab('local')");
-                localTab.innerHTML = '<i class="fas fa-database"></i> Tracked Submissions';
-                desktopTabs.appendChild(localTab);
-            }
-        });
     </script>
 </body>
 </html>
