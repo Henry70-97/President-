@@ -147,6 +147,163 @@
             opacity: 0.9;
         }
 
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background-color: var(--border-light);
+            border-radius: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 8px;
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar.pending {
+            background: linear-gradient(90deg, var(--accent-yellow), #fbbf24);
+        }
+
+        .progress-bar.approved {
+            background: linear-gradient(90deg, var(--green-bold), #34d399);
+        }
+
+        .progress-bar.rejected {
+            background: linear-gradient(90deg, var(--accent-red), #f87171);
+        }
+
+        .progress-bar.withdrawal {
+            background: linear-gradient(90deg, var(--accent-blue), #60a5fa);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 300px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.success {
+            border-left-color: var(--green-bold);
+        }
+
+        .toast.error {
+            border-left-color: var(--accent-red);
+        }
+
+        .toast.info {
+            border-left-color: var(--accent-blue);
+        }
+
+        .toast.warning {
+            border-left-color: var(--accent-yellow);
+        }
+
+        .toast-icon {
+            font-size: 24px;
+        }
+
+        .toast.success .toast-icon {
+            color: var(--green-bold);
+        }
+
+        .toast.error .toast-icon {
+            color: var(--accent-red);
+        }
+
+        .toast.info .toast-icon {
+            color: var(--accent-blue);
+        }
+
+        .toast.warning .toast-icon {
+            color: var(--accent-yellow);
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .toast-close {
+            cursor: pointer;
+            color: var(--text-tertiary);
+            font-size: 18px;
+        }
+
+        .toast-close:hover {
+            color: var(--text-primary);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Action Feedback */
+        .action-feedback {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-feedback.success {
+            background: var(--status-approved-bg);
+            color: var(--status-approved-text);
+        }
+
+        .action-feedback.error {
+            background: var(--status-rejected-bg);
+            color: var(--status-rejected-text);
+        }
+
+        .action-feedback.info {
+            background: var(--accent-blue);
+            color: white;
+            opacity: 0.1;
+        }
+
+        .action-feedback i {
+            font-size: 16px;
+        }
+
         /* Alternating Card Colors */
         .stat-card:nth-child(1) { background: var(--card-color-1); }
         .stat-card:nth-child(2) { background: var(--card-color-2); }
@@ -161,6 +318,8 @@
         .quick-stat-card:nth-child(2) { background: var(--card-color-2); }
         .quick-stat-card:nth-child(3) { background: var(--card-color-3); }
         .quick-stat-card:nth-child(4) { background: var(--card-color-4); }
+        .quick-stat-card:nth-child(5) { background: var(--card-color-5); }
+        .quick-stat-card:nth-child(6) { background: var(--card-color-6); }
 
         .task-card:nth-child(6n+1) { background: var(--card-color-1); }
         .task-card:nth-child(6n+2) { background: var(--card-color-2); }
@@ -586,6 +745,87 @@
             margin-top: 4px;
         }
 
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .quick-stat-card {
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease;
+        }
+
+        .quick-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .quick-stat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .quick-stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .quick-stat-icon.pending {
+            background: var(--status-pending-bg);
+            color: var(--status-pending-text);
+        }
+
+        .quick-stat-icon.approved {
+            background: var(--status-approved-bg);
+            color: var(--status-approved-text);
+        }
+
+        .quick-stat-icon.rejected {
+            background: var(--status-rejected-bg);
+            color: var(--status-rejected-text);
+        }
+
+        .quick-stat-icon.withdrawal {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .quick-stat-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .quick-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--green-bold);
+            margin-bottom: 4px;
+        }
+
+        .quick-stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .quick-stat-time {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
         /* Section Title */
         .section-title {
             font-size: 1.5rem;
@@ -841,47 +1081,6 @@
             background: var(--status-rejected-bg);
             padding: 4px 12px;
             border-radius: 40px;
-        }
-
-        /* Quick Stats */
-        .quick-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .quick-stat-card {
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border-light);
-            text-align: center;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.2s ease;
-        }
-
-        .quick-stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow);
-        }
-
-        .quick-stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--green-bold);
-            margin-bottom: 4px;
-        }
-
-        .quick-stat-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .quick-stat-icon {
-            font-size: 1.5rem;
-            color: var(--green-bold);
-            margin-bottom: 8px;
         }
 
         /* Forms */
@@ -1615,6 +1814,9 @@
     </style>
 </head>
 <body>
+    <!-- Toast Container for Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
     <!-- TV Screens at Top -->
     <div class="tv-container">
         <div class="mini-tv" onclick="toggleVideo(this)">
@@ -1786,27 +1988,89 @@
             <strong><i class="fas fa-exclamation-triangle"></i> Withdrawals Locked:</strong> Pay the one-time membership fee of $3 (387 KES) to withdraw.
         </div>
 
-        <!-- Quick Stats -->
+        <!-- Progress Overview -->
+        <div class="progress-container" style="margin-bottom: 20px;">
+            <div class="progress-bar" id="overallProgress" style="width: 0%;"></div>
+        </div>
+
+        <!-- Quick Stats with Progress -->
         <div class="quick-stats">
             <div class="quick-stat-card">
-                <div class="quick-stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="quick-stat-header">
+                    <div class="quick-stat-icon approved">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="quick-stat-title">Approved (Paid)</div>
+                </div>
                 <div class="quick-stat-value" id="quickApproved">0</div>
-                <div class="quick-stat-label">Approved (Paid)</div>
+                <div class="quick-stat-label">tasks</div>
+                <div class="progress-container" style="margin-top: 10px;">
+                    <div class="progress-bar approved" id="approvedProgress" style="width: 0%;"></div>
+                </div>
             </div>
             <div class="quick-stat-card">
-                <div class="quick-stat-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="quick-stat-header">
+                    <div class="quick-stat-icon rejected">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="quick-stat-title">Rejected</div>
+                </div>
                 <div class="quick-stat-value" id="quickRejected">0</div>
-                <div class="quick-stat-label">Rejected</div>
+                <div class="quick-stat-label">tasks</div>
+                <div class="progress-container" style="margin-top: 10px;">
+                    <div class="progress-bar rejected" id="rejectedProgress" style="width: 0%;"></div>
+                </div>
             </div>
             <div class="quick-stat-card">
-                <div class="quick-stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="quick-stat-header">
+                    <div class="quick-stat-icon pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="quick-stat-title">Pending</div>
+                </div>
                 <div class="quick-stat-value" id="quickPending">0</div>
-                <div class="quick-stat-label">Pending</div>
+                <div class="quick-stat-label">tasks</div>
+                <div class="progress-container" style="margin-top: 10px;">
+                    <div class="progress-bar pending" id="pendingProgress" style="width: 0%;"></div>
+                </div>
             </div>
             <div class="quick-stat-card">
-                <div class="quick-stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="quick-stat-header">
+                    <div class="quick-stat-icon withdrawal">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="quick-stat-title">Pending Withdrawals</div>
+                </div>
+                <div class="quick-stat-value" id="quickPendingWithdrawals">0</div>
+                <div class="quick-stat-label">requests</div>
+                <div class="quick-stat-time" id="latestWithdrawalTime">Latest: N/A</div>
+                <div class="progress-container" style="margin-top: 10px;">
+                    <div class="progress-bar withdrawal" id="withdrawalProgress" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="quick-stat-header">
+                    <div class="quick-stat-icon approved">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <div class="quick-stat-title">Paid Withdrawals</div>
+                </div>
+                <div class="quick-stat-value" id="quickPaidWithdrawals">0</div>
+                <div class="quick-stat-label">completed</div>
+                <div class="quick-stat-time" id="lastPaidTime">Last: N/A</div>
+                <div class="progress-container" style="margin-top: 10px;">
+                    <div class="progress-bar approved" id="paidProgress" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="quick-stat-card">
+                <div class="quick-stat-header">
+                    <div class="quick-stat-icon approved">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="quick-stat-title">Total Earned</div>
+                </div>
                 <div class="quick-stat-value" id="quickEarned">$0</div>
-                <div class="quick-stat-label">Total Earned</div>
+                <div class="quick-stat-label">lifetime</div>
             </div>
         </div>
 
@@ -1905,6 +2169,7 @@
                             <th>Method</th>
                             <th>Phone</th>
                             <th>Status</th>
+                            <th>Progress</th>
                         </tr>
                     </thead>
                     <tbody id="withdrawalsHistoryBody"></tbody>
@@ -1962,6 +2227,7 @@
 
     <!-- Admin Dashboard View -->
     <div id="adminDashboard" class="admin-container">
+        <!-- Admin dashboard content (same as before) -->
         <nav class="navbar">
             <div class="logo">
                 <i class="fas fa-cog"></i>
@@ -2192,6 +2458,7 @@
                             <th>Phone</th>
                             <th>Status</th>
                             <th>Requested</th>
+                            <th>Progress</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -2383,7 +2650,7 @@
             return words.slice(0, wordLimit).join(' ');
         }
 
-        // NEW: Calculate earnings based on score - only scores >= 50 get paid
+        // Calculate earnings based on score - only scores >= 50 get paid
         function calculateEarnings(reward, score) {
             if (score < 50) {
                 return 0; // No reward for scores below 50 - these will be rejected
@@ -2391,12 +2658,62 @@
             return (reward * score) / 100; // Score percentage of reward for paid tasks
         }
 
-        // NEW: Determine status based on score
+        // Determine status based on score
         function getStatusFromScore(score) {
             if (score < 50) {
                 return 'rejected'; // Scores below 50 are rejected
             } else {
                 return 'approved'; // Scores 50 and above are approved (paid)
+            }
+        }
+
+        // Toast notification system
+        function showToast(title, message, type = 'info', duration = 5000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="fas ${icons[type] || icons.info}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <div class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, duration);
+        }
+
+        // Update progress bars
+        function updateProgressBars() {
+            const total = parseInt(document.getElementById('totalSubmissions').textContent) || 0;
+            const approved = parseInt(document.getElementById('quickApproved').textContent) || 0;
+            const rejected = parseInt(document.getElementById('quickRejected').textContent) || 0;
+            const pending = parseInt(document.getElementById('quickPending').textContent) || 0;
+            
+            if (total > 0) {
+                document.getElementById('approvedProgress').style.width = `${(approved / total) * 100}%`;
+                document.getElementById('rejectedProgress').style.width = `${(rejected / total) * 100}%`;
+                document.getElementById('pendingProgress').style.width = `${(pending / total) * 100}%`;
+                document.getElementById('overallProgress').style.width = `${((approved + rejected) / total) * 100}%`;
             }
         }
 
@@ -2766,6 +3083,7 @@
 
             try {
                 await auth.signInWithEmailAndPassword(email, password);
+                showToast('Welcome Back!', 'Successfully logged in', 'success');
             } catch (error) {
                 showAuthMessage(error.message, 'error');
             }
@@ -2795,6 +3113,8 @@
                     });
                     console.log('New user created');
                 }
+                
+                showToast('Welcome!', 'Successfully signed in with Google', 'success');
             } catch (error) {
                 console.error('Google Sign-In error:', error);
                 showAuthMessage(error.message, 'error');
@@ -2822,6 +3142,7 @@
                         });
                         showView('user');
                         await loadUserDashboard();
+                        showToast('Email Verified!', 'Your email has been verified', 'success');
                     } else {
                         showVerificationMessage('Email not verified yet.', 'error');
                     }
@@ -2841,6 +3162,7 @@
             try {
                 await auth.signOut();
                 showView('auth');
+                showToast('Logged Out', 'You have been successfully logged out', 'info');
             } catch (error) {
                 console.error('Logout error:', error);
             }
@@ -2929,6 +3251,7 @@
                 });
 
                 showPaymentMessage('Payment proof submitted! Admin will verify within 24 hours.', 'success');
+                showToast('Payment Submitted', 'Your payment proof has been submitted for verification', 'success');
                 
                 setTimeout(closePaymentModal, 3000);
             } catch (error) {
@@ -3051,9 +3374,57 @@
                 document.getElementById('quickPending').textContent = pending;
                 document.getElementById('quickEarned').textContent = `$${totalEarned.toFixed(2)}`;
                 
+                // Load withdrawal stats
+                await loadWithdrawalStats();
+                
+                updateProgressBars();
                 updateWalletDisplay();
             } catch (error) {
                 console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadWithdrawalStats() {
+            try {
+                const withdrawalsSnapshot = await db.collection('withdrawals')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                const pendingWithdrawals = withdrawalsSnapshot.docs.filter(d => d.data().status === 'pending').length;
+                const paidWithdrawals = withdrawalsSnapshot.docs.filter(d => d.data().status === 'paid').length;
+                
+                document.getElementById('quickPendingWithdrawals').textContent = pendingWithdrawals;
+                document.getElementById('quickPaidWithdrawals').textContent = paidWithdrawals;
+
+                // Update progress bars
+                const totalWithdrawals = pendingWithdrawals + paidWithdrawals;
+                if (totalWithdrawals > 0) {
+                    document.getElementById('withdrawalProgress').style.width = `${(pendingWithdrawals / totalWithdrawals) * 100}%`;
+                    document.getElementById('paidProgress').style.width = `${(paidWithdrawals / totalWithdrawals) * 100}%`;
+                }
+
+                // Get latest withdrawal times
+                if (!withdrawalsSnapshot.empty) {
+                    const latestPending = withdrawalsSnapshot.docs.find(d => d.data().status === 'pending');
+                    const latestPaid = withdrawalsSnapshot.docs.find(d => d.data().status === 'paid');
+                    
+                    if (latestPending) {
+                        const date = latestPending.data().createdAt?.toDate();
+                        if (date) {
+                            document.getElementById('latestWithdrawalTime').textContent = `Latest: ${date.toLocaleDateString()}`;
+                        }
+                    }
+                    
+                    if (latestPaid) {
+                        const date = latestPaid.data().paidAt?.toDate() || latestPaid.data().createdAt?.toDate();
+                        if (date) {
+                            document.getElementById('lastPaidTime').textContent = `Last: ${date.toLocaleDateString()}`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading withdrawal stats:', error);
             }
         }
 
@@ -3146,6 +3517,20 @@
                 snapshot.forEach(doc => {
                     const w = doc.data();
                     const row = tbody.insertRow();
+                    
+                    // Create progress cell
+                    const progressCell = document.createElement('td');
+                    const progressContainer = document.createElement('div');
+                    progressContainer.className = 'progress-container';
+                    progressContainer.style.width = '100px';
+                    
+                    const progressBar = document.createElement('div');
+                    progressBar.className = `progress-bar ${w.status === 'paid' ? 'approved' : 'pending'}`;
+                    progressBar.style.width = w.status === 'paid' ? '100%' : '50%';
+                    
+                    progressContainer.appendChild(progressBar);
+                    progressCell.appendChild(progressContainer);
+                    
                     row.innerHTML = `
                         <td>${w.createdAt ? new Date(w.createdAt.toDate()).toLocaleDateString() : 'N/A'}</td>
                         <td>$${parseFloat(w.amount || 0).toFixed(2)}</td>
@@ -3154,6 +3539,8 @@
                         <td>${escapeHtml(w.phone)}</td>
                         <td><span class="status-badge ${w.status === 'paid' ? 'status-approved' : 'status-pending'}">${w.status}</span></td>
                     `;
+                    
+                    row.cells[6].appendChild(progressContainer);
                 });
             } catch (error) {
                 console.error('Error loading withdrawals:', error);
@@ -3263,6 +3650,7 @@
                 });
 
                 showModalMessage('Work submitted successfully!', 'success');
+                showToast('Work Submitted', 'Your work has been submitted for review', 'success');
                 
                 setTimeout(() => {
                     closeTaskModal();
@@ -3272,6 +3660,7 @@
             } catch (error) {
                 if (error.code === 'permission-denied') {
                     showModalMessage('✅ Your work has been received and will be reviewed shortly!', 'success');
+                    showToast('Work Received', 'Your submission is being processed', 'info');
                     setTimeout(() => {
                         closeTaskModal();
                         loadUserStats();
@@ -3293,6 +3682,7 @@
             if (!userData.membershipPaid) {
                 showMembershipBanner();
                 showWithdrawMessage('Please pay the membership fee first.', 'error');
+                showToast('Membership Required', 'Pay the membership fee to withdraw', 'warning');
                 return;
             }
 
@@ -3307,6 +3697,7 @@
 
             if (amount > userData.wallet) {
                 showWithdrawMessage('Insufficient balance', 'error');
+                showToast('Insufficient Balance', 'You don\'t have enough funds', 'error');
                 return;
             }
 
@@ -3316,6 +3707,16 @@
             }
 
             try {
+                // Deduct from wallet immediately
+                await db.collection('users').doc(currentUser.uid).update({
+                    wallet: firebase.firestore.FieldValue.increment(-amount)
+                });
+
+                // Update local user data
+                userData.wallet -= amount;
+                updateWalletDisplay();
+
+                // Create withdrawal request
                 await db.collection('withdrawals').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
@@ -3328,15 +3729,19 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                showWithdrawMessage('Withdrawal requested!', 'success');
+                showWithdrawMessage('Withdrawal requested! Amount deducted from wallet.', 'success');
+                showToast('Withdrawal Requested', `$${amount.toFixed(2)} has been deducted from your wallet`, 'success');
                 
                 document.getElementById('withdrawAmount').value = '';
                 document.getElementById('withdrawPhone').value = '';
                 document.getElementById('withdrawAmountKES').value = '';
                 
                 await loadWithdrawalsHistory();
+                await loadWithdrawalStats();
+                await loadUserStats();
             } catch (error) {
                 showWithdrawMessage('Error: ' + error.message, 'error');
+                showToast('Error', 'Failed to process withdrawal', 'error');
             }
         }
 
@@ -3569,6 +3974,20 @@
 
             withdrawals.forEach(w => {
                 const row = tbody.insertRow();
+                
+                // Create progress cell
+                const progressCell = document.createElement('td');
+                const progressContainer = document.createElement('div');
+                progressContainer.className = 'progress-container';
+                progressContainer.style.width = '100px';
+                
+                const progressBar = document.createElement('div');
+                progressBar.className = `progress-bar ${w.status === 'paid' ? 'approved' : 'pending'}`;
+                progressBar.style.width = w.status === 'paid' ? '100%' : '50%';
+                
+                progressContainer.appendChild(progressBar);
+                progressCell.appendChild(progressContainer);
+                
                 row.innerHTML = `
                     <td>${escapeHtml(w.userEmail)}</td>
                     <td>$${(w.amount || 0).toFixed(2)}</td>
@@ -3577,12 +3996,17 @@
                     <td>${escapeHtml(w.phone)}</td>
                     <td><span class="status-badge ${w.status === 'paid' ? 'status-approved' : 'status-pending'}">${w.status}</span></td>
                     <td>${w.requestedAt ? new Date(w.requestedAt.toDate()).toLocaleString() : w.createdAt ? new Date(w.createdAt.toDate()).toLocaleString() : 'N/A'}</td>
-                    <td>
-                        ${w.status === 'pending' ? `
-                            <button class="action-btn btn-pay" onclick="markAsPaid('${w.id}', '${w.userId}', ${w.amount})">Mark Paid</button>
-                        ` : ''}
-                    </td>
                 `;
+                
+                row.cells[7].appendChild(progressContainer);
+                
+                const actionsCell = document.createElement('td');
+                if (w.status === 'pending') {
+                    actionsCell.innerHTML = `
+                        <button class="action-btn btn-pay" onclick="markAsPaid('${w.id}', '${w.userId}', ${w.amount})">Mark Paid</button>
+                    `;
+                }
+                row.appendChild(actionsCell);
             });
         }
 
@@ -3638,6 +4062,7 @@
                 });
 
                 showAdminMessage('taskMessage', 'Task created!', 'success');
+                showToast('Task Created', 'New task has been added successfully', 'success');
                 
                 document.getElementById('taskTitle').value = '';
                 document.getElementById('taskDescription').value = '';
@@ -3662,6 +4087,7 @@
                 await db.collection('users').doc(userId).update({ active });
                 await loadAdminUsers();
                 await loadAdminStats();
+                showToast('User Updated', `User has been ${active ? 'activated' : 'deactivated'}`, 'success');
             } catch (error) {
                 console.error('Error updating user:', error);
             }
@@ -3690,6 +4116,7 @@
 
                 await userRef.update({ wallet: newWallet });
                 await loadAdminUsers();
+                showToast('Wallet Updated', `Wallet balance adjusted by $${Math.abs(numAmount).toFixed(2)}`, 'success');
             } catch (error) {
                 console.error('Error adjusting wallet:', error);
             }
@@ -3699,6 +4126,7 @@
             try {
                 await db.collection('tasks').doc(taskId).update({ active });
                 await loadAdminTasks();
+                showToast('Task Updated', `Task has been ${active ? 'activated' : 'deactivated'}`, 'success');
             } catch (error) {
                 console.error('Error updating task:', error);
             }
@@ -3709,6 +4137,7 @@
             try {
                 await db.collection('tasks').doc(taskId).delete();
                 await loadAdminTasks();
+                showToast('Task Deleted', 'Task has been removed', 'info');
             } catch (error) {
                 console.error('Error deleting task:', error);
             }
@@ -3725,6 +4154,7 @@
                 });
                 await loadAdminMemberships();
                 await loadAdminStats();
+                showToast('Membership Approved', 'User can now withdraw funds', 'success');
             } catch (error) {
                 console.error('Error approving membership:', error);
             }
@@ -3734,6 +4164,7 @@
             try {
                 await db.collection('membershipPayments').doc(paymentId).update({ status: 'rejected' });
                 await loadAdminMemberships();
+                showToast('Membership Rejected', 'Payment proof was rejected', 'warning');
             } catch (error) {
                 console.error('Error rejecting membership:', error);
             }
@@ -3756,6 +4187,7 @@
                 });
 
                 showAdminMessage('messageAdminMessage', 'Message sent!', 'success');
+                showToast('Message Sent', 'Your message has been delivered', 'success');
                 document.getElementById('adminMessageText').value = '';
                 await loadAdminMessages();
             } catch (error) {
@@ -3779,7 +4211,6 @@
             selectedSubmissionId = null;
         }
 
-        // UPDATED: Submit review with new scoring logic - scores below 50 are rejected
         async function submitReview() {
             const score = parseInt(document.getElementById('reviewScore').value);
             const feedback = document.getElementById('reviewFeedback').value.trim();
@@ -3822,6 +4253,10 @@
                     await db.collection('users').doc(submission.userId).update({
                         wallet: firebase.firestore.FieldValue.increment(earned)
                     });
+                    
+                    showToast('Payment Issued', `User earned $${earned.toFixed(2)} for this task`, 'success');
+                } else if (status === 'rejected') {
+                    showToast('Task Rejected', 'User will not receive payment', 'warning');
                 }
 
                 showReviewMessage(`Review submitted! Status: ${status}`, 'success');
@@ -3848,8 +4283,11 @@
                     status: 'paid',
                     paidAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                
                 await loadAdminWithdrawals();
                 await loadAdminStats();
+                
+                showToast('Withdrawal Marked Paid', `$${amount.toFixed(2)} has been processed`, 'success');
             } catch (error) {
                 console.error('Error marking as paid:', error);
             }
