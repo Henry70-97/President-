@@ -1791,7 +1791,7 @@
             <div class="quick-stat-card">
                 <div class="quick-stat-icon"><i class="fas fa-check-circle"></i></div>
                 <div class="quick-stat-value" id="quickApproved">0</div>
-                <div class="quick-stat-label">Approved</div>
+                <div class="quick-stat-label">Approved (Paid)</div>
             </div>
             <div class="quick-stat-card">
                 <div class="quick-stat-icon"><i class="fas fa-times-circle"></i></div>
@@ -1823,14 +1823,14 @@
                 <div class="stat-subvalue">Total submissions</div>
             </div>
             <div class="stat-card">
-                <div class="stat-title">Approved Tasks</div>
+                <div class="stat-title">Paid Tasks</div>
                 <div class="stat-value" id="approvedTasks">0</div>
                 <div class="stat-subvalue" id="avgScore">Avg. 0%</div>
             </div>
             <div class="stat-card">
                 <div class="stat-title">Success Rate</div>
                 <div class="stat-value" id="successRate">0%</div>
-                <div class="stat-subvalue">Of submitted tasks</div>
+                <div class="stat-subvalue">Of paid tasks</div>
             </div>
         </div>
 
@@ -2148,7 +2148,7 @@
                     <select id="submissionFilter" onchange="filterSubmissions()">
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
+                        <option value="approved">Approved (Paid)</option>
                         <option value="rejected">Rejected</option>
                     </select>
                 </div>
@@ -2383,9 +2383,21 @@
             return words.slice(0, wordLimit).join(' ');
         }
 
+        // NEW: Calculate earnings based on score - only scores >= 50 get paid
         function calculateEarnings(reward, score) {
-            if (score < 50) return 0;
-            return (reward * score) / 100;
+            if (score < 50) {
+                return 0; // No reward for scores below 50 - these will be rejected
+            }
+            return (reward * score) / 100; // Score percentage of reward for paid tasks
+        }
+
+        // NEW: Determine status based on score
+        function getStatusFromScore(score) {
+            if (score < 50) {
+                return 'rejected'; // Scores below 50 are rejected
+            } else {
+                return 'approved'; // Scores 50 and above are approved (paid)
+            }
         }
 
         // Toggle video play/pause
@@ -2504,7 +2516,7 @@
             messageDiv.className = `message ${type}`;
         }
 
-        // Auth state - FIXED: Properly handle admin role from Firestore
+        // Auth state
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
@@ -2556,7 +2568,7 @@
             try {
                 await db.collection('users').doc(user.uid).set({
                     email: user.email,
-                    role: 'user', // Default role is user
+                    role: 'user',
                     wallet: 0,
                     active: true,
                     verified: user.emailVerified,
@@ -2783,8 +2795,6 @@
                     });
                     console.log('New user created');
                 }
-                
-                // No need to redirect - auth state will handle it
             } catch (error) {
                 console.error('Google Sign-In error:', error);
                 showAuthMessage(error.message, 'error');
@@ -2941,7 +2951,6 @@
                     console.log('User data loaded:', userData);
                     updateWalletDisplay();
                 } else {
-                    // Create user document if it doesn't exist
                     await createUserDocument(currentUser);
                 }
             } catch (error) {
@@ -3770,6 +3779,7 @@
             selectedSubmissionId = null;
         }
 
+        // UPDATED: Submit review with new scoring logic - scores below 50 are rejected
         async function submitReview() {
             const score = parseInt(document.getElementById('reviewScore').value);
             const feedback = document.getElementById('reviewFeedback').value.trim();
@@ -3788,24 +3798,33 @@
                 const submissionDoc = await db.collection('submissions').doc(selectedSubmissionId).get();
                 const submission = submissionDoc.data();
 
+                // Determine status based on score
+                const status = getStatusFromScore(score);
+                
+                // Calculate earnings (will be 0 if score < 50)
                 const earned = calculateEarnings(window.currentTaskReward, score);
 
-                await db.collection('submissions').doc(selectedSubmissionId).update({
-                    status: 'approved',
+                const updateData = {
+                    status: status,
                     score: score,
                     review: feedback,
                     earned: earned,
                     earnedKES: usdToKes(earned),
                     reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
 
-                if (earned > 0) {
+                console.log('Submitting review:', updateData);
+
+                await db.collection('submissions').doc(selectedSubmissionId).update(updateData);
+
+                // Only credit wallet if approved and earned > 0
+                if (status === 'approved' && earned > 0) {
                     await db.collection('users').doc(submission.userId).update({
                         wallet: firebase.firestore.FieldValue.increment(earned)
                     });
                 }
 
-                showReviewMessage('Review submitted!', 'success');
+                showReviewMessage(`Review submitted! Status: ${status}`, 'success');
                 
                 setTimeout(() => {
                     closeReviewModal();
