@@ -29,15 +29,15 @@
             --border-light: #e2e8f0;
             --border-medium: #cbd5e1;
             
-            /* Accent Colors - Calm Professional */
-            --accent-teal: #0d9488;
-            --accent-teal-light: #99f6e4;
-            --accent-teal-soft: #ccfbf1;
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-green: #10b981;
-            --accent-yellow: #f59e0b;
-            --accent-red: #ef4444;
+            /* Bright Alternating Card Colors */
+            --card-color-1: #f0f9ff;  /* Light blue */
+            --card-color-2: #f0fdf4;  /* Light green */
+            --card-color-3: #fefce8;  /* Light yellow */
+            --card-color-4: #faf5ff;  /* Light purple */
+            --card-color-5: #fff1f2;  /* Light pink */
+            --card-color-6: #ecfdf5;  /* Mint */
+            --card-color-7: #eff6ff;  /* Soft blue */
+            --card-color-8: #fef9c3;  /* Soft yellow */
             
             /* Green Bold for Important Elements */
             --green-bold: #059669;
@@ -108,6 +108,78 @@
             background: var(--green-bold-hover);
             transform: translateY(-2px);
         }
+
+        /* Green Buttons */
+        .btn-green {
+            background: var(--green-bold);
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-green:hover {
+            background: var(--green-bold-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-logout {
+            background: var(--green-bold);
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background: var(--green-bold-hover);
+        }
+
+        .btn-switch {
+            background: var(--green-bold);
+            color: white;
+        }
+
+        .btn-switch:hover {
+            opacity: 0.9;
+        }
+
+        /* Alternating Card Colors */
+        .stat-card:nth-child(1) { background: var(--card-color-1); }
+        .stat-card:nth-child(2) { background: var(--card-color-2); }
+        .stat-card:nth-child(3) { background: var(--card-color-3); }
+        .stat-card:nth-child(4) { background: var(--card-color-4); }
+        .stat-card:nth-child(5) { background: var(--card-color-5); }
+        .stat-card:nth-child(6) { background: var(--card-color-6); }
+        .stat-card:nth-child(7) { background: var(--card-color-7); }
+        .stat-card:nth-child(8) { background: var(--card-color-8); }
+
+        .quick-stat-card:nth-child(1) { background: var(--card-color-1); }
+        .quick-stat-card:nth-child(2) { background: var(--card-color-2); }
+        .quick-stat-card:nth-child(3) { background: var(--card-color-3); }
+        .quick-stat-card:nth-child(4) { background: var(--card-color-4); }
+
+        .task-card:nth-child(6n+1) { background: var(--card-color-1); }
+        .task-card:nth-child(6n+2) { background: var(--card-color-2); }
+        .task-card:nth-child(6n+3) { background: var(--card-color-3); }
+        .task-card:nth-child(6n+4) { background: var(--card-color-4); }
+        .task-card:nth-child(6n+5) { background: var(--card-color-5); }
+        .task-card:nth-child(6n+6) { background: var(--card-color-6); }
+
+        .submission-card:nth-child(6n+1) { background: var(--card-color-2); }
+        .submission-card:nth-child(6n+2) { background: var(--card-color-3); }
+        .submission-card:nth-child(6n+3) { background: var(--card-color-4); }
+        .submission-card:nth-child(6n+4) { background: var(--card-color-5); }
+        .submission-card:nth-child(6n+5) { background: var(--card-color-6); }
+        .submission-card:nth-child(6n+6) { background: var(--card-color-7); }
+
+        .support-card:nth-child(1) { background: var(--card-color-1); }
+        .support-card:nth-child(2) { background: var(--card-color-2); }
+        .support-card:nth-child(3) { background: var(--card-color-3); }
+        .support-card:nth-child(4) { background: var(--card-color-4); }
 
         /* Typography */
         h1, h2, h3, h4, h5, h6 {
@@ -374,10 +446,10 @@
         }
 
         .nav-btn {
-            padding: 8px 20px;
+            padding: 10px 24px;
             border: none;
             border-radius: 40px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             text-decoration: none;
@@ -387,13 +459,13 @@
         }
 
         .btn-logout {
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-light);
+            background: var(--green-bold);
+            color: white;
         }
 
         .btn-logout:hover {
-            background: var(--border-light);
+            background: var(--green-bold-hover);
+            transform: translateY(-2px);
         }
 
         .btn-switch {
@@ -402,7 +474,8 @@
         }
 
         .btn-switch:hover {
-            opacity: 0.9;
+            background: var(--green-bold-hover);
+            transform: translateY(-2px);
         }
 
         /* Membership Banner */
@@ -450,7 +523,8 @@
         }
 
         .btn-pay:hover {
-            opacity: 0.9;
+            background: var(--green-bold-hover);
+            transform: translateY(-2px);
         }
 
         /* Withdrawal Warning */
@@ -478,7 +552,6 @@
         }
 
         .stat-card {
-            background: var(--bg-secondary);
             padding: 24px;
             border-radius: 16px;
             box-shadow: var(--shadow-sm);
@@ -539,9 +612,8 @@
         }
 
         .task-card {
-            background: var(--bg-secondary);
-            border-radius: 16px;
             padding: 24px;
+            border-radius: 16px;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-light);
             display: flex;
@@ -551,7 +623,7 @@
 
         .task-card:hover {
             box-shadow: var(--shadow);
-            border-color: var(--green-light);
+            transform: translateY(-2px);
         }
 
         .task-title-green {
@@ -635,9 +707,8 @@
         }
 
         .submission-card {
-            background: var(--bg-secondary);
-            border-radius: 16px;
             padding: 24px;
+            border-radius: 16px;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-light);
             border-left: 4px solid transparent;
@@ -646,6 +717,7 @@
 
         .submission-card:hover {
             box-shadow: var(--shadow);
+            transform: translateY(-2px);
         }
 
         .submission-card.pending {
@@ -780,11 +852,17 @@
         }
 
         .quick-stat-card {
-            background: var(--bg-secondary);
             padding: 20px;
             border-radius: 12px;
             border: 1px solid var(--border-light);
             text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease;
+        }
+
+        .quick-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
 
         .quick-stat-value {
@@ -868,6 +946,7 @@
 
         .btn-primary:hover {
             background: var(--green-bold-hover);
+            transform: translateY(-2px);
         }
 
         .btn-success {
@@ -876,7 +955,8 @@
         }
 
         .btn-success:hover {
-            opacity: 0.9;
+            background: var(--green-bold-hover);
+            transform: translateY(-2px);
         }
 
         .btn-google {
@@ -888,6 +968,7 @@
 
         .btn-google:hover {
             background: var(--border-light);
+            transform: translateY(-2px);
         }
 
         /* Tabs - Desktop */
@@ -915,6 +996,7 @@
         .desktop-tabs .tab-btn:hover {
             background: var(--bg-primary);
             color: var(--text-primary);
+            transform: translateY(-2px);
         }
 
         .desktop-tabs .tab-btn.active {
@@ -1015,6 +1097,7 @@
 
         .action-btn:hover {
             background: var(--border-light);
+            transform: translateY(-2px);
         }
 
         .btn-approve {
@@ -1124,10 +1207,20 @@
             color: white;
         }
 
+        .modal-buttons button:first-child:hover {
+            background: var(--green-bold-hover);
+            transform: translateY(-2px);
+        }
+
         .modal-buttons button:last-child {
             background: var(--bg-primary);
             color: var(--text-primary);
             border: 1px solid var(--border-light);
+        }
+
+        .modal-buttons button:last-child:hover {
+            background: var(--border-light);
+            transform: translateY(-2px);
         }
 
         /* Payment Modal */
@@ -1191,6 +1284,11 @@
             width: 100%;
         }
 
+        .payment-content .btn-pay-now:hover {
+            background: var(--green-bold-hover);
+            transform: translateY(-2px);
+        }
+
         .payment-content textarea {
             width: 100%;
             padding: 14px;
@@ -1212,6 +1310,11 @@
             cursor: pointer;
             width: 100%;
             font-size: 1rem;
+        }
+
+        .payment-content .btn-verify:hover {
+            background: var(--green-bold-hover);
+            transform: translateY(-2px);
         }
 
         /* Messages */
@@ -1265,6 +1368,12 @@
 
         .filter-bar input::placeholder {
             color: var(--text-tertiary);
+        }
+
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--green-bold);
         }
 
         /* Divider */
@@ -1393,17 +1502,18 @@
         }
 
         .support-card {
-            background: var(--bg-primary);
             border-radius: 12px;
             padding: 20px;
             cursor: pointer;
             transition: all 0.2s ease;
             border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
         }
 
         .support-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
             border-color: var(--green-bold);
-            background: var(--bg-secondary);
         }
 
         .support-card i {
@@ -1601,7 +1711,7 @@
                 <button onclick="resendVerificationEmail()" class="btn btn-primary" style="width: auto; display: inline-block; padding: 10px 24px;">Resend Email</button>
             </div>
             <button class="btn btn-primary" onclick="checkEmailVerification()" style="margin-top: 12px;">I've Verified My Email</button>
-            <button class="btn btn-google" onclick="logout()" style="margin-top: 12px;">Back to Login</button>
+            <button class="btn btn-logout" onclick="logout()" style="margin-top: 12px;">Back to Login</button>
             <div id="verificationMessage" class="message" style="margin-top: 24px;"></div>
         </div>
     </div>
