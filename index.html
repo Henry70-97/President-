@@ -1979,6 +1979,36 @@
             </div>
         </nav>
 
+        <!-- Mobile Menu for Admin -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="user-info">
+                <div class="admin-badge" id="mobileAdminEmail">Admin</div>
+                <button class="nav-btn btn-switch" onclick="switchToUser(); toggleMenu();">User Dashboard</button>
+                <button class="nav-btn btn-logout" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="mobile-tabs">
+                <button class="mobile-tab-btn active" onclick="switchAdminMobileTab('tasks')">
+                    <i class="fas fa-tasks"></i> Tasks
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('users')">
+                    <i class="fas fa-users"></i> Users
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('memberships')">
+                    <i class="fas fa-star"></i> Memberships
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('submissions')">
+                    <i class="fas fa-paper-plane"></i> Submissions
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('withdrawals')">
+                    <i class="fas fa-money-bill-wave"></i> Withdrawals
+                </button>
+                <button class="mobile-tab-btn" onclick="switchAdminMobileTab('messages')">
+                    <i class="fas fa-envelope"></i> Messages
+                </button>
+            </div>
+        </div>
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-title">Total Users</div>
@@ -2339,13 +2369,6 @@
         let allMessages = [];
         let currentSupportType = '';
 
-        // Admin emails list - Add your admin emails here
-        const ADMIN_EMAILS = [
-            'admin@example.com',
-            'your-admin-email@gmail.com', // Replace with your actual email
-            'hankwane1@gmail.com'
-        ];
-
         // Exchange rate
         const USD_TO_KES = 129;
 
@@ -2363,11 +2386,6 @@
         function calculateEarnings(reward, score) {
             if (score < 50) return 0;
             return (reward * score) / 100;
-        }
-
-        // Check if user is admin by email
-        function isAdminEmail(email) {
-            return ADMIN_EMAILS.includes(email);
         }
 
         // Toggle video play/pause
@@ -2394,6 +2412,14 @@
             tabs.forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
             switchUserTab(tab);
+            toggleMenu();
+        }
+
+        function switchAdminMobileTab(tab) {
+            const tabs = document.querySelectorAll('#adminDashboard .mobile-tab-btn');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            switchAdminTab(tab);
             toggleMenu();
         }
 
@@ -2478,7 +2504,7 @@
             messageDiv.className = `message ${type}`;
         }
 
-        // Auth state
+        // Auth state - FIXED: Properly handle admin role from Firestore
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
@@ -2492,40 +2518,31 @@
                 }
 
                 try {
-                    // Load user data
+                    // Load user data from Firestore
                     await loadUserData();
                     
-                    // Check membership status
+                    // Check membership status if userData exists
                     if (userData) {
                         checkMembershipStatus();
-                    }
-                    
-                    // Check if admin (based on email or role)
-                    const isAdmin = userData?.role === 'admin' || isAdminEmail(user.email);
-                    
-                    if (isAdmin) {
-                        console.log('Admin detected:', user.email);
-                        // Update user document to ensure admin role is set
-                        if (userData?.role !== 'admin') {
-                            await db.collection('users').doc(user.uid).update({
-                                role: 'admin'
-                            });
-                            userData.role = 'admin';
-                        }
                         
-                        document.getElementById('switchToAdminBtn').style.display = 'inline-block';
-                        document.getElementById('mobileSwitchToAdminBtn').style.display = 'inline-block';
-                        document.getElementById('adminEmail').textContent = user.email;
-                        document.getElementById('mobileAdminEmail').textContent = user.email;
-                        await loadAdminData();
+                        // Check if user is admin based on Firestore role
+                        if (userData.role === 'admin') {
+                            console.log('Admin detected from Firestore:', user.email);
+                            document.getElementById('switchToAdminBtn').style.display = 'inline-block';
+                            document.getElementById('mobileSwitchToAdminBtn').style.display = 'inline-block';
+                            document.getElementById('adminEmail').textContent = user.email;
+                            document.getElementById('mobileAdminEmail').textContent = user.email;
+                            await loadAdminData();
+                        }
                     }
                     
-                    // Show appropriate view
+                    // Show user dashboard
                     showView('user');
                     await loadUserDashboard();
                 } catch (error) {
                     console.error('Error in auth state:', error);
-                    if (error.code === 'permission-denied') {
+                    // If user document doesn't exist, create it
+                    if (error.code === 'permission-denied' || error.message.includes('permission')) {
                         await createUserDocument(user);
                     }
                 }
@@ -2537,12 +2554,9 @@
 
         async function createUserDocument(user) {
             try {
-                // Determine if this user should be admin
-                const isAdmin = isAdminEmail(user.email);
-                
                 await db.collection('users').doc(user.uid).set({
                     email: user.email,
-                    role: isAdmin ? 'admin' : 'user',
+                    role: 'user', // Default role is user
                     wallet: 0,
                     active: true,
                     verified: user.emailVerified,
@@ -2550,7 +2564,7 @@
                     membershipStatus: 'pending',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                console.log('User document created with role:', isAdmin ? 'admin' : 'user');
+                console.log('User document created with role: user');
                 await loadUserData();
             } catch (error) {
                 console.error('Error creating user document:', error);
@@ -2575,7 +2589,7 @@
         }
 
         function switchToAdmin() {
-            if (userData && (userData.role === 'admin' || isAdminEmail(currentUser?.email))) {
+            if (userData && userData.role === 'admin') {
                 showView('admin');
                 loadAdminData();
             } else {
@@ -2595,21 +2609,25 @@
             tabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
             
-            const tabIndex = { available: 0, submissions: 1, withdrawals: 2, messages: 3, support: 4 }[tab];
-            if (tabIndex !== undefined) {
-                tabs[tabIndex]?.classList.add('active');
-                document.getElementById(
-                    tab === 'available' ? 'availableTasksPanel' :
-                    tab === 'submissions' ? 'mySubmissionsPanel' :
-                    tab === 'withdrawals' ? 'userWithdrawalsPanel' :
-                    tab === 'messages' ? 'userMessagesPanel' :
-                    'userSupportPanel'
-                ).classList.add('active');
-                
-                if (tab === 'available') loadUserTasks();
-                if (tab === 'submissions') loadUserSubmissions();
-                if (tab === 'withdrawals') loadWithdrawalsHistory();
-                if (tab === 'messages') loadUserMessages();
+            if (tab === 'available') {
+                tabs[0]?.classList.add('active');
+                document.getElementById('availableTasksPanel').classList.add('active');
+                loadUserTasks();
+            } else if (tab === 'submissions') {
+                tabs[1]?.classList.add('active');
+                document.getElementById('mySubmissionsPanel').classList.add('active');
+                loadUserSubmissions();
+            } else if (tab === 'withdrawals') {
+                tabs[2]?.classList.add('active');
+                document.getElementById('userWithdrawalsPanel').classList.add('active');
+                loadWithdrawalsHistory();
+            } else if (tab === 'messages') {
+                tabs[3]?.classList.add('active');
+                document.getElementById('userMessagesPanel').classList.add('active');
+                loadUserMessages();
+            } else if (tab === 'support') {
+                tabs[4]?.classList.add('active');
+                document.getElementById('userSupportPanel').classList.add('active');
             }
         }
 
@@ -2620,22 +2638,30 @@
             tabs.forEach(t => t.classList.remove('active'));
             panels.forEach(p => p.classList.remove('active'));
             
-            const tabMap = {
-                tasks: 0, users: 1, memberships: 2,
-                submissions: 3, withdrawals: 4, messages: 5
-            };
-            
-            if (tabMap[tab] !== undefined) {
-                tabs[tabMap[tab]]?.classList.add('active');
-                document.getElementById(`admin${tab.charAt(0).toUpperCase() + tab.slice(1)}Panel`).classList.add('active');
-                
-                // Load data based on tab
-                if (tab === 'tasks') loadAdminTasks();
-                if (tab === 'users') loadAdminUsers();
-                if (tab === 'memberships') loadAdminMemberships();
-                if (tab === 'submissions') loadAdminSubmissions();
-                if (tab === 'withdrawals') loadAdminWithdrawals();
-                if (tab === 'messages') loadAdminMessages();
+            if (tab === 'tasks') {
+                tabs[0]?.classList.add('active');
+                document.getElementById('adminTasksPanel').classList.add('active');
+                loadAdminTasks();
+            } else if (tab === 'users') {
+                tabs[1]?.classList.add('active');
+                document.getElementById('adminUsersPanel').classList.add('active');
+                loadAdminUsers();
+            } else if (tab === 'memberships') {
+                tabs[2]?.classList.add('active');
+                document.getElementById('adminMembershipsPanel').classList.add('active');
+                loadAdminMemberships();
+            } else if (tab === 'submissions') {
+                tabs[3]?.classList.add('active');
+                document.getElementById('adminSubmissionsPanel').classList.add('active');
+                loadAdminSubmissions();
+            } else if (tab === 'withdrawals') {
+                tabs[4]?.classList.add('active');
+                document.getElementById('adminWithdrawalsPanel').classList.add('active');
+                loadAdminWithdrawals();
+            } else if (tab === 'messages') {
+                tabs[5]?.classList.add('active');
+                document.getElementById('adminMessagesPanel').classList.add('active');
+                loadAdminMessages();
             }
         }
 
@@ -2694,12 +2720,9 @@
 
                 await user.sendEmailVerification();
 
-                // Check if this email should be admin
-                const isAdmin = isAdminEmail(email);
-
                 await db.collection('users').doc(user.uid).set({
                     email: user.email,
-                    role: isAdmin ? 'admin' : 'user',
+                    role: 'user',
                     wallet: 0,
                     active: true,
                     verified: false,
@@ -2747,13 +2770,10 @@
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 
                 if (!userDoc.exists) {
-                    // Check if this email should be admin
-                    const isAdmin = isAdminEmail(user.email);
-                    
                     // Create new user profile
                     await db.collection('users').doc(user.uid).set({
                         email: user.email,
-                        role: isAdmin ? 'admin' : 'user',
+                        role: 'user',
                         wallet: 0,
                         active: true,
                         verified: true,
@@ -2761,16 +2781,7 @@
                         membershipStatus: 'pending',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    console.log('New user created with role:', isAdmin ? 'admin' : 'user');
-                } else {
-                    // Check if user should be admin but isn't
-                    const userData = userDoc.data();
-                    if (isAdminEmail(user.email) && userData.role !== 'admin') {
-                        await db.collection('users').doc(user.uid).update({
-                            role: 'admin'
-                        });
-                        console.log('User role upgraded to admin');
-                    }
+                    console.log('New user created');
                 }
                 
                 // No need to redirect - auth state will handle it
@@ -2796,7 +2807,9 @@
                 try {
                     await currentUser.reload();
                     if (currentUser.emailVerified) {
-                        await db.collection('users').doc(currentUser.uid).update({ verified: true });
+                        await db.collection('users').doc(currentUser.uid).update({
+                            verified: true
+                        });
                         showView('user');
                         await loadUserDashboard();
                     } else {
@@ -2921,12 +2934,19 @@
 
         // User dashboard functions
         async function loadUserData() {
-            const userDoc = await db.collection('users').doc(currentUser.uid).get();
-            if (userDoc.exists) {
-                userData = userDoc.data();
-                updateWalletDisplay();
-            } else {
-                await createUserDocument(currentUser);
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    userData = userDoc.data();
+                    console.log('User data loaded:', userData);
+                    updateWalletDisplay();
+                } else {
+                    // Create user document if it doesn't exist
+                    await createUserDocument(currentUser);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                throw error;
             }
         }
 
@@ -2981,6 +3001,7 @@
                     tasksContainer.appendChild(card);
                 });
             } catch (error) {
+                console.error('Error loading tasks:', error);
                 tasksContainer.innerHTML = '<div class="empty-state error"><p>Error loading tasks</p></div>';
             }
         }
@@ -3098,6 +3119,7 @@
                     container.appendChild(card);
                 }
             } catch (error) {
+                console.error('Error loading submissions:', error);
                 container.innerHTML = '<div class="empty-state error"><p>Error loading submissions</p></div>';
             }
         }
@@ -3165,6 +3187,7 @@
                     container.appendChild(card);
                 });
             } catch (error) {
+                console.error('Error loading messages:', error);
                 container.innerHTML = '<div class="empty-state error"><p>Error loading messages</p></div>';
             }
         }
@@ -3596,7 +3619,9 @@
 
             try {
                 await db.collection('tasks').add({
-                    title, description, reward,
+                    title,
+                    description,
+                    reward,
                     rewardKES: usdToKes(reward),
                     active: true,
                     submissionsCount: 0,
@@ -3604,6 +3629,7 @@
                 });
 
                 showAdminMessage('taskMessage', 'Task created!', 'success');
+                
                 document.getElementById('taskTitle').value = '';
                 document.getElementById('taskDescription').value = '';
                 document.getElementById('taskReward').value = '';
