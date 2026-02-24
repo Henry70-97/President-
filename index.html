@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>TaskMaster Pro - No Indexes Required</title>
+    <title>TaskMaster Pro - Complete Working Platform</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -13,6 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* All the CSS from previous version remains exactly the same */
         * {
             margin: 0;
             padding: 0;
@@ -802,18 +803,364 @@
         </div>
     </div>
 
-    <!-- Modals (same as before) -->
-    <div id="task-modal" class="modal">[modal content]</div>
-    <div id="review-modal" class="modal">[modal content]</div>
-    <div id="payment-modal" class="modal">[modal content]</div>
-    <div id="message-modal" class="modal">[modal content]</div>
-    <div id="create-task-modal" class="modal">[modal content]</div>
-    <div id="edit-task-modal" class="modal">[modal content]</div>
-    <div id="role-modal" class="modal">[modal content]</div>
-    <div id="wallet-modal" class="modal">[modal content]</div>
-    <div id="community-modal" class="modal">[modal content]</div>
-    <div id="settings-modal" class="modal">[modal content]</div>
-    <div id="report-modal" class="modal">[modal content]</div>
+    <!-- Task Details Modal -->
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-task-title">Task Details</h3>
+                <span class="modal-close" onclick="closeModal('task-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="modal-task-description" style="margin-bottom: 20px; line-height: 1.6;"></p>
+                <div class="task-badges" id="modal-task-badges"></div>
+                <div style="background: var(--light); padding: 15px; border-radius: 12px; margin: 20px 0;">
+                    <strong>Reward:</strong> <span id="modal-task-reward" style="color: var(--success); font-size: 18px;"></span>
+                </div>
+                <div class="form-group">
+                    <label>Your Submission</label>
+                    <textarea id="task-submission-text" class="form-control" rows="6" placeholder="Enter your work submission here..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="submitTask()">Submit Work</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('task-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Review Submission</h3>
+                <span class="modal-close" onclick="closeModal('review-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="background: var(--light); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <p><strong>User:</strong> <span id="review-user-email"></span></p>
+                    <p><strong>Task:</strong> <span id="review-task-title"></span></p>
+                </div>
+                <div style="background: white; border: 2px solid var(--gray-200); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <strong>Work Submitted:</strong>
+                    <p id="review-work-text" style="margin-top: 10px; line-height: 1.6;"></p>
+                </div>
+                <div class="form-group">
+                    <label>Score (0-100) - Scores below 50% are rejected</label>
+                    <input type="number" id="review-score" class="form-control" min="0" max="100" step="1">
+                </div>
+                <div class="form-group">
+                    <label>Feedback</label>
+                    <textarea id="review-feedback" class="form-control" rows="4" placeholder="Provide feedback to the user..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="submitReview('approved')">Approve</button>
+                <button class="btn btn-danger" onclick="submitReview('rejected')">Reject</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('review-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upgrade to Premium</h3>
+                <span class="modal-close" onclick="closeModal('payment-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <i class="fas fa-crown" style="font-size: 50px; color: var(--accent);"></i>
+                    <h2 style="margin: 15px 0;">$3 USD = 387 KES</h2>
+                    <p style="color: var(--gray-500);">One-time payment for lifetime premium access</p>
+                </div>
+                <a href="https://lipana.dev/pay/387" target="_blank" class="btn btn-primary" style="display: block; text-align: center; text-decoration: none; margin: 20px 0;">
+                    <i class="fas fa-lock"></i> Pay Now with Lipana
+                </a>
+                <div class="form-group">
+                    <label>Paste Payment Confirmation</label>
+                    <textarea id="payment-proof" class="form-control" rows="4" placeholder="Paste the payment confirmation message here..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="submitPaymentProof()">Submit Proof</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('payment-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="message-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Message</h3>
+                <span class="modal-close" onclick="closeModal('message-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p id="message-content" style="line-height: 1.6;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Task Modal -->
+    <div id="create-task-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Task</h3>
+                <span class="modal-close" onclick="closeModal('create-task-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="task-title" class="form-control" placeholder="Enter task title">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="task-description" class="form-control" rows="4" placeholder="Enter detailed task description"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label>Reward (USD)</label>
+                        <input type="number" id="task-reward" class="form-control" min="0.1" step="0.1" placeholder="10.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="task-category" class="form-control">
+                            <option value="writing">Writing</option>
+                            <option value="design">Design</option>
+                            <option value="development">Development</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Difficulty</label>
+                    <select id="task-difficulty" class="form-control">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="createTask()">Create Task</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('create-task-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="edit-task-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Task</h3>
+                <span class="modal-close" onclick="closeModal('edit-task-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-task-id">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="edit-task-title" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="edit-task-description" class="form-control" rows="4"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label>Reward (USD)</label>
+                        <input type="number" id="edit-task-reward" class="form-control" min="0.1" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="edit-task-category" class="form-control">
+                            <option value="writing">Writing</option>
+                            <option value="design">Design</option>
+                            <option value="development">Development</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Difficulty</label>
+                    <select id="edit-task-difficulty" class="form-control">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="edit-task-active" class="form-control">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="updateTask()">Update Task</button>
+                <button class="btn btn-danger" onclick="deleteTask()">Delete Task</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('edit-task-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Modal -->
+    <div id="role-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change User Role</h3>
+                <span class="modal-close" onclick="closeModal('role-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>User Email</label>
+                    <input type="text" id="role-user-email" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Select Role</label>
+                    <select id="role-select" class="form-control">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="updateUserRole()">Update Role</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('role-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Modal -->
+    <div id="wallet-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adjust Wallet Balance</h3>
+                <span class="modal-close" onclick="closeModal('wallet-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>User Email</label>
+                    <input type="text" id="wallet-user-email" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Current Balance</label>
+                    <input type="text" id="wallet-current" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Amount to Add/Subtract</label>
+                    <input type="number" id="wallet-amount" class="form-control" step="0.01" placeholder="Use negative for subtraction">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="processWalletAdjustment()">Update Wallet</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('wallet-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Link Modal -->
+    <div id="community-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Community Link</h3>
+                <span class="modal-close" onclick="closeModal('community-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="community-platform" class="form-control">
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="discord">Discord</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Group Name</label>
+                    <input type="text" id="community-name" class="form-control" placeholder="e.g., TaskMaster Community">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="community-description" class="form-control" rows="2" placeholder="Brief description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Invite Link</label>
+                    <input type="url" id="community-url" class="form-control" placeholder="https://chat.whatsapp.com/...">
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="community-active" checked> Active</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveCommunityLink()">Save Link</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('community-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>System Settings</h3>
+                <span class="modal-close" onclick="closeModal('settings-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Minimum Withdrawal Amount ($)</label>
+                    <input type="number" id="setting-min-withdrawal" class="form-control" min="1" step="1" value="5">
+                </div>
+                <div class="form-group">
+                    <label>Review Time Expectation (hours)</label>
+                    <input type="number" id="setting-review-time" class="form-control" min="1" max="72" value="24">
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="setting-registrations" checked> Allow New Registrations</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="setting-maintenance"> Maintenance Mode</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('settings-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="report-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generate Report</h3>
+                <span class="modal-close" onclick="closeModal('report-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Report Type</label>
+                    <select id="report-type" class="form-control">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date Range</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" id="report-start" class="form-control">
+                        <input type="date" id="report-end" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="generateReport()">Generate</button>
+                <button class="btn" style="background: var(--gray-200);" onclick="closeModal('report-modal')">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Firebase Config
@@ -839,7 +1186,7 @@
         let currentSubmissionId = null;
         let currentUserId = null;
         let currentEditTaskId = null;
-        let isAdminView = true; // For admin toggle
+        let isAdminView = true;
         const USD_TO_KES = 129;
 
         // Auth State Observer
@@ -857,7 +1204,6 @@
                 setupMenu();
                 showView('dashboard');
                 
-                // Show view toggle for admins
                 if (currentUserData.role === 'admin') {
                     document.getElementById('viewToggleBtn').classList.remove('hidden');
                     isAdminView = true;
@@ -882,7 +1228,7 @@
             } else {
                 loadUserContent('dashboard');
             }
-            setupMenu(); // Refresh menu
+            setupMenu();
         }
 
         function updateViewToggleButton() {
@@ -936,7 +1282,6 @@
         async function getCollection(collectionName, conditions = [], sortField = null, sortDirection = 'desc') {
             let query = db.collection(collectionName);
             
-            // Apply all where conditions
             conditions.forEach(cond => {
                 query = query.where(cond.field, cond.operator, cond.value);
             });
@@ -948,13 +1293,11 @@
                 results.push({ id: doc.id, ...doc.data() });
             });
             
-            // Manual sorting if sortField provided
             if (sortField) {
                 results.sort((a, b) => {
                     let valA = a[sortField];
                     let valB = b[sortField];
                     
-                    // Handle timestamps
                     if (valA?.toDate) valA = valA.toDate();
                     if (valB?.toDate) valB = valB.toDate();
                     
@@ -969,7 +1312,7 @@
             return results;
         }
 
-        // Setup Menu (simplified - same as before)
+        // Setup Menu
         function setupMenu() {
             const menuEl = document.getElementById('user-menu');
             menuEl.innerHTML = '';
@@ -1091,7 +1434,7 @@
             }
         }
 
-        // Load User Content (simplified versions without indexes)
+        // Load User Content
         async function loadUserContent(view) {
             showLoading();
             const contentEl = document.getElementById('content-area');
@@ -1142,11 +1485,10 @@
             hideLoading();
         }
 
-        // User Dashboard (no indexes needed)
+        // User Dashboard
         async function loadUserDashboard(contentEl) {
             const stats = await getUserStats();
             
-            // Get recent submissions (limit 5) - manual limit after sorting
             const allSubmissions = await getCollection('submissions', 
                 [{ field: 'userId', operator: '==', value: currentUser.uid }],
                 'createdAt', 'desc'
@@ -1213,7 +1555,7 @@
             contentEl.innerHTML = html;
         }
 
-        // User Tasks (no indexes needed)
+        // User Tasks
         async function loadUserTasks(contentEl) {
             const tasks = await getCollection('tasks', 
                 [{ field: 'active', operator: '==', value: true }],
@@ -1270,7 +1612,26 @@
             `;
         }
 
-        // User Submissions by Status (no indexes needed)
+        // Filter Tasks
+        function filterTasks() {
+            const category = document.getElementById('category-filter')?.value || 'all';
+            const difficulty = document.getElementById('difficulty-filter')?.value || 'all';
+            
+            const cards = document.querySelectorAll('.task-card');
+            
+            cards.forEach(card => {
+                const cardCategory = card.dataset.category;
+                const cardDifficulty = card.dataset.difficulty;
+                
+                let show = true;
+                if (category !== 'all' && cardCategory !== category) show = false;
+                if (difficulty !== 'all' && cardDifficulty !== difficulty) show = false;
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // User Submissions by Status
         async function loadUserSubmissionsByStatus(contentEl, status) {
             const submissions = await getCollection('submissions', 
                 [
@@ -1310,7 +1671,7 @@
             contentEl.innerHTML = html;
         }
 
-        // User Earnings (no indexes needed)
+        // User Earnings
         async function loadUserEarnings(contentEl) {
             const submissions = await getCollection('submissions', 
                 [
@@ -1360,7 +1721,7 @@
             contentEl.innerHTML = html;
         }
 
-        // User Transactions (no indexes needed)
+        // User Transactions
         async function loadUserTransactions(contentEl) {
             const transactions = await getCollection('transactions', 
                 [{ field: 'userId', operator: '==', value: currentUser.uid }],
@@ -1392,7 +1753,7 @@
             contentEl.innerHTML = html;
         }
 
-        // User Withdrawals (no indexes needed)
+        // User Withdrawals
         async function loadUserWithdrawals(contentEl) {
             const withdrawals = await getCollection('withdrawals', 
                 [{ field: 'userId', operator: '==', value: currentUser.uid }],
@@ -1467,7 +1828,7 @@
             contentEl.innerHTML = html;
         }
 
-        // User Messages (no indexes needed)
+        // User Messages
         async function loadUserMessages(contentEl) {
             const messages = await getCollection('messages', 
                 [{ field: 'userId', operator: '==', value: currentUser.uid }],
@@ -1493,7 +1854,7 @@
             contentEl.innerHTML = html;
         }
 
-        // User Task Stats (no indexes needed)
+        // User Task Stats
         async function loadUserTaskStats(contentEl) {
             const submissions = await getCollection('submissions', 
                 [{ field: 'userId', operator: '==', value: currentUser.uid }]
@@ -1569,7 +1930,7 @@
             contentEl.innerHTML = html;
         }
 
-        // User Subscription (no indexes needed)
+        // User Subscription
         async function loadUserSubscription(contentEl) {
             const subscriptions = await getCollection('subscriptions', 
                 [{ field: 'userId', operator: '==', value: currentUser.uid }],
@@ -1628,7 +1989,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Load Admin Content (simplified - similar pattern)
+        // Load Admin Content
         async function loadAdminContent(view) {
             showLoading();
             const contentEl = document.getElementById('content-area');
@@ -1673,7 +2034,7 @@
             hideLoading();
         }
 
-        // Admin Dashboard (simplified)
+        // Admin Dashboard
         async function loadAdminDashboard(contentEl) {
             const users = await getCollection('users');
             const premiumUsers = users.filter(u => u.membershipPaid).length;
@@ -1681,7 +2042,6 @@
             const pendingWithdrawals = (await getCollection('withdrawals', [{ field: 'status', operator: '==', value: 'pending' }])).length;
             const tasks = await getCollection('tasks');
             
-            // Calculate revenue
             const payments = await getCollection('membershipPayments', [{ field: 'status', operator: '==', value: 'approved' }]);
             const revenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
@@ -1723,7 +2083,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Admin Tasks (no indexes needed)
+        // Admin Tasks
         async function loadAdminTasks(contentEl) {
             const tasks = await getCollection('tasks', [], 'createdAt', 'desc');
 
@@ -1777,7 +2137,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Admin Users (no indexes needed)
+        // Admin Users
         async function loadAdminUsers(contentEl) {
             const users = await getCollection('users', [], 'createdAt', 'desc');
 
@@ -1803,7 +2163,7 @@
             `;
 
             users.forEach(u => {
-                if (u.id !== currentUser.uid) { // Don't show current admin
+                if (u.id !== currentUser.uid) {
                     html += `
                         <tr class="user-row" data-email="${(u.email || '').toLowerCase()}">
                             <td>${u.email}</td>
@@ -1833,7 +2193,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Admin Submissions (no indexes needed)
+        // Admin Submissions
         async function loadAdminSubmissions(contentEl) {
             const submissions = await getCollection('submissions', [], 'submittedAt', 'desc');
 
@@ -1886,7 +2246,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Admin Withdrawals (no indexes needed)
+        // Admin Withdrawals
         async function loadAdminWithdrawals(contentEl) {
             const withdrawals = await getCollection('withdrawals', [], 'requestedAt', 'desc');
 
@@ -1919,7 +2279,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Admin Memberships (no indexes needed)
+        // Admin Memberships
         async function loadAdminMemberships(contentEl) {
             const payments = await getCollection('membershipPayments', [], 'createdAt', 'desc');
 
@@ -1951,7 +2311,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Admin Transactions (no indexes needed)
+        // Admin Transactions
         async function loadAdminTransactions(contentEl) {
             const transactions = await getCollection('transactions', [], 'createdAt', 'desc');
 
@@ -1978,7 +2338,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Community Links (no indexes needed)
+        // Community Links
         async function loadCommunityLinks(contentEl, isAdmin) {
             const links = await getCollection('communityLinks', [], 'createdAt', 'desc');
             const activeLinks = isAdmin ? links : links.filter(l => l.isActive);
@@ -2018,7 +2378,7 @@
             contentEl.innerHTML = html;
         }
 
-        // Admin Messages (no indexes needed)
+        // Admin Messages
         async function loadAdminMessages(contentEl) {
             const users = await getCollection('users', [{ field: 'role', operator: '==', value: 'user' }]);
             let options = '<option value="">Select user...</option>';
@@ -2203,7 +2563,7 @@
             if (currentUser.emailVerified) {
                 await db.collection('users').doc(currentUser.uid).update({ verified: true });
                 showToast('Email verified!', 'success');
-                auth.onAuthStateChanged(); // Re-trigger auth state
+                auth.onAuthStateChanged();
             } else {
                 showToast('Email not verified yet', 'warning');
             }
@@ -2286,21 +2646,9 @@
                 document.getElementById('edit-task-title').value = task.title || '';
                 document.getElementById('edit-task-description').value = task.description || '';
                 document.getElementById('edit-task-reward').value = task.reward || '';
-                
-                let categoryOptions = '';
-                ['writing', 'design', 'development', 'marketing', 'other'].forEach(c => {
-                    categoryOptions += `<option value="${c}" ${task.category === c ? 'selected' : ''}>${c}</option>`;
-                });
-                document.getElementById('edit-task-category').innerHTML = categoryOptions;
-                
-                let difficultyOptions = '';
-                ['easy', 'medium', 'hard'].forEach(d => {
-                    difficultyOptions += `<option value="${d}" ${task.difficulty === d ? 'selected' : ''}>${d}</option>`;
-                });
-                document.getElementById('edit-task-difficulty').innerHTML = difficultyOptions;
-                
+                document.getElementById('edit-task-category').value = task.category || 'writing';
+                document.getElementById('edit-task-difficulty').value = task.difficulty || 'medium';
                 document.getElementById('edit-task-active').value = task.active ? 'true' : 'false';
-                
                 openModal('edit-task-modal');
             });
         }
@@ -2751,6 +3099,44 @@
             }, { merge: true });
             showToast('Settings saved!', 'success');
             closeModal('settings-modal');
+            hideLoading();
+        }
+
+        // Generate Report
+        async function generateReport() {
+            const type = document.getElementById('report-type').value;
+            const start = document.getElementById('report-start').value;
+            const end = document.getElementById('report-end').value;
+
+            showLoading();
+            
+            const users = await getCollection('users');
+            const submissions = await getCollection('submissions');
+            const withdrawals = await getCollection('withdrawals');
+            const payments = await getCollection('membershipPayments', [{ field: 'status', operator: '==', value: 'approved' }]);
+
+            let totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+            let totalPaid = withdrawals.filter(w => w.status === 'paid').reduce((sum, w) => sum + (w.amount || 0), 0);
+            let approved = submissions.filter(s => s.status === 'approved').length;
+            let rejected = submissions.filter(s => s.status === 'rejected').length;
+            let pending = submissions.filter(s => s.status === 'pending').length;
+
+            const reportHtml = `
+                <div style="background: white; border-radius: 16px; padding: 20px; margin-top: 20px;">
+                    <h4 class="mb-3">Report Summary (${type})</h4>
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="stat-value">${users.length}</div><div class="stat-label">Total Users</div></div>
+                        <div class="stat-card"><div class="stat-value">$${totalRevenue.toFixed(2)}</div><div class="stat-label">Revenue</div></div>
+                        <div class="stat-card"><div class="stat-value">$${totalPaid.toFixed(2)}</div><div class="stat-label">Paid Out</div></div>
+                        <div class="stat-card"><div class="stat-value">${approved}</div><div class="stat-label">Approved Tasks</div></div>
+                        <div class="stat-card"><div class="stat-value">${rejected}</div><div class="stat-label">Rejected Tasks</div></div>
+                        <div class="stat-card"><div class="stat-value">${pending}</div><div class="stat-label">Pending Reviews</div></div>
+                    </div>
+                    <button class="btn btn-primary mt-3" onclick="window.print()">Print Report</button>
+                </div>
+            `;
+
+            document.getElementById('report-results').innerHTML = reportHtml;
             hideLoading();
         }
 
