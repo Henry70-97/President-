@@ -40,6 +40,7 @@
             --success: #10b981;
             --warning: #f59e0b;
             --info: #3b82f6;
+            --fee-color: #f97316;
         }
 
         body {
@@ -652,6 +653,17 @@
             min-width: 150px;
         }
 
+        /* Withdrawal Fee Badge */
+        .fee-badge {
+            background: var(--fee-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .menu-toggle { display: block; }
@@ -1188,6 +1200,7 @@
         let currentEditTaskId = null;
         let isAdminView = true;
         const USD_TO_KES = 129;
+        const WITHDRAWAL_FEE = 0.03; // 3% fee
 
         // Auth State Observer
         auth.onAuthStateChanged(async (user) => {
@@ -1753,7 +1766,7 @@
             contentEl.innerHTML = html;
         }
 
-        // User Withdrawals
+        // User Withdrawals with 3% fee
         async function loadUserWithdrawals(contentEl) {
             const withdrawals = await getCollection('withdrawals', 
                 [{ field: 'userId', operator: '==', value: currentUser.uid }],
@@ -1762,7 +1775,7 @@
 
             let html = `
                 <div class="flex justify-between items-center mb-3">
-                    <h3>Withdrawal History</h3>
+                    <h3>Withdrawal History <span class="fee-badge">3% Fee</span></h3>
                     ${currentUserData.membershipPaid ? `
                         <button class="btn btn-primary" onclick="showWithdrawalForm()" style="width: auto;">Request Withdrawal</button>
                     ` : ''}
@@ -1781,11 +1794,12 @@
             if (currentUserData.membershipPaid) {
                 html += `
                     <div id="withdrawal-form" class="hidden" style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px;">
-                        <h4 class="mb-3">Request Withdrawal</h4>
+                        <h4 class="mb-3">Request Withdrawal <span class="fee-badge">3% Fee Applied</span></h4>
                         <div class="form-group">
                             <label>Amount (USD)</label>
-                            <input type="number" id="withdraw-amount" class="form-control" min="5" max="${currentUserData.wallet}" step="0.01" value="5">
-                            <small>Min: $5 | Available: $${currentUserData.wallet.toFixed(2)}</small>
+                            <input type="number" id="withdraw-amount" class="form-control" min="5" max="${currentUserData.wallet}" step="0.01" value="5" onchange="calculateWithdrawalFee()">
+                            <small id="fee-calculation">Fee: $0.00 | You'll receive: $0.00</small>
+                            <small class="d-block">Available: $${currentUserData.wallet.toFixed(2)}</small>
                         </div>
                         <div class="form-group">
                             <label>Method</label>
@@ -1810,13 +1824,16 @@
                 html += '<div class="text-center p-5">No withdrawal requests</div>';
             } else {
                 withdrawals.forEach(w => {
+                    const fee = w.amount * WITHDRAWAL_FEE;
+                    const netAmount = w.amount - fee;
                     html += `
                         <div class="submission-item ${w.status === 'paid' ? 'submission-approved' : 'submission-pending'}">
                             <div class="flex justify-between">
                                 <span class="submission-title">$${w.amount} ≈ ${w.amount * USD_TO_KES} KES</span>
                                 <span class="status-badge ${w.status === 'paid' ? 'badge-approved' : 'badge-pending'}">${w.status}</span>
                             </div>
-                            <div>${w.method} | ${w.phone}</div>
+                            <div>Method: ${w.method} | Phone: ${w.phone}</div>
+                            <div><small>Fee (3%): $${fee.toFixed(2)} | Net: $${netAmount.toFixed(2)}</small></div>
                             <small>Requested: ${formatDate(w.requestedAt)}</small>
                             ${w.paidAt ? `<small><br>Paid: ${formatDate(w.paidAt)}</small>` : ''}
                         </div>
@@ -1826,6 +1843,14 @@
             
             html += '</div>';
             contentEl.innerHTML = html;
+        }
+
+        // Calculate withdrawal fee dynamically
+        function calculateWithdrawalFee() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value) || 0;
+            const fee = amount * WITHDRAWAL_FEE;
+            const net = amount - fee;
+            document.getElementById('fee-calculation').innerHTML = `Fee (3%): $${fee.toFixed(2)} | You'll receive: $${net.toFixed(2)}`;
         }
 
         // User Messages
@@ -2045,6 +2070,10 @@
             const payments = await getCollection('membershipPayments', [{ field: 'status', operator: '==', value: 'approved' }]);
             const revenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
+            // Calculate total fees collected
+            const paidWithdrawals = await getCollection('withdrawals', [{ field: 'status', operator: '==', value: 'paid' }]);
+            const totalFees = paidWithdrawals.reduce((sum, w) => sum + (w.amount * WITHDRAWAL_FEE), 0);
+
             let html = `
                 <div class="stats-grid">
                     <div class="stat-card" onclick="loadAdminContent('users')">
@@ -2070,12 +2099,12 @@
                     <div class="stat-card">
                         <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
                         <div class="stat-value">$${revenue.toFixed(2)}</div>
-                        <div class="stat-label">Total Revenue</div>
+                        <div class="stat-label">Membership Revenue</div>
                     </div>
-                    <div class="stat-card" onclick="loadAdminContent('tasks')">
-                        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
-                        <div class="stat-value">${tasks.length}</div>
-                        <div class="stat-label">Total Tasks</div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-percent"></i></div>
+                        <div class="stat-value">$${totalFees.toFixed(2)}</div>
+                        <div class="stat-label">Withdrawal Fees</div>
                     </div>
                 </div>
             `;
@@ -2246,20 +2275,24 @@
             contentEl.innerHTML = html;
         }
 
-        // Admin Withdrawals
+        // Admin Withdrawals with fee display
         async function loadAdminWithdrawals(contentEl) {
             const withdrawals = await getCollection('withdrawals', [], 'requestedAt', 'desc');
 
-            let html = '<h3 class="mb-3">Withdrawal Requests</h3><div class="admin-table-container"><table class="admin-table"><thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Phone</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+            let html = '<h3 class="mb-3">Withdrawal Requests <span class="fee-badge">3% Platform Fee</span></h3><div class="admin-table-container"><table class="admin-table"><thead><tr><th>User</th><th>Amount</th><th>Fee (3%)</th><th>Net</th><th>Method</th><th>Phone</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
 
             if (withdrawals.length === 0) {
-                html += '<tr><td colspan="7" class="text-center p-5">No withdrawals</td></tr>';
+                html += '<tr><td colspan="9" class="text-center p-5">No withdrawals</td></tr>';
             } else {
                 withdrawals.forEach(w => {
+                    const fee = w.amount * WITHDRAWAL_FEE;
+                    const net = w.amount - fee;
                     html += `
                         <tr>
                             <td>${w.userEmail}</td>
-                            <td>$${w.amount} ≈ ${w.amount * USD_TO_KES} KES</td>
+                            <td>$${w.amount}</td>
+                            <td>$${fee.toFixed(2)}</td>
+                            <td>$${net.toFixed(2)}</td>
                             <td>${w.method}</td>
                             <td>${w.phone}</td>
                             <td><span class="status-badge ${w.status === 'paid' ? 'badge-approved' : 'badge-pending'}">${w.status}</span></td>
@@ -2415,6 +2448,11 @@
                     <div class="form-group">
                         <label>Minimum Withdrawal ($)</label>
                         <input type="number" id="setting-min-withdrawal" class="form-control" value="${settings.minWithdrawal || 5}">
+                    </div>
+                    <div class="form-group">
+                        <label>Withdrawal Fee (%)</label>
+                        <input type="number" id="setting-withdrawal-fee" class="form-control" value="${(settings.withdrawalFee || 3)}" step="0.1" min="0" max="10">
+                        <small>Current fee: ${WITHDRAWAL_FEE * 100}%</small>
                     </div>
                     <div class="form-group">
                         <label>Review Time (hours)</label>
@@ -2586,27 +2624,47 @@
             });
         }
 
+        // Fixed submitTask with proper permissions
         async function submitTask() {
             const work = document.getElementById('task-submission-text').value;
             if (!work.trim()) return showToast('Enter your work', 'error');
 
             showLoading();
             try {
-                const task = await (await db.collection('tasks').doc(currentTaskId).get()).data();
-                await db.collection('submissions').add({
-                    userId: currentUser.uid, userEmail: currentUser.email,
-                    taskId: currentTaskId, taskTitle: task.title, workText: work,
-                    status: 'pending', submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                const taskDoc = await db.collection('tasks').doc(currentTaskId).get();
+                const task = taskDoc.data();
+                
+                // Create submission with proper fields
+                const submissionData = {
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    taskId: currentTaskId,
+                    taskTitle: task.title,
+                    workText: work,
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+
+                // Add to submissions collection
+                await db.collection('submissions').add(submissionData);
+                
+                // Update task submission count
                 await db.collection('tasks').doc(currentTaskId).update({
                     submissionsCount: firebase.firestore.FieldValue.increment(1)
                 });
-                showToast('Task submitted!', 'success');
+
+                showToast('Task submitted successfully!', 'success');
                 closeModal('task-modal');
-                loadUserContent('pending');
+                
+                // Refresh the current view
+                if (document.querySelector('.menu-item.active')) {
+                    const activeView = document.querySelector('.menu-item.active').innerText.toLowerCase().includes('pending') ? 'pending' : 'tasks';
+                    loadUserContent(activeView);
+                }
             } catch (error) {
-                showToast(error.message, 'error');
+                console.error('Submission error:', error);
+                showToast(error.message || 'Error submitting task', 'error');
             }
             hideLoading();
         }
@@ -2809,39 +2867,61 @@
             if (!proof.trim()) return showToast('Paste payment confirmation', 'error');
 
             showLoading();
-            await db.collection('membershipPayments').add({
-                userId: currentUser.uid, userEmail: currentUser.email,
-                message: proof, amount: 3, amountKES: 387,
-                status: 'pending',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showToast('Proof submitted! Awaiting approval.', 'success');
-            closeModal('payment-modal');
+            try {
+                await db.collection('membershipPayments').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    message: proof,
+                    amount: 3,
+                    amountKES: 387,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('Proof submitted! Awaiting approval.', 'success');
+                closeModal('payment-modal');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
         async function approveMembership(paymentId, userId) {
             showLoading();
-            const batch = db.batch();
-            batch.update(db.collection('membershipPayments').doc(paymentId), { status: 'approved' });
-            batch.update(db.collection('users').doc(userId), { membershipPaid: true, membershipStatus: 'approved' });
-            batch.set(db.collection('subscriptions').doc(), {
-                userId, plan: 'lifetime', status: 'active',
-                amount: 3, amountKES: 387, paymentMethod: 'mpesa',
-                startDate: firebase.firestore.FieldValue.serverTimestamp(),
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            await batch.commit();
-            showToast('Membership approved!', 'success');
-            loadAdminContent('memberships');
+            try {
+                const batch = db.batch();
+                batch.update(db.collection('membershipPayments').doc(paymentId), { status: 'approved' });
+                batch.update(db.collection('users').doc(userId), { 
+                    membershipPaid: true, 
+                    membershipStatus: 'approved' 
+                });
+                batch.set(db.collection('subscriptions').doc(), {
+                    userId, 
+                    plan: 'lifetime', 
+                    status: 'active',
+                    amount: 3, 
+                    amountKES: 387, 
+                    paymentMethod: 'mpesa',
+                    startDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await batch.commit();
+                showToast('Membership approved!', 'success');
+                loadAdminContent('memberships');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
         async function rejectMembership(paymentId) {
             showLoading();
-            await db.collection('membershipPayments').doc(paymentId).update({ status: 'rejected' });
-            showToast('Membership rejected', 'success');
-            loadAdminContent('memberships');
+            try {
+                await db.collection('membershipPayments').doc(paymentId).update({ status: 'rejected' });
+                showToast('Membership rejected', 'success');
+                loadAdminContent('memberships');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
@@ -2884,48 +2964,53 @@
             if (!feedback) return showToast('Feedback required', 'error');
 
             showLoading();
-            const sub = (await db.collection('submissions').doc(currentSubmissionId).get()).data();
-            const task = (await db.collection('tasks').doc(sub.taskId).get()).data();
-            const earned = calculateEarnings(task.reward, score);
+            try {
+                const sub = (await db.collection('submissions').doc(currentSubmissionId).get()).data();
+                const task = (await db.collection('tasks').doc(sub.taskId).get()).data();
+                const earned = calculateEarnings(task.reward, score);
 
-            const batch = db.batch();
-            batch.update(db.collection('submissions').doc(currentSubmissionId), {
-                status, score, review: feedback, earned,
-                earnedKES: earned * USD_TO_KES,
-                reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+                const batch = db.batch();
+                batch.update(db.collection('submissions').doc(currentSubmissionId), {
+                    status, score, review: feedback, earned,
+                    earnedKES: earned * USD_TO_KES,
+                    reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-            if (status === 'approved' && earned > 0) {
-                const user = await db.collection('users').doc(sub.userId).get();
-                const currentWallet = user.data().wallet || 0;
-                batch.update(db.collection('users').doc(sub.userId), {
-                    wallet: currentWallet + earned
-                });
-                batch.set(db.collection('earnings').doc(), {
-                    userId: sub.userId, taskId: sub.taskId, submissionId: currentSubmissionId,
-                    amount: earned, amountKES: earned * USD_TO_KES,
-                    score, percentage: score + '%', status: 'paid',
-                    paidAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                batch.set(db.collection('transactions').doc(), {
-                    userId: sub.userId, type: 'credit', category: 'task_earned',
-                    amount: earned, amountKES: earned * USD_TO_KES,
-                    description: `Task reward for ${sub.taskTitle}`,
-                    status: 'completed', balance: currentWallet + earned,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                if (status === 'approved' && earned > 0) {
+                    const user = await db.collection('users').doc(sub.userId).get();
+                    const currentWallet = user.data().wallet || 0;
+                    batch.update(db.collection('users').doc(sub.userId), {
+                        wallet: currentWallet + earned
+                    });
+                    batch.set(db.collection('earnings').doc(), {
+                        userId: sub.userId, taskId: sub.taskId, submissionId: currentSubmissionId,
+                        amount: earned, amountKES: earned * USD_TO_KES,
+                        score, percentage: score + '%', status: 'paid',
+                        paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    batch.set(db.collection('transactions').doc(), {
+                        userId: sub.userId, type: 'credit', category: 'task_earned',
+                        amount: earned, amountKES: earned * USD_TO_KES,
+                        description: `Task reward for ${sub.taskTitle}`,
+                        status: 'completed', balance: currentWallet + earned,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                await batch.commit();
+                showToast(`Submission ${status}!`, 'success');
+                closeModal('review-modal');
+                loadAdminContent('submissions');
+            } catch (error) {
+                showToast(error.message, 'error');
             }
-            await batch.commit();
-            showToast(`Submission ${status}!`, 'success');
-            closeModal('review-modal');
-            loadAdminContent('submissions');
             hideLoading();
         }
 
-        // Withdrawal Functions
+        // Withdrawal Functions with 3% fee
         function showWithdrawalForm() {
             document.getElementById('withdrawal-form').classList.remove('hidden');
+            calculateWithdrawalFee();
         }
 
         function hideWithdrawalForm() {
@@ -2946,55 +3031,94 @@
             }
             if (!phone || phone.length < 10) return showToast('Valid phone required', 'error');
 
-            showLoading();
-            const batch = db.batch();
-            const withdrawalRef = db.collection('withdrawals').doc();
-            batch.set(withdrawalRef, {
-                userId: currentUser.uid, userEmail: currentUser.email,
-                amount, amountKES: amount * USD_TO_KES,
-                method, phone, status: 'pending',
-                requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            batch.update(db.collection('users').doc(currentUser.uid), {
-                wallet: currentUserData.wallet - amount
-            });
-            batch.set(db.collection('transactions').doc(), {
-                userId: currentUser.uid, type: 'debit', category: 'withdrawal',
-                amount, amountKES: amount * USD_TO_KES,
-                description: `Withdrawal request via ${method}`,
-                status: 'pending', balance: currentUserData.wallet - amount,
-                reference: withdrawalRef.id,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            await batch.commit();
+            const fee = amount * WITHDRAWAL_FEE;
+            const netAmount = amount - fee;
 
-            currentUserData.wallet -= amount;
-            document.getElementById('wallet-balance').textContent = `$${currentUserData.wallet.toFixed(2)}`;
-            showToast('Withdrawal requested!', 'success');
-            hideWithdrawalForm();
-            loadUserContent('withdrawals');
+            showLoading();
+            try {
+                const batch = db.batch();
+                const withdrawalRef = db.collection('withdrawals').doc();
+                
+                // Create withdrawal request
+                batch.set(withdrawalRef, {
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    amount,
+                    fee,
+                    netAmount,
+                    amountKES: amount * USD_TO_KES,
+                    method,
+                    phone,
+                    status: 'pending',
+                    requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Deduct full amount from user wallet
+                batch.update(db.collection('users').doc(currentUser.uid), {
+                    wallet: currentUserData.wallet - amount
+                });
+
+                // Record transaction
+                batch.set(db.collection('transactions').doc(), {
+                    userId: currentUser.uid,
+                    type: 'debit',
+                    category: 'withdrawal',
+                    amount,
+                    fee,
+                    netAmount,
+                    amountKES: amount * USD_TO_KES,
+                    description: `Withdrawal request via ${method} (3% fee: $${fee.toFixed(2)})`,
+                    status: 'pending',
+                    balance: currentUserData.wallet - amount,
+                    reference: withdrawalRef.id,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await batch.commit();
+
+                // Update local data
+                currentUserData.wallet -= amount;
+                document.getElementById('wallet-balance').textContent = `$${currentUserData.wallet.toFixed(2)}`;
+                
+                showToast(`Withdrawal requested! Fee: $${fee.toFixed(2)}`, 'success');
+                hideWithdrawalForm();
+                loadUserContent('withdrawals');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
         async function markWithdrawalPaid(withdrawalId, userId, amount) {
             showLoading();
-            const batch = db.batch();
-            batch.update(db.collection('withdrawals').doc(withdrawalId), {
-                status: 'paid',
-                paidAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            const transactions = await db.collection('transactions')
-                .where('reference', '==', withdrawalId)
-                .get();
-            transactions.forEach(doc => {
-                batch.update(doc.ref, { status: 'completed' });
-            });
-            
-            await batch.commit();
-            showToast('Withdrawal marked as paid!', 'success');
-            loadAdminContent('withdrawals');
+            try {
+                const batch = db.batch();
+                const fee = amount * WITHDRAWAL_FEE;
+                const netAmount = amount - fee;
+
+                batch.update(db.collection('withdrawals').doc(withdrawalId), {
+                    status: 'paid',
+                    paidAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                const transactions = await db.collection('transactions')
+                    .where('reference', '==', withdrawalId)
+                    .get();
+                    
+                transactions.forEach(doc => {
+                    batch.update(doc.ref, { 
+                        status: 'completed',
+                        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                
+                await batch.commit();
+                showToast(`Withdrawal marked as paid! Fee collected: $${fee.toFixed(2)}`, 'success');
+                loadAdminContent('withdrawals');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
@@ -3005,13 +3129,17 @@
             if (!userId || !message) return showToast('Select user and enter message', 'error');
 
             showLoading();
-            await db.collection('messages').add({
-                userId, message,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showToast('Message sent!', 'success');
-            document.getElementById('message-text').value = '';
-            loadAdminContent('messages');
+            try {
+                await db.collection('messages').add({
+                    userId, message,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('Message sent!', 'success');
+                document.getElementById('message-text').value = '';
+                loadAdminContent('messages');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
@@ -3054,21 +3182,25 @@
             if (!name || !url) return showToast('Name and URL required', 'error');
 
             showLoading();
-            const data = {
-                platform, name, description: desc, url, isActive: active,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
+            try {
+                const data = {
+                    platform, name, description: desc, url, isActive: active,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
 
-            if (linkId) {
-                await db.collection('communityLinks').doc(linkId).update(data);
-                showToast('Link updated!', 'success');
-            } else {
-                data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                await db.collection('communityLinks').add(data);
-                showToast('Link created!', 'success');
+                if (linkId) {
+                    await db.collection('communityLinks').doc(linkId).update(data);
+                    showToast('Link updated!', 'success');
+                } else {
+                    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('communityLinks').add(data);
+                    showToast('Link created!', 'success');
+                }
+                closeModal('community-modal');
+                loadAdminContent('community');
+            } catch (error) {
+                showToast(error.message, 'error');
             }
-            closeModal('community-modal');
-            loadAdminContent('community');
             hideLoading();
         }
 
@@ -3079,26 +3211,39 @@
         async function deleteCommunityLink(linkId) {
             if (!confirm('Delete this link?')) return;
             showLoading();
-            await db.collection('communityLinks').doc(linkId).delete();
-            showToast('Link deleted!', 'success');
-            loadAdminContent('community');
+            try {
+                await db.collection('communityLinks').doc(linkId).delete();
+                showToast('Link deleted!', 'success');
+                loadAdminContent('community');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
         // Settings Functions
         async function saveSettings() {
             const minWithdrawal = parseFloat(document.getElementById('setting-min-withdrawal').value);
+            const withdrawalFee = parseFloat(document.getElementById('setting-withdrawal-fee').value) / 100;
             const reviewTime = parseInt(document.getElementById('setting-review-time').value);
             const allowRegistrations = document.getElementById('setting-registrations').checked;
             const maintenanceMode = document.getElementById('setting-maintenance').checked;
 
             showLoading();
-            await db.collection('settings').doc('platform').set({
-                minWithdrawal, reviewTime, allowRegistrations, maintenanceMode,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-            showToast('Settings saved!', 'success');
-            closeModal('settings-modal');
+            try {
+                await db.collection('settings').doc('platform').set({
+                    minWithdrawal, 
+                    withdrawalFee, 
+                    reviewTime, 
+                    allowRegistrations, 
+                    maintenanceMode,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                showToast('Settings saved!', 'success');
+                closeModal('settings-modal');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
@@ -3110,66 +3255,84 @@
 
             showLoading();
             
-            const users = await getCollection('users');
-            const submissions = await getCollection('submissions');
-            const withdrawals = await getCollection('withdrawals');
-            const payments = await getCollection('membershipPayments', [{ field: 'status', operator: '==', value: 'approved' }]);
+            try {
+                const users = await getCollection('users');
+                const submissions = await getCollection('submissions');
+                const withdrawals = await getCollection('withdrawals');
+                const payments = await getCollection('membershipPayments', [{ field: 'status', operator: '==', value: 'approved' }]);
 
-            let totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-            let totalPaid = withdrawals.filter(w => w.status === 'paid').reduce((sum, w) => sum + (w.amount || 0), 0);
-            let approved = submissions.filter(s => s.status === 'approved').length;
-            let rejected = submissions.filter(s => s.status === 'rejected').length;
-            let pending = submissions.filter(s => s.status === 'pending').length;
+                let totalRevenue = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+                let totalFees = withdrawals.filter(w => w.status === 'paid').reduce((sum, w) => sum + (w.fee || 0), 0);
+                let totalPaid = withdrawals.filter(w => w.status === 'paid').reduce((sum, w) => sum + (w.netAmount || 0), 0);
+                let approved = submissions.filter(s => s.status === 'approved').length;
+                let rejected = submissions.filter(s => s.status === 'rejected').length;
+                let pending = submissions.filter(s => s.status === 'pending').length;
 
-            const reportHtml = `
-                <div style="background: white; border-radius: 16px; padding: 20px; margin-top: 20px;">
-                    <h4 class="mb-3">Report Summary (${type})</h4>
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-value">${users.length}</div><div class="stat-label">Total Users</div></div>
-                        <div class="stat-card"><div class="stat-value">$${totalRevenue.toFixed(2)}</div><div class="stat-label">Revenue</div></div>
-                        <div class="stat-card"><div class="stat-value">$${totalPaid.toFixed(2)}</div><div class="stat-label">Paid Out</div></div>
-                        <div class="stat-card"><div class="stat-value">${approved}</div><div class="stat-label">Approved Tasks</div></div>
-                        <div class="stat-card"><div class="stat-value">${rejected}</div><div class="stat-label">Rejected Tasks</div></div>
-                        <div class="stat-card"><div class="stat-value">${pending}</div><div class="stat-label">Pending Reviews</div></div>
+                const reportHtml = `
+                    <div style="background: white; border-radius: 16px; padding: 20px; margin-top: 20px;">
+                        <h4 class="mb-3">Report Summary (${type})</h4>
+                        <div class="stats-grid">
+                            <div class="stat-card"><div class="stat-value">${users.length}</div><div class="stat-label">Total Users</div></div>
+                            <div class="stat-card"><div class="stat-value">$${totalRevenue.toFixed(2)}</div><div class="stat-label">Membership Revenue</div></div>
+                            <div class="stat-card"><div class="stat-value">$${totalFees.toFixed(2)}</div><div class="stat-label">Withdrawal Fees</div></div>
+                            <div class="stat-card"><div class="stat-value">$${totalPaid.toFixed(2)}</div><div class="stat-label">Paid to Users</div></div>
+                            <div class="stat-card"><div class="stat-value">${approved}</div><div class="stat-label">Approved Tasks</div></div>
+                            <div class="stat-card"><div class="stat-value">${rejected}</div><div class="stat-label">Rejected Tasks</div></div>
+                            <div class="stat-card"><div class="stat-value">${pending}</div><div class="stat-label">Pending Reviews</div></div>
+                        </div>
+                        <button class="btn btn-primary mt-3" onclick="window.print()">Print Report</button>
                     </div>
-                    <button class="btn btn-primary mt-3" onclick="window.print()">Print Report</button>
-                </div>
-            `;
+                `;
 
-            document.getElementById('report-results').innerHTML = reportHtml;
+                document.getElementById('report-results').innerHTML = reportHtml;
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
             hideLoading();
         }
 
         // Stats
         async function getUserStats() {
-            const submissions = await getCollection('submissions', 
-                [{ field: 'userId', operator: '==', value: currentUser.uid }]
-            );
+            try {
+                const submissions = await getCollection('submissions', 
+                    [{ field: 'userId', operator: '==', value: currentUser.uid }]
+                );
 
-            let totalEarned = 0, completed = 0, total = 0;
-            let totalScore = 0, bestScore = 0;
-            
-            submissions.forEach(s => {
-                total++;
-                if (s.status === 'approved') {
-                    completed++;
-                    totalEarned += s.earned || 0;
-                    totalScore += s.score || 0;
-                    bestScore = Math.max(bestScore, s.score || 0);
-                }
-            });
+                let totalEarned = 0, completed = 0, total = 0;
+                let totalScore = 0, bestScore = 0;
+                
+                submissions.forEach(s => {
+                    total++;
+                    if (s.status === 'approved') {
+                        completed++;
+                        totalEarned += s.earned || 0;
+                        totalScore += s.score || 0;
+                        bestScore = Math.max(bestScore, s.score || 0);
+                    }
+                });
 
-            const avgScore = completed ? (totalScore / completed).toFixed(1) : 0;
-            const approvalRate = total ? ((completed / total) * 100).toFixed(1) : 0;
+                const avgScore = completed ? (totalScore / completed).toFixed(1) : 0;
+                const approvalRate = total ? ((completed / total) * 100).toFixed(1) : 0;
 
-            return {
-                wallet: currentUserData.wallet || 0,
-                totalEarned,
-                completed,
-                approvalRate,
-                avgScore,
-                bestScore
-            };
+                return {
+                    wallet: currentUserData.wallet || 0,
+                    totalEarned,
+                    completed,
+                    approvalRate,
+                    avgScore,
+                    bestScore
+                };
+            } catch (error) {
+                console.error('Error getting stats:', error);
+                return {
+                    wallet: currentUserData.wallet || 0,
+                    totalEarned: 0,
+                    completed: 0,
+                    approvalRate: 0,
+                    avgScore: 0,
+                    bestScore: 0
+                };
+            }
         }
 
         // Modal Functions
