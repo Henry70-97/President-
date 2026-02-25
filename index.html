@@ -107,11 +107,79 @@
         window.viewWithdrawalDetails = viewWithdrawalDetails;
         window.viewSubscriptionDetails = viewSubscriptionDetails;
         window.exportUsersData = exportUsersData;
+        window.verifyPayment = verifyPayment;
 
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', () => {
+        // Initialize the app with sample data
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeSampleData();
             checkAuthState();
         });
+
+        // Initialize sample packages
+        async function initializeSampleData() {
+            try {
+                // Check if packages exist
+                const packagesSnapshot = await getDocs(collection(db, 'packages'));
+                
+                if (packagesSnapshot.empty) {
+                    console.log("Creating sample packages...");
+                    
+                    // Create Basic Package
+                    await addDoc(collection(db, 'packages'), {
+                        name: "Basic Plan",
+                        description: "Perfect for beginners",
+                        price: 9.99,
+                        duration: 30,
+                        features: [
+                            "Access to basic tasks",
+                            "Earn up to $100/month",
+                            "Standard support",
+                            "Withdraw earnings anytime",
+                            "Daily task limit: 5"
+                        ],
+                        isActive: true,
+                        taskLimit: 5,
+                        maxEarnings: 100,
+                        createdAt: Timestamp.now()
+                    });
+
+                    // Create Premium Package
+                    await addDoc(collection(db, 'packages'), {
+                        name: "Premium Plan",
+                        description: "For serious earners",
+                        price: 29.99,
+                        duration: 30,
+                        features: [
+                            "Access to all tasks",
+                            "Earn up to $500/month",
+                            "Priority support",
+                            "Higher paying tasks",
+                            "Instant withdrawals",
+                            "Exclusive bonuses",
+                            "Unlimited tasks"
+                        ],
+                        isActive: true,
+                        taskLimit: -1, // Unlimited
+                        maxEarnings: 500,
+                        createdAt: Timestamp.now()
+                    });
+
+                    console.log("Sample packages created successfully");
+                }
+
+                // Check if admin user exists
+                const adminQuery = query(collection(db, 'users'), where('role', '==', 'admin'));
+                const adminSnapshot = await getDocs(adminQuery);
+                
+                if (adminSnapshot.empty) {
+                    // Create admin user (this would normally be done through auth)
+                    console.log("Please create admin user through Firebase Console");
+                }
+
+            } catch (error) {
+                console.error("Error creating sample packages:", error);
+            }
+        }
 
         // Check authentication state
         function checkAuthState() {
@@ -138,6 +206,9 @@
                                 totalEarned: 0,
                                 totalWithdrawn: 0,
                                 isActive: true,
+                                hasPackage: false,
+                                currentPackage: null,
+                                packageExpiry: null,
                                 createdAt: Timestamp.now()
                             };
                             await setDoc(userDocRef, userData);
@@ -292,6 +363,9 @@
                     totalEarned: 0,
                     totalWithdrawn: 0,
                     isActive: true,
+                    hasPackage: false,
+                    currentPackage: null,
+                    packageExpiry: null,
                     createdAt: Timestamp.now()
                 });
 
@@ -337,6 +411,7 @@
                 let totalTransactions = 0;
                 let pendingWithdrawalsCount = 0;
                 let activeSubscriptionsCount = 0;
+                let pendingSubscriptionsCount = 0;
 
                 try {
                     const usersSnapshot = await getDocs(collection(db, 'users'));
@@ -360,6 +435,11 @@
                         query(collection(db, 'subscriptions'), where('status', '==', 'active'))
                     );
                     activeSubscriptionsCount = activeSubscriptions.size;
+                    
+                    const pendingSubscriptions = await getDocs(
+                        query(collection(db, 'subscriptions'), where('paymentStatus', '==', 'pending'))
+                    );
+                    pendingSubscriptionsCount = pendingSubscriptions.size;
                 } catch (e) { console.error("Error fetching subscriptions:", e); }
 
                 app.innerHTML = `
@@ -410,8 +490,8 @@
                                         <i class="fas fa-crown text-white text-xl"></i>
                                     </div>
                                     <div>
-                                        <p class="text-gray-500">Active Subscriptions</p>
-                                        <p class="text-2xl font-bold">${activeSubscriptionsCount}</p>
+                                        <p class="text-gray-500">Subscriptions</p>
+                                        <p class="text-2xl font-bold">${activeSubscriptionsCount} Active / ${pendingSubscriptionsCount} Pending</p>
                                     </div>
                                 </div>
                             </div>
@@ -525,6 +605,7 @@
                                     <th class="px-6 py-3 text-left">Name</th>
                                     <th class="px-6 py-3 text-left">Email</th>
                                     <th class="px-6 py-3 text-left">Role</th>
+                                    <th class="px-6 py-3 text-left">Package</th>
                                     <th class="px-6 py-3 text-left">Wallet</th>
                                     <th class="px-6 py-3 text-left">Earned</th>
                                     <th class="px-6 py-3 text-left">Withdrawn</th>
@@ -538,7 +619,7 @@
                 if (usersSnapshot.empty) {
                     html += `
                         <tr>
-                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">No users found</td>
+                            <td colspan="9" class="px-6 py-4 text-center text-gray-500">No users found</td>
                         </tr>
                     `;
                 } else {
@@ -552,6 +633,17 @@
                                     <span class="px-2 py-1 ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'} rounded-full text-xs">
                                         ${user.role || 'user'}
                                     </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    ${user.hasPackage ? `
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                            ${user.currentPackage || 'Active'}
+                                        </span>
+                                    ` : `
+                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+                                            No Package
+                                        </span>
+                                    `}
                                 </td>
                                 <td class="px-6 py-4 font-bold">$${(user.walletBalance || 0).toFixed(2)}</td>
                                 <td class="px-6 py-4">$${(user.totalEarned || 0).toFixed(2)}</td>
@@ -826,9 +918,8 @@
                                     <th class="px-6 py-3 text-left">Package</th>
                                     <th class="px-6 py-3 text-left">Price</th>
                                     <th class="px-6 py-3 text-left">Status</th>
-                                    <th class="px-6 py-3 text-left">Start Date</th>
-                                    <th class="px-6 py-3 text-left">End Date</th>
                                     <th class="px-6 py-3 text-left">Payment</th>
+                                    <th class="px-6 py-3 text-left">Start Date</th>
                                     <th class="px-6 py-3 text-left">Actions</th>
                                 </tr>
                             </thead>
@@ -838,7 +929,7 @@
                 if (!subscriptionsSnapshot || subscriptionsSnapshot.empty) {
                     html += `
                         <tr>
-                            <td colspan="8" class="px-6 py-4 text-center text-gray-500">No subscriptions found</td>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">No subscriptions found</td>
                         </tr>
                     `;
                 } else {
@@ -873,29 +964,28 @@
                                         'bg-gray-100 text-gray-800'
                                     } rounded-full text-xs">
                                         ${sub.status || 'pending'}
-                                        ${isActive && daysLeft > 0 ? ` (${daysLeft} days left)` : ''}
+                                        ${isActive && daysLeft > 0 ? ` (${daysLeft} days)` : ''}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">${sub.startDate ? dayjs(sub.startDate.toDate()).format('MMM D, YYYY') : 'N/A'}</td>
-                                <td class="px-6 py-4">${sub.endDate ? dayjs(sub.endDate.toDate()).format('MMM D, YYYY') : 'N/A'}</td>
                                 <td class="px-6 py-4">
                                     <span class="px-2 py-1 ${sub.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} rounded-full text-xs">
                                         ${sub.paymentStatus || 'pending'}
                                     </span>
                                 </td>
+                                <td class="px-6 py-4">${sub.startDate ? dayjs(sub.startDate.toDate()).format('MMM D, YYYY') : 'N/A'}</td>
                                 <td class="px-6 py-4">
                                     <div class="flex space-x-2">
                                         <button onclick="window.viewSubscriptionDetails('${subDoc.id}')" class="text-blue-600 hover:text-blue-800" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </button>
+                                        ${sub.paymentStatus === 'pending' && sub.paymentMessage ? `
+                                            <button onclick="window.verifyPayment('${subDoc.id}')" class="text-green-600 hover:text-green-800" title="Verify Payment">
+                                                <i class="fas fa-check-circle"></i>
+                                            </button>
+                                        ` : ''}
                                         ${sub.status === 'active' ? `
                                             <button onclick="window.cancelSubscription('${subDoc.id}')" class="text-red-600 hover:text-red-800" title="Cancel">
                                                 <i class="fas fa-ban"></i>
-                                            </button>
-                                        ` : ''}
-                                        ${sub.paymentStatus !== 'paid' ? `
-                                            <button onclick="window.verifyPayment('${subDoc.id}')" class="text-green-600 hover:text-green-800" title="Verify Payment">
-                                                <i class="fas fa-check-circle"></i>
                                             </button>
                                         ` : ''}
                                     </div>
@@ -1078,39 +1168,62 @@
             try {
                 // Fetch user's data with error handling
                 let tasksCount = 0;
+                let pendingTasksCount = 0;
                 let transactionsCount = 0;
-                let hasActiveSubscription = false;
+                let hasActivePackage = userData.hasPackage || false;
+                let activePackage = userData.currentPackage;
+                let packageExpiry = userData.packageExpiry;
 
-                try {
-                    const tasksSnapshot = await getDocs(
-                        query(collection(db, 'tasks'), where('userId', '==', currentUser.uid))
-                    );
-                    tasksCount = tasksSnapshot.size;
-                } catch (e) { console.error("Error fetching tasks:", e); }
+                // Check if package is expired
+                if (packageExpiry) {
+                    const expiryDate = packageExpiry.toDate();
+                    if (new Date() > expiryDate) {
+                        hasActivePackage = false;
+                        activePackage = null;
+                        // Update user record
+                        await updateDoc(doc(db, 'users', currentUser.uid), {
+                            hasPackage: false,
+                            currentPackage: null,
+                            packageExpiry: null
+                        });
+                    }
+                }
 
-                try {
-                    const transactionsSnapshot = await getDocs(
-                        query(collection(db, 'transactions'), where('userId', '==', currentUser.uid))
-                    );
-                    transactionsCount = transactionsSnapshot.size;
-                } catch (e) { console.error("Error fetching transactions:", e); }
+                // Fetch tasks only if user has active package
+                if (hasActivePackage) {
+                    try {
+                        const tasksSnapshot = await getDocs(
+                            query(collection(db, 'tasks'), where('userId', '==', currentUser.uid))
+                        );
+                        tasksCount = tasksSnapshot.size;
+                        
+                        const pendingTasks = await getDocs(
+                            query(collection(db, 'tasks'), where('userId', '==', currentUser.uid), where('status', '==', 'pending'))
+                        );
+                        pendingTasksCount = pendingTasks.size;
+                    } catch (e) { console.error("Error fetching tasks:", e); }
 
-                try {
-                    const subscriptionSnapshot = await getDocs(
-                        query(collection(db, 'subscriptions'), where('userId', '==', currentUser.uid), where('status', '==', 'active'))
-                    );
-                    hasActiveSubscription = !subscriptionSnapshot.empty;
-                } catch (e) { console.error("Error fetching subscription:", e); }
+                    try {
+                        const transactionsSnapshot = await getDocs(
+                            query(collection(db, 'transactions'), where('userId', '==', currentUser.uid))
+                        );
+                        transactionsCount = transactionsSnapshot.size;
+                    } catch (e) { console.error("Error fetching transactions:", e); }
+                }
 
                 app.innerHTML = `
                     <div class="space-y-6">
                         <div class="flex justify-between items-center">
                             <h2 class="text-3xl font-bold">Welcome, ${userData.firstName || ''}!</h2>
-                            ${hasActiveSubscription ? `
+                            ${hasActivePackage ? `
                                 <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full">
-                                    <i class="fas fa-crown mr-2"></i>Premium Member
+                                    <i class="fas fa-crown mr-2"></i>${activePackage} Member
                                 </span>
-                            ` : ''}
+                            ` : `
+                                <span class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Package Required
+                                </span>
+                            `}
                         </div>
                         
                         <!-- Wallet Overview -->
@@ -1146,47 +1259,81 @@
                             </div>
                         </div>
 
-                        <!-- Quick Stats -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-white rounded-lg shadow p-4">
-                                <div class="flex items-center">
-                                    <div class="bg-blue-100 rounded-full p-3 mr-4">
-                                        <i class="fas fa-tasks text-blue-600 text-xl"></i>
+                        <!-- Package Status or Warning -->
+                        ${!hasActivePackage ? `
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
                                     </div>
-                                    <div>
-                                        <p class="text-gray-500">Total Tasks</p>
-                                        <p class="text-2xl font-bold">${tasksCount}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-white rounded-lg shadow p-4">
-                                <div class="flex items-center">
-                                    <div class="bg-green-100 rounded-full p-3 mr-4">
-                                        <i class="fas fa-exchange-alt text-green-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-500">Transactions</p>
-                                        <p class="text-2xl font-bold">${transactionsCount}</p>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-yellow-700">
+                                            You need to select a package before you can start earning. 
+                                            <button onclick="window.showUserTab('packages')" class="font-medium underline text-yellow-700 hover:text-yellow-600">
+                                                Choose a package now
+                                            </button>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        ` : ''}
+
+                        <!-- Quick Stats - Only show if user has package -->
+                        ${hasActivePackage ? `
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-white rounded-lg shadow p-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-blue-100 rounded-full p-3 mr-4">
+                                            <i class="fas fa-tasks text-blue-600 text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Total Tasks</p>
+                                            <p class="text-2xl font-bold">${tasksCount}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg shadow p-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-yellow-100 rounded-full p-3 mr-4">
+                                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Pending Tasks</p>
+                                            <p class="text-2xl font-bold">${pendingTasksCount}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-lg shadow p-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-green-100 rounded-full p-3 mr-4">
+                                            <i class="fas fa-exchange-alt text-green-600 text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-500">Transactions</p>
+                                            <p class="text-2xl font-bold">${transactionsCount}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
 
                         <!-- User Tabs -->
                         <div class="bg-white rounded-lg shadow">
                             <div class="border-b overflow-x-auto">
                                 <nav class="flex -mb-px">
-                                    <button onclick="window.showUserTab('tasks')" class="px-6 py-3 text-blue-600 border-b-2 border-blue-500 font-medium whitespace-nowrap" id="userTabTasks">
-                                        <i class="fas fa-tasks mr-2"></i>My Tasks
-                                    </button>
-                                    <button onclick="window.showUserTab('transactions')" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap" id="userTabTransactions">
-                                        <i class="fas fa-history mr-2"></i>Transactions
-                                    </button>
-                                    <button onclick="window.showUserTab('withdraw')" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap" id="userTabWithdraw">
-                                        <i class="fas fa-money-bill-wave mr-2"></i>Withdraw
-                                    </button>
-                                    <button onclick="window.showUserTab('subscription')" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap" id="userTabSubscription">
-                                        <i class="fas fa-crown mr-2"></i>Subscription
+                                    ${hasActivePackage ? `
+                                        <button onclick="window.showUserTab('tasks')" class="px-6 py-3 text-blue-600 border-b-2 border-blue-500 font-medium whitespace-nowrap" id="userTabTasks">
+                                            <i class="fas fa-tasks mr-2"></i>My Tasks
+                                        </button>
+                                        <button onclick="window.showUserTab('transactions')" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap" id="userTabTransactions">
+                                            <i class="fas fa-history mr-2"></i>Transactions
+                                        </button>
+                                        <button onclick="window.showUserTab('withdraw')" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap" id="userTabWithdraw">
+                                            <i class="fas fa-money-bill-wave mr-2"></i>Withdraw
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="window.showUserTab('subscription')" class="px-6 py-3 ${!hasActivePackage ? 'text-blue-600 border-b-2 border-blue-500' : 'text-gray-500'} hover:text-gray-700 font-medium whitespace-nowrap" id="userTabSubscription">
+                                        <i class="fas fa-crown mr-2"></i>My Subscription
                                     </button>
                                     <button onclick="window.showUserTab('packages')" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap" id="userTabPackages">
                                         <i class="fas fa-box mr-2"></i>Packages
@@ -1205,7 +1352,11 @@
                 `;
 
                 // Load default user tab
-                await showUserTab('tasks');
+                if (hasActivePackage) {
+                    await showUserTab('tasks');
+                } else {
+                    await showUserTab('packages');
+                }
             } catch (error) {
                 console.error("Error loading user dashboard:", error);
                 app.innerHTML = `<p class="text-red-500">Error loading dashboard: ${error.message}</p>`;
@@ -1215,7 +1366,8 @@
         // Show user tab content
         async function showUserTab(tab) {
             // Update tab styles
-            ['tasks', 'transactions', 'withdraw', 'subscription', 'packages', 'feedback'].forEach(t => {
+            const tabs = ['tasks', 'transactions', 'withdraw', 'subscription', 'packages', 'feedback'];
+            tabs.forEach(t => {
                 const element = document.getElementById(`userTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
                 if (element) {
                     if (t === tab) {
@@ -1264,6 +1416,24 @@
         // Load user tasks
         async function loadUserTasks(contentElement) {
             try {
+                // Check if user has active package
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                const userData = userDoc.data();
+                
+                if (!userData.hasPackage) {
+                    contentElement.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-exclamation-circle text-4xl text-yellow-500 mb-4"></i>
+                            <h3 class="text-xl font-bold mb-2">Package Required</h3>
+                            <p class="text-gray-600 mb-4">You need to select a package before you can view and complete tasks.</p>
+                            <button onclick="window.showUserTab('packages')" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                                View Available Packages
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
                 // Check if tasks collection exists
                 let tasksSnapshot;
                 try {
@@ -1284,7 +1454,7 @@
                     html += `
                         <div class="text-center py-8 text-gray-500">
                             <i class="fas fa-tasks text-4xl mb-3"></i>
-                            <p>No tasks assigned yet.</p>
+                            <p>No tasks assigned yet. Check back later for new tasks!</p>
                         </div>
                     `;
                 } else {
@@ -1326,6 +1496,11 @@
                                         <p class="text-sm font-bold text-blue-800">Admin Feedback:</p>
                                         <p class="text-gray-700">${task.adminFeedback}</p>
                                     </div>
+                                ` : ''}
+                                ${task.completedAt ? `
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        Completed: ${dayjs(task.completedAt.toDate()).format('MMM D, YYYY h:mm A')}
+                                    </p>
                                 ` : ''}
                             </div>
                         `;
@@ -1426,42 +1601,65 @@
         }
 
         // Load withdraw form
-        function loadWithdrawForm(contentElement) {
-            contentElement.innerHTML = `
-                <h3 class="text-xl font-bold mb-4">Withdraw Funds</h3>
-                <div class="max-w-md">
-                    <form id="withdrawForm" class="space-y-4">
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="amount">Amount ($)</label>
-                            <input type="number" id="amount" min="1" step="0.01" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500" required>
+        async function loadWithdrawForm(contentElement) {
+            try {
+                // Check if user has active package
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                const userData = userDoc.data();
+                
+                if (!userData.hasPackage) {
+                    contentElement.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-exclamation-circle text-4xl text-yellow-500 mb-4"></i>
+                            <h3 class="text-xl font-bold mb-2">Package Required</h3>
+                            <p class="text-gray-600 mb-4">You need an active package to withdraw funds.</p>
+                            <button onclick="window.showUserTab('packages')" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                                View Available Packages
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="method">Withdrawal Method</label>
-                            <select id="method" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500" required>
-                                <option value="">Select method</option>
-                                <option value="paypal">PayPal</option>
-                                <option value="bank">Bank Transfer</option>
-                                <option value="crypto">Cryptocurrency (USDT)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-2" for="accountDetails">Account Details</label>
-                            <input type="text" id="accountDetails" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500" placeholder="PayPal email / Bank account / Wallet address" required>
-                        </div>
-                        <div class="bg-yellow-50 border border-yellow-200 rounded p-4">
-                            <p class="text-sm text-yellow-800">
-                                <i class="fas fa-info-circle mr-2"></i>
-                                Withdrawals are processed within 24-48 hours. Minimum withdrawal: $10
-                            </p>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
-                            <i class="fas fa-paper-plane mr-2"></i>Request Withdrawal
-                        </button>
-                    </form>
-                </div>
-            `;
+                    `;
+                    return;
+                }
 
-            document.getElementById('withdrawForm').addEventListener('submit', handleWithdrawRequest);
+                contentElement.innerHTML = `
+                    <h3 class="text-xl font-bold mb-4">Withdraw Funds</h3>
+                    <div class="max-w-md">
+                        <form id="withdrawForm" class="space-y-4">
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="amount">Amount ($)</label>
+                                <input type="number" id="amount" min="1" step="0.01" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="method">Withdrawal Method</label>
+                                <select id="method" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500" required>
+                                    <option value="">Select method</option>
+                                    <option value="paypal">PayPal</option>
+                                    <option value="bank">Bank Transfer</option>
+                                    <option value="crypto">Cryptocurrency (USDT)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="accountDetails">Account Details</label>
+                                <input type="text" id="accountDetails" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-blue-500" placeholder="PayPal email / Bank account / Wallet address" required>
+                            </div>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded p-4">
+                                <p class="text-sm text-yellow-800">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Withdrawals are processed within 24-48 hours. Minimum withdrawal: $10
+                                </p>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
+                                <i class="fas fa-paper-plane mr-2"></i>Request Withdrawal
+                            </button>
+                        </form>
+                    </div>
+                `;
+
+                document.getElementById('withdrawForm').addEventListener('submit', handleWithdrawRequest);
+            } catch (error) {
+                console.error("Error loading withdraw form:", error);
+                contentElement.innerHTML = `<p class="text-red-500">Error loading withdraw form: ${error.message}</p>`;
+            }
         }
 
         // Handle withdraw request
@@ -1480,6 +1678,11 @@
                 // Get current user data
                 const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
                 const userData = userDoc.data();
+
+                if (!userData.hasPackage) {
+                    Swal.fire('Error!', 'You need an active package to withdraw funds', 'error');
+                    return;
+                }
 
                 if ((userData.walletBalance || 0) < amount) {
                     Swal.fire('Error!', 'Insufficient balance', 'error');
@@ -1588,6 +1791,13 @@
                                         </button>
                                     ` : ''}
                                 </div>
+                                
+                                ${sub.paymentMessage ? `
+                                    <div class="mt-4 p-3 bg-white bg-opacity-20 rounded-lg">
+                                        <p class="text-sm font-bold">Payment Message:</p>
+                                        <p class="text-sm mt-1">${sub.paymentMessage}</p>
+                                    </div>
+                                ` : ''}
                             </div>
                         `;
                     });
@@ -1613,13 +1823,14 @@
                 }
                 
                 let html = `
-                    <h3 class="text-xl font-bold mb-6">Available Subscription Packages</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <h3 class="text-xl font-bold mb-6">Choose Your Package</h3>
+                    <p class="text-gray-600 mb-6">Select a package to start earning. Payment is required before your first withdrawal.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 `;
 
                 if (!packagesSnapshot || packagesSnapshot.empty) {
                     html += `
-                        <div class="col-span-3 text-center py-8 text-gray-500">
+                        <div class="col-span-2 text-center py-8 text-gray-500">
                             <i class="fas fa-box-open text-5xl mb-4"></i>
                             <p>No packages available at the moment.</p>
                         </div>
@@ -1648,7 +1859,7 @@
                                     </ul>
                                     <button onclick="window.subscribeToPackage('${doc.id}', '${pkg.name || 'Package'}', ${pkg.price || 0}, ${pkg.duration || 30})" 
                                         class="mt-6 w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition">
-                                        <i class="fas fa-crown mr-2"></i>Subscribe Now
+                                        <i class="fas fa-crown mr-2"></i>Select Package
                                     </button>
                                 </div>
                             </div>
@@ -1817,6 +2028,15 @@
         }
 
         async function assignTaskToUser(userId) {
+            // Check if user has active package
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            const userData = userDoc.data();
+            
+            if (!userData.hasPackage) {
+                Swal.fire('Error!', 'User does not have an active package. Cannot assign tasks.', 'error');
+                return;
+            }
+
             const { value: formValues } = await Swal.fire({
                 title: 'Assign Task to User',
                 html: `
@@ -1859,8 +2079,14 @@
 
         async function showCreateTaskForm() {
             try {
-                const usersSnapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'user')));
+                // Only get users with active packages
+                const usersSnapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'user'), where('hasPackage', '==', true)));
                 let userOptions = '<option value="">Select User</option>';
+                
+                if (usersSnapshot.empty) {
+                    Swal.fire('Info!', 'No users with active packages found. Users need to subscribe first.', 'info');
+                    return;
+                }
                 
                 usersSnapshot.forEach(doc => {
                     const user = doc.data();
@@ -2055,6 +2281,8 @@
                     <textarea id="packageDescription" class="swal2-textarea" placeholder="Package Description" required></textarea>
                     <input id="packagePrice" type="number" class="swal2-input" placeholder="Price" step="0.01" required>
                     <input id="packageDuration" type="number" class="swal2-input" placeholder="Duration (days)" required>
+                    <input id="packageTaskLimit" type="number" class="swal2-input" placeholder="Daily Task Limit (-1 for unlimited)" value="-1">
+                    <input id="packageMaxEarnings" type="number" class="swal2-input" placeholder="Max Monthly Earnings" step="0.01">
                     <textarea id="packageFeatures" class="swal2-textarea" placeholder="Features (one per line)" rows="4" required></textarea>
                 `,
                 focusConfirm: false,
@@ -2069,6 +2297,8 @@
                         description: document.getElementById('packageDescription').value,
                         price: parseFloat(document.getElementById('packagePrice').value),
                         duration: parseInt(document.getElementById('packageDuration').value),
+                        taskLimit: parseInt(document.getElementById('packageTaskLimit').value),
+                        maxEarnings: parseFloat(document.getElementById('packageMaxEarnings').value),
                         features: features,
                         isActive: true,
                         createdAt: Timestamp.now()
@@ -2098,6 +2328,8 @@
                     <textarea id="packageDescription" class="swal2-textarea" placeholder="Package Description" required>${pkg.description || ''}</textarea>
                     <input id="packagePrice" type="number" class="swal2-input" placeholder="Price" step="0.01" value="${pkg.price || 0}" required>
                     <input id="packageDuration" type="number" class="swal2-input" placeholder="Duration (days)" value="${pkg.duration || 30}" required>
+                    <input id="packageTaskLimit" type="number" class="swal2-input" placeholder="Daily Task Limit (-1 for unlimited)" value="${pkg.taskLimit || -1}">
+                    <input id="packageMaxEarnings" type="number" class="swal2-input" placeholder="Max Monthly Earnings" step="0.01" value="${pkg.maxEarnings || 0}">
                     <textarea id="packageFeatures" class="swal2-textarea" placeholder="Features (one per line)" rows="4" required>${(pkg.features || []).join('\n')}</textarea>
                 `,
                 focusConfirm: false,
@@ -2112,6 +2344,8 @@
                         description: document.getElementById('packageDescription').value,
                         price: parseFloat(document.getElementById('packagePrice').value),
                         duration: parseInt(document.getElementById('packageDuration').value),
+                        taskLimit: parseInt(document.getElementById('packageTaskLimit').value),
+                        maxEarnings: parseFloat(document.getElementById('packageMaxEarnings').value),
                         features: features
                     };
                 }
@@ -2151,7 +2385,7 @@
                         <div class="bg-gray-100 p-3 rounded mt-2">
                             <p class="font-mono">https://lipwa.com/pay/urbanpay-${packageId}</p>
                         </div>
-                        <p class="mt-4 text-sm text-gray-600">After payment, paste the payment confirmation message below:</p>
+                        <p class="mt-4 text-sm text-gray-600">After payment, paste the payment confirmation message below. Your subscription will be activated after admin verification.</p>
                     </div>
                 `,
                 input: 'textarea',
@@ -2170,6 +2404,10 @@
 
             if (result.isConfirmed) {
                 try {
+                    // Create subscription with pending payment
+                    const startDate = Timestamp.now();
+                    const endDate = Timestamp.fromDate(new Date(Date.now() + duration * 24 * 60 * 60 * 1000));
+                    
                     await addDoc(collection(db, 'subscriptions'), {
                         userId: currentUser.uid,
                         packageId: packageId,
@@ -2179,8 +2417,8 @@
                         status: 'pending',
                         paymentStatus: 'pending',
                         paymentMessage: result.value.paymentMessage,
-                        startDate: Timestamp.now(),
-                        endDate: Timestamp.fromDate(new Date(Date.now() + duration * 24 * 60 * 60 * 1000)),
+                        startDate: startDate,
+                        endDate: endDate,
                         autoRenew: true,
                         createdAt: Timestamp.now()
                     });
@@ -2190,6 +2428,7 @@
                         html: `
                             <p>Your subscription request has been submitted.</p>
                             <p class="mt-2">The admin will verify your payment and activate your subscription.</p>
+                            <p class="mt-2">Once activated, you can start earning!</p>
                         `,
                         icon: 'success'
                     });
@@ -2241,8 +2480,8 @@
             });
         }
 
-        // Add verify payment function for admin
-        window.verifyPayment = async function(subscriptionId) {
+        // Verify payment function for admin
+        async function verifyPayment(subscriptionId) {
             const result = await Swal.fire({
                 title: 'Verify Payment',
                 text: 'Has the payment been confirmed?',
@@ -2254,20 +2493,32 @@
 
             if (result.isConfirmed) {
                 try {
-                    await updateDoc(doc(db, 'subscriptions', subscriptionId), {
+                    const subRef = doc(db, 'subscriptions', subscriptionId);
+                    const subDoc = await getDoc(subRef);
+                    const subData = subDoc.data();
+                    
+                    await updateDoc(subRef, {
                         paymentStatus: 'paid',
                         status: 'active',
                         verifiedAt: Timestamp.now(),
                         verifiedBy: currentUser.uid
                     });
 
-                    Swal.fire('Success!', 'Payment verified and subscription activated', 'success');
+                    // Update user's package status
+                    const userRef = doc(db, 'users', subData.userId);
+                    await updateDoc(userRef, {
+                        hasPackage: true,
+                        currentPackage: subData.packageName,
+                        packageExpiry: subData.endDate
+                    });
+
+                    Swal.fire('Success!', 'Payment verified and subscription activated. User can now access tasks.', 'success');
                     await showAdminTab('subscriptions');
                 } catch (error) {
                     Swal.fire('Error!', error.message, 'error');
                 }
             }
-        };
+        }
 
         async function replyToFeedback(feedbackId) {
             const { value: reply } = await Swal.fire({
@@ -2305,11 +2556,24 @@
 
             if (result.isConfirmed) {
                 try {
-                    await updateDoc(doc(db, 'subscriptions', subscriptionId), {
+                    const subRef = doc(db, 'subscriptions', subscriptionId);
+                    const subDoc = await getDoc(subRef);
+                    const subData = subDoc.data();
+                    
+                    await updateDoc(subRef, {
                         status: 'cancelled',
                         autoRenew: false,
                         cancelledAt: Timestamp.now()
                     });
+
+                    // Update user's package status
+                    const userRef = doc(db, 'users', subData.userId);
+                    await updateDoc(userRef, {
+                        hasPackage: false,
+                        currentPackage: null,
+                        packageExpiry: null
+                    });
+
                     Swal.fire('Success!', 'Subscription cancelled', 'success');
                     await showUserTab('subscription');
                 } catch (error) {
@@ -2357,6 +2621,10 @@
                                 <div>
                                     <p class="text-sm text-gray-600">Role</p>
                                     <p class="font-bold">${user.role || 'user'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Package</p>
+                                    <p class="font-bold">${user.hasPackage ? user.currentPackage : 'No Package'}</p>
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Status</p>
@@ -2528,7 +2796,9 @@
                             ${sub.paymentMessage ? `
                                 <div class="mt-4 pt-4 border-t">
                                     <p class="text-sm text-gray-600">Payment Message</p>
-                                    <p class="font-mono text-sm bg-gray-100 p-2 rounded mt-1">${sub.paymentMessage}</p>
+                                    <div class="bg-gray-100 p-3 rounded mt-1">
+                                        <p class="text-sm font-mono">${sub.paymentMessage}</p>
+                                    </div>
                                 </div>
                             ` : ''}
                             
@@ -2608,11 +2878,11 @@
         async function exportUsersData() {
             try {
                 const usersSnapshot = await getDocs(collection(db, 'users'));
-                let csv = 'Name,Email,Role,Wallet Balance,Total Earned,Total Withdrawn,Status,Joined\n';
+                let csv = 'Name,Email,Role,Package,Wallet Balance,Total Earned,Total Withdrawn,Status,Joined\n';
                 
                 usersSnapshot.forEach(doc => {
                     const user = doc.data();
-                    csv += `"${user.firstName || ''} ${user.lastName || ''}","${user.email || ''}","${user.role || 'user'}",${user.walletBalance || 0},${user.totalEarned || 0},${user.totalWithdrawn || 0},"${user.isActive ? 'Active' : 'Inactive'}","${user.createdAt ? dayjs(user.createdAt.toDate()).format('YYYY-MM-DD') : ''}"\n`;
+                    csv += `"${user.firstName || ''} ${user.lastName || ''}","${user.email || ''}","${user.role || 'user'}","${user.hasPackage ? user.currentPackage : 'None'}",${user.walletBalance || 0},${user.totalEarned || 0},${user.totalWithdrawn || 0},"${user.isActive ? 'Active' : 'Inactive'}","${user.createdAt ? dayjs(user.createdAt.toDate()).format('YYYY-MM-DD') : ''}"\n`;
                 });
                 
                 const blob = new Blob([csv], { type: 'text/csv' });
