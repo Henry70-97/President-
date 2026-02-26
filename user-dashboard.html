@@ -68,6 +68,8 @@
         .disabled-btn:hover { background: #94a3b8; }
         .withdrawal-warning { color: #ef4444; font-size: 0.9rem; margin-top: 0.5rem; display: none; }
         .balance-highlight { font-size: 2rem; font-weight: 800; color: #10b981; }
+        .message-unread { background: #6366f120; border-left: 4px solid #6366f1; }
+        .message-time { font-size: 0.8rem; color: #94a3b8; }
         @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }
     </style>
 </head>
@@ -255,15 +257,90 @@
                 // Load dashboard
                 loadDashboard();
                 
+                // Set up real-time listener for wallet updates
+                setupWalletListener();
+                
+                // Set up real-time listener for submission approvals
+                setupApprovalListener();
+                
             } catch (error) {
                 console.error('Auth error:', error);
                 showToast('Error loading user data', true);
             }
         });
         
+        // Set up real-time listener for wallet changes
+        function setupWalletListener() {
+            db.collection('users').doc(currentUser.uid)
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const newWallet = doc.data().wallet || 0;
+                        userData.wallet = newWallet;
+                        document.getElementById('walletDisplay').textContent = `$${newWallet.toFixed(2)}`;
+                        
+                        // Update stats grid if it's visible
+                        const statsGrid = document.getElementById('statsGrid');
+                        if (statsGrid.children.length > 0) {
+                            // Refresh stats
+                            loadDashboard();
+                        }
+                    }
+                });
+        }
+        
+        // Set up listener for submission approvals
+        function setupApprovalListener() {
+            db.collection('submissions')
+                .where('userId', '==', currentUser.uid)
+                .where('status', '==', 'approved')
+                .where('paidToWallet', '==', false)
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'modified' || change.type === 'added') {
+                            const submission = change.doc.data();
+                            if (submission.earned && !submission.paidToWallet) {
+                                // Add money to wallet
+                                addEarningsToWallet(change.doc.id, submission.earned);
+                            }
+                        }
+                    });
+                });
+        }
+        
+        // Add earnings to wallet when submission is approved
+        async function addEarningsToWallet(submissionId, amount) {
+            try {
+                // Use transaction to ensure data consistency
+                await db.runTransaction(async (transaction) => {
+                    // Update user's wallet
+                    const userRef = db.collection('users').doc(currentUser.uid);
+                    transaction.update(userRef, {
+                        wallet: firebase.firestore.FieldValue.increment(amount)
+                    });
+                    
+                    // Mark submission as paid
+                    const submissionRef = db.collection('submissions').doc(submissionId);
+                    transaction.update(submissionRef, {
+                        paidToWallet: true,
+                        paidAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                
+                console.log(`Added $${amount} to wallet for submission ${submissionId}`);
+                showToast(`$${amount} added to your wallet!`);
+                
+            } catch (error) {
+                console.error('Error adding earnings to wallet:', error);
+            }
+        }
+        
         // Load Dashboard Stats
         async function loadDashboard() {
             try {
+                // Get fresh user data
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                userData.wallet = userDoc.data().wallet || 0;
+                
                 // Simple queries
                 const pendingSnapshot = await db.collection('submissions')
                     .where('userId', '==', currentUser.uid)
@@ -303,6 +380,9 @@
                     </div>
                 `;
                 
+                // Update wallet display
+                document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
+                
                 // Load tasks by default
                 loadTasks();
                 
@@ -319,15 +399,13 @@
             }
         }
         
-        // Load Tasks - FIXED VERSION
+        // Load Tasks
         async function loadTasks() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
                 
                 // Get all tasks
                 const snapshot = await db.collection('tasks').get();
-                
-                console.log('Tasks snapshot size:', snapshot.size);
                 
                 let html = '<h3 style="margin-bottom:1.5rem;">Available Tasks</h3>';
                 
@@ -337,7 +415,6 @@
                             <i class="fas fa-tasks"></i>
                             <h4>No Tasks Available</h4>
                             <p>Check back later for new tasks.</p>
-                            <div class="debug-info">If you're an admin, please create some tasks in the admin panel.</div>
                         </div>
                     `;
                 } else {
@@ -345,7 +422,6 @@
                     const tasks = [];
                     snapshot.forEach(doc => {
                         const taskData = doc.data();
-                        console.log('Task data:', taskData);
                         tasks.push({ 
                             id: doc.id, 
                             ...taskData 
@@ -354,8 +430,6 @@
                     
                     // Filter active tasks
                     const activeTasks = tasks.filter(task => task.active === true);
-                    
-                    console.log('Active tasks:', activeTasks.length);
                     
                     if (activeTasks.length === 0) {
                         html += `
@@ -375,19 +449,17 @@
                         
                         html += '<div class="task-grid">';
                         
-                        activeTasks.forEach(task => {
+                        for (const task of activeTasks) {
+                            // Check if user has already submitted this task
+                            const hasSubmitted = await hasUserSubmitted(task.id);
+                            
                             // Safely handle reward value
                             let rewardValue = 0;
                             if (task.reward) {
-                                // Convert to number if it's a string
                                 rewardValue = parseFloat(task.reward);
-                                // Check if it's a valid number
-                                if (isNaN(rewardValue)) {
-                                    rewardValue = 0;
-                                }
+                                if (isNaN(rewardValue)) rewardValue = 0;
                             }
                             
-                            // Safely handle other fields
                             const title = task.title || 'Untitled Task';
                             const description = task.description || 'No description provided';
                             const category = task.category || 'other';
@@ -405,16 +477,21 @@
                                         <strong>$${rewardValue.toFixed(2)}</strong>
                                         <div style="display:flex; gap:0.5rem;">
                                             <button class="btn btn-secondary" onclick="viewTaskDetails('${task.id}')" style="padding:0.5rem 1rem;">
-                                                <i class="fas fa-eye"></i> Details
+                                                <i class="fas fa-eye"></i>
                                             </button>
-                                            <button class="btn btn-primary" onclick="submitTask('${task.id}')" style="padding:0.5rem 1rem;">
-                                                Submit
-                                            </button>
+                                            ${!hasSubmitted ? 
+                                                `<button class="btn btn-primary" onclick="submitTask('${task.id}')" style="padding:0.5rem 1rem;">
+                                                    Submit
+                                                </button>` : 
+                                                `<button class="btn btn-success" disabled style="padding:0.5rem 1rem; opacity:0.6;">
+                                                    <i class="fas fa-check"></i> Done
+                                                </button>`
+                                            }
                                         </div>
                                     </div>
                                 </div>
                             `;
-                        });
+                        }
                         
                         html += '</div>';
                     }
@@ -521,7 +598,7 @@
             }
         }
         
-        // Submit Task - Modified to check for existing submissions
+        // Submit Task
         async function submitTask(taskId) {
             try {
                 // First check if user has already submitted this task
@@ -565,11 +642,11 @@
                 return !snapshot.empty;
             } catch (error) {
                 console.error('Error checking submissions:', error);
-                throw error;
+                return false;
             }
         }
         
-        // Save Submission - Modified to double-check before saving
+        // Save Submission
         async function saveSubmission(taskId) {
             const work = document.getElementById('workText').value;
             if (!work) {
@@ -578,7 +655,7 @@
             }
             
             try {
-                // Double-check if already submitted (in case of rapid double-click)
+                // Double-check if already submitted
                 const hasSubmitted = await hasUserSubmitted(taskId);
                 
                 if (hasSubmitted) {
@@ -597,6 +674,7 @@
                     taskTitle: task.title || 'Untitled Task',
                     workText: work,
                     status: 'pending',
+                    paidToWallet: false,
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
@@ -625,25 +703,16 @@
                 
                 const snapshot = await db.collection('submissions')
                     .where('userId', '==', currentUser.uid)
+                    .orderBy('submittedAt', 'desc')
                     .get();
                 
                 let html = '<h3 style="margin-bottom:1.5rem;">My Submissions</h3>';
                 
                 if (snapshot.empty) {
-                    html += '<p>No submissions yet.</p>';
+                    html += '<div class="empty-state"><p>No submissions yet.</p></div>';
                 } else {
-                    const submissions = [];
                     snapshot.forEach(doc => {
-                        submissions.push({ id: doc.id, ...doc.data() });
-                    });
-                    
-                    submissions.sort((a, b) => {
-                        if (!a.submittedAt) return 1;
-                        if (!b.submittedAt) return -1;
-                        return b.submittedAt.seconds - a.submittedAt.seconds;
-                    });
-                    
-                    submissions.forEach(sub => {
+                        const sub = doc.data();
                         const statusClass = sub.status === 'approved' ? 'success' : sub.status === 'rejected' ? 'danger' : 'warning';
                         
                         const submittedDate = sub.submittedAt ? new Date(sub.submittedAt.seconds * 1000).toLocaleDateString() : 'N/A';
@@ -655,10 +724,11 @@
                                     <span class="badge ${statusClass}">${sub.status}</span>
                                 </div>
                                 <p style="color:#64748b; margin-bottom:0.5rem;">${sub.workText.substring(0, 100)}${sub.workText.length > 100 ? '...' : ''}</p>
-                                <div style="display:flex; gap:1rem; font-size:0.9rem; color:#64748b;">
+                                <div style="display:flex; gap:1rem; font-size:0.9rem; color:#64748b; flex-wrap:wrap;">
                                     <span><i class="far fa-calendar"></i> ${submittedDate}</span>
                                     ${sub.score ? `<span>Score: ${sub.score}%</span>` : ''}
                                     ${sub.earned ? `<span>Earned: $${sub.earned.toFixed(2)}</span>` : ''}
+                                    ${sub.paidToWallet ? `<span class="badge success">Paid to Wallet</span>` : ''}
                                 </div>
                                 ${sub.review ? `<p style="margin-top:0.5rem; background:#f1f5f9; padding:0.5rem; border-radius:10px;"><strong>Feedback:</strong> ${sub.review}</p>` : ''}
                             </div>
@@ -670,47 +740,19 @@
                 
             } catch (error) {
                 console.error('Error loading submissions:', error);
-                document.getElementById('content').innerHTML = '<p style="color:#ef4444;">Error loading submissions.</p>';
+                document.getElementById('content').innerHTML = '<div class="empty-state"><p style="color:#ef4444;">Error loading submissions.</p><button class="btn btn-primary" onclick="loadSubmissions()">Try Again</button></div>';
             }
         }
         
-        // Listen for submission approvals (add this to your Firebase Functions or admin panel)
-        // For now, we'll simulate this with a function that would be called when admin approves
-        async function processApprovedSubmission(submissionId, earnedAmount) {
-            try {
-                const submissionRef = db.collection('submissions').doc(submissionId);
-                const submission = await submissionRef.get();
-                const subData = submission.data();
-                
-                // Update user's wallet
-                await db.collection('users').doc(subData.userId).update({
-                    wallet: firebase.firestore.FieldValue.increment(earnedAmount)
-                });
-                
-                // Update submission with earned amount
-                await submissionRef.update({
-                    earned: earnedAmount,
-                    paidToWallet: true,
-                    paidAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                console.log('Wallet updated for user:', subData.userId);
-                
-            } catch (error) {
-                console.error('Error processing approval:', error);
-            }
-        }
-        
-        // Load Withdrawals - FIXED WITH BALANCE CHECK
+        // Load Withdrawals
         async function loadWithdrawals() {
             try {
-                // Get latest user data to ensure accurate balance
+                // Get latest user data
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const latestUserData = userDoc.data();
-                userData.wallet = latestUserData.wallet || 0;
+                const latestBalance = userDoc.data().wallet || 0;
+                userData.wallet = latestBalance;
                 
-                // Update wallet display
-                document.getElementById('walletDisplay').textContent = `$${userData.wallet.toFixed(2)}`;
+                document.getElementById('walletDisplay').textContent = `$${latestBalance.toFixed(2)}`;
                 
                 if (!userData.membershipPaid) {
                     document.getElementById('content').innerHTML = `
@@ -737,9 +779,9 @@
                     <div style="background:#f8fafc; border-radius:1.5rem; padding:1.5rem; margin-bottom:2rem;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                             <div style="font-size:1.2rem; font-weight:600;">Available Balance:</div>
-                            <div class="balance-highlight">$${userData.wallet.toFixed(2)}</div>
+                            <div class="balance-highlight">$${latestBalance.toFixed(2)}</div>
                         </div>
-                        <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" max="${userData.wallet}" step="0.01" oninput="validateWithdrawAmount(${userData.wallet})">
+                        <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" max="${latestBalance}" step="0.01" oninput="validateWithdrawAmount(${latestBalance})">
                         <div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div>
                         <select id="withdrawMethod">
                             <option value="mpesa">M-Pesa</option>
@@ -747,7 +789,7 @@
                         </select>
                         <input type="tel" id="withdrawPhone" placeholder="Phone Number" pattern="[0-9]{10,12}" title="Please enter a valid phone number">
                         <button class="btn btn-primary" style="width:100%;" onclick="requestWithdrawal()" id="withdrawBtn">Request Withdrawal</button>
-                        <p style="font-size:0.9rem; color:#64748b; margin-top:0.5rem;">Minimum withdrawal: $5 | Maximum: $${userData.wallet.toFixed(2)}</p>
+                        <p style="font-size:0.9rem; color:#64748b; margin-top:0.5rem;">Minimum withdrawal: $5 | Maximum: $${latestBalance.toFixed(2)}</p>
                     </div>
                     <h4 style="margin-bottom:1rem;">Withdrawal History</h4>
                 `;
@@ -776,11 +818,11 @@
                 
             } catch (error) {
                 console.error('Error loading withdrawals:', error);
-                document.getElementById('content').innerHTML = '<p style="color:#ef4444;">Error loading withdrawals.</p>';
+                document.getElementById('content').innerHTML = '<div class="empty-state"><p style="color:#ef4444;">Error loading withdrawals.</p><button class="btn btn-primary" onclick="loadWithdrawals()">Try Again</button></div>';
             }
         }
         
-        // Validate withdrawal amount in real-time
+        // Validate withdrawal amount
         function validateWithdrawAmount(maxBalance) {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const warning = document.getElementById('withdrawWarning');
@@ -788,31 +830,25 @@
             
             if (amount > maxBalance) {
                 warning.style.display = 'block';
-                withdrawBtn.disabled = true;
-                withdrawBtn.classList.add('disabled-btn');
+                if (withdrawBtn) withdrawBtn.disabled = true;
             } else {
                 warning.style.display = 'none';
-                withdrawBtn.disabled = false;
-                withdrawBtn.classList.remove('disabled-btn');
+                if (withdrawBtn) withdrawBtn.disabled = false;
             }
         }
         
-        // Request Withdrawal - FIXED WITH MULTIPLE SAFETY CHECKS
+        // Request Withdrawal
         async function requestWithdrawal() {
-            const amountInput = document.getElementById('withdrawAmount');
-            const amount = parseFloat(amountInput.value);
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             const phone = document.getElementById('withdrawPhone').value;
             
-            // Get the latest balance from Firestore to ensure accuracy
+            // Get the latest balance
             try {
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const latestBalance = userDoc.data().wallet || 0;
                 
-                // Update local userData
-                userData.wallet = latestBalance;
-                
-                // Multiple validation checks
+                // Validation
                 if (!amount || isNaN(amount) || amount <= 0) {
                     showToast('Please enter a valid amount', true);
                     return;
@@ -833,7 +869,7 @@
                     return;
                 }
                 
-                // Check if user has any pending withdrawals
+                // Check for pending withdrawals
                 const pendingSnapshot = await db.collection('withdrawals')
                     .where('userId', '==', currentUser.uid)
                     .where('status', '==', 'pending')
@@ -844,29 +880,21 @@
                     return;
                 }
                 
-                // Start a transaction to ensure data consistency
+                // Process withdrawal
                 await db.runTransaction(async (transaction) => {
-                    // Get fresh user data within transaction
                     const userRef = db.collection('users').doc(currentUser.uid);
                     const userSnap = await transaction.get(userRef);
                     
-                    if (!userSnap.exists) {
-                        throw new Error('User not found');
-                    }
-                    
                     const currentBalance = userSnap.data().wallet || 0;
                     
-                    // Double-check balance within transaction
                     if (amount > currentBalance) {
                         throw new Error('Insufficient balance');
                     }
                     
-                    // Update user's wallet
                     transaction.update(userRef, {
                         wallet: firebase.firestore.FieldValue.increment(-amount)
                     });
                     
-                    // Create withdrawal record
                     const withdrawalRef = db.collection('withdrawals').doc();
                     transaction.set(withdrawalRef, {
                         userId: currentUser.uid,
@@ -880,62 +908,101 @@
                     });
                 });
                 
-                // Update local user data
+                // Update local data
                 userData.wallet -= amount;
                 document.getElementById('walletDisplay').textContent = `$${userData.wallet.toFixed(2)}`;
                 
                 showToast('Withdrawal requested successfully!');
-                
-                // Reload withdrawals to show the new request
-                setTimeout(() => loadWithdrawals(), 1000);
+                loadWithdrawals();
                 
             } catch (error) {
                 console.error('Error requesting withdrawal:', error);
-                
-                if (error.message === 'Insufficient balance') {
-                    showToast('Insufficient balance. Please refresh and try again.', true);
-                } else {
-                    showToast('Error requesting withdrawal. Please try again.', true);
-                }
-                
-                // Refresh the withdrawals page to show correct balance
-                loadWithdrawals();
+                showToast(error.message || 'Error requesting withdrawal', true);
+                loadWithdrawals(); // Refresh to show correct balance
             }
         }
         
-        // Load Messages
+        // Load Messages - FIXED VERSION
         async function loadMessages() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
                 
+                // Get messages for this user
                 const snapshot = await db.collection('messages')
                     .where('userId', '==', currentUser.uid)
-                    .orderBy('createdAt', 'desc')
                     .get();
                 
                 let html = '<h3 style="margin-bottom:1.5rem;">Messages</h3>';
                 
                 if (snapshot.empty) {
-                    html += '<p>No messages yet.</p>';
+                    html += `
+                        <div class="empty-state">
+                            <i class="fas fa-envelope-open-text"></i>
+                            <h4>No Messages</h4>
+                            <p>You don't have any messages yet.</p>
+                        </div>
+                    `;
                 } else {
+                    // Convert to array for sorting
+                    const messages = [];
                     snapshot.forEach(doc => {
-                        const msg = doc.data();
+                        messages.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    // Sort by createdAt (newest first)
+                    messages.sort((a, b) => {
+                        if (!a.createdAt) return 1;
+                        if (!b.createdAt) return -1;
+                        return b.createdAt.seconds - a.createdAt.seconds;
+                    });
+                    
+                    html += '<div style="display:flex; flex-direction:column; gap:1rem;">';
+                    
+                    messages.forEach(msg => {
                         const msgDate = msg.createdAt ? new Date(msg.createdAt.seconds * 1000).toLocaleString() : 'N/A';
+                        const isUnread = !msg.read;
                         
                         html += `
-                            <div class="submission-card">
-                                <p>${msg.message}</p>
-                                <p style="color:#64748b; font-size:0.9rem;">${msgDate}</p>
+                            <div class="submission-card ${isUnread ? 'message-unread' : ''}" onclick="${!msg.read ? `markMessageRead('${msg.id}')` : ''}" style="cursor:${!msg.read ? 'pointer' : 'default'}">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                                    <strong>${msg.subject || 'Message'}</strong>
+                                    ${!msg.read ? '<span class="badge primary">New</span>' : ''}
+                                </div>
+                                <p style="color:#0f172a; margin-bottom:0.5rem;">${msg.message}</p>
+                                <div class="message-time">${msgDate}</div>
+                                ${msg.adminName ? `<p style="font-size:0.8rem; color:#6366f1; margin-top:0.3rem;">From: ${msg.adminName}</p>` : ''}
                             </div>
                         `;
                     });
+                    
+                    html += '</div>';
                 }
                 
                 document.getElementById('content').innerHTML = html;
                 
             } catch (error) {
                 console.error('Error loading messages:', error);
-                document.getElementById('content').innerHTML = '<p style="color:#ef4444;">Error loading messages.</p>';
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
+                        <h4>Error Loading Messages</h4>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadMessages()" style="margin-top:1rem;">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Mark message as read
+        async function markMessageRead(messageId) {
+            try {
+                await db.collection('messages').doc(messageId).update({
+                    read: true,
+                    readAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                loadMessages(); // Reload messages
+            } catch (error) {
+                console.error('Error marking message as read:', error);
             }
         }
         
@@ -953,6 +1020,7 @@
                 <div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:1rem;">
                     <p><strong>Email:</strong> ${userData.email}</p>
                     <p><strong>Member since:</strong> ${joinDate}</p>
+                    <p><strong>Wallet Balance:</strong> $${(userData.wallet || 0).toFixed(2)}</p>
                     <p><strong>Membership:</strong> 
                         <span class="${userData.membershipPaid ? 'premium-badge' : 'badge warning'}">
                             ${userData.membershipPaid ? 'Premium' : 'Free'}
