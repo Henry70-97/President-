@@ -14,321 +14,68 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: linear-gradient(145deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; }
         .app-container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-        
-        /* Header Styling */
-        .header { 
-            background: rgba(255,255,255,0.95); 
-            backdrop-filter: blur(10px);
-            border-radius: 2rem; 
-            padding: 1rem 2rem; 
-            margin-bottom: 1.5rem; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.5);
-        }
-        .logo h2 { 
-            background: linear-gradient(135deg, #667eea, #764ba2); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent;
-            font-size: 1.8rem;
-        }
+        .header { background: white; border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .logo h2 { background: linear-gradient(135deg, #6366f1, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .user-menu { display: flex; align-items: center; gap: 1rem; }
-        .wallet-badge { 
-            background: linear-gradient(135deg, #667eea20, #764ba220); 
-            padding: 0.5rem 1.5rem; 
-            border-radius: 40px; 
-            color: #667eea; 
-            font-weight: 700;
-            border: 2px solid #667eea;
-            font-size: 1.1rem;
-        }
-        .user-name {
-            font-weight: 600;
-            color: #333;
-            background: white;
-            padding: 0.5rem 1.5rem;
-            border-radius: 40px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        .logout-btn { 
-            background: white; 
-            border: none; 
-            color: #ef4444; 
-            font-size: 1.2rem; 
-            cursor: pointer; 
-            padding: 0.7rem 1.2rem;
-            border-radius: 40px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-        }
-        .logout-btn:hover {
-            background: #ef4444;
-            color: white;
-        }
-        
-        /* Stats Cards with alternating colors */
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 1.2rem; 
-            margin-bottom: 2rem; 
-        }
-        .stat-card { 
-            border-radius: 1.8rem; 
-            padding: 1.8rem 1.5rem; 
-            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.2);
-            transition: transform 0.3s;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255,255,255,0.1);
-            transform: rotate(45deg);
-            pointer-events: none;
-        }
-        .stat-card:nth-child(1) { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .stat-card:nth-child(2) { background: linear-gradient(135deg, #f093fb, #f5576c); }
-        .stat-card:nth-child(3) { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .stat-card:nth-child(4) { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-        
-        .stat-card i { 
-            font-size: 2.5rem; 
-            margin-bottom: 1rem;
-            opacity: 0.8;
-        }
-        .stat-value { 
-            font-size: 2.2rem; 
-            font-weight: 800; 
-            margin-bottom: 0.2rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        .stat-label { 
-            font-size: 0.9rem;
-            opacity: 0.9;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        /* Tabs Styling */
-        .tabs { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-        .tab { 
-            padding: 0.8rem 1.8rem; 
-            border: none; 
-            border-radius: 40px; 
-            background: white; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            font-size: 0.95rem;
-        }
-        .tab.active { 
-            background: linear-gradient(135deg, #667eea, #764ba2); 
-            color: white;
-            box-shadow: 0 10px 20px -5px #667eea80;
-        }
-        
-        /* Content Area */
-        .content { 
-            background: rgba(255,255,255,0.95); 
-            backdrop-filter: blur(10px);
-            border-radius: 2rem; 
-            padding: 2rem; 
-            min-height: 500px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            border: 1px solid rgba(255,255,255,0.5);
-        }
-        
-        /* Task Cards with alternating colors */
-        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-        .task-card { 
-            border-radius: 1.8rem; 
-            padding: 1.8rem; 
-            border: none;
-            transition: all 0.3s;
-            color: white;
-            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-        }
-        .task-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
-        }
-        .task-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255,255,255,0.1);
-            transform: rotate(45deg);
-            pointer-events: none;
-        }
-        
-        /* Alternating task card colors */
-        .task-card:nth-child(6n+1) { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .task-card:nth-child(6n+2) { background: linear-gradient(135deg, #f093fb, #f5576c); }
-        .task-card:nth-child(6n+3) { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-        .task-card:nth-child(6n+4) { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-        .task-card:nth-child(6n+5) { background: linear-gradient(135deg, #fa709a, #fee140); }
-        .task-card:nth-child(6n+6) { background: linear-gradient(135deg, #30cfd0, #330867); }
-        
-        .task-card h4 { 
-            font-size: 1.4rem; 
-            margin-bottom: 1rem;
-            font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        .task-card .description { 
-            opacity: 0.9; 
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
-        }
-        .task-card .badge { 
-            background: rgba(255,255,255,0.25);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.5);
-            font-weight: 600;
-            backdrop-filter: blur(5px);
-        }
-        
-        /* Bold green for task title and amount */
-        .task-card .task-title {
-            font-weight: 800;
-            color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .task-card .reward-amount {
-            font-weight: 800;
-            color: #00ff9d;
-            font-size: 1.6rem;
-            text-shadow: 0 0 10px rgba(0,255,157,0.5);
-        }
-        
-        .badge { 
-            padding: 0.4rem 1.2rem; 
-            border-radius: 40px; 
-            font-size: 0.8rem; 
-            font-weight: 600; 
-            display: inline-block; 
-        }
-        
-        .btn { 
-            padding: 0.8rem 1.5rem; 
-            border: none; 
-            border-radius: 40px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            font-size: 0.9rem;
-        }
-        .btn-primary { 
-            background: rgba(255,255,255,0.25);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.5);
-            backdrop-filter: blur(5px);
-        }
-        .btn-primary:hover { 
-            background: white;
-            color: #667eea;
-        }
-        .btn-outline { 
-            background: rgba(255,255,255,0.15);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.5);
-            backdrop-filter: blur(5px);
-        }
-        .btn-outline:hover { 
-            background: rgba(255,255,255,0.3);
-        }
-        
-        /* Modal Styling */
-        .modal { 
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        .modal .btn-primary {
-            background: white;
-            color: #667eea;
-        }
-        .modal .btn-primary:hover {
-            background: rgba(255,255,255,0.9);
-        }
-        
-        /* Submission Cards */
-        .submission-card { 
-            background: linear-gradient(135deg, #667eea10, #764ba210);
-            border-radius: 1.5rem; 
-            padding: 1.5rem; 
-            margin-bottom: 1rem; 
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            backdrop-filter: blur(5px);
-        }
-        
-        /* Benefits Cards */
-        .benefit-card { 
-            background: linear-gradient(135deg, #667eea10, #764ba210);
-            border-radius: 1.5rem; 
-            padding: 2rem; 
-            text-align: center; 
-            border: 1px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(5px);
-            transition: transform 0.3s;
-        }
-        .benefit-card:hover {
-            transform: translateY(-5px);
-        }
-        .benefit-card i { 
-            font-size: 3rem; 
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem; 
-        }
-        
-        /* Loading Spinner */
-        .loading { text-align: center; padding: 3rem; color: #667eea; }
-        .loading i { font-size: 3rem; margin-bottom: 1rem; }
-        
-        /* Info and Success Boxes */
-        .info-box { 
-            background: linear-gradient(135deg, #667eea20, #764ba220);
-            border-left: 4px solid #667eea; 
-            padding: 1rem; 
-            border-radius: 1rem; 
-            margin: 1rem 0;
-            color: #333;
-        }
-        .success-box { 
-            background: linear-gradient(135deg, #43e97b20, #38f9d720);
-            border-left: 4px solid #43e97b; 
-            padding: 1rem; 
-            border-radius: 1rem; 
-            margin: 1rem 0;
-            color: #333;
-        }
-        
-        @media (max-width: 768px) { 
-            .header { flex-direction: column; gap: 1rem; text-align: center; }
-            .user-menu { flex-wrap: wrap; justify-content: center; }
-        }
+        .wallet-badge { background: #6366f120; padding: 0.5rem 1rem; border-radius: 40px; color: #6366f1; font-weight: 600; }
+        .logout-btn { background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.5rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: white; border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .stat-card i { font-size: 2rem; color: #6366f1; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #0f172a; }
+        .stat-label { color: #64748b; }
+        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .tab.active { background: #6366f1; color: white; }
+        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 400px; }
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .task-card { background: #f8fafc; border-radius: 1.5rem; padding: 1.5rem; border: 1px solid #e2e8f0; transition: transform 0.2s; display: flex; flex-direction: column; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .task-card h4 { margin-bottom: 0.5rem; font-size: 1.2rem; }
+        .task-card .description { color: #64748b; margin-bottom: 1rem; flex-grow: 1; }
+        .badge { padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .badge.primary { background: #6366f120; color: #6366f1; }
+        .badge.success { background: #10b98120; color: #10b981; }
+        .badge.warning { background: #f59e0b20; color: #f59e0b; }
+        .badge.danger { background: #ef444420; color: #ef4444; }
+        .badge.premium { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
+        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 0.9rem; }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-primary:hover { background: #4f52e0; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-outline { background: transparent; border: 2px solid #6366f1; color: #6366f1; }
+        .btn-outline:hover { background: #6366f1; color: white; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
+        .modal.active { display: block; }
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
+        .modal-backdrop.active { display: block; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 40px; z-index: 2000; display: none; }
+        input, textarea, select { width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }
+        textarea { border-radius: 20px; min-height: 100px; }
+        .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
+        .flex-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        .premium-badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .loading { text-align: center; padding: 3rem; color: #64748b; }
+        .loading i { font-size: 3rem; margin-bottom: 1rem; color: #6366f1; }
+        .lipwa-badge { background: #8b5cf6; color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .empty-state { text-align: center; padding: 3rem; color: #64748b; }
+        .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
+        .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+        .benefit-card { background: linear-gradient(135deg, #f8fafc, #ffffff); border-radius: 1.5rem; padding: 2rem; text-align: center; border: 1px solid #e2e8f0; }
+        .benefit-card i { font-size: 3rem; color: #f59e0b; margin-bottom: 1rem; }
+        .benefit-card h4 { margin-bottom: 0.5rem; color: #0f172a; }
+        .benefit-card p { color: #64748b; }
+        .price-tag { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin: 1rem 0; }
+        .price-tag small { font-size: 1rem; color: #64748b; }
+        .task-details { padding: 1rem; }
+        .task-details p { margin: 1rem 0; color: #334155; }
+        .task-details .label { font-weight: 600; color: #0f172a; width: 100px; display: inline-block; }
+        .info-box { background: #e6f0ff; border-left: 4px solid #6366f1; padding: 1rem; border-radius: 1rem; margin: 1rem 0; }
+        .success-box { background: #10b98120; border-left: 4px solid #10b981; padding: 1rem; border-radius: 1rem; margin: 1rem 0; }
+        @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }
     </style>
 </head>
 <body>
@@ -339,7 +86,7 @@
             </div>
             <div class="user-menu">
                 <div class="wallet-badge" id="walletDisplay">$0.00</div>
-                <span class="user-name" id="userName">Loading...</span>
+                <span id="userName">Loading...</span>
                 <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </div>
@@ -544,7 +291,7 @@
                     <div class="stat-card">
                         <i class="fas fa-wallet"></i>
                         <div class="stat-value">$${(userData.wallet || 0).toFixed(2)}</div>
-                        <div class="stat-label">Wallet Balance</div>
+                        <div class="stat-label">Balance</div>
                     </div>
                     <div class="stat-card">
                         <i class="fas fa-clock"></i>
@@ -572,7 +319,7 @@
                     <div class="stat-card">
                         <i class="fas fa-wallet"></i>
                         <div class="stat-value">$${(userData.wallet || 0).toFixed(2)}</div>
-                        <div class="stat-label">Wallet Balance</div>
+                        <div class="stat-label">Balance</div>
                     </div>
                 `;
                 loadTasks();
@@ -587,7 +334,7 @@
                 // Get all tasks
                 const snapshot = await db.collection('tasks').get();
                 
-                let html = '<h3 style="margin-bottom:1.5rem; color:#333;">Available Tasks</h3>';
+                let html = '<h3 style="margin-bottom:1.5rem;">Available Tasks</h3>';
                 
                 if (snapshot.empty) {
                     html += `
@@ -648,14 +395,14 @@
                             
                             html += `
                                 <div class="task-card">
-                                    <h4 class="task-title">${title}</h4>
+                                    <h4>${title}</h4>
                                     <p class="description">${shortDescription}</p>
                                     <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
-                                        <span class="badge">${category}</span>
-                                        <span class="badge">${difficulty}</span>
+                                        <span class="badge primary">${category}</span>
+                                        <span class="badge warning">${difficulty}</span>
                                     </div>
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
-                                        <span class="reward-amount">$${rewardValue.toFixed(2)}</span>
+                                        <strong>$${rewardValue.toFixed(2)}</strong>
                                         <div style="display:flex; gap:0.5rem;">
                                             <button class="btn btn-outline" onclick="viewTaskDetails('${task.id}')">Details</button>
                                             <button class="btn btn-primary" onclick="submitTask('${task.id}')">Submit</button>
@@ -702,46 +449,46 @@
                 const createdDate = task.createdAt ? new Date(task.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
                 
                 showModal(`
-                    <div class="task-details" style="color:white;">
-                        <h2 style="margin-bottom:1rem; font-size:1.8rem;">${task.title || 'Untitled Task'}</h2>
+                    <div class="task-details">
+                        <h2 style="margin-bottom:1rem;">${task.title || 'Untitled Task'}</h2>
                         
-                        <div style="background:rgba(255,255,255,0.1); border-radius:1rem; padding:1.5rem; margin-bottom:1.5rem; backdrop-filter:blur(10px);">
-                            <p style="margin-bottom:1rem; font-weight:600;">Description:</p>
-                            <p style="line-height:1.6;">${task.description || 'No description provided'}</p>
+                        <div style="background:#f8fafc; border-radius:1rem; padding:1.5rem; margin-bottom:1.5rem;">
+                            <p style="margin-bottom:1rem;"><span class="label">Description:</span></p>
+                            <p style="color:#334155; line-height:1.6;">${task.description || 'No description provided'}</p>
                         </div>
                         
                         <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1.5rem;">
-                            <div style="background:rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; backdrop-filter:blur(10px);">
-                                <span style="font-weight:600;">Reward:</span>
-                                <p style="font-size:1.8rem; font-weight:800; color:#00ff9d; text-shadow:0 0 10px rgba(0,255,157,0.5);">$${rewardValue.toFixed(2)}</p>
+                            <div style="background:#f8fafc; border-radius:1rem; padding:1rem;">
+                                <span class="label">Reward:</span>
+                                <p style="font-size:1.5rem; font-weight:700; color:#10b981;">$${rewardValue.toFixed(2)}</p>
                             </div>
-                            <div style="background:rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; backdrop-filter:blur(10px);">
-                                <span style="font-weight:600;">KES Equivalent:</span>
-                                <p style="font-size:1.3rem; font-weight:600;">KSh ${(rewardValue * 130).toFixed(2)}</p>
+                            <div style="background:#f8fafc; border-radius:1rem; padding:1rem;">
+                                <span class="label">KES Equivalent:</span>
+                                <p style="font-size:1.2rem; font-weight:600;">KSh ${(rewardValue * 130).toFixed(2)}</p>
                             </div>
                         </div>
                         
                         <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-bottom:1.5rem;">
-                            <div style="background:rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; backdrop-filter:blur(10px);">
-                                <span style="font-weight:600;">Category:</span>
-                                <p><span class="badge" style="background:rgba(255,255,255,0.2);">${task.category || 'other'}</span></p>
+                            <div style="background:#f8fafc; border-radius:1rem; padding:1rem;">
+                                <span class="label">Category:</span>
+                                <p><span class="badge primary">${task.category || 'other'}</span></p>
                             </div>
-                            <div style="background:rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; backdrop-filter:blur(10px);">
-                                <span style="font-weight:600;">Difficulty:</span>
-                                <p><span class="badge" style="background:rgba(255,255,255,0.2);">${task.difficulty || 'medium'}</span></p>
+                            <div style="background:#f8fafc; border-radius:1rem; padding:1rem;">
+                                <span class="label">Difficulty:</span>
+                                <p><span class="badge warning">${task.difficulty || 'medium'}</span></p>
                             </div>
                         </div>
                         
-                        <div style="background:rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; margin-bottom:1.5rem; backdrop-filter:blur(10px);">
-                            <p><span style="font-weight:600;">Submissions:</span> ${task.submissionsCount || 0} users have submitted</p>
-                            <p><span style="font-weight:600;">Posted:</span> ${createdDate}</p>
+                        <div style="background:#f8fafc; border-radius:1rem; padding:1rem; margin-bottom:1.5rem;">
+                            <p><span class="label">Submissions:</span> ${task.submissionsCount || 0} users have submitted</p>
+                            <p><span class="label">Posted:</span> ${createdDate}</p>
                         </div>
                         
-                        <div class="info-box" style="background:rgba(255,255,255,0.1); color:white; border-left-color:#00ff9d;">
+                        <div class="info-box">
                             <i class="fas fa-info-circle"></i> Submissions are reviewed within 3 hours. You'll be notified once reviewed.
                         </div>
                         
-                        <button class="btn btn-primary" style="width:100%; margin-top:1rem; background:white; color:#667eea;" onclick="submitTask('${taskId}')">Submit Work for This Task</button>
+                        <button class="btn btn-primary" style="width:100%;" onclick="submitTask('${taskId}')">Submit Work for This Task</button>
                     </div>
                 `);
                 
@@ -755,18 +502,18 @@
         function submitTask(taskId) {
             closeModal(); // Close any open modal
             showModal(`
-                <h3 style="margin-bottom:1rem; color:white;">Submit Work</h3>
-                <textarea id="workText" placeholder="Enter your work here..." style="width:100%; min-height:150px; margin-bottom:1rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:white; border-radius:1rem; padding:1rem;"></textarea>
+                <h3 style="margin-bottom:1rem;">Submit Work</h3>
+                <textarea id="workText" placeholder="Enter your work here..." style="width:100%; min-height:150px; margin-bottom:1rem;"></textarea>
                 
-                <div class="info-box" style="background:rgba(255,255,255,0.1); color:white; border-left-color:#00ff9d; margin-bottom:1rem;">
+                <div class="info-box" style="margin-bottom:1rem;">
                     <i class="fas fa-clock"></i> <strong>Review time:</strong> Submissions are reviewed within 3 hours. You'll receive feedback and payment if approved.
                 </div>
                 
-                <button class="btn btn-primary" style="width:100%; background:white; color:#667eea;" onclick="saveSubmission('${taskId}')">Submit Work</button>
+                <button class="btn btn-primary" style="width:100%;" onclick="saveSubmission('${taskId}')">Submit Work</button>
             `);
         }
         
-        // Save Submission
+        // Save Submission - FIXED VERSION with proper success message
         async function saveSubmission(taskId) {
             const work = document.getElementById('workText').value;
             if (!work) {
@@ -796,16 +543,16 @@
                 
                 // Show success message with review time info
                 showModal(`
-                    <div class="success-box" style="text-align:center; background:rgba(255,255,255,0.1); color:white;">
-                        <i class="fas fa-check-circle" style="font-size:4rem; color:#00ff9d; margin-bottom:1rem;"></i>
-                        <h3 style="margin-bottom:1rem; color:white;">Work Submitted Successfully!</h3>
+                    <div class="success-box" style="text-align:center;">
+                        <i class="fas fa-check-circle" style="font-size:4rem; color:#10b981; margin-bottom:1rem;"></i>
+                        <h3 style="margin-bottom:1rem;">Work Submitted Successfully!</h3>
                         <p style="margin-bottom:1rem;">Your work has been submitted for review.</p>
-                        <div style="background:rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; margin:1rem 0; backdrop-filter:blur(10px);">
-                            <i class="fas fa-clock" style="color:#00ff9d;"></i>
+                        <div style="background:#f8fafc; border-radius:1rem; padding:1rem; margin:1rem 0;">
+                            <i class="fas fa-clock" style="color:#6366f1;"></i>
                             <p style="font-weight:600; margin-top:0.5rem;">Review Time: Up to 3 hours</p>
-                            <p style="opacity:0.9; font-size:0.9rem;">You'll receive a notification once your work is reviewed. If approved, payment will be added to your wallet.</p>
+                            <p style="color:#64748b; font-size:0.9rem;">You'll receive a notification once your work is reviewed. If approved, payment will be added to your wallet.</p>
                         </div>
-                        <button class="btn btn-primary" style="margin-top:1rem; background:white; color:#667eea;" onclick="closeModal(); switchTab('submissions')">View My Submissions</button>
+                        <button class="btn btn-primary" style="margin-top:1rem;" onclick="closeModal(); switchTab('submissions')">View My Submissions</button>
                     </div>
                 `);
                 
@@ -829,7 +576,7 @@
                     .where('userId', '==', currentUser.uid)
                     .get();
                 
-                let html = '<h3 style="margin-bottom:1.5rem; color:#333;">My Submissions</h3>';
+                let html = '<h3 style="margin-bottom:1.5rem;">My Submissions</h3>';
                 
                 if (snapshot.empty) {
                     html += '<p>No submissions yet.</p>';
@@ -853,18 +600,18 @@
                         html += `
                             <div class="submission-card">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                                    <h4 style="color:#667eea;">${sub.taskTitle}</h4>
-                                    <span class="badge" style="background:${sub.status === 'approved' ? '#10b981' : sub.status === 'rejected' ? '#ef4444' : '#f59e0b'}; color:white;">${sub.status}</span>
+                                    <h4>${sub.taskTitle}</h4>
+                                    <span class="badge ${statusClass}">${sub.status}</span>
                                 </div>
                                 <p style="color:#64748b; margin-bottom:0.5rem;">${sub.workText.substring(0, 100)}${sub.workText.length > 100 ? '...' : ''}</p>
                                 <div style="display:flex; gap:1rem; font-size:0.9rem; color:#64748b; flex-wrap:wrap;">
                                     <span><i class="far fa-calendar"></i> ${submittedDate}</span>
                                     ${sub.score ? `<span>Score: ${sub.score}%</span>` : ''}
-                                    ${sub.earned ? `<span style="color:#10b981; font-weight:600;">Earned: $${sub.earned.toFixed(2)}</span>` : ''}
+                                    ${sub.earned ? `<span>Earned: $${sub.earned.toFixed(2)}</span>` : ''}
                                 </div>
                                 ${sub.review ? `<p style="margin-top:0.5rem; background:#f1f5f9; padding:0.5rem; border-radius:10px;"><strong>Feedback:</strong> ${sub.review}</p>` : ''}
                                 ${sub.status === 'pending' ? `
-                                    <div style="margin-top:0.5rem; font-size:0.9rem; color:#f59e0b;">
+                                    <div style="margin-top:0.5rem; font-size:0.9rem; color:#6366f1;">
                                         <i class="fas fa-clock"></i> Under review (up to 3 hours)
                                     </div>
                                 ` : ''}
@@ -918,7 +665,7 @@
                                     $3 <small>/month</small>
                                 </div>
                                 <p style="color:#64748b; margin-bottom:1.5rem;">Cancel anytime · No hidden fees</p>
-                                <button class="btn btn-success" style="padding:1rem 3rem; font-size:1.2rem; background:linear-gradient(135deg, #43e97b, #38f9d7); color:white; border:none;" onclick="showMembershipPayment()">Upgrade Now</button>
+                                <button class="btn btn-success" style="padding:1rem 3rem; font-size:1.2rem;" onclick="showMembershipPayment()">Upgrade Now</button>
                                 <p style="margin-top:1rem; font-size:0.9rem;">Pay via <span class="lipwa-badge">Lipwa.com</span></p>
                             </div>
                             
@@ -939,9 +686,9 @@
                     .get();
                 
                 let html = `
-                    <h3 style="margin-bottom:1.5rem; color:#333;">Withdraw Funds</h3>
-                    <div style="background:linear-gradient(135deg, #667eea10, #764ba210); border-radius:1.5rem; padding:1.5rem; margin-bottom:2rem;">
-                        <div style="font-size:1.5rem; font-weight:700; margin-bottom:1rem;">Available Balance: <span style="color:#10b981;">$${(userData.wallet || 0).toFixed(2)}</span></div>
+                    <h3 style="margin-bottom:1.5rem;">Withdraw Funds</h3>
+                    <div style="background:#f8fafc; border-radius:1.5rem; padding:1.5rem; margin-bottom:2rem;">
+                        <div style="font-size:1.5rem; font-weight:700; margin-bottom:1rem;">Available Balance: $${(userData.wallet || 0).toFixed(2)}</div>
                         <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" step="0.01">
                         <select id="withdrawMethod">
                             <option value="mpesa">M-Pesa</option>
@@ -975,7 +722,7 @@
                             <div class="submission-card">
                                 <div style="display:flex; justify-content:space-between;">
                                     <span><strong>$${w.amount}</strong> via ${w.method}</span>
-                                    <span class="badge" style="background:${w.status === 'paid' ? '#10b981' : '#f59e0b'}; color:white;">${w.status}</span>
+                                    <span class="badge ${w.status === 'paid' ? 'success' : 'warning'}">${w.status}</span>
                                 </div>
                                 <p style="color:#64748b; font-size:0.9rem;">${w.phone} • ${requestedDate}</p>
                             </div>
@@ -1049,7 +796,7 @@
                     .where('userId', '==', currentUser.uid)
                     .get();
                 
-                let html = '<h3 style="margin-bottom:1.5rem; color:#333;">Messages</h3>';
+                let html = '<h3 style="margin-bottom:1.5rem;">Messages</h3>';
                 
                 if (snapshot.empty) {
                     html += '<p>No messages yet.</p>';
@@ -1090,22 +837,22 @@
             const joinDate = userData.createdAt ? new Date(userData.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
             
             document.getElementById('content').innerHTML = `
-                <h3 style="margin-bottom:1.5rem; color:#333;">Profile Settings</h3>
-                <div style="background:linear-gradient(135deg, #667eea10, #764ba210); border-radius:1.5rem; padding:1.5rem;">
+                <h3 style="margin-bottom:1.5rem;">Profile Settings</h3>
+                <div style="background:#f8fafc; border-radius:1.5rem; padding:1.5rem;">
                     <input type="text" id="profileName" value="${userData.displayName || ''}" placeholder="Display Name">
                     <input type="tel" id="profilePhone" value="${userData.phone || ''}" placeholder="Phone Number">
                     <button class="btn btn-primary" style="width:100%;" onclick="updateProfile()">Update Profile</button>
                 </div>
-                <div style="margin-top:1rem; padding:1rem; background:linear-gradient(135deg, #667eea10, #764ba210); border-radius:1rem;">
+                <div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:1rem;">
                     <p><strong>Email:</strong> ${userData.email}</p>
                     <p><strong>Member since:</strong> ${joinDate}</p>
                     <p><strong>Membership:</strong> 
-                        <span class="badge" style="background:${userData.membershipPaid ? 'linear-gradient(135deg, #f59e0b, #fbbf24)' : '#f59e0b'}; color:white;">
+                        <span class="${userData.membershipPaid ? 'premium-badge' : 'badge warning'}">
                             ${userData.membershipPaid ? 'Premium' : 'Free'}
                         </span>
                     </p>
                     ${!userData.membershipPaid ? `
-                        <button class="btn btn-success" style="width:100%; margin-top:1rem; background:linear-gradient(135deg, #43e97b, #38f9d7); color:white; border:none;" onclick="switchTab('withdrawals')">Upgrade to Premium</button>
+                        <button class="btn btn-success" style="width:100%; margin-top:1rem;" onclick="switchTab('withdrawals')">Upgrade to Premium</button>
                     ` : ''}
                 </div>
             `;
@@ -1142,12 +889,12 @@
         // Show Membership Payment
         function showMembershipPayment() {
             showModal(`
-                <h3 style="margin-bottom:1rem; color:white;">Premium Membership</h3>
-                <p style="margin-bottom:1rem; color:white;">Upgrade to premium for only <strong style="color:#00ff9d;">$3/month</strong></p>
+                <h3 style="margin-bottom:1rem;">Premium Membership</h3>
+                <p style="margin-bottom:1rem;">Upgrade to premium for only <strong>$3/month</strong></p>
                 
-                <div style="background:rgba(255,255,255,0.1); border-radius:1rem; padding:1rem; margin-bottom:1rem; backdrop-filter:blur(10px);">
-                    <h4 style="margin-bottom:0.5rem; color:white;">Premium Benefits:</h4>
-                    <ul style="list-style:none; padding:0; color:white;">
+                <div style="background:linear-gradient(135deg, #f59e0b20, #fbbf2420); border-radius:1rem; padding:1rem; margin-bottom:1rem;">
+                    <h4 style="margin-bottom:0.5rem;">Premium Benefits:</h4>
+                    <ul style="list-style:none; padding:0;">
                         <li style="margin:0.5rem 0;">✓ Withdraw earnings to mobile money</li>
                         <li style="margin:0.5rem 0;">✓ Access to premium tasks with higher pay</li>
                         <li style="margin:0.5rem 0;">✓ Priority submission review</li>
@@ -1156,18 +903,18 @@
                     </ul>
                 </div>
                 
-                <div style="background:rgba(255,255,255,0.1); padding:1rem; border-radius:1rem; margin-bottom:1rem; backdrop-filter:blur(10px);">
-                    <p><strong style="color:white;">How to pay via Lipwa.com:</strong></p>
-                    <ol style="margin-left:1.5rem; color:white;">
-                        <li>Visit <a href="https://lipwa.com" target="_blank" style="color:#00ff9d;">lipwa.com</a></li>
+                <div style="background:#f3f4f6; padding:1rem; border-radius:1rem; margin-bottom:1rem;">
+                    <p><strong>How to pay via Lipwa.com:</strong></p>
+                    <ol style="margin-left:1.5rem; color:#4b5563;">
+                        <li>Visit <a href="https://lipwa.com" target="_blank">lipwa.com</a></li>
                         <li>Send $3 to username: <strong>@nextgen</strong></li>
                         <li>Copy the transaction ID</li>
                         <li>Enter it below</li>
                     </ol>
                 </div>
                 
-                <input type="text" id="transactionCode" placeholder="Enter Lipwa Transaction ID" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:white;">
-                <button class="btn btn-success" style="width:100%; background:white; color:#667eea;" onclick="submitPaymentProof()">Submit Payment Proof</button>
+                <input type="text" id="transactionCode" placeholder="Enter Lipwa Transaction ID">
+                <button class="btn btn-success" style="width:100%;" onclick="submitPaymentProof()">Submit Payment Proof</button>
             `);
         }
         
