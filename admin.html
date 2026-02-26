@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>NextGen · Admin Dashboard</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+        .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; }
+        .logo h2 { background: linear-gradient(135deg, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .admin-badge { background: #ef4444; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.9rem; }
+        .logout-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 1.5rem; padding: 1.5rem; color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .stat-card i { font-size: 2rem; color: #818cf8; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .tab.active { background: #6366f1; }
+        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 500px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 1rem; background: #f8fafc; }
+        .data-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; }
+        .badge { padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .badge.success { background: #10b98120; color: #10b981; border: 1px solid #10b981; }
+        .badge.warning { background: #f59e0b20; color: #f59e0b; border: 1px solid #f59e0b; }
+        .badge.danger { background: #ef444420; color: #ef4444; border: 1px solid #ef4444; }
+        .badge.primary { background: #6366f120; color: #6366f1; border: 1px solid #6366f1; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; margin: 0.2rem; }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 500px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
+        .modal.active { display: block; }
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
+        .modal-backdrop.active { display: block; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 40px; z-index: 2000; display: none; }
+        input, textarea, select { width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }
+        textarea { border-radius: 20px; min-height: 100px; }
+        .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; }
+        .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+        .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="logo">
+                <h2>🔷 NextGen Admin</h2>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span id="adminName">Loading...</span>
+                <span class="admin-badge">Admin</span>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid"></div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('users')">👥 Users</button>
+            <button class="tab" onclick="switchTab('tasks')">📋 Tasks</button>
+            <button class="tab" onclick="switchTab('submissions')">📝 Submissions</button>
+            <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
+            <button class="tab" onclick="switchTab('memberships')">👑 Memberships</button>
+            <button class="tab" onclick="switchTab('messages')">💬 Messages</button>
+        </div>
+        
+        <div class="content" id="content"></div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal" id="modal">
+        <div id="modalContent"></div>
+        <div class="flex-row" style="justify-content: flex-end; margin-top: 1rem;">
+            <button class="btn btn-danger" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
+            authDomain: "nextgen-5fb6f.firebaseapp.com",
+            projectId: "nextgen-5fb6f",
+            storageBucket: "nextgen-5fb6f.firebasestorage.app",
+            messagingSenderId: "100132076455",
+            appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        let currentUser = null;
+        
+        // Check auth state
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const doc = await db.collection('users').doc(user.uid).get();
+            if (!doc.exists || doc.data().role !== 'admin') {
+                auth.signOut();
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            if (doc.data().active === false) {
+                auth.signOut();
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = user;
+            document.getElementById('adminName').textContent = doc.data().displayName;
+            
+            loadDashboard();
+        });
+        
+        // Toast
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.background = isError ? '#dc2626' : '#0f172a';
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+        
+        // Modal
+        function showModal(html) {
+            document.getElementById('modalContent').innerHTML = html;
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('modalBackdrop').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('modalBackdrop').classList.remove('active');
+        }
+        
+        document.getElementById('modalBackdrop').addEventListener('click', closeModal);
+        
+        // Logout
+        function logout() {
+            auth.signOut();
+            window.location.href = 'index.html';
+        }
+        
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            switch(tab) {
+                case 'users': loadUsers(); break;
+                case 'tasks': loadTasks(); break;
+                case 'submissions': loadSubmissions(); break;
+                case 'withdrawals': loadWithdrawals(); break;
+                case 'memberships': loadMemberships(); break;
+                case 'messages': loadMessages(); break;
+            }
+        }
+        
+        // Load Dashboard Stats
+        async function loadDashboard() {
+            const usersSnapshot = await db.collection('users').get();
+            const tasksSnapshot = await db.collection('tasks').get();
+            
+            const pendingSubs = await db.collection('submissions')
+                .where('status', '==', 'pending')
+                .get();
+            
+            const pendingWithdrawals = await db.collection('withdrawals')
+                .where('status', '==', 'pending')
+                .get();
+            
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <div class="stat-value">${usersSnapshot.size}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-tasks"></i>
+                    <div class="stat-value">${tasksSnapshot.size}</div>
+                    <div class="stat-label">Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock"></i>
+                    <div class="stat-value">${pendingSubs.size}</div>
+                    <div class="stat-label">Pending Reviews</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-money-bill"></i>
+                    <div class="stat-value">${pendingWithdrawals.size}</div>
+                    <div class="stat-label">Pending Withdrawals</div>
+                </div>
+            `;
+            
+            loadUsers();
+        }
+        
+        // Load Users
+        async function loadUsers() {
+            const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
+            
+            let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>';
+            html += '<table class="data-table">';
+            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Role</th><th>Status</th><th>Actions</th></tr>';
+            
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                html += `
+                    <tr>
+                        <td>${user.email}</td>
+                        <td>${user.displayName}</td>
+                        <td>$${user.wallet || 0}</td>
+                        <td>${user.role}</td>
+                        <td><span class="badge ${user.active ? 'success' : 'danger'}">${user.active ? 'Active' : 'Inactive'}</span></td>
+                        <td class="action-buttons">
+                            <button class="btn btn-primary" onclick="toggleUserStatus('${doc.id}', ${!user.active})">${user.active ? 'Deactivate' : 'Activate'}</button>
+                            <button class="btn btn-success" onclick="showAdjustWallet('${doc.id}', '${user.displayName}', ${user.wallet})">Adjust Wallet</button>
+                            ${user.role !== 'admin' ? `<button class="btn btn-warning" onclick="makeAdmin('${doc.id}')">Make Admin</button>` : ''}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            document.getElementById('content').innerHTML = html;
+        }
+        
+        // Toggle User Status
+        async function toggleUserStatus(userId, newStatus) {
+            await db.collection('users').doc(userId).update({ active: newStatus });
+            showToast('User status updated');
+            loadUsers();
+        }
+        
+        // Make Admin
+        async function makeAdmin(userId) {
+            await db.collection('users').doc(userId).update({ role: 'admin' });
+            showToast('User is now admin');
+            loadUsers();
+        }
+        
+        // Show Adjust Wallet
+        function showAdjustWallet(userId, userName, currentWallet) {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Adjust Wallet - ${userName}</h3>
+                <p>Current Balance: $${currentWallet}</p>
+                <input type="number" id="adjustAmount" placeholder="Amount">
+                <select id="adjustType">
+                    <option value="add">Add Funds</option>
+                    <option value="subtract">Subtract Funds</option>
+                </select>
+                <textarea id="adjustReason" placeholder="Reason for adjustment"></textarea>
+                <button class="btn btn-primary" style="width:100%;" onclick="adjustWallet('${userId}')">Apply</button>
+            `);
+        }
+        
+        // Adjust Wallet
+        async function adjustWallet(userId) {
+            const amount = parseFloat(document.getElementById('adjustAmount').value);
+            const type = document.getElementById('adjustType').value;
+            const reason = document.getElementById('adjustReason').value;
+            
+            if (!amount || amount <= 0 || !reason) {
+                showToast('Enter valid amount and reason', true);
+                return;
+            }
+            
+            const adjustment = type === 'add' ? amount : -amount;
+            
+            await db.collection('users').doc(userId).update({
+                wallet: firebase.firestore.FieldValue.increment(adjustment)
+            });
+            
+            await db.collection('walletAdjustments').add({
+                userId,
+                adjustedBy: currentUser.uid,
+                amount: adjustment,
+                reason,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            closeModal();
+            showToast(`Wallet adjusted by $${amount}`);
+            loadUsers();
+        }
+        
+        // Load Tasks
+        async function loadTasks() {
+            const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();
+            
+            let html = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">
+                    <h3>Task Management</h3>
+                    <button class="btn btn-primary" onclick="showCreateTask()">+ New Task</button>
+                </div>
+                <table class="data-table">
+                <tr><th>Title</th><th>Reward</th><th>Category</th><th>Difficulty</th><th>Submissions</th><th>Status</th><th>Actions</th></tr>
+            `;
+            
+            snapshot.forEach(doc => {
+                const task = doc.data();
+                html += `
+                    <tr>
+                        <td>${task.title}</td>
+                        <td>$${task.reward}</td>
+                        <td>${task.category}</td>
+                        <td>${task.difficulty}</td>
+                        <td>${task.submissionsCount || 0}</td>
+                        <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td>
+                        <td class="action-buttons">
+                            <button class="btn btn-primary" onclick="editTask('${doc.id}')">Edit</button>
+                            <button class="btn btn-warning" onclick="toggleTask('${doc.id}', ${!task.active})">${task.active ? 'Deactivate' : 'Activate'}</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</table>';
+            document.getElementById('content').innerHTML = html;
+        }
+        
+        // Show Create Task
+        function showCreateTask() {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Create New Task</h3>
+                <input type="text" id="taskTitle" placeholder="Title">
+                <textarea id="taskDescription" placeholder="Description"></textarea>
+                <input type="number" id="taskReward" placeholder="Reward (USD)">
+                <select id="taskCategory">
+                    <option value="writing">Writing</option>
+                    <option value="design">Design</option>
+                    <option value="development">Development</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="taskDifficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <button class="btn btn-primary" style="width:100%;" onclick="createTask()">Create</button>
+            `);
+        }
+        
+        // Create Task
+        async function createTask() {
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDescription').value;
+            const reward = parseFloat(document.getElementById('taskReward').value);
+            const category = document.getElementById('taskCategory').value;
+            const difficulty = document.getElementById('taskDifficulty').value;
+            
+            if (!title || !description || !reward) {
+                showToast('Fill all fields', true);
+                return;
+            }
+            
+            await db.collection('tasks').add({
+                title,
+                description,
+                reward,
+                rewardKES: reward * 130,
+                category,
+                difficulty,
+                active: true,
+                submissionsCount: 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            closeModal();
+            showToast('Task created');
+            loadTasks();
+        }
+        
+        // Toggle Task
+        async function toggleTask(taskId, newStatus) {
+            await db.collection('tasks').doc(taskId).update({ active: newStatus });
+            showToast('Task updated');
+            loadTasks();
+        }
+        
+        // Edit Task
+        async function editTask(taskId) {
+            const task = await db.collection('tasks').doc(taskId).get();
+            const data = task.data();
+            
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Edit Task</h3>
+                <input type="text" id="editTitle" value="${data.title}">
+                <textarea id="editDescription">${data.description}</textarea>
+                <input type="number" id="editReward" value="${data.reward}">
+                <select id="editCategory">
+                    <option value="writing" ${data.category === 'writing' ? 'selected' : ''}>Writing</option>
+                    <option value="design" ${data.category === 'design' ? 'selected' : ''}>Design</option>
+                    <option value="development" ${data.category === 'development' ? 'selected' : ''}>Development</option>
+                    <option value="marketing" ${data.category === 'marketing' ? 'selected' : ''}>Marketing</option>
+                    <option value="other" ${data.category === 'other' ? 'selected' : ''}>Other</option>
+                </select>
+                <select id="editDifficulty">
+                    <option value="easy" ${data.difficulty === 'easy' ? 'selected' : ''}>Easy</option>
+                    <option value="medium" ${data.difficulty === 'medium' ? 'selected' : ''}>Medium</option>
+                    <option value="hard" ${data.difficulty === 'hard' ? 'selected' : ''}>Hard</option>
+                </select>
+                <button class="btn btn-primary" style="width:100%;" onclick="updateTask('${taskId}')">Update</button>
+            `);
+        }
+        
+        // Update Task
+        async function updateTask(taskId) {
+            const title = document.getElementById('editTitle').value;
+            const description = document.getElementById('editDescription').value;
+            const reward = parseFloat(document.getElementById('editReward').value);
+            const category = document.getElementById('editCategory').value;
+            const difficulty = document.getElementById('editDifficulty').value;
+            
+            await db.collection('tasks').doc(taskId).update({
+                title,
+                description,
+                reward,
+                rewardKES: reward * 130,
+                category,
+                difficulty
+            });
+            
+            closeModal();
+            showToast('Task updated');
+            loadTasks();
+        }
+        
+        // Load Submissions
+        async function loadSubmissions() {
+            const snapshot = await db.collection('submissions')
+                .where('status', '==', 'pending')
+                .get();
+            
+            let html = '<h3 style="margin-bottom:1.5rem;">Pending Submissions</h3>';
+            
+            if (snapshot.empty) {
+                html += '<p>No pending submissions.</p>';
+            } else {
+                snapshot.forEach(doc => {
+                    const sub = doc.data();
+                    html += `
+                        <div class="submission-card">
+                            <h4>${sub.taskTitle}</h4>
+                            <p><strong>User:</strong> ${sub.userEmail}</p>
+                            <p><strong>Work:</strong> ${sub.workText}</p>
+                            <div class="flex-row" style="margin:1rem 0;">
+                                <input type="number" id="score-${doc.id}" placeholder="Score (0-100)" min="0" max="100" style="width:120px;">
+                                <textarea id="review-${doc.id}" placeholder="Feedback" style="flex:1;"></textarea>
+                            </div>
+                            <div class="flex-row">
+                                <button class="btn btn-success" onclick="reviewSubmission('${doc.id}', true)">Approve</button>
+                                <button class="btn btn-danger" onclick="reviewSubmission('${doc.id}', false)">Reject</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('content').innerHTML = html;
+        }
+        
+        // Review Submission
+        async function reviewSubmission(subId, approved) {
+            const score = parseInt(document.getElementById(`score-${subId}`)?.value || 0);
+            const review = document.getElementById(`review-${subId}`)?.value || '';
+            
+            if (approved && (!score || score < 0 || score > 100)) {
+                showToast('Enter valid score (0-100)', true);
+                return;
+            }
+            
+            const subDoc = await db.collection('submissions').doc(subId).get();
+            const sub = subDoc.data();
+            
+            const taskDoc = await db.collection('tasks').doc(sub.taskId).get();
+            const task = taskDoc.data();
+            
+            let earned = 0;
+            let status = approved ? 'approved' : 'rejected';
+            
+            if (approved && score >= 50) {
+                earned = (task.reward * score) / 100;
+                
+                await db.collection('users').doc(sub.userId).update({
+                    wallet: firebase.firestore.FieldValue.increment(earned),
+                    totalEarned: firebase.firestore.FieldValue.increment(earned),
+                    tasksCompleted: firebase.firestore.FieldValue.increment(1)
+                });
+            } else if (approved && score < 50) {
+                status = 'rejected';
+            }
+            
+            await db.collection('submissions').doc(subId).update({
+                status,
+                score: approved ? score : 0,
+                review,
+                earned,
+                reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showToast(`Submission ${status}${earned > 0 ? ' - $' + earned : ''}`);
+            loadSubmissions();
+        }
+        
+        // Load Withdrawals
+        async function loadWithdrawals() {
+            const snapshot = await db.collection('withdrawals')
+                .where('status', '==', 'pending')
+                .get();
+            
+            let html = '<h3 style="margin-bottom:1.5rem;">Pending Withdrawals</h3>';
+            
+            if (snapshot.empty) {
+                html += '<p>No pending withdrawals.</p>';
+            } else {
+                snapshot.forEach(doc => {
+                    const w = doc.data();
+                    html += `
+                        <div class="submission-card">
+                            <p><strong>User:</strong> ${w.userEmail}</p>
+                            <p><strong>Amount:</strong> $${w.amount} (KES ${w.amountKES})</p>
+                            <p><strong>Method:</strong> ${w.method} - ${w.phone}</p>
+                            <p><strong>Requested:</strong> ${w.requestedAt?.toDate().toLocaleString()}</p>
+                            <button class="btn btn-success" onclick="processWithdrawal('${doc.id}')">Mark as Paid</button>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('content').innerHTML = html;
+        }
+        
+        // Process Withdrawal
+        async function processWithdrawal(withdrawalId) {
+            await db.collection('withdrawals').doc(withdrawalId).update({
+                status: 'paid',
+                paidAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showToast('Withdrawal marked as paid');
+            loadWithdrawals();
+        }
+        
+        // Load Memberships
+        async function loadMemberships() {
+            const snapshot = await db.collection('membershipPayments')
+                .where('status', '==', 'pending')
+                .get();
+            
+            let html = '<h3 style="margin-bottom:1.5rem;">Pending Memberships</h3>';
+            
+            if (snapshot.empty) {
+                html += '<p>No pending memberships.</p>';
+            } else {
+                snapshot.forEach(doc => {
+                    const p = doc.data();
+                    html += `
+                        <div class="submission-card">
+                            <p><strong>User:</strong> ${p.userEmail}</p>
+                            <p><strong>Transaction:</strong> ${p.transactionCode}</p>
+                            <p><strong>Submitted:</strong> ${p.submittedAt?.toDate().toLocaleString()}</p>
+                            <div class="flex-row">
+                                <button class="btn btn-success" onclick="approveMembership('${p.userId}', '${doc.id}')">Approve</button>
+                                <button class="btn btn-danger" onclick="rejectMembership('${p.userId}', '${doc.id}')">Reject</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('content').innerHTML = html;
+        }
+        
+        // Approve Membership
+        async function approveMembership(userId, paymentId) {
+            await db.collection('users').doc(userId).update({
+                membershipPaid: true,
+                membershipStatus: 'approved'
+            });
+            
+            await db.collection('membershipPayments').doc(paymentId).update({
+                status: 'approved'
+            });
+            
+            showToast('Membership approved');
+            loadMemberships();
+        }
+        
+        // Reject Membership
+        async function rejectMembership(userId, paymentId) {
+            await db.collection('users').doc(userId).update({
+                membershipStatus: 'rejected'
+            });
+            
+            await db.collection('membershipPayments').doc(paymentId).update({
+                status: 'rejected'
+            });
+            
+            showToast('Membership rejected');
+            loadMemberships();
+        }
+        
+        // Load Messages
+        async function loadMessages() {
+            const users = await db.collection('users').get();
+            
+            let options = '';
+            users.forEach(doc => {
+                const user = doc.data();
+                options += `<option value="${doc.id}">${user.email} - ${user.displayName}</option>`;
+            });
+            
+            const messages = await db.collection('messages')
+                .orderBy('createdAt', 'desc')
+                .limit(20)
+                .get();
+            
+            let messagesHtml = '';
+            messages.forEach(doc => {
+                const msg = doc.data();
+                messagesHtml += `
+                    <div class="submission-card">
+                        <p><strong>To:</strong> ${msg.userId}</p>
+                        <p>${msg.message}</p>
+                        <small>${msg.createdAt?.toDate().toLocaleString()}</small>
+                    </div>
+                `;
+            });
+            
+            let html = `
+                <h3 style="margin-bottom:1.5rem;">Send Message</h3>
+                <div style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem;">
+                    <select id="messageUser">${options}</select>
+                    <textarea id="messageText" placeholder="Type your message..."></textarea>
+                    <button class="btn btn-primary" onclick="sendMessage()">Send Message</button>
+                </div>
+                <h4 style="margin-bottom:1rem;">Recent Messages</h4>
+                ${messagesHtml || '<p>No messages</p>'}
+            `;
+            
+            document.getElementById('content').innerHTML = html;
+        }
+        
+        // Send Message
+        async function sendMessage() {
+            const userId = document.getElementById('messageUser').value;
+            const message = document.getElementById('messageText').value;
+            
+            if (!message) {
+                showToast('Enter message', true);
+                return;
+            }
+            
+            await db.collection('messages').add({
+                userId,
+                message,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showToast('Message sent');
+            document.getElementById('messageText').value = '';
+        }
+    </script>
+</body>
+</html>

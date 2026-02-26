@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>NextGen · User Dashboard</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; }
+        .app-container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+        .header { background: white; border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .logo h2 { background: linear-gradient(135deg, #6366f1, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .user-menu { display: flex; align-items: center; gap: 1rem; }
+        .wallet-badge { background: #6366f120; padding: 0.5rem 1rem; border-radius: 40px; color: #6366f1; font-weight: 600; }
+        .logout-btn { background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.5rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: white; border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .stat-card i { font-size: 2rem; color: #6366f1; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #0f172a; }
+        .stat-label { color: #64748b; }
+        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .tab.active { background: #6366f1; color: white; }
+        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 400px; }
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .task-card { background: #f8fafc; border-radius: 1.5rem; padding: 1.5rem; border: 1px solid #e2e8f0; transition: transform 0.2s; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .badge { padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .badge.primary { background: #6366f120; color: #6366f1; }
+        .badge.success { background: #10b98120; color: #10b981; }
+        .badge.warning { background: #f59e0b20; color: #f59e0b; }
+        .badge.danger { background: #ef444420; color: #ef4444; }
+        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-primary:hover { background: #4f52e0; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 500px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
+        .modal.active { display: block; }
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
+        .modal-backdrop.active { display: block; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 40px; z-index: 2000; display: none; }
+        input, textarea, select { width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }
+        textarea { border-radius: 20px; min-height: 100px; }
+        .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
+        .flex-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+        .premium-badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
+        .loading { text-align: center; padding: 3rem; color: #64748b; }
+        .loading i { font-size: 3rem; margin-bottom: 1rem; color: #6366f1; }
+        .lipwa-badge { background: #8b5cf6; color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .empty-state { text-align: center; padding: 3rem; color: #64748b; }
+        .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
+        .debug-info { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; }
+        @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="logo">
+                <h2>🔷 NextGen Tasks</h2>
+            </div>
+            <div class="user-menu">
+                <div class="wallet-badge" id="walletDisplay">$0.00</div>
+                <span id="userName">Loading...</span>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid"></div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
+            <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
+            <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
+            <button class="tab" onclick="switchTab('messages')">💬 Messages</button>
+            <button class="tab" onclick="switchTab('profile')">👤 Profile</button>
+        </div>
+        
+        <div class="content" id="content">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading dashboard...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal" id="modal">
+        <div id="modalContent"></div>
+        <div class="flex-row" style="justify-content: flex-end; margin-top: 1rem;">
+            <button class="btn btn-primary" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
+            authDomain: "nextgen-5fb6f.firebaseapp.com",
+            projectId: "nextgen-5fb6f",
+            storageBucket: "nextgen-5fb6f.firebasestorage.app",
+            messagingSenderId: "100132076455",
+            appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // Enable offline persistence
+        db.enablePersistence()
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.log('Persistence failed');
+                } else if (err.code == 'unimplemented') {
+                    console.log('Persistence not available');
+                }
+            });
+        
+        // Global variables
+        let currentUser = null;
+        let userData = null;
+        
+        // Toast function
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.background = isError ? '#dc2626' : '#0f172a';
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+        
+        // Modal functions
+        function showModal(html) {
+            document.getElementById('modalContent').innerHTML = html;
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('modalBackdrop').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('modalBackdrop').classList.remove('active');
+        }
+        
+        document.getElementById('modalBackdrop').addEventListener('click', closeModal);
+        
+        // Logout function
+        function logout() {
+            auth.signOut();
+            window.location.href = 'index.html';
+        }
+        
+        // Tab switching function
+        function switchTab(tab) {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Load appropriate content
+            switch(tab) {
+                case 'tasks':
+                    loadTasks();
+                    break;
+                case 'submissions':
+                    loadSubmissions();
+                    break;
+                case 'withdrawals':
+                    loadWithdrawals();
+                    break;
+                case 'messages':
+                    loadMessages();
+                    break;
+                case 'profile':
+                    loadProfile();
+                    break;
+            }
+        }
+        
+        // Check auth state
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Check email verification (skip for Google users)
+            const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+            if (!user.emailVerified && !isGoogle) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            try {
+                // Get user data
+                const doc = await db.collection('users').doc(user.uid).get();
+                
+                if (!doc.exists) {
+                    // Create user document if it doesn't exist
+                    await db.collection('users').doc(user.uid).set({
+                        email: user.email,
+                        displayName: user.displayName || 'User',
+                        phone: '',
+                        role: 'user',
+                        wallet: 0,
+                        active: true,
+                        verified: user.emailVerified || isGoogle,
+                        membershipPaid: false,
+                        membershipStatus: 'pending',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    // Fetch the newly created document
+                    const newDoc = await db.collection('users').doc(user.uid).get();
+                    userData = { id: user.uid, ...newDoc.data() };
+                } else {
+                    userData = { id: user.uid, ...doc.data() };
+                }
+                
+                // Check if user is active
+                if (userData.active === false) {
+                    await auth.signOut();
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                currentUser = user;
+                
+                // Update UI
+                document.getElementById('userName').textContent = userData.displayName;
+                document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
+                
+                // Load dashboard
+                loadDashboard();
+                
+            } catch (error) {
+                console.error('Auth error:', error);
+                showToast('Error loading user data', true);
+            }
+        });
+        
+        // Load Dashboard Stats
+        async function loadDashboard() {
+            try {
+                // Simple queries
+                const pendingSnapshot = await db.collection('submissions')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', '==', 'pending')
+                    .get();
+                
+                const approvedSnapshot = await db.collection('submissions')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', '==', 'approved')
+                    .get();
+                
+                const totalEarned = approvedSnapshot.docs.reduce((sum, doc) => {
+                    const data = doc.data();
+                    return sum + (data.earned || 0);
+                }, 0);
+                
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card">
+                        <i class="fas fa-wallet"></i>
+                        <div class="stat-value">$${(userData.wallet || 0).toFixed(2)}</div>
+                        <div class="stat-label">Balance</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock"></i>
+                        <div class="stat-value">${pendingSnapshot.size}</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="stat-value">${approvedSnapshot.size}</div>
+                        <div class="stat-label">Approved</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div class="stat-value">$${totalEarned.toFixed(2)}</div>
+                        <div class="stat-label">Total Earned</div>
+                    </div>
+                `;
+                
+                // Load tasks by default
+                loadTasks();
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card">
+                        <i class="fas fa-wallet"></i>
+                        <div class="stat-value">$${(userData.wallet || 0).toFixed(2)}</div>
+                        <div class="stat-label">Balance</div>
+                    </div>
+                `;
+                loadTasks();
+            }
+        }
+        
+        // Load Tasks - FIXED VERSION
+        async function loadTasks() {
+            try {
+                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
+                
+                // Get all tasks
+                const snapshot = await db.collection('tasks').get();
+                
+                console.log('Tasks snapshot size:', snapshot.size);
+                
+                let html = '<h3 style="margin-bottom:1.5rem;">Available Tasks</h3>';
+                
+                if (snapshot.empty) {
+                    html += `
+                        <div class="empty-state">
+                            <i class="fas fa-tasks"></i>
+                            <h4>No Tasks Available</h4>
+                            <p>Check back later for new tasks.</p>
+                            <div class="debug-info">If you're an admin, please create some tasks in the admin panel.</div>
+                        </div>
+                    `;
+                } else {
+                    // Convert to array for manual filtering and sorting
+                    const tasks = [];
+                    snapshot.forEach(doc => {
+                        const taskData = doc.data();
+                        console.log('Task data:', taskData);
+                        tasks.push({ 
+                            id: doc.id, 
+                            ...taskData 
+                        });
+                    });
+                    
+                    // Filter active tasks
+                    const activeTasks = tasks.filter(task => task.active === true);
+                    
+                    console.log('Active tasks:', activeTasks.length);
+                    
+                    if (activeTasks.length === 0) {
+                        html += `
+                            <div class="empty-state">
+                                <i class="fas fa-tasks"></i>
+                                <h4>No Active Tasks</h4>
+                                <p>All tasks are currently inactive.</p>
+                            </div>
+                        `;
+                    } else {
+                        // Sort by createdAt if available (newest first)
+                        activeTasks.sort((a, b) => {
+                            if (!a.createdAt) return 1;
+                            if (!b.createdAt) return -1;
+                            return b.createdAt.seconds - a.createdAt.seconds;
+                        });
+                        
+                        html += '<div class="task-grid">';
+                        
+                        activeTasks.forEach(task => {
+                            // Safely handle reward value
+                            let rewardValue = 0;
+                            if (task.reward) {
+                                // Convert to number if it's a string
+                                rewardValue = parseFloat(task.reward);
+                                // Check if it's a valid number
+                                if (isNaN(rewardValue)) {
+                                    rewardValue = 0;
+                                }
+                            }
+                            
+                            // Safely handle other fields
+                            const title = task.title || 'Untitled Task';
+                            const description = task.description || 'No description provided';
+                            const category = task.category || 'other';
+                            const difficulty = task.difficulty || 'medium';
+                            
+                            html += `
+                                <div class="task-card">
+                                    <h4 style="margin-bottom:0.5rem;">${title}</h4>
+                                    <p style="color:#64748b; margin-bottom:1rem;">${description.substring(0, 80)}${description.length > 80 ? '...' : ''}</p>
+                                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+                                        <span class="badge primary">${category}</span>
+                                        <span class="badge warning">${difficulty}</span>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <strong>$${rewardValue.toFixed(2)}</strong>
+                                        <button class="btn btn-primary" onclick="submitTask('${task.id}')">Submit</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                    }
+                }
+                
+                document.getElementById('content').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
+                        <h4>Error Loading Tasks</h4>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadTasks()" style="margin-top:1rem;">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Submit Task
+        function submitTask(taskId) {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Submit Work</h3>
+                <textarea id="workText" placeholder="Enter your work here..." style="width:100%; min-height:150px; margin-bottom:1rem;"></textarea>
+                <button class="btn btn-primary" style="width:100%;" onclick="saveSubmission('${taskId}')">Submit Work</button>
+            `);
+        }
+        
+        // Save Submission
+        async function saveSubmission(taskId) {
+            const work = document.getElementById('workText').value;
+            if (!work) {
+                showToast('Please enter your work', true);
+                return;
+            }
+            
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                const task = taskDoc.data();
+                
+                await db.collection('submissions').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    taskId: taskId,
+                    taskTitle: task.title || 'Untitled Task',
+                    workText: work,
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                await db.collection('tasks').doc(taskId).update({
+                    submissionsCount: firebase.firestore.FieldValue.increment(1)
+                });
+                
+                closeModal();
+                showToast('Submission saved successfully!');
+                
+                // Switch to submissions tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                loadSubmissions();
+                
+            } catch (error) {
+                console.error('Error saving submission:', error);
+                showToast('Error saving submission', true);
+            }
+        }
+        
+        // Load Submissions
+        async function loadSubmissions() {
+            try {
+                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>';
+                
+                const snapshot = await db.collection('submissions')
+                    .where('userId', '==', currentUser.uid)
+                    .get();
+                
+                let html = '<h3 style="margin-bottom:1.5rem;">My Submissions</h3>';
+                
+                if (snapshot.empty) {
+                    html += '<p>No submissions yet.</p>';
+                } else {
+                    const submissions = [];
+                    snapshot.forEach(doc => {
+                        submissions.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    submissions.sort((a, b) => {
+                        if (!a.submittedAt) return 1;
+                        if (!b.submittedAt) return -1;
+                        return b.submittedAt.seconds - a.submittedAt.seconds;
+                    });
+                    
+                    submissions.forEach(sub => {
+                        const statusClass = sub.status === 'approved' ? 'success' : sub.status === 'rejected' ? 'danger' : 'warning';
+                        
+                        const submittedDate = sub.submittedAt ? new Date(sub.submittedAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                        
+                        html += `
+                            <div class="submission-card">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                                    <h4>${sub.taskTitle}</h4>
+                                    <span class="badge ${statusClass}">${sub.status}</span>
+                                </div>
+                                <p style="color:#64748b; margin-bottom:0.5rem;">${sub.workText.substring(0, 100)}${sub.workText.length > 100 ? '...' : ''}</p>
+                                <div style="display:flex; gap:1rem; font-size:0.9rem; color:#64748b;">
+                                    <span><i class="far fa-calendar"></i> ${submittedDate}</span>
+                                    ${sub.score ? `<span>Score: ${sub.score}%</span>` : ''}
+                                    ${sub.earned ? `<span>Earned: $${sub.earned.toFixed(2)}</span>` : ''}
+                                </div>
+                                ${sub.review ? `<p style="margin-top:0.5rem; background:#f1f5f9; padding:0.5rem; border-radius:10px;"><strong>Feedback:</strong> ${sub.review}</p>` : ''}
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('content').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                document.getElementById('content').innerHTML = '<p style="color:#ef4444;">Error loading submissions.</p>';
+            }
+        }
+        
+        // Load Withdrawals
+        async function loadWithdrawals() {
+            try {
+                if (!userData.membershipPaid) {
+                    document.getElementById('content').innerHTML = `
+                        <div style="text-align:center; padding:3rem;">
+                            <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b; margin-bottom:1rem;"></i>
+                            <h3 style="margin-bottom:1rem;">Premium Feature</h3>
+                            <p style="color:#64748b; margin-bottom:2rem;">Withdrawals are only available for premium members.</p>
+                            <button class="btn btn-success" onclick="showMembershipPayment()">Upgrade to Premium ($3/month)</button>
+                            <p style="margin-top:1rem; font-size:0.9rem;">Pay via <span class="lipwa-badge">Lipwa.com</span></p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading withdrawals...</p></div>';
+                
+                const snapshot = await db.collection('withdrawals')
+                    .where('userId', '==', currentUser.uid)
+                    .get();
+                
+                let html = `
+                    <h3 style="margin-bottom:1.5rem;">Withdraw Funds</h3>
+                    <div style="background:#f8fafc; border-radius:1.5rem; padding:1.5rem; margin-bottom:2rem;">
+                        <div style="font-size:1.5rem; font-weight:700; margin-bottom:1rem;">Available Balance: $${(userData.wallet || 0).toFixed(2)}</div>
+                        <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" step="0.01">
+                        <select id="withdrawMethod">
+                            <option value="mpesa">M-Pesa</option>
+                            <option value="airtel">Airtel Money</option>
+                        </select>
+                        <input type="tel" id="withdrawPhone" placeholder="Phone Number">
+                        <button class="btn btn-primary" style="width:100%;" onclick="requestWithdrawal()">Request Withdrawal</button>
+                        <p style="font-size:0.9rem; color:#64748b; margin-top:0.5rem;">Minimum withdrawal: $5</p>
+                    </div>
+                    <h4 style="margin-bottom:1rem;">Withdrawal History</h4>
+                `;
+                
+                if (snapshot.empty) {
+                    html += '<p>No withdrawals yet.</p>';
+                } else {
+                    const withdrawals = [];
+                    snapshot.forEach(doc => {
+                        withdrawals.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    withdrawals.sort((a, b) => {
+                        if (!a.requestedAt) return 1;
+                        if (!b.requestedAt) return -1;
+                        return b.requestedAt.seconds - a.requestedAt.seconds;
+                    });
+                    
+                    withdrawals.forEach(w => {
+                        const requestedDate = w.requestedAt ? new Date(w.requestedAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                        
+                        html += `
+                            <div class="submission-card">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span><strong>$${w.amount}</strong> via ${w.method}</span>
+                                    <span class="badge ${w.status === 'paid' ? 'success' : 'warning'}">${w.status}</span>
+                                </div>
+                                <p style="color:#64748b; font-size:0.9rem;">${w.phone} • ${requestedDate}</p>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('content').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading withdrawals:', error);
+                document.getElementById('content').innerHTML = '<p style="color:#ef4444;">Error loading withdrawals.</p>';
+            }
+        }
+        
+        // Request Withdrawal
+        async function requestWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('withdrawMethod').value;
+            const phone = document.getElementById('withdrawPhone').value;
+            
+            if (!amount || amount < 5) {
+                showToast('Minimum withdrawal is $5', true);
+                return;
+            }
+            
+            if (amount > userData.wallet) {
+                showToast('Insufficient balance', true);
+                return;
+            }
+            
+            if (!phone) {
+                showToast('Enter phone number', true);
+                return;
+            }
+            
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    wallet: firebase.firestore.FieldValue.increment(-amount)
+                });
+                
+                await db.collection('withdrawals').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    amount,
+                    amountKES: amount * 130,
+                    method,
+                    phone,
+                    status: 'pending',
+                    requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                userData.wallet -= amount;
+                document.getElementById('walletDisplay').textContent = `$${userData.wallet.toFixed(2)}`;
+                
+                showToast('Withdrawal requested successfully!');
+                loadWithdrawals();
+                
+            } catch (error) {
+                console.error('Error requesting withdrawal:', error);
+                showToast('Error requesting withdrawal', true);
+            }
+        }
+        
+        // Load Messages
+        async function loadMessages() {
+            try {
+                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
+                
+                const snapshot = await db.collection('messages')
+                    .where('userId', '==', currentUser.uid)
+                    .get();
+                
+                let html = '<h3 style="margin-bottom:1.5rem;">Messages</h3>';
+                
+                if (snapshot.empty) {
+                    html += '<p>No messages yet.</p>';
+                } else {
+                    const messages = [];
+                    snapshot.forEach(doc => {
+                        messages.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    messages.sort((a, b) => {
+                        if (!a.createdAt) return 1;
+                        if (!b.createdAt) return -1;
+                        return b.createdAt.seconds - a.createdAt.seconds;
+                    });
+                    
+                    messages.forEach(msg => {
+                        const msgDate = msg.createdAt ? new Date(msg.createdAt.seconds * 1000).toLocaleString() : 'N/A';
+                        
+                        html += `
+                            <div class="submission-card">
+                                <p>${msg.message}</p>
+                                <p style="color:#64748b; font-size:0.9rem;">${msgDate}</p>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('content').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                document.getElementById('content').innerHTML = '<p style="color:#ef4444;">Error loading messages.</p>';
+            }
+        }
+        
+        // Load Profile
+        function loadProfile() {
+            const joinDate = userData.createdAt ? new Date(userData.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+            
+            document.getElementById('content').innerHTML = `
+                <h3 style="margin-bottom:1.5rem;">Profile Settings</h3>
+                <div style="background:#f8fafc; border-radius:1.5rem; padding:1.5rem;">
+                    <input type="text" id="profileName" value="${userData.displayName || ''}" placeholder="Display Name">
+                    <input type="tel" id="profilePhone" value="${userData.phone || ''}" placeholder="Phone Number">
+                    <button class="btn btn-primary" style="width:100%;" onclick="updateProfile()">Update Profile</button>
+                </div>
+                <div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:1rem;">
+                    <p><strong>Email:</strong> ${userData.email}</p>
+                    <p><strong>Member since:</strong> ${joinDate}</p>
+                    <p><strong>Membership:</strong> 
+                        <span class="${userData.membershipPaid ? 'premium-badge' : 'badge warning'}">
+                            ${userData.membershipPaid ? 'Premium' : 'Free'}
+                        </span>
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Update Profile
+        async function updateProfile() {
+            const name = document.getElementById('profileName').value;
+            const phone = document.getElementById('profilePhone').value;
+            
+            if (!name) {
+                showToast('Name is required', true);
+                return;
+            }
+            
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    displayName: name,
+                    phone: phone || ''
+                });
+                
+                userData.displayName = name;
+                userData.phone = phone;
+                document.getElementById('userName').textContent = name;
+                
+                showToast('Profile updated successfully!');
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showToast('Error updating profile', true);
+            }
+        }
+        
+        // Show Membership Payment
+        function showMembershipPayment() {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Premium Membership</h3>
+                <p style="margin-bottom:1rem;">Upgrade to premium for only <strong>$3/month</strong></p>
+                <div style="background:#f3f4f6; padding:1rem; border-radius:1rem; margin-bottom:1rem;">
+                    <p><strong>Pay via Lipwa.com:</strong></p>
+                    <p>1. Visit <a href="https://lipwa.com" target="_blank">lipwa.com</a></p>
+                    <p>2. Send $3 to username: <strong>@nextgen</strong></p>
+                    <p>3. Copy the transaction ID</p>
+                </div>
+                <input type="text" id="transactionCode" placeholder="Enter Lipwa Transaction ID">
+                <button class="btn btn-success" style="width:100%;" onclick="submitPaymentProof()">Submit Payment Proof</button>
+            `);
+        }
+        
+        // Submit Payment Proof
+        async function submitPaymentProof() {
+            const code = document.getElementById('transactionCode').value;
+            if (!code) {
+                showToast('Enter transaction ID', true);
+                return;
+            }
+            
+            try {
+                await db.collection('membershipPayments').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    transactionCode: code,
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                await db.collection('users').doc(currentUser.uid).update({
+                    membershipStatus: 'pending'
+                });
+                
+                closeModal();
+                showToast('Payment proof submitted for review!');
+                
+            } catch (error) {
+                console.error('Error submitting payment:', error);
+                showToast('Error submitting payment', true);
+            }
+        }
+    </script>
+</body>
+</html>
