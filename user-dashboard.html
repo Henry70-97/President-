@@ -103,6 +103,50 @@
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
         }
         
+        /* Fee breakdown styling */
+        .fee-breakdown {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid #6366f1;
+        }
+        .fee-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.3rem 0;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+        .fee-row.total {
+            border-bottom: none;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 2px solid #94a3b8;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .fee-label {
+            color: #475569;
+        }
+        .fee-value {
+            font-weight: 600;
+        }
+        .fee-value.positive {
+            color: #10b981;
+        }
+        .fee-value.negative {
+            color: #ef4444;
+        }
+        .info-text {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
         input, textarea, select { width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }
         textarea { border-radius: 20px; min-height: 100px; }
         .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
@@ -184,6 +228,11 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        
+        // Fee constants
+        const TRANSACTION_FEE_PERCENT = 3; // 3%
+        const PLATFORM_FEE_PERCENT = 2; // 2%
+        const TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT; // 5%
         
         // Enable offline persistence with error handling
         db.enablePersistence()
@@ -285,6 +334,7 @@
                         verified: user.emailVerified || isGoogle,
                         membershipPaid: false,
                         membershipStatus: 'pending',
+                        totalFeesPaid: 0, // Track total fees paid
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
@@ -340,6 +390,7 @@
                 // Get fresh user data
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 userData.wallet = userDoc.data().wallet || 0;
+                userData.totalFeesPaid = userDoc.data().totalFeesPaid || 0;
                 
                 // Simple queries without orderBy to avoid index issues
                 const pendingSnapshot = await db.collection('submissions')
@@ -661,7 +712,7 @@
             }
         }
         
-        // Save Submission - MODIFIED to work with new form
+        // Save Submission
         async function saveSubmission(taskId) {
             const work = document.getElementById('workText').value;
             if (!work) {
@@ -786,13 +837,14 @@
             }
         }
         
-        // Load Withdrawals
+        // Load Withdrawals - MODIFIED with fee calculations
         async function loadWithdrawals() {
             try {
                 // Get latest user data
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const latestBalance = userDoc.data().wallet || 0;
                 userData.wallet = latestBalance;
+                userData.totalFeesPaid = userDoc.data().totalFeesPaid || 0;
                 
                 document.getElementById('walletDisplay').textContent = `$${latestBalance.toFixed(2)}`;
                 
@@ -823,16 +875,58 @@
                             <div style="font-size:1.2rem; font-weight:600;">Available Balance:</div>
                             <div class="balance-highlight">$${latestBalance.toFixed(2)}</div>
                         </div>
-                        <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" max="${latestBalance}" step="0.01" oninput="validateWithdrawAmount(${latestBalance})">
+                        
+                        <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" max="${latestBalance}" step="0.01" oninput="updateFeeBreakdown(${latestBalance})">
+                        
+                        <!-- Fee Breakdown Section -->
+                        <div id="feeBreakdown" class="fee-breakdown" style="display: none;">
+                            <h4 style="margin-bottom:0.8rem; color:#0f172a;">Fee Breakdown</h4>
+                            <div class="fee-row">
+                                <span class="fee-label">Withdrawal Amount:</span>
+                                <span class="fee-value" id="displayWithdrawAmount">$0.00</span>
+                            </div>
+                            <div class="fee-row">
+                                <span class="fee-label">Transaction Fee (${TRANSACTION_FEE_PERCENT}%):</span>
+                                <span class="fee-value negative" id="displayTransactionFee">-$0.00</span>
+                            </div>
+                            <div class="fee-row">
+                                <span class="fee-label">Platform Fee (${PLATFORM_FEE_PERCENT}%):</span>
+                                <span class="fee-value negative" id="displayPlatformFee">-$0.00</span>
+                            </div>
+                            <div class="fee-row total">
+                                <span class="fee-label">You Will Receive:</span>
+                                <span class="fee-value positive" id="displayNetAmount">$0.00</span>
+                            </div>
+                            <div class="info-text">
+                                <i class="fas fa-info-circle"></i>
+                                Total fees: <span id="displayTotalFees">$0.00</span> (${TOTAL_FEE_PERCENT}%)
+                            </div>
+                        </div>
+                        
                         <div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div>
-                        <select id="withdrawMethod">
+                        
+                        <select id="withdrawMethod" onchange="updateFeeBreakdown(${latestBalance})">
                             <option value="M-Pesa">M-Pesa</option>
                             <option value="Airtel Money">Airtel Money</option>
                         </select>
+                        
                         <input type="tel" id="withdrawPhone" placeholder="Phone Number (e.g., 0712345678)">
+                        
                         <button class="btn btn-primary" style="width:100%;" onclick="requestWithdrawal()" id="withdrawBtn">Request Withdrawal</button>
-                        <p style="font-size:0.9rem; color:#64748b; margin-top:0.5rem;">Minimum withdrawal: $5 | Maximum: $${latestBalance.toFixed(2)}</p>
+                        
+                        <p style="font-size:0.9rem; color:#64748b; margin-top:0.5rem;">
+                            <i class="fas fa-info-circle"></i> 
+                            Minimum withdrawal: $5 | Fees: ${TRANSACTION_FEE_PERCENT}% transaction + ${PLATFORM_FEE_PERCENT}% platform
+                        </p>
+                        
+                        ${userData.totalFeesPaid > 0 ? `
+                            <p style="font-size:0.9rem; color:#10b981; margin-top:0.5rem;">
+                                <i class="fas fa-chart-line"></i> 
+                                Total fees paid to date: $${userData.totalFeesPaid.toFixed(2)}
+                            </p>
+                        ` : ''}
                     </div>
+                    
                     <h4 style="margin-bottom:1rem;">Withdrawal History</h4>
                 `;
                 
@@ -864,6 +958,10 @@
                                     <span><strong>$${w.amount}</strong> via ${w.method}</span>
                                     <span class="badge ${w.status === 'paid' ? 'success' : w.status === 'rejected' ? 'danger' : 'warning'}">${w.status}</span>
                                 </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:#64748b;">
+                                    <span>Fees: $${(w.fees || 0).toFixed(2)} (${TRANSACTION_FEE_PERCENT}% + ${PLATFORM_FEE_PERCENT}%)</span>
+                                    <span>Net: $${(w.netAmount || 0).toFixed(2)}</span>
+                                </div>
                                 <p style="color:#64748b; font-size:0.9rem;">${w.phone || 'No phone'} • ${requestedDate}</p>
                                 ${w.status === 'rejected' && w.rejectionReason ? `<p style="color:#ef4444; font-size:0.9rem;">Reason: ${w.rejectionReason}</p>` : ''}
                             </div>
@@ -872,6 +970,11 @@
                 }
                 
                 document.getElementById('content').innerHTML = html;
+                
+                // Add event listener for amount input
+                document.getElementById('withdrawAmount').addEventListener('input', function() {
+                    updateFeeBreakdown(latestBalance);
+                });
                 
             } catch (error) {
                 console.error('Error loading withdrawals:', error);
@@ -883,6 +986,51 @@
                         <button class="btn btn-primary" onclick="loadWithdrawals()" style="margin-top:1rem;">Try Again</button>
                     </div>
                 `;
+            }
+        }
+        
+        // NEW FUNCTION: Update fee breakdown
+        function updateFeeBreakdown(maxBalance) {
+            const amountInput = document.getElementById('withdrawAmount');
+            const amount = parseFloat(amountInput.value) || 0;
+            const warning = document.getElementById('withdrawWarning');
+            const withdrawBtn = document.getElementById('withdrawBtn');
+            const feeBreakdown = document.getElementById('feeBreakdown');
+            
+            if (amount <= 0) {
+                feeBreakdown.style.display = 'none';
+                warning.style.display = 'none';
+                if (withdrawBtn) withdrawBtn.disabled = false;
+                return;
+            }
+            
+            // Calculate fees
+            const transactionFee = amount * (TRANSACTION_FEE_PERCENT / 100);
+            const platformFee = amount * (PLATFORM_FEE_PERCENT / 100);
+            const totalFees = transactionFee + platformFee;
+            const netAmount = amount - totalFees;
+            
+            // Update display
+            document.getElementById('displayWithdrawAmount').textContent = `$${amount.toFixed(2)}`;
+            document.getElementById('displayTransactionFee').textContent = `-$${transactionFee.toFixed(2)}`;
+            document.getElementById('displayPlatformFee').textContent = `-$${platformFee.toFixed(2)}`;
+            document.getElementById('displayNetAmount').textContent = `$${netAmount.toFixed(2)}`;
+            document.getElementById('displayTotalFees').textContent = `$${totalFees.toFixed(2)}`;
+            
+            // Check if amount exceeds balance
+            if (amount > maxBalance) {
+                warning.style.display = 'block';
+                if (withdrawBtn) withdrawBtn.disabled = true;
+                feeBreakdown.style.display = 'none';
+            } else if (amount < 5) {
+                warning.textContent = 'Minimum withdrawal amount is $5';
+                warning.style.display = 'block';
+                if (withdrawBtn) withdrawBtn.disabled = true;
+                feeBreakdown.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+                if (withdrawBtn) withdrawBtn.disabled = false;
+                feeBreakdown.style.display = 'block';
             }
         }
         
@@ -901,11 +1049,17 @@
             }
         }
         
-        // Request Withdrawal
+        // Request Withdrawal - MODIFIED with fee calculations
         async function requestWithdrawal() {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             const phone = document.getElementById('withdrawPhone').value;
+            
+            // Calculate fees
+            const transactionFee = amount * (TRANSACTION_FEE_PERCENT / 100);
+            const platformFee = amount * (PLATFORM_FEE_PERCENT / 100);
+            const totalFees = transactionFee + platformFee;
+            const netAmount = amount - totalFees;
             
             // Get the latest balance
             try {
@@ -933,6 +1087,21 @@
                     return;
                 }
                 
+                // Show confirmation with fee breakdown
+                const confirmWithdrawal = confirm(
+                    `Withdrawal Summary:\n\n` +
+                    `Requested Amount: $${amount.toFixed(2)}\n` +
+                    `Transaction Fee (${TRANSACTION_FEE_PERCENT}%): -$${transactionFee.toFixed(2)}\n` +
+                    `Platform Fee (${PLATFORM_FEE_PERCENT}%): -$${platformFee.toFixed(2)}\n` +
+                    `Total Fees: -$${totalFees.toFixed(2)}\n` +
+                    `You Will Receive: $${netAmount.toFixed(2)}\n\n` +
+                    `Proceed with withdrawal?`
+                );
+                
+                if (!confirmWithdrawal) {
+                    return;
+                }
+                
                 // Check for pending withdrawals
                 const pendingSnapshot = await db.collection('withdrawals')
                     .where('userId', '==', currentUser.uid)
@@ -950,21 +1119,28 @@
                     const userSnap = await transaction.get(userRef);
                     
                     const currentBalance = userSnap.data().wallet || 0;
+                    const currentTotalFees = userSnap.data().totalFeesPaid || 0;
                     
                     if (amount > currentBalance) {
                         throw new Error('Insufficient balance');
                     }
                     
+                    // Update user wallet (deduct full amount)
                     transaction.update(userRef, {
-                        wallet: firebase.firestore.FieldValue.increment(-amount)
+                        wallet: firebase.firestore.FieldValue.increment(-amount),
+                        totalFeesPaid: currentTotalFees + totalFees // Track total fees paid
                     });
                     
                     const withdrawalRef = db.collection('withdrawals').doc();
                     transaction.set(withdrawalRef, {
                         userId: currentUser.uid,
                         userEmail: currentUser.email,
-                        amount: amount,
-                        amountKES: amount * 130,
+                        amount: amount, // Original amount
+                        transactionFee: transactionFee,
+                        platformFee: platformFee,
+                        fees: totalFees,
+                        netAmount: netAmount, // Amount user receives after fees
+                        amountKES: netAmount * 130, // Convert net amount to KES
                         method: method,
                         phone: phone,
                         status: 'pending',
@@ -972,7 +1148,7 @@
                     });
                 });
                 
-                showToast('Withdrawal requested successfully!');
+                showToast(`Withdrawal requested successfully! You will receive $${netAmount.toFixed(2)} after fees.`);
                 loadWithdrawals(); // Refresh the page
                 
             } catch (error) {
@@ -1085,6 +1261,7 @@
                     <p><strong>Email:</strong> ${userData.email}</p>
                     <p><strong>Member since:</strong> ${joinDate}</p>
                     <p><strong>Wallet Balance:</strong> $${(userData.wallet || 0).toFixed(2)}</p>
+                    <p><strong>Total Fees Paid:</strong> $${(userData.totalFeesPaid || 0).toFixed(2)}</p>
                     <p><strong>Membership:</strong> 
                         <span class="${userData.membershipPaid ? 'premium-badge' : 'badge warning'}">
                             ${userData.membershipPaid ? 'Premium' : 'Free'}
