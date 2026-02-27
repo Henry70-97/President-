@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NextGen · Task Platform</title>
+    <title>NextGen HUB</title>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -33,16 +33,98 @@
         .divider { text-align: center; margin: 1.5rem 0; position: relative; }
         .divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; }
         .divider span { background: white; padding: 0 1rem; position: relative; color: #64748b; }
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 1rem 2rem; border-radius: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: none; z-index: 1000; }
         .link { text-align: center; margin-top: 1rem; }
         .link a { color: #667eea; text-decoration: none; font-weight: 600; cursor: pointer; }
         .info-text { text-align: center; color: #64748b; margin: 1rem 0; font-size: 0.9rem; }
+        
+        /* Alert Dialog Styles */
+        .alert-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            z-index: 2000;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            display: none;
+        }
+
+        .alert-dialog.show {
+            display: block;
+        }
+
+        .alert-dialog.error {
+            border-top: 4px solid #dc2626;
+        }
+
+        .alert-dialog.success {
+            border-top: 4px solid #10b981;
+        }
+
+        .alert-dialog i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-dialog.error i {
+            color: #dc2626;
+        }
+
+        .alert-dialog.success i {
+            color: #10b981;
+        }
+
+        .alert-dialog h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .alert-dialog p {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-dialog button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .alert-dialog button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.5);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="auth-card">
         <div class="logo">
-            <h1>🔷 NextGen Tasks</h1>
+            <h1>🔷 NextGen HUB</h1>
         </div>
         
         <div class="tabs">
@@ -103,7 +185,14 @@
         </div>
     </div>
     
-    <div class="toast" id="toast"></div>
+    <!-- Alert Dialog -->
+    <div class="overlay" id="overlay" onclick="hideAlert()"></div>
+    <div class="alert-dialog" id="alertDialog">
+        <i class="fas" id="alertIcon"></i>
+        <h3 id="alertTitle"></h3>
+        <p id="alertMessage"></p>
+        <button onclick="hideAlert()">OK</button>
+    </div>
     
     <script>
         // Firebase Config
@@ -122,13 +211,26 @@
         
         let currentUser = null;
         
-        // Toast function
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.style.background = isError ? '#dc2626' : '#1e293b';
-            toast.style.display = 'block';
-            setTimeout(() => toast.style.display = 'none', 3000);
+        // Alert functions
+        function showAlert(message, type = 'error') {
+            const alertDialog = document.getElementById('alertDialog');
+            const overlay = document.getElementById('overlay');
+            const alertIcon = document.getElementById('alertIcon');
+            const alertTitle = document.getElementById('alertTitle');
+            const alertMessage = document.getElementById('alertMessage');
+            
+            alertDialog.className = 'alert-dialog ' + type;
+            alertIcon.className = 'fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle');
+            alertTitle.textContent = type === 'error' ? 'Error!' : 'Success!';
+            alertMessage.textContent = message;
+            
+            alertDialog.classList.add('show');
+            overlay.classList.add('show');
+        }
+        
+        function hideAlert() {
+            document.getElementById('alertDialog').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
         }
         
         // Tab switching
@@ -163,12 +265,12 @@
             const phone = document.getElementById('regPhone').value;
             
             if (!name || !email || !password) {
-                showToast('Please fill all required fields', true);
+                showAlert('Please fill all required fields', 'error');
                 return;
             }
             
             if (password.length < 6) {
-                showToast('Password must be at least 6 characters', true);
+                showAlert('Password must be at least 6 characters', 'error');
                 return;
             }
             
@@ -191,9 +293,9 @@
                 });
                 
                 showVerifyView(email);
-                showToast('Verification email sent!');
+                showAlert('Verification email sent!', 'success');
             } catch (error) {
-                showToast(error.message, true);
+                showAlert(error.message, 'error');
             }
         }
         
@@ -203,14 +305,14 @@
             const password = document.getElementById('loginPassword').value;
             
             if (!email || !password) {
-                showToast('Please enter email and password', true);
+                showAlert('Please enter email and password', 'error');
                 return;
             }
             
             try {
                 await auth.signInWithEmailAndPassword(email, password);
             } catch (error) {
-                showToast(error.message, true);
+                showAlert(error.message, 'error');
             }
         }
         
@@ -239,7 +341,7 @@
                     });
                 }
             } catch (error) {
-                showToast(error.message, true);
+                showAlert(error.message, 'error');
             }
         }
         
@@ -251,7 +353,7 @@
                     await db.collection('users').doc(auth.currentUser.uid).update({ verified: true });
                     window.location.href = 'user-dashboard.html';
                 } else {
-                    showToast('Email not verified yet', true);
+                    showAlert('Email not verified yet', 'error');
                 }
             }
         }
@@ -260,7 +362,7 @@
         async function resendVerification() {
             if (auth.currentUser) {
                 await auth.currentUser.sendEmailVerification();
-                showToast('Verification email resent!');
+                showAlert('Verification email resent!', 'success');
             }
         }
         
@@ -280,7 +382,7 @@
                     
                     if (userData.active === false) {
                         await auth.signOut();
-                        showToast('Account deactivated', true);
+                        showAlert('Account deactivated', 'error');
                         return;
                     }
                     

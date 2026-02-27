@@ -85,7 +85,89 @@
         .modal.active { display: block; }
         .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
         .modal-backdrop.active { display: block; }
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 40px; z-index: 2000; display: none; }
+        
+        /* Alert Dialog Styles */
+        .alert-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            z-index: 2000;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            display: none;
+        }
+
+        .alert-dialog.show {
+            display: block;
+        }
+
+        .alert-dialog.error {
+            border-top: 4px solid #dc2626;
+        }
+
+        .alert-dialog.success {
+            border-top: 4px solid #10b981;
+        }
+
+        .alert-dialog i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-dialog.error i {
+            color: #dc2626;
+        }
+
+        .alert-dialog.success i {
+            color: #10b981;
+        }
+
+        .alert-dialog h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .alert-dialog p {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-dialog button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .alert-dialog button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.5);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
         
         /* Square and bigger textbox for submissions */
         .submit-textbox { 
@@ -340,8 +422,14 @@
         </div>
     </div>
     
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
+    <!-- Alert Dialog -->
+    <div class="overlay" id="overlay" onclick="hideAlert()"></div>
+    <div class="alert-dialog" id="alertDialog">
+        <i class="fas" id="alertIcon"></i>
+        <h3 id="alertTitle"></h3>
+        <p id="alertMessage"></p>
+        <button onclick="hideAlert()">OK</button>
+    </div>
     
     <script>
         // Firebase Config
@@ -380,13 +468,26 @@
         let userData = null;
         let messagesListener = null;
         
-        // Toast function
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.style.background = isError ? '#dc2626' : '#0f172a';
-            toast.style.display = 'block';
-            setTimeout(() => toast.style.display = 'none', 3000);
+        // Alert functions
+        function showAlert(message, type = 'error') {
+            const alertDialog = document.getElementById('alertDialog');
+            const overlay = document.getElementById('overlay');
+            const alertIcon = document.getElementById('alertIcon');
+            const alertTitle = document.getElementById('alertTitle');
+            const alertMessage = document.getElementById('alertMessage');
+            
+            alertDialog.className = 'alert-dialog ' + type;
+            alertIcon.className = 'fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle');
+            alertTitle.textContent = type === 'error' ? 'Error!' : 'Success!';
+            alertMessage.textContent = message;
+            
+            alertDialog.classList.add('show');
+            overlay.classList.add('show');
+        }
+        
+        function hideAlert() {
+            document.getElementById('alertDialog').classList.remove('show');
+            document.getElementById('overlay').classList.remove('show');
         }
         
         // Modal functions
@@ -505,7 +606,7 @@
                 
             } catch (error) {
                 console.error('Auth error:', error);
-                showToast('Error loading user data', true);
+                showAlert('Error loading user data', 'error');
             }
         });
         
@@ -773,7 +874,7 @@
                 
             } catch (error) {
                 console.error('Error preparing submission form:', error);
-                showToast('Error preparing submission form', true);
+                showAlert('Error preparing submission form', 'error');
             }
         }
         
@@ -783,7 +884,7 @@
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 
                 if (!taskDoc.exists) {
-                    showToast('Task not found', true);
+                    showAlert('Task not found', 'error');
                     return;
                 }
                 
@@ -856,7 +957,7 @@
                 
             } catch (error) {
                 console.error('Error loading task details:', error);
-                showToast('Error loading task details', true);
+                showAlert('Error loading task details', 'error');
             }
         }
         
@@ -879,12 +980,12 @@
         async function saveSubmission(taskId) {
             const work = document.getElementById('workText').value;
             if (!work) {
-                showToast('Please enter your work', true);
+                showAlert('Please enter your work', 'error');
                 return;
             }
             
             if (work.length < 20) {
-                showToast('Please provide more detailed work (at least 20 characters)', true);
+                showAlert('Please provide more detailed work (at least 20 characters)', 'error');
                 return;
             }
             
@@ -893,7 +994,7 @@
                 
                 if (hasSubmitted) {
                     closeModal();
-                    showToast('You have already submitted this task', true);
+                    showAlert('You have already submitted this task', 'error');
                     return;
                 }
                 
@@ -916,7 +1017,7 @@
                 });
                 
                 closeModal();
-                showToast('Submission saved successfully!');
+                showAlert('Submission saved successfully!', 'success');
                 
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.tab')[1].classList.add('active');
@@ -924,7 +1025,7 @@
                 
             } catch (error) {
                 console.error('Error saving submission:', error);
-                showToast('Your work has been submitted successfully. It will be reviewed within 3 hours', true);
+                showAlert('Your work has been submitted successfully. It will be reviewed within 3 hours', 'success');
             }
         }
         
@@ -1199,22 +1300,22 @@
                 const latestBalance = userDoc.data().wallet || 0;
                 
                 if (!amount || isNaN(amount) || amount <= 0) {
-                    showToast('Please enter a valid amount', true);
+                    showAlert('Please enter a valid amount', 'error');
                     return;
                 }
                 
                 if (amount < 5) {
-                    showToast('Minimum withdrawal is $5', true);
+                    showAlert('Minimum withdrawal is $5', 'error');
                     return;
                 }
                 
                 if (amount > latestBalance) {
-                    showToast(`Insufficient balance. You have $${latestBalance.toFixed(2)} available`, true);
+                    showAlert(`Insufficient balance. You have $${latestBalance.toFixed(2)} available`, 'error');
                     return;
                 }
                 
                 if (!phone || phone.length < 10) {
-                    showToast('Enter a valid phone number', true);
+                    showAlert('Enter a valid phone number', 'error');
                     return;
                 }
                 
@@ -1238,7 +1339,7 @@
                     .get();
                 
                 if (!pendingSnapshot.empty) {
-                    showToast('You already have a pending withdrawal request', true);
+                    showAlert('You already have a pending withdrawal request', 'error');
                     return;
                 }
                 
@@ -1275,12 +1376,12 @@
                     });
                 });
                 
-                showToast(`Withdrawal requested successfully! You will receive $${netAmount.toFixed(2)} after fees.`);
+                showAlert(`Withdrawal requested successfully! You will receive $${netAmount.toFixed(2)} after fees.`, 'success');
                 loadWithdrawals();
                 
             } catch (error) {
                 console.error('Error requesting withdrawal:', error);
-                showToast(error.message || 'Error requesting withdrawal', true);
+                showAlert(error.message || 'Error requesting withdrawal', 'error');
             }
         }
         
@@ -1479,17 +1580,17 @@
             const message = document.getElementById('messageContent')?.value;
             
             if (!subject || !subject.trim()) {
-                showToast('Please enter a subject', true);
+                showAlert('Please enter a subject', 'error');
                 return;
             }
             
             if (!message || !message.trim()) {
-                showToast('Please enter your message', true);
+                showAlert('Please enter your message', 'error');
                 return;
             }
             
             if (message.length < 10) {
-                showToast('Message must be at least 10 characters', true);
+                showAlert('Message must be at least 10 characters', 'error');
                 return;
             }
             
@@ -1515,14 +1616,14 @@
                 });
                 
                 closeModal();
-                showToast('Message sent successfully!');
+                showAlert('Message sent successfully!', 'success');
                 
                 // Refresh messages
                 loadMessages();
                 
             } catch (error) {
                 console.error('Error sending message:', error);
-                showToast('Your messsage has been sent successfully', true);
+                showAlert('Your message has been sent successfully', 'success');
             }
         }
         
@@ -1536,7 +1637,7 @@
                     .get();
                 
                 if (snapshot.empty) {
-                    showToast('Message thread not found. please create new message', true);
+                    showAlert('Message thread not found. Please create a new message', 'error');
                     return;
                 }
                 
@@ -1619,7 +1720,7 @@
                 
             } catch (error) {
                 console.error('Error loading message thread:', error);
-                showToast('Error loading message thread', true);
+                showAlert('Error loading message thread', 'error');
             }
         }
         
@@ -1628,12 +1729,12 @@
             const reply = document.getElementById('replyMessage')?.value;
             
             if (!reply || !reply.trim()) {
-                showToast('Please enter your reply', true);
+                showAlert('Please enter your reply', 'error');
                 return;
             }
             
             if (reply.length < 5) {
-                showToast('Reply must be at least 5 characters', true);
+                showAlert('Reply must be at least 5 characters', 'error');
                 return;
             }
             
@@ -1664,11 +1765,11 @@
                 // Refresh the thread
                 closeModal();
                 viewMessageThread(threadId);
-                showToast('Reply sent successfully!');
+                showAlert('Reply sent successfully!', 'success');
                 
             } catch (error) {
                 console.error('Error sending reply:', error);
-                showToast('Error sending reply', true);
+                showAlert('Error sending reply', 'error');
             }
         }
         
@@ -1704,7 +1805,7 @@
             const phone = document.getElementById('profilePhone').value;
             
             if (!name) {
-                showToast('Name is required', true);
+                showAlert('Name is required', 'error');
                 return;
             }
             
@@ -1718,11 +1819,11 @@
                 userData.phone = phone;
                 document.getElementById('userName').textContent = name;
                 
-                showToast('Profile updated successfully!');
+                showAlert('Profile updated successfully!', 'success');
                 
             } catch (error) {
                 console.error('Error updating profile:', error);
-                showToast('Error updating profile', true);
+                showAlert('Error updating profile', 'error');
             }
         }
         
@@ -1746,7 +1847,7 @@
         async function submitPaymentProof() {
             const code = document.getElementById('transactionCode').value;
             if (!code) {
-                showToast('Enter transaction ID', true);
+                showAlert('Enter transaction ID', 'error');
                 return;
             }
             
@@ -1764,11 +1865,11 @@
                 });
                 
                 closeModal();
-                showToast('Payment proof submitted for review!');
+                showAlert('Payment proof submitted for review!', 'success');
                 
             } catch (error) {
                 console.error('Error submitting payment:', error);
-                showToast('Error submitting payment', true);
+                showAlert('Error submitting payment', 'error');
             }
         }
     </script>
