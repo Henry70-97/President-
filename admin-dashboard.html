@@ -47,7 +47,146 @@
         .modal.active { display: block; }  
         .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }  
         .modal-backdrop.active { display: block; }  
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 40px; z-index: 2000; display: none; }  
+        
+        /* New Alert Modal Styles */
+        .alert-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 2rem;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            z-index: 2000;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .alert-modal.active {
+            display: block;
+        }
+        
+        .alert-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1999;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .alert-backdrop.active {
+            display: block;
+        }
+        
+        .alert-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .alert-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .alert-icon.success {
+            background: #10b98120;
+            color: #10b981;
+        }
+        
+        .alert-icon.error {
+            background: #ef444420;
+            color: #ef4444;
+        }
+        
+        .alert-icon.warning {
+            background: #f59e0b20;
+            color: #f59e0b;
+        }
+        
+        .alert-icon.info {
+            background: #3b82f620;
+            color: #3b82f6;
+        }
+        
+        .alert-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        .alert-message {
+            color: #4b5563;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+        
+        .alert-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .alert-button.success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .alert-button.success:hover {
+            background: #059669;
+        }
+        
+        .alert-button.error {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .alert-button.error:hover {
+            background: #dc2626;
+        }
+        
+        .alert-button.info {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .alert-button.info:hover {
+            background: #2563eb;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .toast { display: none; } /* Hide old toast */
+        
         input, textarea, select { width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }  
         textarea { border-radius: 20px; min-height: 100px; }  
         .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; }  
@@ -57,6 +196,7 @@
         .deadline-badge { background: #fef3c7; color: #92400e; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
         .client-badge { background: #e0e7ff; color: #3730a3; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
         .task-requirements { background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; font-size: 0.9rem; margin: 0.5rem 0; }  
+        .instructions-badge { background: #dbeafe; color: #1e40af; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
         @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }  
     </style>  
 </head>  
@@ -87,7 +227,7 @@
         <div class="content" id="content"></div>  
     </div>  
   
-    <!-- Modal -->  
+    <!-- Regular Modal -->  
     <div class="modal-backdrop" id="modalBackdrop"></div>  
     <div class="modal" id="modal">  
         <div id="modalContent"></div>  
@@ -96,7 +236,20 @@
         </div>  
     </div>  
   
-    <!-- Toast -->  
+    <!-- Alert Modal (replaces toast) -->  
+    <div class="alert-backdrop" id="alertBackdrop"></div>  
+    <div class="alert-modal" id="alertModal">  
+        <div class="alert-header">  
+            <div class="alert-icon" id="alertIcon">  
+                <i class="fas fa-check-circle"></i>  
+            </div>  
+            <div class="alert-title" id="alertTitle">Success</div>  
+        </div>  
+        <div class="alert-message" id="alertMessage">Operation completed successfully</div>  
+        <button class="alert-button" id="alertButton">OK</button>  
+    </div>  
+  
+    <!-- Old toast (hidden) -->  
     <div class="toast" id="toast"></div>  
   
     <script>  
@@ -144,15 +297,72 @@
             loadDashboard();  
         });  
           
-        // Toast function  
-        function showToast(msg, isError = false) {  
-            const toast = document.getElementById('toast');  
-            toast.textContent = msg;  
-            toast.style.background = isError ? '#dc2626' : '#0f172a';  
-            toast.style.display = 'block';  
-            setTimeout(() => toast.style.display = 'none', 3000);  
-        }  
-          
+        // NEW Alert Modal Function  
+        function showAlert(message, type = 'success', title = '') {  
+            const alertModal = document.getElementById('alertModal');  
+            const alertBackdrop = document.getElementById('alertBackdrop');  
+            const alertIcon = document.getElementById('alertIcon');  
+            const alertTitle = document.getElementById('alertTitle');  
+            const alertMessage = document.getElementById('alertMessage');  
+            const alertButton = document.getElementById('alertButton');  
+            
+            // Set icon based on type
+            let iconHtml = '';
+            let buttonClass = 'success';
+            let defaultTitle = '';
+            
+            switch(type) {
+                case 'success':
+                    iconHtml = '<i class="fas fa-check-circle"></i>';
+                    defaultTitle = 'Success';
+                    buttonClass = 'success';
+                    break;
+                case 'error':
+                    iconHtml = '<i class="fas fa-exclamation-circle"></i>';
+                    defaultTitle = 'Error';
+                    buttonClass = 'error';
+                    break;
+                case 'warning':
+                    iconHtml = '<i class="fas fa-exclamation-triangle"></i>';
+                    defaultTitle = 'Warning';
+                    buttonClass = 'warning';
+                    break;
+                case 'info':
+                    iconHtml = '<i class="fas fa-info-circle"></i>';
+                    defaultTitle = 'Information';
+                    buttonClass = 'info';
+                    break;
+                default:
+                    iconHtml = '<i class="fas fa-check-circle"></i>';
+                    defaultTitle = 'Success';
+                    buttonClass = 'success';
+            }
+            
+            // Update modal content
+            alertIcon.className = `alert-icon ${type}`;
+            alertIcon.innerHTML = iconHtml;
+            alertTitle.textContent = title || defaultTitle;
+            alertMessage.textContent = message;
+            alertButton.className = `alert-button ${buttonClass}`;
+            alertButton.textContent = 'OK';
+            
+            // Show modal
+            alertModal.classList.add('active');
+            alertBackdrop.classList.add('active');
+            
+            // Handle button click
+            alertButton.onclick = () => {
+                alertModal.classList.remove('active');
+                alertBackdrop.classList.remove('active');
+            };
+            
+            // Close on backdrop click
+            alertBackdrop.onclick = () => {
+                alertModal.classList.remove('active');
+                alertBackdrop.classList.remove('active');
+            };
+        }
+        
         // Modal functions  
         function showModal(html) {  
             document.getElementById('modalContent').innerHTML = html;  
@@ -282,14 +492,14 @@
         // Toggle User Status  
         async function toggleUserStatus(userId, newStatus) {  
             await db.collection('users').doc(userId).update({ active: newStatus });  
-            showToast('User status updated');  
+            showAlert(`User status updated to ${newStatus ? 'Active' : 'Inactive'}`, 'success');  
             loadUsers();  
         }  
           
         // Make Admin  
         async function makeAdmin(userId) {  
             await db.collection('users').doc(userId).update({ role: 'admin' });  
-            showToast('User is now admin');  
+            showAlert('User is now an admin', 'success');  
             loadUsers();  
         }  
           
@@ -315,17 +525,17 @@
             const reason = document.getElementById('adjustReason')?.value;  
               
             if (!amount || amount <= 0) {  
-                showToast('Please enter a valid amount greater than 0', true);  
+                showAlert('Please enter a valid amount greater than 0', 'error');  
                 return;  
             }  
               
             if (!reason || reason.trim() === '') {  
-                showToast('Please enter a reason for the adjustment', true);  
+                showAlert('Please enter a reason for the adjustment', 'error');  
                 return;  
             }  
               
             if (!userId) {  
-                showToast('User ID is missing', true);  
+                showAlert('User ID is missing', 'error');  
                 return;  
             }  
               
@@ -345,15 +555,15 @@
                 });  
                   
                 closeModal();  
-                showToast(`Wallet adjusted by $${amount.toFixed(2)}`);  
+                showAlert(`Wallet adjusted by $${amount.toFixed(2)}`, 'success');  
                 loadUsers();  
             } catch (error) {  
                 console.error('Error adjusting wallet:', error);  
-                showToast('Error adjusting wallet: ' + error.message, true);  
+                showAlert('Error adjusting wallet: ' + error.message, 'error');  
             }  
         }  
           
-        // Load Tasks - MODIFIED to show client name, deadline, and requirements  
+        // Load Tasks - MODIFIED to show instructions  
         async function loadTasks() {  
             const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();  
               
@@ -385,7 +595,7 @@
                         <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td>  
                         <td class="action-buttons">  
                             <button class="btn btn-primary edit-task-btn" data-task-id="${doc.id}">Edit</button>  
-                            <button class="btn btn-info view-requirements-btn" data-task-id="${doc.id}">View Reqs</button>  
+                            <button class="btn btn-info view-requirements-btn" data-task-id="${doc.id}">View Details</button>  
                             <button class="btn btn-warning toggle-task-btn" data-task-id="${doc.id}" data-new-status="${!task.active}">${task.active ? 'Deactivate' : 'Activate'}</button>  
                         </td>  
                     </tr>  
@@ -396,7 +606,7 @@
             document.getElementById('content').innerHTML = html;  
         }  
           
-        // Show Create Task Modal - MODIFIED to include client name, requirements, and deadline  
+        // Show Create Task Modal - MODIFIED to include instructions  
         function showCreateTask() {  
             showModal(`  
                 <h3 style="margin-bottom:1rem;">Create New Task</h3>  
@@ -408,6 +618,9 @@
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Task Requirements</h4>  
                 <textarea id="taskRequirements" placeholder="Detailed requirements for this task..." style="min-height: 120px;" required></textarea>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Instructions for Users</h4>  
+                <textarea id="taskInstructions" placeholder="Step-by-step instructions on how to complete this task..." style="min-height: 120px;" required></textarea>  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Deadline & Reward</h4>  
                 <input type="date" id="taskDeadline" required>  
@@ -430,19 +643,20 @@
             `);  
         }  
           
-        // Create Task - MODIFIED to include new fields  
+        // Create Task - MODIFIED to include instructions  
         async function createTask() {  
             const title = document.getElementById('taskTitle').value;  
             const description = document.getElementById('taskDescription').value;  
             const clientName = document.getElementById('taskClientName').value;  
             const requirements = document.getElementById('taskRequirements').value;  
+            const instructions = document.getElementById('taskInstructions').value;  
             const deadline = document.getElementById('taskDeadline').value;  
             const reward = parseFloat(document.getElementById('taskReward').value);  
             const category = document.getElementById('taskCategory').value;  
             const difficulty = document.getElementById('taskDifficulty').value;  
               
-            if (!title || !description || !requirements || !deadline || !reward) {  
-                showToast('Please fill all required fields', true);  
+            if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
+                showAlert('Please fill all required fields', 'error');  
                 return;  
             }  
               
@@ -455,6 +669,7 @@
                 description,  
                 clientName: clientName || 'NextGen',  
                 requirements,  
+                instructions, // New field for step-by-step instructions  
                 deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
                 reward,  
                 rewardKES: reward * 130,  
@@ -466,18 +681,18 @@
             });  
               
             closeModal();  
-            showToast('Task created successfully');  
+            showAlert('Task created successfully', 'success');  
             loadTasks();  
         }  
           
         // Toggle Task  
         async function toggleTask(taskId, newStatus) {  
             await db.collection('tasks').doc(taskId).update({ active: newStatus });  
-            showToast('Task updated');  
+            showAlert(`Task ${newStatus ? 'activated' : 'deactivated'}`, 'success');  
             loadTasks();  
         }  
           
-        // Edit Task - MODIFIED to include new fields  
+        // Edit Task - MODIFIED to include instructions  
         async function editTask(taskId) {  
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
@@ -503,6 +718,9 @@
                 <h4 style="margin: 1rem 0 0.5rem;">Task Requirements</h4>  
                 <textarea id="editRequirements" style="min-height: 120px;" required>${data.requirements || ''}</textarea>  
                   
+                <h4 style="margin: 1rem 0 0.5rem;">Instructions for Users</h4>  
+                <textarea id="editInstructions" style="min-height: 120px;" required>${data.instructions || ''}</textarea>  
+                  
                 <h4 style="margin: 1rem 0 0.5rem;">Deadline & Reward</h4>  
                 <input type="date" id="editDeadline" value="${deadlineValue}" required>  
                 <input type="number" id="editReward" value="${data.reward}" step="0.01" min="0" required>  
@@ -524,19 +742,20 @@
             `);  
         }  
           
-        // Update Task - MODIFIED to include new fields  
+        // Update Task - MODIFIED to include instructions  
         async function updateTask(taskId) {  
             const title = document.getElementById('editTitle').value;  
             const description = document.getElementById('editDescription').value;  
             const clientName = document.getElementById('editClientName').value;  
             const requirements = document.getElementById('editRequirements').value;  
+            const instructions = document.getElementById('editInstructions').value;  
             const deadline = document.getElementById('editDeadline').value;  
             const reward = parseFloat(document.getElementById('editReward').value);  
             const category = document.getElementById('editCategory').value;  
             const difficulty = document.getElementById('editDifficulty').value;  
               
-            if (!title || !description || !requirements || !deadline || !reward) {  
-                showToast('Please fill all required fields', true);  
+            if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
+                showAlert('Please fill all required fields', 'error');  
                 return;  
             }  
               
@@ -549,6 +768,7 @@
                 description,  
                 clientName: clientName || 'NextGen',  
                 requirements,  
+                instructions,  
                 deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
                 reward,  
                 rewardKES: reward * 130,  
@@ -557,11 +777,11 @@
             });  
               
             closeModal();  
-            showToast('Task updated successfully');  
+            showAlert('Task updated successfully', 'success');  
             loadTasks();  
         }  
           
-        // View Requirements - NEW function to view task requirements  
+        // View Details - MODIFIED to show instructions  
         async function viewRequirements(taskId) {  
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
@@ -570,7 +790,7 @@
             const deadlineDisplay = data.deadline ? formatDate(data.deadline) : 'No deadline';  
               
             showModal(`  
-                <h3 style="margin-bottom:1rem;">${data.title} - Requirements</h3>  
+                <h3 style="margin-bottom:1rem;">${data.title}</h3>  
                   
                 <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">  
@@ -582,19 +802,24 @@
                     <p><strong>Category:</strong> ${data.category} | <strong>Difficulty:</strong> ${data.difficulty}</p>  
                 </div>  
                   
-                <h4 style="margin: 1rem 0 0.5rem;">Description</h4>  
+                <h4 style="margin: 1rem 0 0.5rem;">📋 Description</h4>  
                 <div style="background: #f1f5f9; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
                     ${data.description}  
                 </div>  
                   
-                <h4 style="margin: 1rem 0 0.5rem;">Detailed Requirements</h4>  
-                <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; white-space: pre-wrap;">  
+                <h4 style="margin: 1rem 0 0.5rem;">📝 Requirements</h4>  
+                <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; white-space: pre-wrap;">  
                     ${data.requirements || 'No specific requirements provided.'}  
+                </div>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">📌 Instructions</h4>  
+                <div style="background: #dbeafe; padding: 1rem; border-radius: 0.5rem; white-space: pre-wrap;">  
+                    ${data.instructions || 'No instructions provided.'}  
                 </div>  
             `);  
         }  
           
-        // Load Submissions - MODIFIED to show task requirements when reviewing  
+        // Load Submissions - MODIFIED to show instructions  
         async function loadSubmissions() {  
             const snapshot = await db.collection('submissions')  
                 .where('status', '==', 'pending')  
@@ -608,8 +833,9 @@
                 for (const doc of snapshot.docs) {  
                     const sub = doc.data();  
                       
-                    // Get task details to show requirements  
+                    // Get task details to show requirements and instructions  
                     let taskRequirements = '';  
+                    let taskInstructions = '';  
                     let taskDeadline = '';  
                     let taskClient = '';  
                     try {  
@@ -617,6 +843,7 @@
                         if (taskDoc.exists) {  
                             const task = taskDoc.data();  
                             taskRequirements = task.requirements || 'No requirements available';  
+                            taskInstructions = task.instructions || 'No instructions available';  
                             taskDeadline = task.deadline ? formatDate(task.deadline) : 'No deadline';  
                             taskClient = task.clientName || 'NextGen';  
                         }  
@@ -633,13 +860,28 @@
                               
                             <p><strong>User:</strong> ${sub.userEmail}</p>  
                               
-                            <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0;">  
-                                <p style="margin: 0 0 0.25rem 0;"><strong>Task Requirements:</strong></p>  
-                                <p style="margin: 0; font-size: 0.9rem; color: #4b5563;">${taskRequirements.substring(0, 150)}${taskRequirements.length > 150 ? '...' : ''}</p>  
-                                <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: #6b7280;"><i class="fas fa-calendar"></i> Deadline: ${taskDeadline}</p>  
+                            <div style="margin: 1rem 0;">  
+                                <details>  
+                                    <summary style="cursor: pointer; color: #6366f1; font-weight: 600; margin-bottom: 0.5rem;">  
+                                        📋 View Task Requirements & Instructions  
+                                    </summary>  
+                                    <div style="margin-top: 0.5rem;">  
+                                        <p><strong>Requirements:</strong></p>  
+                                        <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 0.5rem; font-size: 0.9rem;">  
+                                            ${taskRequirements}  
+                                        </div>  
+                                        <p><strong>Instructions:</strong></p>  
+                                        <div style="background: #dbeafe; padding: 0.5rem; border-radius: 0.5rem; font-size: 0.9rem;">  
+                                            ${taskInstructions}  
+                                        </div>  
+                                        <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #6b7280;">  
+                                            <i class="fas fa-calendar"></i> Deadline: ${taskDeadline}  
+                                        </p>  
+                                    </div>  
+                                </details>  
                             </div>  
                               
-                            <div style="background: #dbeafe; padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0;">  
+                            <div style="background: #fee2e2; padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0;">  
                                 <p style="margin: 0 0 0.25rem 0;"><strong>User's Submission:</strong></p>  
                                 <p style="margin: 0;">${sub.workText}</p>  
                             </div>  
@@ -651,7 +893,6 @@
                             <div class="flex-row">  
                                 <button class="btn btn-success approve-submission" data-sub-id="${doc.id}">Approve</button>  
                                 <button class="btn btn-danger reject-submission" data-sub-id="${doc.id}">Reject</button>  
-                                <button class="btn btn-info view-full-requirements" data-task-id="${sub.taskId}">View Full Requirements</button>  
                             </div>  
                         </div>  
                     `;  
@@ -668,12 +909,12 @@
             const review = submissionCard.querySelector('.submission-review')?.value || '';  
               
             if (approved && (!score || score < 0 || score > 100)) {  
-                showToast('Enter valid score (0-100)', true);  
+                showAlert('Please enter a valid score between 0 and 100', 'error');  
                 return;  
             }  
               
             if (!review || review.trim() === '') {  
-                showToast('Please provide feedback', true);  
+                showAlert('Please provide feedback for the user', 'error');  
                 return;  
             }  
               
@@ -694,8 +935,12 @@
                     totalEarned: firebase.firestore.FieldValue.increment(earned),  
                     tasksCompleted: firebase.firestore.FieldValue.increment(1)  
                 });  
+                showAlert(`Submission approved! User earned $${earned.toFixed(2)}`, 'success');  
             } else if (approved && score < 50) {  
                 status = 'rejected';  
+                showAlert('Submission rejected (score below 50%)', 'warning');  
+            } else {  
+                showAlert('Submission rejected', 'info');  
             }  
               
             await db.collection('submissions').doc(subId).update({  
@@ -706,7 +951,6 @@
                 reviewedAt: firebase.firestore.FieldValue.serverTimestamp()  
             });  
               
-            showToast(`Submission ${status}${earned > 0 ? ' - $' + earned : ''}`);  
             loadSubmissions();  
         }  
           
@@ -745,7 +989,7 @@
                 paidAt: firebase.firestore.FieldValue.serverTimestamp()  
             });  
               
-            showToast('Withdrawal marked as paid');  
+            showAlert('Withdrawal marked as paid', 'success');  
             loadWithdrawals();  
         }  
           
@@ -790,7 +1034,7 @@
                 status: 'approved'  
             });  
               
-            showToast('Membership approved');  
+            showAlert('Membership approved', 'success');  
             loadMemberships();  
         }  
           
@@ -804,11 +1048,11 @@
                 status: 'rejected'  
             });  
               
-            showToast('Membership rejected');  
+            showAlert('Membership rejected', 'info');  
             loadMemberships();  
         }  
           
-        // Load Messages (keeping existing functionality)  
+        // Load Messages  
         async function loadMessages() {  
             const users = await db.collection('users').get();  
               
@@ -845,13 +1089,11 @@
             let html = `  
                 <h3 style="margin-bottom:1.5rem;">Message Center</h3>  
                   
-                <!-- Toggle between individual and broadcast -->  
                 <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">  
                     <button class="btn ${currentMessageType === 'individual' ? 'btn-primary' : 'btn'}" id="individualMessageBtn">📨 Individual Message</button>  
                     <button class="btn ${currentMessageType === 'broadcast' ? 'btn-primary' : 'btn'}" id="broadcastMessageBtn">📢 Broadcast to All</button>  
                 </div>  
                   
-                <!-- Individual Message Form -->  
                 <div id="individualMessageForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: ${currentMessageType === 'individual' ? 'block' : 'none'};">  
                     <h4 style="margin-bottom:1rem;">Send Individual Message</h4>  
                     <select id="messageUser">  
@@ -862,7 +1104,6 @@
                     <button class="btn btn-primary" id="sendMessageBtn">Send Message</button>  
                 </div>  
                   
-                <!-- Broadcast Message Form -->  
                 <div id="broadcastMessageForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: ${currentMessageType === 'broadcast' ? 'block' : 'none'};">  
                     <h4 style="margin-bottom:1rem; color: #6366f1;">Send Broadcast to All Users</h4>  
                     <div style="background: #6366f120; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
@@ -872,7 +1113,7 @@
                     <textarea id="broadcastMessage" placeholder="Type your broadcast message..." style="min-height: 120px;"></textarea>  
                     <div style="display: flex; gap: 0.5rem;">  
                         <button class="btn btn-primary" id="sendBroadcastBtn" style="flex: 1;">  
-                            <i class="fas fa-bullhorn"></i> Send Broadcast to All Users  
+                            <i class="fas fa-bullhorn"></i> Send Broadcast  
                         </button>  
                         <button class="btn" id="previewBroadcastBtn">  
                             <i class="fas fa-eye"></i> Preview  
@@ -880,7 +1121,6 @@
                     </div>  
                 </div>  
                   
-                <!-- Recent Messages -->  
                 <h4 style="margin-bottom:1rem; display: flex; justify-content: space-between; align-items: center;">  
                     <span>Recent Messages</span>  
                     <span class="badge primary">${messages.size} messages</span>  
@@ -897,12 +1137,12 @@
             const message = document.getElementById('messageText').value;  
               
             if (!userId) {  
-                showToast('Please select a user', true);  
+                showAlert('Please select a user', 'error');  
                 return;  
             }  
               
             if (!message) {  
-                showToast('Enter message', true);  
+                showAlert('Please enter a message', 'error');  
                 return;  
             }  
               
@@ -916,7 +1156,7 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()  
             });  
               
-            showToast('Message sent');  
+            showAlert('Message sent successfully', 'success');  
             document.getElementById('messageText').value = '';  
             loadMessages();  
         }  
@@ -927,7 +1167,7 @@
             const message = document.getElementById('broadcastMessage')?.value;  
               
             if (!message || message.trim() === '') {  
-                showToast('Please enter a message', true);  
+                showAlert('Please enter a message', 'error');  
                 return;  
             }  
               
@@ -961,7 +1201,7 @@
             const message = document.getElementById('broadcastMessage')?.value;  
               
             closeModal();  
-            showToast('Preparing broadcast...');  
+            showAlert('Preparing broadcast...', 'info', 'Please Wait');  
               
             try {  
                 const usersSnapshot = await db.collection('users').get();  
@@ -992,7 +1232,7 @@
                   
                 await batch.commit();  
                   
-                showToast(`✅ Broadcast sent to ${sentCount} users!`);  
+                showAlert(`✅ Broadcast sent to ${sentCount} users!`, 'success');  
                   
                 document.getElementById('broadcastMessage').value = '';  
                 if (document.getElementById('broadcastTitle')) {  
@@ -1003,7 +1243,7 @@
                   
             } catch (error) {  
                 console.error('Broadcast error:', error);  
-                showToast('Error sending broadcast: ' + error.message, true);  
+                showAlert('Error sending broadcast: ' + error.message, 'error');  
             }  
         }  
           
@@ -1013,7 +1253,7 @@
             const message = document.getElementById('broadcastMessage')?.value;  
               
             if (!message) {  
-                showToast('Enter a message to preview', true);  
+                showAlert('Please enter a message to preview', 'error');  
                 return;  
             }  
               
@@ -1126,15 +1366,8 @@
                 return;  
             }  
               
-            // View Requirements button - NEW  
+            // View Requirements button  
             if (target.classList.contains('view-requirements-btn')) {  
-                const taskId = target.getAttribute('data-task-id');  
-                await viewRequirements(taskId);  
-                return;  
-            }  
-              
-            // View Full Requirements button (in submissions) - NEW  
-            if (target.classList.contains('view-full-requirements')) {  
                 const taskId = target.getAttribute('data-task-id');  
                 await viewRequirements(taskId);  
                 return;  
@@ -1229,7 +1462,7 @@
         });  
           
         // Make functions globally available  
-        window.showToast = showToast;  
+        window.showAlert = showAlert;  
         window.showModal = showModal;  
         window.closeModal = closeModal;  
         window.logout = logout;  
