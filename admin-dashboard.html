@@ -1,690 +1,1257 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>NextGen · Admin Dashboard</title>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
-        .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
-        .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; }
-        .logo h2 { background: linear-gradient(135deg, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .admin-badge { background: #ef4444; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.9rem; }
-        .logout-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 1.5rem; padding: 1.5rem; color: white; border: 1px solid rgba(255,255,255,0.2); }
-        .stat-card i { font-size: 2rem; color: #818cf8; margin-bottom: 0.5rem; }
-        .stat-value { font-size: 2rem; font-weight: 700; }
-        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .tab.active { background: #6366f1; }
-        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 500px; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th { text-align: left; padding: 1rem; background: #f8fafc; }
-        .data-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; }
-        .badge { padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
-        .badge.success { background: #10b98120; color: #10b981; border: 1px solid #10b981; }
-        .badge.warning { background: #f59e0b20; color: #f59e0b; border: 1px solid #f59e0b; }
-        .badge.danger { background: #ef444420; color: #ef4444; border: 1px solid #ef4444; }
-        .badge.primary { background: #6366f120; color: #6366f1; border: 1px solid #6366f1; }
-        .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; margin: 0.2rem; }
-        .btn-primary { background: #6366f1; color: white; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 500px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
-        .modal.active { display: block; }
-        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
-        .modal-backdrop.active { display: block; }
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 40px; z-index: 2000; display: none; }
-        input, textarea, select { width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }
-        textarea { border-radius: 20px; min-height: 100px; }
-        .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; }
-        .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
-        .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }
-    </style>
-</head>
-<body>
-    <div class="app-container">
-        <div class="header">
-            <div class="logo">
-                <h2>🔷 NextGen Admin</h2>
-            </div>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <span id="adminName">Loading...</span>
-                <span class="admin-badge">Admin</span>
-                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
-            </div>
-        </div>
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">  
+    <title>NextGen · Admin Dashboard</title>  
+    <!-- Firebase -->  
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>  
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>  
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>  
+    <!-- Font Awesome -->  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">  
+    <!-- Google Fonts -->  
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">  
+    <style>  
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }  
+        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }  
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }  
+        .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; }  
+        .logo h2 { background: linear-gradient(135deg, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }  
+        .admin-badge { background: #ef4444; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.9rem; }  
+        .logout-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }  
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }  
+        .stat-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 1.5rem; padding: 1.5rem; color: white; border: 1px solid rgba(255,255,255,0.2); }  
+        .stat-card i { font-size: 2rem; color: #818cf8; margin-bottom: 0.5rem; }  
+        .stat-value { font-size: 2rem; font-weight: 700; }  
+        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }  
+        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }  
+        .tab.active { background: #6366f1; }  
+        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 500px; }  
+        .data-table { width: 100%; border-collapse: collapse; }  
+        .data-table th { text-align: left; padding: 1rem; background: #f8fafc; }  
+        .data-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; }  
+        .badge { padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }  
+        .badge.success { background: #10b98120; color: #10b981; border: 1px solid #10b981; }  
+        .badge.warning { background: #f59e0b20; color: #f59e0b; border: 1px solid #f59e0b; }  
+        .badge.danger { background: #ef444420; color: #ef4444; border: 1px solid #ef4444; }  
+        .badge.primary { background: #6366f120; color: #6366f1; border: 1px solid #6366f1; }  
+        .badge.info { background: #3b82f620; color: #3b82f6; border: 1px solid #3b82f6; }  
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; margin: 0.2rem; pointer-events: auto; }  
+        .btn-primary { background: #6366f1; color: white; }  
+        .btn-success { background: #10b981; color: white; }  
+        .btn-danger { background: #ef4444; color: white; }  
+        .btn-warning { background: #f59e0b; color: white; }  
+        .btn-info { background: #3b82f6; color: white; }  
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }  
+        .modal.active { display: block; }  
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }  
+        .modal-backdrop.active { display: block; }  
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: white; padding: 1rem 2rem; border-radius: 40px; z-index: 2000; display: none; }  
+        input, textarea, select { width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }  
+        textarea { border-radius: 20px; min-height: 100px; }  
+        .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; }  
+        .flex-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }  
+        .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }  
+        .action-buttons button { position: relative; z-index: 1; }  
+        .deadline-badge { background: #fef3c7; color: #92400e; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
+        .client-badge { background: #e0e7ff; color: #3730a3; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
+        .task-requirements { background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; font-size: 0.9rem; margin: 0.5rem 0; }  
+        @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }  
+    </style>  
+</head>  
+<body>  
+    <div class="app-container">  
+        <div class="header">  
+            <div class="logo">  
+                <h2>🔷 NextGen Admin</h2>  
+            </div>  
+            <div style="display: flex; align-items: center; gap: 1rem;">  
+                <span id="adminName">Loading...</span>  
+                <span class="admin-badge">Admin</span>  
+                <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>  
+            </div>  
+        </div>  
         
-        <div class="stats-grid" id="statsGrid"></div>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('users')">👥 Users</button>
-            <button class="tab" onclick="switchTab('tasks')">📋 Tasks</button>
-            <button class="tab" onclick="switchTab('submissions')">📝 Submissions</button>
-            <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
-            <button class="tab" onclick="switchTab('memberships')">👑 Memberships</button>
-            <button class="tab" onclick="switchTab('messages')">💬 Messages</button>
-        </div>
-        
-        <div class="content" id="content"></div>
-    </div>
-    
-    <!-- Modal -->
-    <div class="modal-backdrop" id="modalBackdrop"></div>
-    <div class="modal" id="modal">
-        <div id="modalContent"></div>
-        <div class="flex-row" style="justify-content: flex-end; margin-top: 1rem;">
-            <button class="btn btn-danger" onclick="closeModal()">Close</button>
-        </div>
-    </div>
-    
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
-    
-    <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
-            authDomain: "nextgen-5fb6f.firebaseapp.com",
-            projectId: "nextgen-5fb6f",
-            storageBucket: "nextgen-5fb6f.firebasestorage.app",
-            messagingSenderId: "100132076455",
-            appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        let currentUser = null;
-        
-        // Check auth state
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            const doc = await db.collection('users').doc(user.uid).get();
-            if (!doc.exists || doc.data().role !== 'admin') {
-                auth.signOut();
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            if (doc.data().active === false) {
-                auth.signOut();
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            currentUser = user;
-            document.getElementById('adminName').textContent = doc.data().displayName;
-            
-            loadDashboard();
-        });
-        
-        // Toast
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.style.background = isError ? '#dc2626' : '#0f172a';
-            toast.style.display = 'block';
-            setTimeout(() => toast.style.display = 'none', 3000);
-        }
-        
-        // Modal
-        function showModal(html) {
-            document.getElementById('modalContent').innerHTML = html;
-            document.getElementById('modal').classList.add('active');
-            document.getElementById('modalBackdrop').classList.add('active');
-        }
-        
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
-            document.getElementById('modalBackdrop').classList.remove('active');
-        }
-        
-        document.getElementById('modalBackdrop').addEventListener('click', closeModal);
-        
-        // Logout
-        function logout() {
-            auth.signOut();
-            window.location.href = 'index.html';
-        }
-        
-        // Tab switching
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            switch(tab) {
-                case 'users': loadUsers(); break;
-                case 'tasks': loadTasks(); break;
-                case 'submissions': loadSubmissions(); break;
-                case 'withdrawals': loadWithdrawals(); break;
-                case 'memberships': loadMemberships(); break;
-                case 'messages': loadMessages(); break;
-            }
-        }
-        
-        // Load Dashboard Stats
-        async function loadDashboard() {
-            const usersSnapshot = await db.collection('users').get();
-            const tasksSnapshot = await db.collection('tasks').get();
-            
-            const pendingSubs = await db.collection('submissions')
-                .where('status', '==', 'pending')
-                .get();
-            
-            const pendingWithdrawals = await db.collection('withdrawals')
-                .where('status', '==', 'pending')
-                .get();
-            
-            document.getElementById('statsGrid').innerHTML = `
-                <div class="stat-card">
-                    <i class="fas fa-users"></i>
-                    <div class="stat-value">${usersSnapshot.size}</div>
-                    <div class="stat-label">Total Users</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-tasks"></i>
-                    <div class="stat-value">${tasksSnapshot.size}</div>
-                    <div class="stat-label">Tasks</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-clock"></i>
-                    <div class="stat-value">${pendingSubs.size}</div>
-                    <div class="stat-label">Pending Reviews</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-money-bill"></i>
-                    <div class="stat-value">${pendingWithdrawals.size}</div>
-                    <div class="stat-label">Pending Withdrawals</div>
-                </div>
-            `;
-            
-            loadUsers();
-        }
-        
-        // Load Users
-        async function loadUsers() {
-            const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
-            
-            let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>';
-            html += '<table class="data-table">';
-            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Role</th><th>Status</th><th>Actions</th></tr>';
-            
-            snapshot.forEach(doc => {
-                const user = doc.data();
-                html += `
-                    <tr>
-                        <td>${user.email}</td>
-                        <td>${user.displayName}</td>
-                        <td>$${user.wallet || 0}</td>
-                        <td>${user.role}</td>
-                        <td><span class="badge ${user.active ? 'success' : 'danger'}">${user.active ? 'Active' : 'Inactive'}</span></td>
-                        <td class="action-buttons">
-                            <button class="btn btn-primary" onclick="toggleUserStatus('${doc.id}', ${!user.active})">${user.active ? 'Deactivate' : 'Activate'}</button>
-                            <button class="btn btn-success" onclick="showAdjustWallet('${doc.id}', '${user.displayName}', ${user.wallet})">Adjust Wallet</button>
-                            ${user.role !== 'admin' ? `<button class="btn btn-warning" onclick="makeAdmin('${doc.id}')">Make Admin</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</table>';
-            document.getElementById('content').innerHTML = html;
-        }
-        
-        // Toggle User Status
-        async function toggleUserStatus(userId, newStatus) {
-            await db.collection('users').doc(userId).update({ active: newStatus });
-            showToast('User status updated');
-            loadUsers();
-        }
-        
-        // Make Admin
-        async function makeAdmin(userId) {
-            await db.collection('users').doc(userId).update({ role: 'admin' });
-            showToast('User is now admin');
-            loadUsers();
-        }
-        
-        // Show Adjust Wallet
-        function showAdjustWallet(userId, userName, currentWallet) {
-            showModal(`
-                <h3 style="margin-bottom:1rem;">Adjust Wallet - ${userName}</h3>
-                <p>Current Balance: $${currentWallet}</p>
-                <input type="number" id="adjustAmount" placeholder="Amount">
-                <select id="adjustType">
-                    <option value="add">Add Funds</option>
-                    <option value="subtract">Subtract Funds</option>
-                </select>
-                <textarea id="adjustReason" placeholder="Reason for adjustment"></textarea>
-                <button class="btn btn-primary" style="width:100%;" onclick="adjustWallet('${userId}')">Apply</button>
-            `);
-        }
-        
-        // Adjust Wallet
-        async function adjustWallet(userId) {
-            const amount = parseFloat(document.getElementById('adjustAmount').value);
-            const type = document.getElementById('adjustType').value;
-            const reason = document.getElementById('adjustReason').value;
-            
-            if (!amount || amount <= 0 || !reason) {
-                showToast('Enter valid amount and reason', true);
-                return;
-            }
-            
-            const adjustment = type === 'add' ? amount : -amount;
-            
-            await db.collection('users').doc(userId).update({
-                wallet: firebase.firestore.FieldValue.increment(adjustment)
-            });
-            
-            await db.collection('walletAdjustments').add({
-                userId,
-                adjustedBy: currentUser.uid,
-                amount: adjustment,
-                reason,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            closeModal();
-            showToast(`Wallet adjusted by $${amount}`);
-            loadUsers();
-        }
-        
-        // Load Tasks
-        async function loadTasks() {
-            const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();
-            
-            let html = `
-                <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">
-                    <h3>Task Management</h3>
-                    <button class="btn btn-primary" onclick="showCreateTask()">+ New Task</button>
-                </div>
-                <table class="data-table">
-                <tr><th>Title</th><th>Reward</th><th>Category</th><th>Difficulty</th><th>Submissions</th><th>Status</th><th>Actions</th></tr>
-            `;
-            
-            snapshot.forEach(doc => {
-                const task = doc.data();
-                html += `
-                    <tr>
-                        <td>${task.title}</td>
-                        <td>$${task.reward}</td>
-                        <td>${task.category}</td>
-                        <td>${task.difficulty}</td>
-                        <td>${task.submissionsCount || 0}</td>
-                        <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td>
-                        <td class="action-buttons">
-                            <button class="btn btn-primary" onclick="editTask('${doc.id}')">Edit</button>
-                            <button class="btn btn-warning" onclick="toggleTask('${doc.id}', ${!task.active})">${task.active ? 'Deactivate' : 'Activate'}</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += '</table>';
-            document.getElementById('content').innerHTML = html;
-        }
-        
-        // Show Create Task
-        function showCreateTask() {
-            showModal(`
-                <h3 style="margin-bottom:1rem;">Create New Task</h3>
-                <input type="text" id="taskTitle" placeholder="Title">
-                <textarea id="taskDescription" placeholder="Description"></textarea>
-                <input type="number" id="taskReward" placeholder="Reward (USD)">
-                <select id="taskCategory">
-                    <option value="writing">Writing</option>
-                    <option value="design">Design</option>
-                    <option value="development">Development</option>
-                    <option value="marketing">Marketing</option>
-                    <option value="other">Other</option>
-                </select>
-                <select id="taskDifficulty">
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                </select>
-                <button class="btn btn-primary" style="width:100%;" onclick="createTask()">Create</button>
-            `);
-        }
-        
-        // Create Task
-        async function createTask() {
-            const title = document.getElementById('taskTitle').value;
-            const description = document.getElementById('taskDescription').value;
-            const reward = parseFloat(document.getElementById('taskReward').value);
-            const category = document.getElementById('taskCategory').value;
-            const difficulty = document.getElementById('taskDifficulty').value;
-            
-            if (!title || !description || !reward) {
-                showToast('Fill all fields', true);
-                return;
-            }
-            
-            await db.collection('tasks').add({
-                title,
-                description,
-                reward,
-                rewardKES: reward * 130,
-                category,
-                difficulty,
-                active: true,
-                submissionsCount: 0,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            closeModal();
-            showToast('Task created');
-            loadTasks();
-        }
-        
-        // Toggle Task
-        async function toggleTask(taskId, newStatus) {
-            await db.collection('tasks').doc(taskId).update({ active: newStatus });
-            showToast('Task updated');
-            loadTasks();
-        }
-        
-        // Edit Task
-        async function editTask(taskId) {
-            const task = await db.collection('tasks').doc(taskId).get();
-            const data = task.data();
-            
-            showModal(`
-                <h3 style="margin-bottom:1rem;">Edit Task</h3>
-                <input type="text" id="editTitle" value="${data.title}">
-                <textarea id="editDescription">${data.description}</textarea>
-                <input type="number" id="editReward" value="${data.reward}">
-                <select id="editCategory">
-                    <option value="writing" ${data.category === 'writing' ? 'selected' : ''}>Writing</option>
-                    <option value="design" ${data.category === 'design' ? 'selected' : ''}>Design</option>
-                    <option value="development" ${data.category === 'development' ? 'selected' : ''}>Development</option>
-                    <option value="marketing" ${data.category === 'marketing' ? 'selected' : ''}>Marketing</option>
-                    <option value="other" ${data.category === 'other' ? 'selected' : ''}>Other</option>
-                </select>
-                <select id="editDifficulty">
-                    <option value="easy" ${data.difficulty === 'easy' ? 'selected' : ''}>Easy</option>
-                    <option value="medium" ${data.difficulty === 'medium' ? 'selected' : ''}>Medium</option>
-                    <option value="hard" ${data.difficulty === 'hard' ? 'selected' : ''}>Hard</option>
-                </select>
-                <button class="btn btn-primary" style="width:100%;" onclick="updateTask('${taskId}')">Update</button>
-            `);
-        }
-        
-        // Update Task
-        async function updateTask(taskId) {
-            const title = document.getElementById('editTitle').value;
-            const description = document.getElementById('editDescription').value;
-            const reward = parseFloat(document.getElementById('editReward').value);
-            const category = document.getElementById('editCategory').value;
-            const difficulty = document.getElementById('editDifficulty').value;
-            
-            await db.collection('tasks').doc(taskId).update({
-                title,
-                description,
-                reward,
-                rewardKES: reward * 130,
-                category,
-                difficulty
-            });
-            
-            closeModal();
-            showToast('Task updated');
-            loadTasks();
-        }
-        
-        // Load Submissions
-        async function loadSubmissions() {
-            const snapshot = await db.collection('submissions')
-                .where('status', '==', 'pending')
-                .get();
-            
-            let html = '<h3 style="margin-bottom:1.5rem;">Pending Submissions</h3>';
-            
-            if (snapshot.empty) {
-                html += '<p>No pending submissions.</p>';
-            } else {
-                snapshot.forEach(doc => {
-                    const sub = doc.data();
-                    html += `
-                        <div class="submission-card">
-                            <h4>${sub.taskTitle}</h4>
-                            <p><strong>User:</strong> ${sub.userEmail}</p>
-                            <p><strong>Work:</strong> ${sub.workText}</p>
-                            <div class="flex-row" style="margin:1rem 0;">
-                                <input type="number" id="score-${doc.id}" placeholder="Score (0-100)" min="0" max="100" style="width:120px;">
-                                <textarea id="review-${doc.id}" placeholder="Feedback" style="flex:1;"></textarea>
-                            </div>
-                            <div class="flex-row">
-                                <button class="btn btn-success" onclick="reviewSubmission('${doc.id}', true)">Approve</button>
-                                <button class="btn btn-danger" onclick="reviewSubmission('${doc.id}', false)">Reject</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            
-            document.getElementById('content').innerHTML = html;
-        }
-        
-        // Review Submission
-        async function reviewSubmission(subId, approved) {
-            const score = parseInt(document.getElementById(`score-${subId}`)?.value || 0);
-            const review = document.getElementById(`review-${subId}`)?.value || '';
-            
-            if (approved && (!score || score < 0 || score > 100)) {
-                showToast('Enter valid score (0-100)', true);
-                return;
-            }
-            
-            const subDoc = await db.collection('submissions').doc(subId).get();
-            const sub = subDoc.data();
-            
-            const taskDoc = await db.collection('tasks').doc(sub.taskId).get();
-            const task = taskDoc.data();
-            
-            let earned = 0;
-            let status = approved ? 'approved' : 'rejected';
-            
-            if (approved && score >= 50) {
-                earned = (task.reward * score) / 100;
-                
-                await db.collection('users').doc(sub.userId).update({
-                    wallet: firebase.firestore.FieldValue.increment(earned),
-                    totalEarned: firebase.firestore.FieldValue.increment(earned),
-                    tasksCompleted: firebase.firestore.FieldValue.increment(1)
-                });
-            } else if (approved && score < 50) {
-                status = 'rejected';
-            }
-            
-            await db.collection('submissions').doc(subId).update({
-                status,
-                score: approved ? score : 0,
-                review,
-                earned,
-                reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            showToast(`Submission ${status}${earned > 0 ? ' - $' + earned : ''}`);
-            loadSubmissions();
-        }
-        
-        // Load Withdrawals
-        async function loadWithdrawals() {
-            const snapshot = await db.collection('withdrawals')
-                .where('status', '==', 'pending')
-                .get();
-            
-            let html = '<h3 style="margin-bottom:1.5rem;">Pending Withdrawals</h3>';
-            
-            if (snapshot.empty) {
-                html += '<p>No pending withdrawals.</p>';
-            } else {
-                snapshot.forEach(doc => {
-                    const w = doc.data();
-                    html += `
-                        <div class="submission-card">
-                            <p><strong>User:</strong> ${w.userEmail}</p>
-                            <p><strong>Amount:</strong> $${w.amount} (KES ${w.amountKES})</p>
-                            <p><strong>Method:</strong> ${w.method} - ${w.phone}</p>
-                            <p><strong>Requested:</strong> ${w.requestedAt?.toDate().toLocaleString()}</p>
-                            <button class="btn btn-success" onclick="processWithdrawal('${doc.id}')">Mark as Paid</button>
-                        </div>
-                    `;
-                });
-            }
-            
-            document.getElementById('content').innerHTML = html;
-        }
-        
-        // Process Withdrawal
-        async function processWithdrawal(withdrawalId) {
-            await db.collection('withdrawals').doc(withdrawalId).update({
-                status: 'paid',
-                paidAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            showToast('Withdrawal marked as paid');
-            loadWithdrawals();
-        }
-        
-        // Load Memberships
-        async function loadMemberships() {
-            const snapshot = await db.collection('membershipPayments')
-                .where('status', '==', 'pending')
-                .get();
-            
-            let html = '<h3 style="margin-bottom:1.5rem;">Pending Memberships</h3>';
-            
-            if (snapshot.empty) {
-                html += '<p>No pending memberships.</p>';
-            } else {
-                snapshot.forEach(doc => {
-                    const p = doc.data();
-                    html += `
-                        <div class="submission-card">
-                            <p><strong>User:</strong> ${p.userEmail}</p>
-                            <p><strong>Transaction:</strong> ${p.transactionCode}</p>
-                            <p><strong>Submitted:</strong> ${p.submittedAt?.toDate().toLocaleString()}</p>
-                            <div class="flex-row">
-                                <button class="btn btn-success" onclick="approveMembership('${p.userId}', '${doc.id}')">Approve</button>
-                                <button class="btn btn-danger" onclick="rejectMembership('${p.userId}', '${doc.id}')">Reject</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            
-            document.getElementById('content').innerHTML = html;
-        }
-        
-        // Approve Membership
-        async function approveMembership(userId, paymentId) {
-            await db.collection('users').doc(userId).update({
-                membershipPaid: true,
-                membershipStatus: 'approved'
-            });
-            
-            await db.collection('membershipPayments').doc(paymentId).update({
-                status: 'approved'
-            });
-            
-            showToast('Membership approved');
-            loadMemberships();
-        }
-        
-        // Reject Membership
-        async function rejectMembership(userId, paymentId) {
-            await db.collection('users').doc(userId).update({
-                membershipStatus: 'rejected'
-            });
-            
-            await db.collection('membershipPayments').doc(paymentId).update({
-                status: 'rejected'
-            });
-            
-            showToast('Membership rejected');
-            loadMemberships();
-        }
-        
-        // Load Messages
-        async function loadMessages() {
-            const users = await db.collection('users').get();
-            
-            let options = '';
-            users.forEach(doc => {
-                const user = doc.data();
-                options += `<option value="${doc.id}">${user.email} - ${user.displayName}</option>`;
-            });
-            
-            const messages = await db.collection('messages')
-                .orderBy('createdAt', 'desc')
-                .limit(20)
-                .get();
-            
-            let messagesHtml = '';
-            messages.forEach(doc => {
-                const msg = doc.data();
-                messagesHtml += `
-                    <div class="submission-card">
-                        <p><strong>To:</strong> ${msg.userId}</p>
-                        <p>${msg.message}</p>
-                        <small>${msg.createdAt?.toDate().toLocaleString()}</small>
-                    </div>
-                `;
-            });
-            
-            let html = `
-                <h3 style="margin-bottom:1.5rem;">Send Message</h3>
-                <div style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem;">
-                    <select id="messageUser">${options}</select>
-                    <textarea id="messageText" placeholder="Type your message..."></textarea>
-                    <button class="btn btn-primary" onclick="sendMessage()">Send Message</button>
-                </div>
-                <h4 style="margin-bottom:1rem;">Recent Messages</h4>
-                ${messagesHtml || '<p>No messages</p>'}
-            `;
-            
-            document.getElementById('content').innerHTML = html;
-        }
-        
-        // Send Message
-        async function sendMessage() {
-            const userId = document.getElementById('messageUser').value;
-            const message = document.getElementById('messageText').value;
-            
-            if (!message) {
-                showToast('Enter message', true);
-                return;
-            }
-            
-            await db.collection('messages').add({
-                userId,
-                message,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            showToast('Message sent');
-            document.getElementById('messageText').value = '';
-        }
-    </script>
-</body>
+        <div class="stats-grid" id="statsGrid"></div>  
+      
+        <div class="tabs">  
+            <button class="tab active" data-tab="users">👥 Users</button>  
+            <button class="tab" data-tab="tasks">📋 Tasks</button>  
+            <button class="tab" data-tab="submissions">📝 Submissions</button>  
+            <button class="tab" data-tab="withdrawals">💰 Withdrawals</button>  
+            <button class="tab" data-tab="memberships">👑 Memberships</button>  
+            <button class="tab" data-tab="messages">💬 Messages</button>  
+        </div>  
+      
+        <div class="content" id="content"></div>  
+    </div>  
+  
+    <!-- Modal -->  
+    <div class="modal-backdrop" id="modalBackdrop"></div>  
+    <div class="modal" id="modal">  
+        <div id="modalContent"></div>  
+        <div class="flex-row" style="justify-content: flex-end; margin-top: 1rem;">  
+            <button class="btn btn-danger" id="closeModalBtn">Close</button>  
+        </div>  
+    </div>  
+  
+    <!-- Toast -->  
+    <div class="toast" id="toast"></div>  
+  
+    <script>  
+        // Firebase Config  
+        const firebaseConfig = {  
+            apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",  
+            authDomain: "nextgen-5fb6f.firebaseapp.com",  
+            projectId: "nextgen-5fb6f",  
+            storageBucket: "nextgen-5fb6f.firebasestorage.app",  
+            messagingSenderId: "100132076455",  
+            appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"  
+        };  
+          
+        firebase.initializeApp(firebaseConfig);  
+        const auth = firebase.auth();  
+        const db = firebase.firestore();  
+          
+        let currentUser = null;  
+        let currentTab = 'users';  
+        let currentMessageType = 'individual'; // 'individual' or 'broadcast'  
+          
+        // Check auth state  
+        auth.onAuthStateChanged(async (user) => {  
+            if (!user) {  
+                window.location.href = 'index.html';  
+                return;  
+            }  
+              
+            const doc = await db.collection('users').doc(user.uid).get();  
+            if (!doc.exists || doc.data().role !== 'admin') {  
+                auth.signOut();  
+                window.location.href = 'index.html';  
+                return;  
+            }  
+              
+            if (doc.data().active === false) {  
+                auth.signOut();  
+                window.location.href = 'index.html';  
+                return;  
+            }  
+              
+            currentUser = user;  
+            document.getElementById('adminName').textContent = doc.data().displayName;  
+              
+            loadDashboard();  
+        });  
+          
+        // Toast function  
+        function showToast(msg, isError = false) {  
+            const toast = document.getElementById('toast');  
+            toast.textContent = msg;  
+            toast.style.background = isError ? '#dc2626' : '#0f172a';  
+            toast.style.display = 'block';  
+            setTimeout(() => toast.style.display = 'none', 3000);  
+        }  
+          
+        // Modal functions  
+        function showModal(html) {  
+            document.getElementById('modalContent').innerHTML = html;  
+            document.getElementById('modal').classList.add('active');  
+            document.getElementById('modalBackdrop').classList.add('active');  
+        }  
+          
+        function closeModal() {  
+            document.getElementById('modal').classList.remove('active');  
+            document.getElementById('modalBackdrop').classList.remove('active');  
+        }  
+          
+        // Format date for display  
+        function formatDate(date) {  
+            if (!date) return 'No deadline';  
+            if (date.toDate) date = date.toDate();  
+            return new Date(date).toLocaleDateString('en-US', {  
+                year: 'numeric',  
+                month: 'short',  
+                day: 'numeric'  
+            });  
+        }  
+          
+        // Check if deadline is approaching  
+        function getDeadlineStatus(deadline) {  
+            if (!deadline) return null;  
+            const deadlineDate = deadline.toDate ? deadline.toDate() : new Date(deadline);  
+            const now = new Date();  
+            const daysLeft = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));  
+              
+            if (daysLeft < 0) return { class: 'danger', text: 'Overdue' };  
+            if (daysLeft <= 2) return { class: 'warning', text: `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` };  
+            return { class: 'success', text: `${daysLeft} days left` };  
+        }  
+          
+        // Logout function  
+        function logout() {  
+            auth.signOut();  
+            window.location.href = 'index.html';  
+        }  
+          
+        // Tab switching function  
+        function switchTab(tab) {  
+            currentTab = tab;  
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));  
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');  
+              
+            switch(tab) {  
+                case 'users': loadUsers(); break;  
+                case 'tasks': loadTasks(); break;  
+                case 'submissions': loadSubmissions(); break;  
+                case 'withdrawals': loadWithdrawals(); break;  
+                case 'memberships': loadMemberships(); break;  
+                case 'messages': loadMessages(); break;  
+            }  
+        }  
+          
+        // Load Dashboard Stats  
+        async function loadDashboard() {  
+            const usersSnapshot = await db.collection('users').get();  
+            const tasksSnapshot = await db.collection('tasks').get();  
+              
+            const pendingSubs = await db.collection('submissions')  
+                .where('status', '==', 'pending')  
+                .get();  
+              
+            const pendingWithdrawals = await db.collection('withdrawals')  
+                .where('status', '==', 'pending')  
+                .get();  
+              
+            document.getElementById('statsGrid').innerHTML = `  
+                <div class="stat-card">  
+                    <i class="fas fa-users"></i>  
+                    <div class="stat-value">${usersSnapshot.size}</div>  
+                    <div class="stat-label">Total Users</div>  
+                </div>  
+                <div class="stat-card">  
+                    <i class="fas fa-tasks"></i>  
+                    <div class="stat-value">${tasksSnapshot.size}</div>  
+                    <div class="stat-label">Tasks</div>  
+                </div>  
+                <div class="stat-card">  
+                    <i class="fas fa-clock"></i>  
+                    <div class="stat-value">${pendingSubs.size}</div>  
+                    <div class="stat-label">Pending Reviews</div>  
+                </div>  
+                <div class="stat-card">  
+                    <i class="fas fa-money-bill"></i>  
+                    <div class="stat-value">${pendingWithdrawals.size}</div>  
+                    <div class="stat-label">Pending Withdrawals</div>  
+                </div>  
+            `;  
+              
+            loadUsers();  
+        }  
+          
+        // Load Users  
+        async function loadUsers() {  
+            const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();  
+              
+            let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>';  
+            html += '<table class="data-table">';  
+            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Role</th><th>Status</th><th>Actions</th></tr>';  
+              
+            snapshot.forEach(doc => {  
+                const user = doc.data();  
+                html += `  
+                    <tr>  
+                        <td>${user.email}</td>  
+                        <td>${user.displayName}</td>  
+                        <td>$${user.wallet || 0}</td>  
+                        <td>${user.role}</td>  
+                        <td><span class="badge ${user.active ? 'success' : 'danger'}">${user.active ? 'Active' : 'Inactive'}</span></td>  
+                        <td class="action-buttons">  
+                            <button class="btn btn-primary toggle-status-btn" data-user-id="${doc.id}" data-new-status="${!user.active}">${user.active ? 'Deactivate' : 'Activate'}</button>  
+                            <button class="btn btn-success adjust-wallet-btn" data-user-id="${doc.id}" data-user-name="${user.displayName}" data-wallet="${user.wallet || 0}">Adjust Wallet</button>  
+                            ${user.role !== 'admin' ? `<button class="btn btn-warning make-admin-btn" data-user-id="${doc.id}">Make Admin</button>` : ''}  
+                        </td>  
+                    </tr>  
+                `;  
+            });  
+              
+            html += '</table>';  
+            document.getElementById('content').innerHTML = html;  
+        }  
+          
+        // Toggle User Status  
+        async function toggleUserStatus(userId, newStatus) {  
+            await db.collection('users').doc(userId).update({ active: newStatus });  
+            showToast('User status updated');  
+            loadUsers();  
+        }  
+          
+        // Make Admin  
+        async function makeAdmin(userId) {  
+            await db.collection('users').doc(userId).update({ role: 'admin' });  
+            showToast('User is now admin');  
+            loadUsers();  
+        }  
+          
+        // Show Adjust Wallet Modal  
+        function showAdjustWallet(userId, userName, currentWallet) {  
+            showModal(`  
+                <h3 style="margin-bottom:1rem;">Adjust Wallet - ${userName}</h3>  
+                <p>Current Balance: $${currentWallet}</p>  
+                <input type="number" id="adjustAmount" placeholder="Amount" step="0.01" min="0">  
+                <select id="adjustType">  
+                    <option value="add">Add Funds</option>  
+                    <option value="subtract">Subtract Funds</option>  
+                </select>  
+                <textarea id="adjustReason" placeholder="Reason for adjustment (required)"></textarea>  
+                <button class="btn btn-primary apply-adjustment-btn" data-user-id="${userId}" style="width:100%;">Apply</button>  
+            `);  
+        }  
+          
+        // Adjust Wallet  
+        async function adjustWallet(userId) {  
+            const amount = parseFloat(document.getElementById('adjustAmount')?.value);  
+            const type = document.getElementById('adjustType')?.value;  
+            const reason = document.getElementById('adjustReason')?.value;  
+              
+            if (!amount || amount <= 0) {  
+                showToast('Please enter a valid amount greater than 0', true);  
+                return;  
+            }  
+              
+            if (!reason || reason.trim() === '') {  
+                showToast('Please enter a reason for the adjustment', true);  
+                return;  
+            }  
+              
+            if (!userId) {  
+                showToast('User ID is missing', true);  
+                return;  
+            }  
+              
+            const adjustment = type === 'add' ? amount : -amount;  
+              
+            try {  
+                await db.collection('users').doc(userId).update({  
+                    wallet: firebase.firestore.FieldValue.increment(adjustment)  
+                });  
+                  
+                await db.collection('walletAdjustments').add({  
+                    userId,  
+                    adjustedBy: currentUser.uid,  
+                    amount: adjustment,  
+                    reason: reason.trim(),  
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()  
+                });  
+                  
+                closeModal();  
+                showToast(`Wallet adjusted by $${amount.toFixed(2)}`);  
+                loadUsers();  
+            } catch (error) {  
+                console.error('Error adjusting wallet:', error);  
+                showToast('Error adjusting wallet: ' + error.message, true);  
+            }  
+        }  
+          
+        // Load Tasks - MODIFIED to show client name, deadline, and requirements  
+        async function loadTasks() {  
+            const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();  
+              
+            let html = `  
+                <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">  
+                    <h3>Task Management</h3>  
+                    <button class="btn btn-primary" id="createTaskBtn">+ New Task</button>  
+                </div>  
+                <table class="data-table">  
+                <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Difficulty</th><th>Status</th><th>Actions</th></tr>  
+            `;  
+              
+            snapshot.forEach(doc => {  
+                const task = doc.data();  
+                const deadlineStatus = task.deadline ? getDeadlineStatus(task.deadline) : null;  
+                const deadlineDisplay = task.deadline ? formatDate(task.deadline) : 'No deadline';  
+                  
+                html += `  
+                    <tr>  
+                        <td>${task.title}</td>  
+                        <td><span class="client-badge">${task.clientName || 'NextGen'}</span></td>  
+                        <td>$${task.reward}</td>  
+                        <td>  
+                            <span class="deadline-badge">${deadlineDisplay}</span>  
+                            ${deadlineStatus ? `<br><small class="badge ${deadlineStatus.class}">${deadlineStatus.text}</small>` : ''}  
+                        </td>  
+                        <td>${task.category}</td>  
+                        <td>${task.difficulty}</td>  
+                        <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td>  
+                        <td class="action-buttons">  
+                            <button class="btn btn-primary edit-task-btn" data-task-id="${doc.id}">Edit</button>  
+                            <button class="btn btn-info view-requirements-btn" data-task-id="${doc.id}">View Reqs</button>  
+                            <button class="btn btn-warning toggle-task-btn" data-task-id="${doc.id}" data-new-status="${!task.active}">${task.active ? 'Deactivate' : 'Activate'}</button>  
+                        </td>  
+                    </tr>  
+                `;  
+            });  
+              
+            html += '</table>';  
+            document.getElementById('content').innerHTML = html;  
+        }  
+          
+        // Show Create Task Modal - MODIFIED to include client name, requirements, and deadline  
+        function showCreateTask() {  
+            showModal(`  
+                <h3 style="margin-bottom:1rem;">Create New Task</h3>  
+                <input type="text" id="taskTitle" placeholder="Task Title" required>  
+                <textarea id="taskDescription" placeholder="Task Description" required></textarea>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Client Information</h4>  
+                <input type="text" id="taskClientName" placeholder="Client Name (e.g., NextGen, Client ABC)" value="NextGen">  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Task Requirements</h4>  
+                <textarea id="taskRequirements" placeholder="Detailed requirements for this task..." style="min-height: 120px;" required></textarea>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Deadline & Reward</h4>  
+                <input type="date" id="taskDeadline" required>  
+                <input type="number" id="taskReward" placeholder="Reward (USD)" step="0.01" min="0" required>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Task Details</h4>  
+                <select id="taskCategory">  
+                    <option value="writing">Writing</option>  
+                    <option value="design">Design</option>  
+                    <option value="development">Development</option>  
+                    <option value="marketing">Marketing</option>  
+                    <option value="other">Other</option>  
+                </select>  
+                <select id="taskDifficulty">  
+                    <option value="easy">Easy</option>  
+                    <option value="medium">Medium</option>  
+                    <option value="hard">Hard</option>  
+                </select>  
+                <button class="btn btn-primary" id="createTaskConfirmBtn" style="width:100%;">Create Task</button>  
+            `);  
+        }  
+          
+        // Create Task - MODIFIED to include new fields  
+        async function createTask() {  
+            const title = document.getElementById('taskTitle').value;  
+            const description = document.getElementById('taskDescription').value;  
+            const clientName = document.getElementById('taskClientName').value;  
+            const requirements = document.getElementById('taskRequirements').value;  
+            const deadline = document.getElementById('taskDeadline').value;  
+            const reward = parseFloat(document.getElementById('taskReward').value);  
+            const category = document.getElementById('taskCategory').value;  
+            const difficulty = document.getElementById('taskDifficulty').value;  
+              
+            if (!title || !description || !requirements || !deadline || !reward) {  
+                showToast('Please fill all required fields', true);  
+                return;  
+            }  
+              
+            // Convert deadline string to Firestore timestamp  
+            const deadlineDate = new Date(deadline);  
+            deadlineDate.setHours(23, 59, 59, 999); // End of the selected day  
+              
+            await db.collection('tasks').add({  
+                title,  
+                description,  
+                clientName: clientName || 'NextGen',  
+                requirements,  
+                deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
+                reward,  
+                rewardKES: reward * 130,  
+                category,  
+                difficulty,  
+                active: true,  
+                submissionsCount: 0,  
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()  
+            });  
+              
+            closeModal();  
+            showToast('Task created successfully');  
+            loadTasks();  
+        }  
+          
+        // Toggle Task  
+        async function toggleTask(taskId, newStatus) {  
+            await db.collection('tasks').doc(taskId).update({ active: newStatus });  
+            showToast('Task updated');  
+            loadTasks();  
+        }  
+          
+        // Edit Task - MODIFIED to include new fields  
+        async function editTask(taskId) {  
+            const task = await db.collection('tasks').doc(taskId).get();  
+            const data = task.data();  
+              
+            // Format deadline for date input  
+            let deadlineValue = '';  
+            if (data.deadline) {  
+                const deadline = data.deadline.toDate();  
+                const year = deadline.getFullYear();  
+                const month = String(deadline.getMonth() + 1).padStart(2, '0');  
+                const day = String(deadline.getDate()).padStart(2, '0');  
+                deadlineValue = `${year}-${month}-${day}`;  
+            }  
+              
+            showModal(`  
+                <h3 style="margin-bottom:1rem;">Edit Task</h3>  
+                <input type="text" id="editTitle" value="${data.title}" required>  
+                <textarea id="editDescription" required>${data.description}</textarea>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Client Information</h4>  
+                <input type="text" id="editClientName" value="${data.clientName || 'NextGen'}">  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Task Requirements</h4>  
+                <textarea id="editRequirements" style="min-height: 120px;" required>${data.requirements || ''}</textarea>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Deadline & Reward</h4>  
+                <input type="date" id="editDeadline" value="${deadlineValue}" required>  
+                <input type="number" id="editReward" value="${data.reward}" step="0.01" min="0" required>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Task Details</h4>  
+                <select id="editCategory">  
+                    <option value="writing" ${data.category === 'writing' ? 'selected' : ''}>Writing</option>  
+                    <option value="design" ${data.category === 'design' ? 'selected' : ''}>Design</option>  
+                    <option value="development" ${data.category === 'development' ? 'selected' : ''}>Development</option>  
+                    <option value="marketing" ${data.category === 'marketing' ? 'selected' : ''}>Marketing</option>  
+                    <option value="other" ${data.category === 'other' ? 'selected' : ''}>Other</option>  
+                </select>  
+                <select id="editDifficulty">  
+                    <option value="easy" ${data.difficulty === 'easy' ? 'selected' : ''}>Easy</option>  
+                    <option value="medium" ${data.difficulty === 'medium' ? 'selected' : ''}>Medium</option>  
+                    <option value="hard" ${data.difficulty === 'hard' ? 'selected' : ''}>Hard</option>  
+                </select>  
+                <button class="btn btn-primary" id="updateTaskBtn" data-task-id="${taskId}" style="width:100%;">Update Task</button>  
+            `);  
+        }  
+          
+        // Update Task - MODIFIED to include new fields  
+        async function updateTask(taskId) {  
+            const title = document.getElementById('editTitle').value;  
+            const description = document.getElementById('editDescription').value;  
+            const clientName = document.getElementById('editClientName').value;  
+            const requirements = document.getElementById('editRequirements').value;  
+            const deadline = document.getElementById('editDeadline').value;  
+            const reward = parseFloat(document.getElementById('editReward').value);  
+            const category = document.getElementById('editCategory').value;  
+            const difficulty = document.getElementById('editDifficulty').value;  
+              
+            if (!title || !description || !requirements || !deadline || !reward) {  
+                showToast('Please fill all required fields', true);  
+                return;  
+            }  
+              
+            // Convert deadline string to Firestore timestamp  
+            const deadlineDate = new Date(deadline);  
+            deadlineDate.setHours(23, 59, 59, 999);  
+              
+            await db.collection('tasks').doc(taskId).update({  
+                title,  
+                description,  
+                clientName: clientName || 'NextGen',  
+                requirements,  
+                deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
+                reward,  
+                rewardKES: reward * 130,  
+                category,  
+                difficulty  
+            });  
+              
+            closeModal();  
+            showToast('Task updated successfully');  
+            loadTasks();  
+        }  
+          
+        // View Requirements - NEW function to view task requirements  
+        async function viewRequirements(taskId) {  
+            const task = await db.collection('tasks').doc(taskId).get();  
+            const data = task.data();  
+              
+            const deadlineStatus = data.deadline ? getDeadlineStatus(data.deadline) : null;  
+            const deadlineDisplay = data.deadline ? formatDate(data.deadline) : 'No deadline';  
+              
+            showModal(`  
+                <h3 style="margin-bottom:1rem;">${data.title} - Requirements</h3>  
+                  
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">  
+                        <span class="client-badge"><i class="fas fa-building"></i> ${data.clientName || 'NextGen'}</span>  
+                        <span class="deadline-badge"><i class="fas fa-calendar"></i> ${deadlineDisplay}</span>  
+                        ${deadlineStatus ? `<span class="badge ${deadlineStatus.class}">${deadlineStatus.text}</span>` : ''}  
+                    </div>  
+                    <p><strong>Reward:</strong> $${data.reward} (KES ${data.rewardKES})</p>  
+                    <p><strong>Category:</strong> ${data.category} | <strong>Difficulty:</strong> ${data.difficulty}</p>  
+                </div>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Description</h4>  
+                <div style="background: #f1f5f9; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
+                    ${data.description}  
+                </div>  
+                  
+                <h4 style="margin: 1rem 0 0.5rem;">Detailed Requirements</h4>  
+                <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; white-space: pre-wrap;">  
+                    ${data.requirements || 'No specific requirements provided.'}  
+                </div>  
+            `);  
+        }  
+          
+        // Load Submissions - MODIFIED to show task requirements when reviewing  
+        async function loadSubmissions() {  
+            const snapshot = await db.collection('submissions')  
+                .where('status', '==', 'pending')  
+                .get();  
+              
+            let html = '<h3 style="margin-bottom:1.5rem;">Pending Submissions</h3>';  
+              
+            if (snapshot.empty) {  
+                html += '<p>No pending submissions.</p>';  
+            } else {  
+                for (const doc of snapshot.docs) {  
+                    const sub = doc.data();  
+                      
+                    // Get task details to show requirements  
+                    let taskRequirements = '';  
+                    let taskDeadline = '';  
+                    let taskClient = '';  
+                    try {  
+                        const taskDoc = await db.collection('tasks').doc(sub.taskId).get();  
+                        if (taskDoc.exists) {  
+                            const task = taskDoc.data();  
+                            taskRequirements = task.requirements || 'No requirements available';  
+                            taskDeadline = task.deadline ? formatDate(task.deadline) : 'No deadline';  
+                            taskClient = task.clientName || 'NextGen';  
+                        }  
+                    } catch (e) {  
+                        console.error('Error fetching task:', e);  
+                    }  
+                      
+                    html += `  
+                        <div class="submission-card" data-sub-id="${doc.id}">  
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">  
+                                <h4 style="margin: 0;">${sub.taskTitle}</h4>  
+                                <span class="client-badge"><i class="fas fa-building"></i> ${taskClient}</span>  
+                            </div>  
+                              
+                            <p><strong>User:</strong> ${sub.userEmail}</p>  
+                              
+                            <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0;">  
+                                <p style="margin: 0 0 0.25rem 0;"><strong>Task Requirements:</strong></p>  
+                                <p style="margin: 0; font-size: 0.9rem; color: #4b5563;">${taskRequirements.substring(0, 150)}${taskRequirements.length > 150 ? '...' : ''}</p>  
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: #6b7280;"><i class="fas fa-calendar"></i> Deadline: ${taskDeadline}</p>  
+                            </div>  
+                              
+                            <div style="background: #dbeafe; padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0;">  
+                                <p style="margin: 0 0 0.25rem 0;"><strong>User's Submission:</strong></p>  
+                                <p style="margin: 0;">${sub.workText}</p>  
+                            </div>  
+                              
+                            <div class="flex-row" style="margin:1rem 0;">  
+                                <input type="number" class="submission-score" placeholder="Score (0-100)" min="0" max="100" style="width:120px;">  
+                                <textarea class="submission-review" placeholder="Feedback (required)" style="flex:1;"></textarea>  
+                            </div>  
+                            <div class="flex-row">  
+                                <button class="btn btn-success approve-submission" data-sub-id="${doc.id}">Approve</button>  
+                                <button class="btn btn-danger reject-submission" data-sub-id="${doc.id}">Reject</button>  
+                                <button class="btn btn-info view-full-requirements" data-task-id="${sub.taskId}">View Full Requirements</button>  
+                            </div>  
+                        </div>  
+                    `;  
+                }  
+            }  
+              
+            document.getElementById('content').innerHTML = html;  
+        }  
+          
+        // Review Submission  
+        async function reviewSubmission(subId, approved) {  
+            const submissionCard = document.querySelector(`[data-sub-id="${subId}"]`);  
+            const score = parseInt(submissionCard.querySelector('.submission-score')?.value || 0);  
+            const review = submissionCard.querySelector('.submission-review')?.value || '';  
+              
+            if (approved && (!score || score < 0 || score > 100)) {  
+                showToast('Enter valid score (0-100)', true);  
+                return;  
+            }  
+              
+            if (!review || review.trim() === '') {  
+                showToast('Please provide feedback', true);  
+                return;  
+            }  
+              
+            const subDoc = await db.collection('submissions').doc(subId).get();  
+            const sub = subDoc.data();  
+              
+            const taskDoc = await db.collection('tasks').doc(sub.taskId).get();  
+            const task = taskDoc.data();  
+              
+            let earned = 0;  
+            let status = approved ? 'approved' : 'rejected';  
+              
+            if (approved && score >= 50) {  
+                earned = (task.reward * score) / 100;  
+                  
+                await db.collection('users').doc(sub.userId).update({  
+                    wallet: firebase.firestore.FieldValue.increment(earned),  
+                    totalEarned: firebase.firestore.FieldValue.increment(earned),  
+                    tasksCompleted: firebase.firestore.FieldValue.increment(1)  
+                });  
+            } else if (approved && score < 50) {  
+                status = 'rejected';  
+            }  
+              
+            await db.collection('submissions').doc(subId).update({  
+                status,  
+                score: approved ? score : 0,  
+                review,  
+                earned,  
+                reviewedAt: firebase.firestore.FieldValue.serverTimestamp()  
+            });  
+              
+            showToast(`Submission ${status}${earned > 0 ? ' - $' + earned : ''}`);  
+            loadSubmissions();  
+        }  
+          
+        // Load Withdrawals  
+        async function loadWithdrawals() {  
+            const snapshot = await db.collection('withdrawals')  
+                .where('status', '==', 'pending')  
+                .get();  
+              
+            let html = '<h3 style="margin-bottom:1.5rem;">Pending Withdrawals</h3>';  
+              
+            if (snapshot.empty) {  
+                html += '<p>No pending withdrawals.</p>';  
+            } else {  
+                snapshot.forEach(doc => {  
+                    const w = doc.data();  
+                    html += `  
+                        <div class="submission-card">  
+                            <p><strong>User:</strong> ${w.userEmail}</p>  
+                            <p><strong>Amount:</strong> $${w.amount} (KES ${w.amountKES})</p>  
+                            <p><strong>Method:</strong> ${w.method} - ${w.phone}</p>  
+                            <p><strong>Requested:</strong> ${w.requestedAt?.toDate().toLocaleString()}</p>  
+                            <button class="btn btn-success process-withdrawal" data-withdrawal-id="${doc.id}">Mark as Paid</button>  
+                        </div>  
+                    `;  
+                });  
+            }  
+              
+            document.getElementById('content').innerHTML = html;  
+        }  
+          
+        // Process Withdrawal  
+        async function processWithdrawal(withdrawalId) {  
+            await db.collection('withdrawals').doc(withdrawalId).update({  
+                status: 'paid',  
+                paidAt: firebase.firestore.FieldValue.serverTimestamp()  
+            });  
+              
+            showToast('Withdrawal marked as paid');  
+            loadWithdrawals();  
+        }  
+          
+        // Load Memberships  
+        async function loadMemberships() {  
+            const snapshot = await db.collection('membershipPayments')  
+                .where('status', '==', 'pending')  
+                .get();  
+              
+            let html = '<h3 style="margin-bottom:1.5rem;">Pending Memberships</h3>';  
+              
+            if (snapshot.empty) {  
+                html += '<p>No pending memberships.</p>';  
+            } else {  
+                snapshot.forEach(doc => {  
+                    const p = doc.data();  
+                    html += `  
+                        <div class="submission-card">  
+                            <p><strong>User:</strong> ${p.userEmail}</p>  
+                            <p><strong>Transaction:</strong> ${p.transactionCode}</p>  
+                            <p><strong>Submitted:</strong> ${p.submittedAt?.toDate().toLocaleString()}</p>  
+                            <div class="flex-row">  
+                                <button class="btn btn-success approve-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Approve</button>  
+                                <button class="btn btn-danger reject-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Reject</button>  
+                            </div>  
+                        </div>  
+                    `;  
+                });  
+            }  
+              
+            document.getElementById('content').innerHTML = html;  
+        }  
+          
+        // Approve Membership  
+        async function approveMembership(userId, paymentId) {  
+            await db.collection('users').doc(userId).update({  
+                membershipPaid: true,  
+                membershipStatus: 'approved'  
+            });  
+              
+            await db.collection('membershipPayments').doc(paymentId).update({  
+                status: 'approved'  
+            });  
+              
+            showToast('Membership approved');  
+            loadMemberships();  
+        }  
+          
+        // Reject Membership  
+        async function rejectMembership(userId, paymentId) {  
+            await db.collection('users').doc(userId).update({  
+                membershipStatus: 'rejected'  
+            });  
+              
+            await db.collection('membershipPayments').doc(paymentId).update({  
+                status: 'rejected'  
+            });  
+              
+            showToast('Membership rejected');  
+            loadMemberships();  
+        }  
+          
+        // Load Messages (keeping existing functionality)  
+        async function loadMessages() {  
+            const users = await db.collection('users').get();  
+              
+            let options = '';  
+            users.forEach(doc => {  
+                const user = doc.data();  
+                options += `<option value="${doc.id}">${user.email} - ${user.displayName}</option>`;  
+            });  
+              
+            const messages = await db.collection('messages')  
+                .orderBy('createdAt', 'desc')  
+                .limit(20)  
+                .get();  
+              
+            let messagesHtml = '';  
+            messages.forEach(doc => {  
+                const msg = doc.data();  
+                const isBroadcast = msg.userId === 'ALL_USERS' || msg.isBroadcast;  
+                messagesHtml += `  
+                    <div class="submission-card" style="border-left: 4px solid ${isBroadcast ? '#6366f1' : '#10b981'}">  
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">  
+                            <strong style="color: ${isBroadcast ? '#6366f1' : '#10b981'}">  
+                                ${isBroadcast ? '📢 Broadcast to All Users' : `👤 To: ${msg.userEmail || msg.userId}`}  
+                            </strong>  
+                            <small>${msg.createdAt?.toDate().toLocaleString()}</small>  
+                        </div>  
+                        ${msg.title ? `<h4 style="margin: 0.5rem 0; color: #1f2937;">${msg.title}</h4>` : ''}  
+                        <p style="margin: 0.5rem 0;">${msg.message}</p>  
+                        ${msg.sentCount ? `<small style="color: #6b7280;">✓ Delivered to ${msg.sentCount} users</small>` : ''}  
+                    </div>  
+                `;  
+            });  
+              
+            let html = `  
+                <h3 style="margin-bottom:1.5rem;">Message Center</h3>  
+                  
+                <!-- Toggle between individual and broadcast -->  
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">  
+                    <button class="btn ${currentMessageType === 'individual' ? 'btn-primary' : 'btn'}" id="individualMessageBtn">📨 Individual Message</button>  
+                    <button class="btn ${currentMessageType === 'broadcast' ? 'btn-primary' : 'btn'}" id="broadcastMessageBtn">📢 Broadcast to All</button>  
+                </div>  
+                  
+                <!-- Individual Message Form -->  
+                <div id="individualMessageForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: ${currentMessageType === 'individual' ? 'block' : 'none'};">  
+                    <h4 style="margin-bottom:1rem;">Send Individual Message</h4>  
+                    <select id="messageUser">  
+                        <option value="">Select User</option>  
+                        ${options}  
+                    </select>  
+                    <textarea id="messageText" placeholder="Type your message..."></textarea>  
+                    <button class="btn btn-primary" id="sendMessageBtn">Send Message</button>  
+                </div>  
+                  
+                <!-- Broadcast Message Form -->  
+                <div id="broadcastMessageForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: ${currentMessageType === 'broadcast' ? 'block' : 'none'};">  
+                    <h4 style="margin-bottom:1rem; color: #6366f1;">Send Broadcast to All Users</h4>  
+                    <div style="background: #6366f120; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
+                        <p style="margin: 0;"><strong>⚠️ Important:</strong> This message will be sent to ALL registered users (${users.size} users total).</p>  
+                    </div>  
+                    <input type="text" id="broadcastTitle" placeholder="Message Title (Optional)">  
+                    <textarea id="broadcastMessage" placeholder="Type your broadcast message..." style="min-height: 120px;"></textarea>  
+                    <div style="display: flex; gap: 0.5rem;">  
+                        <button class="btn btn-primary" id="sendBroadcastBtn" style="flex: 1;">  
+                            <i class="fas fa-bullhorn"></i> Send Broadcast to All Users  
+                        </button>  
+                        <button class="btn" id="previewBroadcastBtn">  
+                            <i class="fas fa-eye"></i> Preview  
+                        </button>  
+                    </div>  
+                </div>  
+                  
+                <!-- Recent Messages -->  
+                <h4 style="margin-bottom:1rem; display: flex; justify-content: space-between; align-items: center;">  
+                    <span>Recent Messages</span>  
+                    <span class="badge primary">${messages.size} messages</span>  
+                </h4>  
+                ${messagesHtml || '<p style="text-align: center; padding: 2rem; background: #f8fafc; border-radius: 1rem;">No messages yet</p>'}  
+            `;  
+              
+            document.getElementById('content').innerHTML = html;  
+        }  
+          
+        // Send Individual Message  
+        async function sendMessage() {  
+            const userId = document.getElementById('messageUser').value;  
+            const message = document.getElementById('messageText').value;  
+              
+            if (!userId) {  
+                showToast('Please select a user', true);  
+                return;  
+            }  
+              
+            if (!message) {  
+                showToast('Enter message', true);  
+                return;  
+            }  
+              
+            const userDoc = await db.collection('users').doc(userId).get();  
+            const userEmail = userDoc.data().email;  
+              
+            await db.collection('messages').add({  
+                userId,  
+                userEmail,  
+                message,  
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()  
+            });  
+              
+            showToast('Message sent');  
+            document.getElementById('messageText').value = '';  
+            loadMessages();  
+        }  
+          
+        // Send Broadcast Message  
+        async function sendBroadcast() {  
+            const title = document.getElementById('broadcastTitle')?.value || '';  
+            const message = document.getElementById('broadcastMessage')?.value;  
+              
+            if (!message || message.trim() === '') {  
+                showToast('Please enter a message', true);  
+                return;  
+            }  
+              
+            showModal(`  
+                <h3 style="margin-bottom:1rem; color: #6366f1;">Confirm Broadcast</h3>  
+                <div style="background: #6366f120; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
+                    <p><strong>⚠️ You are about to send a message to ALL users</strong></p>  
+                    <p>This action cannot be undone. Please review your message:</p>  
+                </div>  
+                  
+                ${title ? `<p><strong>Title:</strong> ${title}</p>` : ''}  
+                <p><strong>Message:</strong></p>  
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">  
+                    ${message}  
+                </div>  
+                  
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">  
+                    <button class="btn btn-success" id="confirmBroadcastBtn" style="flex: 1;">  
+                        <i class="fas fa-check"></i> Yes, Send to All Users  
+                    </button>  
+                    <button class="btn btn-danger" id="cancelBroadcastBtn" style="flex: 1;">  
+                        <i class="fas fa-times"></i> Cancel  
+                    </button>  
+                </div>  
+            `);  
+        }  
+          
+        // Execute Broadcast  
+        async function executeBroadcast() {  
+            const title = document.getElementById('broadcastTitle')?.value || '';  
+            const message = document.getElementById('broadcastMessage')?.value;  
+              
+            closeModal();  
+            showToast('Preparing broadcast...');  
+              
+            try {  
+                const usersSnapshot = await db.collection('users').get();  
+                const sentCount = usersSnapshot.size;  
+                  
+                await db.collection('messages').add({  
+                    userId: 'ALL_USERS',  
+                    isBroadcast: true,  
+                    title: title,  
+                    message: message,  
+                    sentCount: sentCount,  
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),  
+                    sentBy: currentUser.uid  
+                });  
+                  
+                const batch = db.batch();  
+                usersSnapshot.docs.forEach((userDoc) => {  
+                    const notifRef = db.collection('notifications').doc();  
+                    batch.set(notifRef, {  
+                        userId: userDoc.id,  
+                        type: 'broadcast',  
+                        title: title || 'New Announcement',  
+                        message: message,  
+                        read: false,  
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()  
+                    });  
+                });  
+                  
+                await batch.commit();  
+                  
+                showToast(`✅ Broadcast sent to ${sentCount} users!`);  
+                  
+                document.getElementById('broadcastMessage').value = '';  
+                if (document.getElementById('broadcastTitle')) {  
+                    document.getElementById('broadcastTitle').value = '';  
+                }  
+                  
+                loadMessages();  
+                  
+            } catch (error) {  
+                console.error('Broadcast error:', error);  
+                showToast('Error sending broadcast: ' + error.message, true);  
+            }  
+        }  
+          
+        // Preview Broadcast  
+        function previewBroadcast() {  
+            const title = document.getElementById('broadcastTitle')?.value || '';  
+            const message = document.getElementById('broadcastMessage')?.value;  
+              
+            if (!message) {  
+                showToast('Enter a message to preview', true);  
+                return;  
+            }  
+              
+            showModal(`  
+                <h3 style="margin-bottom:1rem;">Broadcast Preview</h3>  
+                <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 2rem; border-radius: 1rem;">  
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">  
+                        <i class="fas fa-bullhorn" style="font-size: 1.5rem;"></i>  
+                        <span style="font-weight: 600;">Admin Announcement</span>  
+                    </div>  
+                    ${title ? `<h4 style="margin-bottom: 0.5rem;">${title}</h4>` : ''}  
+                    <p style="margin: 0; opacity: 0.95;">${message}</p>  
+                    <div style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">  
+                        — NextGen Admin  
+                    </div>  
+                </div>  
+                <p style="margin-top: 1rem; color: #6b7280;">This is how users will see your broadcast message.</p>  
+                <button class="btn btn-primary" onclick="closeModal()" style="width: 100%;">Close Preview</button>  
+            `);  
+        }  
+          
+        // Event Delegation for all buttons  
+        document.addEventListener('click', async (e) => {  
+            const target = e.target;  
+              
+            // Logout button  
+            if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {  
+                logout();  
+                return;  
+            }  
+              
+            // Tab buttons  
+            if (target.classList.contains('tab') || target.closest('.tab')) {  
+                const tab = target.closest('.tab') || target;  
+                const tabName = tab.getAttribute('data-tab');  
+                if (tabName) {  
+                    switchTab(tabName);  
+                }  
+                return;  
+            }  
+              
+            // Close modal button  
+            if (target.id === 'closeModalBtn' || target.closest('#closeModalBtn') || target.classList.contains('modal-backdrop')) {  
+                closeModal();  
+                return;  
+            }  
+              
+            // Adjust Wallet button  
+            if (target.classList.contains('adjust-wallet-btn')) {  
+                const userId = target.getAttribute('data-user-id');  
+                const userName = target.getAttribute('data-user-name');  
+                const wallet = target.getAttribute('data-wallet');  
+                showAdjustWallet(userId, userName, parseFloat(wallet || 0));  
+                return;  
+            }  
+              
+            // Apply Adjustment button (inside modal)  
+            if (target.classList.contains('apply-adjustment-btn')) {  
+                const userId = target.getAttribute('data-user-id');  
+                await adjustWallet(userId);  
+                return;  
+            }  
+              
+            // Toggle User Status  
+            if (target.classList.contains('toggle-status-btn')) {  
+                const userId = target.getAttribute('data-user-id');  
+                const newStatus = target.getAttribute('data-new-status') === 'true';  
+                await toggleUserStatus(userId, newStatus);  
+                return;  
+            }  
+              
+            // Make Admin  
+            if (target.classList.contains('make-admin-btn')) {  
+                const userId = target.getAttribute('data-user-id');  
+                await makeAdmin(userId);  
+                return;  
+            }  
+              
+            // Create Task button  
+            if (target.id === 'createTaskBtn') {  
+                showCreateTask();  
+                return;  
+            }  
+              
+            // Create Task Confirm button  
+            if (target.id === 'createTaskConfirmBtn') {  
+                await createTask();  
+                return;  
+            }  
+              
+            // Edit Task button  
+            if (target.classList.contains('edit-task-btn')) {  
+                const taskId = target.getAttribute('data-task-id');  
+                await editTask(taskId);  
+                return;  
+            }  
+              
+            // Update Task button  
+            if (target.id === 'updateTaskBtn') {  
+                const taskId = target.getAttribute('data-task-id');  
+                await updateTask(taskId);  
+                return;  
+            }  
+              
+            // Toggle Task button  
+            if (target.classList.contains('toggle-task-btn')) {  
+                const taskId = target.getAttribute('data-task-id');  
+                const newStatus = target.getAttribute('data-new-status') === 'true';  
+                await toggleTask(taskId, newStatus);  
+                return;  
+            }  
+              
+            // View Requirements button - NEW  
+            if (target.classList.contains('view-requirements-btn')) {  
+                const taskId = target.getAttribute('data-task-id');  
+                await viewRequirements(taskId);  
+                return;  
+            }  
+              
+            // View Full Requirements button (in submissions) - NEW  
+            if (target.classList.contains('view-full-requirements')) {  
+                const taskId = target.getAttribute('data-task-id');  
+                await viewRequirements(taskId);  
+                return;  
+            }  
+              
+            // Approve Submission  
+            if (target.classList.contains('approve-submission')) {  
+                const subId = target.getAttribute('data-sub-id');  
+                await reviewSubmission(subId, true);  
+                return;  
+            }  
+              
+            // Reject Submission  
+            if (target.classList.contains('reject-submission')) {  
+                const subId = target.getAttribute('data-sub-id');  
+                await reviewSubmission(subId, false);  
+                return;  
+            }  
+              
+            // Process Withdrawal  
+            if (target.classList.contains('process-withdrawal')) {  
+                const withdrawalId = target.getAttribute('data-withdrawal-id');  
+                await processWithdrawal(withdrawalId);  
+                return;  
+            }  
+              
+            // Approve Membership  
+            if (target.classList.contains('approve-membership')) {  
+                const userId = target.getAttribute('data-user-id');  
+                const paymentId = target.getAttribute('data-payment-id');  
+                await approveMembership(userId, paymentId);  
+                return;  
+            }  
+              
+            // Reject Membership  
+            if (target.classList.contains('reject-membership')) {  
+                const userId = target.getAttribute('data-user-id');  
+                const paymentId = target.getAttribute('data-payment-id');  
+                await rejectMembership(userId, paymentId);  
+                return;  
+            }  
+              
+            // Send Individual Message  
+            if (target.id === 'sendMessageBtn') {  
+                await sendMessage();  
+                return;  
+            }  
+              
+            // Individual Message button  
+            if (target.id === 'individualMessageBtn') {  
+                currentMessageType = 'individual';  
+                document.getElementById('individualMessageForm').style.display = 'block';  
+                document.getElementById('broadcastMessageForm').style.display = 'none';  
+                target.classList.add('btn-primary');  
+                document.getElementById('broadcastMessageBtn').classList.remove('btn-primary');  
+                return;  
+            }  
+              
+            // Broadcast Message button  
+            if (target.id === 'broadcastMessageBtn') {  
+                currentMessageType = 'broadcast';  
+                document.getElementById('broadcastMessageForm').style.display = 'block';  
+                document.getElementById('individualMessageForm').style.display = 'none';  
+                target.classList.add('btn-primary');  
+                document.getElementById('individualMessageBtn').classList.remove('btn-primary');  
+                return;  
+            }  
+              
+            // Send Broadcast button  
+            if (target.id === 'sendBroadcastBtn' || target.closest('#sendBroadcastBtn')) {  
+                await sendBroadcast();  
+                return;  
+            }  
+              
+            // Preview Broadcast button  
+            if (target.id === 'previewBroadcastBtn') {  
+                previewBroadcast();  
+                return;  
+            }  
+              
+            // Confirm Broadcast button (in modal)  
+            if (target.id === 'confirmBroadcastBtn') {  
+                await executeBroadcast();  
+                return;  
+            }  
+              
+            // Cancel Broadcast button (in modal)  
+            if (target.id === 'cancelBroadcastBtn') {  
+                closeModal();  
+                return;  
+            }  
+        });  
+          
+        // Make functions globally available  
+        window.showToast = showToast;  
+        window.showModal = showModal;  
+        window.closeModal = closeModal;  
+        window.logout = logout;  
+        window.switchTab = switchTab;  
+        window.toggleUserStatus = toggleUserStatus;  
+        window.makeAdmin = makeAdmin;  
+        window.showAdjustWallet = showAdjustWallet;  
+        window.adjustWallet = adjustWallet;  
+        window.showCreateTask = showCreateTask;  
+        window.createTask = createTask;  
+        window.toggleTask = toggleTask;  
+        window.editTask = editTask;  
+        window.updateTask = updateTask;  
+        window.viewRequirements = viewRequirements;  
+        window.reviewSubmission = reviewSubmission;  
+        window.processWithdrawal = processWithdrawal;  
+        window.approveMembership = approveMembership;  
+        window.rejectMembership = rejectMembership;  
+        window.sendMessage = sendMessage;  
+        window.sendBroadcast = sendBroadcast;  
+        window.executeBroadcast = executeBroadcast;  
+        window.previewBroadcast = previewBroadcast;  
+    </script>  
+</body>  
 </html>
