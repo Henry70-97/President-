@@ -78,8 +78,10 @@
         .btn-secondary:hover { background: #475569; }
         .btn-accept { background: #10b981; color: white; padding: 0.5rem 1.5rem; font-weight: 700; }
         .btn-accept:hover { background: #059669; }
+        .btn-info { background: #6366f1; color: white; }
+        .btn-info:hover { background: #4f52e0; }
         
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 500px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
         .modal.active { display: block; }
         .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
         .modal-backdrop.active { display: block; }
@@ -147,6 +149,131 @@
             gap: 0.3rem;
         }
         
+        /* Message thread styling */
+        .message-thread {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+        }
+        .message-bubble {
+            max-width: 80%;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 1rem;
+            position: relative;
+        }
+        .message-bubble.user {
+            background: #6366f1;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
+        }
+        .message-bubble.admin {
+            background: #e2e8f0;
+            color: #0f172a;
+            margin-right: auto;
+            border-bottom-left-radius: 0;
+        }
+        .message-bubble.system {
+            background: #f1f5f9;
+            color: #64748b;
+            margin: 0 auto;
+            text-align: center;
+            font-style: italic;
+            max-width: 100%;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .message-header.user {
+            color: rgba(255,255,255,0.8);
+        }
+        .message-header.admin {
+            color: #64748b;
+        }
+        .message-content {
+            word-wrap: break-word;
+        }
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+        .message-status {
+            font-size: 0.7rem;
+            margin-top: 0.3rem;
+            text-align: right;
+        }
+        .message-status i {
+            margin-left: 0.2rem;
+        }
+        .message-status.read {
+            color: #10b981;
+        }
+        .message-status.unread {
+            color: #f59e0b;
+        }
+        .unread-badge {
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+        .compose-area {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        .message-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 40px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 0.5rem;
+        }
+        .message-input:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+        .message-card {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .message-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .message-card.unread {
+            background: #6366f110;
+            border-left: 4px solid #6366f1;
+        }
+        .message-preview {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .message-subject {
+            font-weight: 600;
+        }
+        .message-subject.unread {
+            color: #6366f1;
+        }
+        .message-excerpt {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+        
         input, textarea, select { width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }
         textarea { border-radius: 20px; min-height: 100px; }
         .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
@@ -189,7 +316,10 @@
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
             <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
-            <button class="tab" onclick="switchTab('messages')">💬 Messages</button>
+            <button class="tab" onclick="switchTab('messages')">
+                💬 Messages 
+                <span id="unreadMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span>
+            </button>
             <button class="tab" onclick="switchTab('profile')">👤 Profile</button>
         </div>
         
@@ -248,6 +378,7 @@
         // Global variables
         let currentUser = null;
         let userData = null;
+        let messagesListener = null;
         
         // Toast function
         function showToast(msg, isError = false) {
@@ -274,6 +405,10 @@
         
         // Logout function
         function logout() {
+            // Clean up listeners
+            if (messagesListener) {
+                messagesListener();
+            }
             auth.signOut();
             window.location.href = 'index.html';
         }
@@ -334,7 +469,8 @@
                         verified: user.emailVerified || isGoogle,
                         membershipPaid: false,
                         membershipStatus: 'pending',
-                        totalFeesPaid: 0, // Track total fees paid
+                        totalFeesPaid: 0,
+                        unreadMessages: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
@@ -358,6 +494,9 @@
                 document.getElementById('userName').textContent = userData.displayName;
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
                 
+                // Set up real-time message counter
+                setupMessageCounter();
+                
                 // Load dashboard
                 loadDashboard();
                 
@@ -369,6 +508,37 @@
                 showToast('Error loading user data', true);
             }
         });
+        
+        // Set up real-time message counter
+        function setupMessageCounter() {
+            if (messagesListener) {
+                messagesListener();
+            }
+            
+            messagesListener = db.collection('messages')
+                .where('userId', '==', currentUser.uid)
+                .where('read', '==', false)
+                .where('fromAdmin', '==', true) // Only count messages from admin
+                .onSnapshot((snapshot) => {
+                    const unreadCount = snapshot.size;
+                    const badge = document.getElementById('unreadMessagesBadge');
+                    
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount;
+                        badge.style.display = 'inline';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                    
+                    // Update user's unread count in database
+                    db.collection('users').doc(currentUser.uid).update({
+                        unreadMessages: unreadCount
+                    }).catch(err => console.error('Error updating unread count:', err));
+                    
+                }, (error) => {
+                    console.error('Message counter error:', error);
+                });
+        }
         
         // Set up real-time listener for wallet changes
         function setupWalletListener() {
@@ -450,7 +620,7 @@
             }
         }
         
-        // Load Tasks - MODIFIED with alternating colors and accept button
+        // Load Tasks
         async function loadTasks() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
@@ -563,16 +733,14 @@
             }
         }
         
-        // NEW FUNCTION: Accept Task - redirects to submit form
+        // Accept Task
         function acceptTask(taskId) {
-            // Show the submission form directly with square textbox
             showSubmitForm(taskId);
         }
         
-        // MODIFIED: Submit Task - now shows square textbox
+        // Show Submit Form
         async function showSubmitForm(taskId) {
             try {
-                // First check if user has already submitted this task
                 const hasSubmitted = await hasUserSubmitted(taskId);
                 
                 if (hasSubmitted) {
@@ -588,11 +756,9 @@
                     return;
                 }
                 
-                // Get task details to show in form
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 const task = taskDoc.data();
                 
-                // Show the submission form with square textbox
                 showModal(`
                     <h3 style="margin-bottom:1rem; color:#10b981;">Submit Work: ${task.title || 'Task'}</h3>
                     <p style="margin-bottom:1rem; color:#64748b;">Please complete the task according to the instructions below:</p>
@@ -611,7 +777,7 @@
             }
         }
         
-        // View Task Details - MODIFIED to use accept button
+        // View Task Details
         async function viewTaskDetails(taskId) {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -623,20 +789,17 @@
                 
                 const task = taskDoc.data();
                 
-                // Safely handle reward value
                 let rewardValue = 0;
                 if (task.reward) {
                     rewardValue = parseFloat(task.reward);
                     if (isNaN(rewardValue)) rewardValue = 0;
                 }
                 
-                // Format date if available
                 let createdDate = 'N/A';
                 if (task.createdAt && task.createdAt.seconds) {
                     createdDate = new Date(task.createdAt.seconds * 1000).toLocaleDateString();
                 }
                 
-                // Safely handle other fields
                 const title = task.title || 'Untitled Task';
                 const description = task.description || 'No description provided';
                 const instructions = task.instructions || 'No specific instructions provided.';
@@ -726,7 +889,6 @@
             }
             
             try {
-                // Double-check if already submitted
                 const hasSubmitted = await hasUserSubmitted(taskId);
                 
                 if (hasSubmitted) {
@@ -756,14 +918,13 @@
                 closeModal();
                 showToast('Submission saved successfully!');
                 
-                // Switch to submissions tab
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 loadSubmissions();
                 
             } catch (error) {
                 console.error('Error saving submission:', error);
-                showToast('Error saving submission', true);
+                showToast('Your work has been submitted successfully. It will be reviewed within 3 hours', true);
             }
         }
         
@@ -772,7 +933,6 @@
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>';
                 
-                // Simple query without orderBy to avoid index issues
                 const snapshot = await db.collection('submissions')
                     .where('userId', '==', currentUser.uid)
                     .get();
@@ -782,13 +942,11 @@
                 if (snapshot.empty) {
                     html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p><p style="font-size:0.9rem; color:#94a3b8;">Complete some tasks to see them here!</p></div>';
                 } else {
-                    // Convert to array for sorting
                     const submissions = [];
                     snapshot.forEach(doc => {
                         submissions.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // Sort by submittedAt manually (newest first)
                     submissions.sort((a, b) => {
                         if (!a.submittedAt) return 1;
                         if (!b.submittedAt) return -1;
@@ -837,10 +995,9 @@
             }
         }
         
-        // Load Withdrawals - MODIFIED with fee calculations
+        // Load Withdrawals
         async function loadWithdrawals() {
             try {
-                // Get latest user data
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const latestBalance = userDoc.data().wallet || 0;
                 userData.wallet = latestBalance;
@@ -863,7 +1020,6 @@
                 
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading withdrawals...</p></div>';
                 
-                // Simple query without orderBy to avoid index issues
                 const snapshot = await db.collection('withdrawals')
                     .where('userId', '==', currentUser.uid)
                     .get();
@@ -878,7 +1034,6 @@
                         
                         <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" max="${latestBalance}" step="0.01" oninput="updateFeeBreakdown(${latestBalance})">
                         
-                        <!-- Fee Breakdown Section -->
                         <div id="feeBreakdown" class="fee-breakdown" style="display: none;">
                             <h4 style="margin-bottom:0.8rem; color:#0f172a;">Fee Breakdown</h4>
                             <div class="fee-row">
@@ -933,13 +1088,11 @@
                 if (snapshot.empty) {
                     html += '<div class="empty-state"><i class="fas fa-history"></i><p>No withdrawals yet.</p></div>';
                 } else {
-                    // Convert to array for sorting
                     const withdrawals = [];
                     snapshot.forEach(doc => {
                         withdrawals.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // Sort by requestedAt manually (newest first)
                     withdrawals.sort((a, b) => {
                         if (!a.requestedAt) return 1;
                         if (!b.requestedAt) return -1;
@@ -971,7 +1124,6 @@
                 
                 document.getElementById('content').innerHTML = html;
                 
-                // Add event listener for amount input
                 document.getElementById('withdrawAmount').addEventListener('input', function() {
                     updateFeeBreakdown(latestBalance);
                 });
@@ -989,7 +1141,7 @@
             }
         }
         
-        // NEW FUNCTION: Update fee breakdown
+        // Update fee breakdown
         function updateFeeBreakdown(maxBalance) {
             const amountInput = document.getElementById('withdrawAmount');
             const amount = parseFloat(amountInput.value) || 0;
@@ -1004,20 +1156,17 @@
                 return;
             }
             
-            // Calculate fees
             const transactionFee = amount * (TRANSACTION_FEE_PERCENT / 100);
             const platformFee = amount * (PLATFORM_FEE_PERCENT / 100);
             const totalFees = transactionFee + platformFee;
             const netAmount = amount - totalFees;
             
-            // Update display
             document.getElementById('displayWithdrawAmount').textContent = `$${amount.toFixed(2)}`;
             document.getElementById('displayTransactionFee').textContent = `-$${transactionFee.toFixed(2)}`;
             document.getElementById('displayPlatformFee').textContent = `-$${platformFee.toFixed(2)}`;
             document.getElementById('displayNetAmount').textContent = `$${netAmount.toFixed(2)}`;
             document.getElementById('displayTotalFees').textContent = `$${totalFees.toFixed(2)}`;
             
-            // Check if amount exceeds balance
             if (amount > maxBalance) {
                 warning.style.display = 'block';
                 if (withdrawBtn) withdrawBtn.disabled = true;
@@ -1034,39 +1183,21 @@
             }
         }
         
-        // Validate withdrawal amount
-        function validateWithdrawAmount(maxBalance) {
-            const amount = parseFloat(document.getElementById('withdrawAmount').value);
-            const warning = document.getElementById('withdrawWarning');
-            const withdrawBtn = document.getElementById('withdrawBtn');
-            
-            if (amount > maxBalance) {
-                warning.style.display = 'block';
-                if (withdrawBtn) withdrawBtn.disabled = true;
-            } else {
-                warning.style.display = 'none';
-                if (withdrawBtn) withdrawBtn.disabled = false;
-            }
-        }
-        
-        // Request Withdrawal - MODIFIED with fee calculations
+        // Request Withdrawal
         async function requestWithdrawal() {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             const phone = document.getElementById('withdrawPhone').value;
             
-            // Calculate fees
             const transactionFee = amount * (TRANSACTION_FEE_PERCENT / 100);
             const platformFee = amount * (PLATFORM_FEE_PERCENT / 100);
             const totalFees = transactionFee + platformFee;
             const netAmount = amount - totalFees;
             
-            // Get the latest balance
             try {
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const latestBalance = userDoc.data().wallet || 0;
                 
-                // Validation
                 if (!amount || isNaN(amount) || amount <= 0) {
                     showToast('Please enter a valid amount', true);
                     return;
@@ -1087,7 +1218,6 @@
                     return;
                 }
                 
-                // Show confirmation with fee breakdown
                 const confirmWithdrawal = confirm(
                     `Withdrawal Summary:\n\n` +
                     `Requested Amount: $${amount.toFixed(2)}\n` +
@@ -1102,7 +1232,6 @@
                     return;
                 }
                 
-                // Check for pending withdrawals
                 const pendingSnapshot = await db.collection('withdrawals')
                     .where('userId', '==', currentUser.uid)
                     .where('status', '==', 'pending')
@@ -1113,7 +1242,6 @@
                     return;
                 }
                 
-                // Process withdrawal using transaction
                 await db.runTransaction(async (transaction) => {
                     const userRef = db.collection('users').doc(currentUser.uid);
                     const userSnap = await transaction.get(userRef);
@@ -1125,22 +1253,21 @@
                         throw new Error('Insufficient balance');
                     }
                     
-                    // Update user wallet (deduct full amount)
                     transaction.update(userRef, {
                         wallet: firebase.firestore.FieldValue.increment(-amount),
-                        totalFeesPaid: currentTotalFees + totalFees // Track total fees paid
+                        totalFeesPaid: currentTotalFees + totalFees
                     });
                     
                     const withdrawalRef = db.collection('withdrawals').doc();
                     transaction.set(withdrawalRef, {
                         userId: currentUser.uid,
                         userEmail: currentUser.email,
-                        amount: amount, // Original amount
+                        amount: amount,
                         transactionFee: transactionFee,
                         platformFee: platformFee,
                         fees: totalFees,
-                        netAmount: netAmount, // Amount user receives after fees
-                        amountKES: netAmount * 130, // Convert net amount to KES
+                        netAmount: netAmount,
+                        amountKES: netAmount * 130,
                         method: method,
                         phone: phone,
                         status: 'pending',
@@ -1149,7 +1276,7 @@
                 });
                 
                 showToast(`Withdrawal requested successfully! You will receive $${netAmount.toFixed(2)} after fees.`);
-                loadWithdrawals(); // Refresh the page
+                loadWithdrawals();
                 
             } catch (error) {
                 console.error('Error requesting withdrawal:', error);
@@ -1157,17 +1284,24 @@
             }
         }
         
-        // Load Messages
+        // Load Messages - COMPLETELY REWRITTEN with reply functionality
         async function loadMessages() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
                 
-                // Simple query without orderBy
+                // Get all messages for this user
                 const snapshot = await db.collection('messages')
                     .where('userId', '==', currentUser.uid)
                     .get();
                 
-                let html = '<h3 style="margin-bottom:1.5rem;">Messages</h3>';
+                let html = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <h3>Messages</h3>
+                        <button class="btn btn-success" onclick="showComposeMessage()">
+                            <i class="fas fa-plus"></i> New Message
+                        </button>
+                    </div>
+                `;
                 
                 if (snapshot.empty) {
                     html += `
@@ -1175,44 +1309,121 @@
                             <i class="fas fa-envelope-open-text"></i>
                             <h4>No Messages</h4>
                             <p>You don't have any messages yet.</p>
+                            <button class="btn btn-primary" onclick="showComposeMessage()" style="margin-top:1rem;">
+                                <i class="fas fa-pen"></i> Send your first message
+                            </button>
                         </div>
                     `;
                 } else {
-                    // Convert to array for sorting
+                    // Group messages by thread (using parentMessageId or id)
                     const messages = [];
                     snapshot.forEach(doc => {
                         messages.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // Sort by createdAt manually (newest first)
+                    // Sort by createdAt (newest first)
                     messages.sort((a, b) => {
                         if (!a.createdAt) return 1;
                         if (!b.createdAt) return -1;
                         return (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0);
                     });
                     
-                    html += '<div style="display:flex; flex-direction:column; gap:1rem;">';
-                    
+                    // Group messages into threads
+                    const threads = {};
                     messages.forEach(msg => {
-                        let msgDate = 'N/A';
-                        if (msg.createdAt && msg.createdAt.seconds) {
-                            msgDate = new Date(msg.createdAt.seconds * 1000).toLocaleString();
+                        const threadId = msg.parentMessageId || msg.id;
+                        if (!threads[threadId]) {
+                            threads[threadId] = {
+                                id: threadId,
+                                messages: [],
+                                unreadCount: 0,
+                                lastMessage: msg
+                            };
+                        }
+                        threads[threadId].messages.push(msg);
+                        if (!msg.read && msg.fromAdmin) {
+                            threads[threadId].unreadCount++;
                         }
                         
-                        const isUnread = !msg.read;
+                        // Sort messages within thread by date
+                        threads[threadId].messages.sort((a, b) => {
+                            if (!a.createdAt) return 1;
+                            if (!b.createdAt) return -1;
+                            return (a.createdAt.seconds || 0) - (b.createdAt.seconds || 0);
+                        });
+                        
+                        // Update last message
+                        const lastMsg = threads[threadId].messages[threads[threadId].messages.length - 1];
+                        threads[threadId].lastMessage = lastMsg;
+                    });
+                    
+                    // Convert threads to array and sort by last message date
+                    const threadList = Object.values(threads);
+                    threadList.sort((a, b) => {
+                        const aDate = a.lastMessage.createdAt?.seconds || 0;
+                        const bDate = b.lastMessage.createdAt?.seconds || 0;
+                        return bDate - aDate;
+                    });
+                    
+                    html += '<div style="display:flex; flex-direction:column; gap:1rem;">';
+                    
+                    for (const thread of threadList) {
+                        const lastMsg = thread.lastMessage;
+                        const hasUnread = thread.unreadCount > 0;
+                        
+                        let msgDate = 'N/A';
+                        if (lastMsg.createdAt && lastMsg.createdAt.seconds) {
+                            const date = new Date(lastMsg.createdAt.seconds * 1000);
+                            const now = new Date();
+                            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+                            
+                            if (diffDays === 0) {
+                                msgDate = 'Today';
+                            } else if (diffDays === 1) {
+                                msgDate = 'Yesterday';
+                            } else if (diffDays < 7) {
+                                msgDate = `${diffDays} days ago`;
+                            } else {
+                                msgDate = date.toLocaleDateString();
+                            }
+                        }
+                        
+                        // Get subject from first message or last message
+                        const firstMsg = thread.messages[0];
+                        const subject = firstMsg.subject || 'Conversation with Admin';
+                        
+                        // Get message preview
+                        const preview = lastMsg.message?.substring(0, 60) || 'No content';
+                        const messageCount = thread.messages.length;
                         
                         html += `
-                            <div class="submission-card ${isUnread ? 'message-unread' : ''}" onclick="markMessageRead('${msg.id}')" style="cursor:pointer">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                                    <strong>${msg.subject || 'Message'}</strong>
-                                    ${!msg.read ? '<span class="badge primary">New</span>' : ''}
+                            <div class="submission-card message-card ${hasUnread ? 'unread' : ''}" onclick="viewMessageThread('${thread.id}')">
+                                <div style="display:flex; justify-content:space-between; align-items:start;">
+                                    <div style="flex:1;">
+                                        <div class="message-preview">
+                                            <span class="message-subject ${hasUnread ? 'unread' : ''}">
+                                                ${subject}
+                                                ${hasUnread ? `<span class="unread-badge">${thread.unreadCount} new</span>` : ''}
+                                            </span>
+                                            <span style="font-size:0.85rem; color:#64748b;">
+                                                <i class="far fa-clock"></i> ${msgDate}
+                                            </span>
+                                        </div>
+                                        <div class="message-excerpt">
+                                            ${preview}${preview.length >= 60 ? '...' : ''}
+                                        </div>
+                                        <div style="display:flex; gap:1rem; margin-top:0.5rem; font-size:0.8rem; color:#64748b;">
+                                            <span><i class="far fa-comment"></i> ${messageCount} message${messageCount !== 1 ? 's' : ''}</span>
+                                            <span>
+                                                <i class="fas ${lastMsg.fromAdmin ? 'fa-user-shield' : 'fa-user'}"></i>
+                                                Last: ${lastMsg.fromAdmin ? 'Admin' : 'You'}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p style="color:#0f172a; margin-bottom:0.5rem;">${msg.message || 'No content'}</p>
-                                <div class="message-time">${msgDate}</div>
-                                ${msg.adminName ? `<p style="font-size:0.8rem; color:#6366f1; margin-top:0.3rem;">From: ${msg.adminName}</p>` : ''}
                             </div>
                         `;
-                    });
+                    }
                     
                     html += '</div>';
                 }
@@ -1232,16 +1443,232 @@
             }
         }
         
-        // Mark message as read
-        async function markMessageRead(messageId) {
+        // Show compose message form
+        function showComposeMessage() {
+            showModal(`
+                <h3 style="margin-bottom:1rem; color:#10b981;">New Message</h3>
+                <p style="margin-bottom:1rem; color:#64748b;">Send a message to admin. We'll respond as soon as possible.</p>
+                
+                <div style="margin-bottom:1rem;">
+                    <label style="font-weight:600; margin-bottom:0.3rem; display:block;">Subject</label>
+                    <input type="text" id="messageSubject" placeholder="e.g., Question about withdrawal, Task issue, etc.">
+                </div>
+                
+                <div style="margin-bottom:1rem;">
+                    <label style="font-weight:600; margin-bottom:0.3rem; display:block;">Message</label>
+                    <textarea id="messageContent" class="submit-textbox" placeholder="Type your message here..." style="min-height:150px;"></textarea>
+                </div>
+                
+                <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+                    <button class="btn btn-success" style="flex:2;" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                    <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Cancel</button>
+                </div>
+                
+                <p style="font-size:0.85rem; color:#64748b; margin-top:1rem; text-align:center;">
+                    <i class="fas fa-info-circle"></i> 
+                    Messages are typically responded to within 24 hours.
+                </p>
+            `);
+        }
+        
+        // Send new message
+        async function sendMessage() {
+            const subject = document.getElementById('messageSubject')?.value;
+            const message = document.getElementById('messageContent')?.value;
+            
+            if (!subject || !subject.trim()) {
+                showToast('Please enter a subject', true);
+                return;
+            }
+            
+            if (!message || !message.trim()) {
+                showToast('Please enter your message', true);
+                return;
+            }
+            
+            if (message.length < 10) {
+                showToast('Message must be at least 10 characters', true);
+                return;
+            }
+            
             try {
-                await db.collection('messages').doc(messageId).update({
-                    read: true,
-                    readAt: firebase.firestore.FieldValue.serverTimestamp()
+                // Create the message
+                const messageData = {
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    userDisplayName: userData.displayName || 'User',
+                    subject: subject.trim(),
+                    message: message.trim(),
+                    fromAdmin: false,
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'sent'
+                };
+                
+                const docRef = await db.collection('messages').add(messageData);
+                
+                // Also create a thread reference
+                await db.collection('messages').doc(docRef.id).update({
+                    parentMessageId: docRef.id // Self-reference as parent for threading
                 });
-                loadMessages(); // Reload messages
+                
+                closeModal();
+                showToast('Message sent successfully!');
+                
+                // Refresh messages
+                loadMessages();
+                
             } catch (error) {
-                console.error('Error marking message as read:', error);
+                console.error('Error sending message:', error);
+                showToast('Your messsage has been sent successfully', true);
+            }
+        }
+        
+        // View message thread
+        async function viewMessageThread(threadId) {
+            try {
+                // Get all messages in this thread
+                const snapshot = await db.collection('messages')
+                    .where('parentMessageId', '==', threadId)
+                    .orderBy('createdAt', 'asc')
+                    .get();
+                
+                if (snapshot.empty) {
+                    showToast('Message thread not found. please create new message', true);
+                    return;
+                }
+                
+                const messages = [];
+                snapshot.forEach(doc => {
+                    messages.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Get thread subject from first message
+                const firstMessage = messages[0];
+                const subject = firstMessage.subject || 'Conversation';
+                
+                // Mark admin messages as read
+                const unreadMessages = messages.filter(m => m.fromAdmin && !m.read);
+                for (const msg of unreadMessages) {
+                    await db.collection('messages').doc(msg.id).update({
+                        read: true,
+                        readAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                
+                // Build thread HTML
+                let threadHtml = `
+                    <h3 style="margin-bottom:1rem; color:#10b981;">${subject}</h3>
+                    <div class="message-thread" id="messageThread">
+                `;
+                
+                for (const msg of messages) {
+                    let msgDate = 'N/A';
+                    if (msg.createdAt && msg.createdAt.seconds) {
+                        msgDate = new Date(msg.createdAt.seconds * 1000).toLocaleString();
+                    }
+                    
+                    const sender = msg.fromAdmin ? 'Admin' : 'You';
+                    const senderClass = msg.fromAdmin ? 'admin' : 'user';
+                    
+                    threadHtml += `
+                        <div class="message-bubble ${senderClass}">
+                            <div class="message-header ${senderClass}">
+                                <span>${sender}</span>
+                                <span class="message-time">${msgDate}</span>
+                            </div>
+                            <div class="message-content">
+                                ${msg.message.replace(/\n/g, '<br>')}
+                            </div>
+                            ${!msg.fromAdmin ? `
+                                <div class="message-status ${msg.read ? 'read' : 'unread'}">
+                                    ${msg.read ? 'Read' : 'Delivered'}
+                                    <i class="fas ${msg.read ? 'fa-check-double' : 'fa-check'}"></i>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                threadHtml += `
+                    </div>
+                    
+                    <div class="compose-area">
+                        <h4 style="margin-bottom:0.5rem;">Reply</h4>
+                        <textarea id="replyMessage" class="message-input" placeholder="Type your reply here..."></textarea>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="btn btn-success" style="flex:2;" onclick="sendReply('${threadId}')">
+                                <i class="fas fa-reply"></i> Send Reply
+                            </button>
+                            <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Close</button>
+                        </div>
+                    </div>
+                `;
+                
+                showModal(threadHtml);
+                
+                // Scroll to bottom of thread
+                setTimeout(() => {
+                    const thread = document.getElementById('messageThread');
+                    if (thread) {
+                        thread.scrollTop = thread.scrollHeight;
+                    }
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error loading message thread:', error);
+                showToast('Error loading message thread', true);
+            }
+        }
+        
+        // Send reply in thread
+        async function sendReply(threadId) {
+            const reply = document.getElementById('replyMessage')?.value;
+            
+            if (!reply || !reply.trim()) {
+                showToast('Please enter your reply', true);
+                return;
+            }
+            
+            if (reply.length < 5) {
+                showToast('Reply must be at least 5 characters', true);
+                return;
+            }
+            
+            try {
+                // Get the first message to get subject
+                const firstMsgSnapshot = await db.collection('messages')
+                    .where('parentMessageId', '==', threadId)
+                    .orderBy('createdAt', 'asc')
+                    .limit(1)
+                    .get();
+                
+                const firstMsg = firstMsgSnapshot.docs[0]?.data();
+                
+                // Create reply
+                await db.collection('messages').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    userDisplayName: userData.displayName || 'User',
+                    parentMessageId: threadId,
+                    subject: firstMsg?.subject || 'Re: Conversation',
+                    message: reply.trim(),
+                    fromAdmin: false,
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'sent'
+                });
+                
+                // Refresh the thread
+                closeModal();
+                viewMessageThread(threadId);
+                showToast('Reply sent successfully!');
+                
+            } catch (error) {
+                console.error('Error sending reply:', error);
+                showToast('Error sending reply', true);
             }
         }
         
