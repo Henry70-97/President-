@@ -11,32 +11,259 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; }
-        .app-container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-        .header { background: white; border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .logo h2 { background: linear-gradient(135deg, #6366f1, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .user-menu { display: flex; align-items: center; gap: 1rem; }
-        .wallet-badge { background: #6366f120; padding: 0.5rem 1rem; border-radius: 40px; color: #6366f1; font-weight: 600; }
-        .logout-btn { background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; padding: 0.5rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card { background: white; border-radius: 1.5rem; padding: 1.5rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .stat-card i { font-size: 2rem; color: #6366f1; margin-bottom: 0.5rem; }
-        .stat-value { font-size: 1.8rem; font-weight: 700; color: #0f172a; }
-        .stat-label { color: #64748b; }
-        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .tab.active { background: #6366f1; color: white; }
-        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 400px; }
-        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; 
+        }
+        
+        body { 
+            background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); 
+            min-height: 100vh; 
+        }
+        
+        .app-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 1rem; 
+        }
+        
+        /* Header with Hamburger */
+        .header { 
+            background: white; 
+            border-radius: 2rem; 
+            padding: 1rem 2rem; 
+            margin-bottom: 1.5rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            position: relative;
+        }
+        
+        .logo h2 { 
+            background: linear-gradient(135deg, #6366f1, #10b981); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        .user-menu { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+        }
+        
+        .wallet-badge { 
+            background: #6366f120; 
+            padding: 0.6rem 1.2rem; 
+            border-radius: 40px; 
+            color: #6366f1; 
+            font-weight: 700; 
+            font-size: 1.1rem;
+        }
+        
+        #userName {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+        
+        .logout-btn { 
+            background: none; 
+            border: none; 
+            color: #ef4444; 
+            font-size: 1.3rem; 
+            cursor: pointer; 
+            padding: 0.5rem; 
+        }
+        
+        /* Hamburger Menu Styles */
+        .hamburger-menu {
+            display: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #6366f1;
+            padding: 0.5rem;
+        }
+        
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 85%;
+            max-width: 350px;
+            height: 100vh;
+            background: white;
+            z-index: 2000;
+            padding: 2rem;
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        .mobile-nav.active {
+            left: 0;
+            display: block;
+        }
+        
+        .mobile-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        
+        .mobile-nav-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+        
+        .close-menu {
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+        
+        .mobile-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1e293b;
+        }
+        
+        .mobile-nav-item:hover {
+            background: #f1f5f9;
+        }
+        
+        .mobile-nav-item.active {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .mobile-nav-item i {
+            width: 24px;
+            font-size: 1.3rem;
+        }
+        
+        .mobile-nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1999;
+        }
+        
+        .mobile-nav-overlay.active {
+            display: block;
+        }
+        
+        /* Stats Grid */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 1.2rem; 
+            margin-bottom: 2rem; 
+        }
+        
+        .stat-card { 
+            background: white; 
+            border-radius: 1.5rem; 
+            padding: 1.8rem; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .stat-card i { 
+            font-size: 2.2rem; 
+            color: #6366f1; 
+            margin-bottom: 0.8rem; 
+        }
+        
+        .stat-value { 
+            font-size: 2.2rem; 
+            font-weight: 800; 
+            color: #0f172a; 
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+        
+        .stat-label { 
+            color: #64748b; 
+            font-size: 1rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Tabs - Hidden on mobile */
+        .tabs { 
+            display: flex; 
+            gap: 0.5rem; 
+            flex-wrap: wrap; 
+            margin-bottom: 1.5rem; 
+        }
+        
+        .tab { 
+            padding: 0.8rem 1.5rem; 
+            border: none; 
+            border-radius: 40px; 
+            background: white; 
+            font-weight: 600; 
+            font-size: 0.95rem;
+            cursor: pointer; 
+            transition: all 0.3s; 
+        }
+        
+        .tab.active { 
+            background: #6366f1; 
+            color: white; 
+        }
+        
+        /* Content area */
+        .content { 
+            background: white; 
+            border-radius: 2rem; 
+            padding: 2.5rem; 
+            min-height: 500px; 
+        }
+        
+        /* Task Grid */
+        .task-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 1.8rem; 
+        }
         
         /* Alternating card colors */
         .task-card:nth-child(odd) { 
             background: #f8fafc; 
             border-left: 4px solid #6366f1;
         }
+        
         .task-card:nth-child(even) { 
             background: #eef2ff; 
             border-left: 4px solid #10b981;
@@ -44,47 +271,169 @@
         
         .task-card { 
             border-radius: 1.5rem; 
-            padding: 1.5rem; 
+            padding: 1.8rem; 
             border: 1px solid #e2e8f0; 
             transition: transform 0.2s; 
         }
-        .task-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
-        /* Green bold text for task title and amount */
+        .task-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
+        }
+        
         .task-title { 
             color: #10b981; 
             font-weight: 800; 
-            font-size: 1.2rem; 
-            margin-bottom: 0.5rem; 
+            font-size: 1.4rem; 
+            margin-bottom: 0.8rem; 
+            line-height: 1.3;
         }
+        
         .task-amount { 
             color: #10b981; 
-            font-weight: 700; 
-            font-size: 1.3rem; 
+            font-weight: 800; 
+            font-size: 1.6rem; 
+            letter-spacing: -0.5px;
         }
         
-        .badge { padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
-        .badge.primary { background: #6366f120; color: #6366f1; }
-        .badge.success { background: #10b98120; color: #10b981; }
-        .badge.warning { background: #f59e0b20; color: #f59e0b; }
-        .badge.danger { background: #ef444420; color: #ef4444; }
+        /* Badges */
+        .badge { 
+            padding: 0.4rem 1.2rem; 
+            border-radius: 40px; 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+            display: inline-block; 
+            letter-spacing: 0.3px;
+        }
         
-        .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .btn-primary { background: #6366f1; color: white; }
-        .btn-primary:hover { background: #4f52e0; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-success:hover { background: #059669; }
-        .btn-secondary { background: #64748b; color: white; }
-        .btn-secondary:hover { background: #475569; }
-        .btn-accept { background: #10b981; color: white; padding: 0.5rem 1.5rem; font-weight: 700; }
-        .btn-accept:hover { background: #059669; }
-        .btn-info { background: #6366f1; color: white; }
-        .btn-info:hover { background: #4f52e0; }
+        .badge.primary { 
+            background: #6366f120; 
+            color: #6366f1; 
+        }
         
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
-        .modal.active { display: block; }
-        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
-        .modal-backdrop.active { display: block; }
+        .badge.success { 
+            background: #10b98120; 
+            color: #10b981; 
+        }
+        
+        .badge.warning { 
+            background: #f59e0b20; 
+            color: #f59e0b; 
+        }
+        
+        .badge.danger { 
+            background: #ef444420; 
+            color: #ef4444; 
+        }
+        
+        /* Buttons */
+        .btn { 
+            padding: 0.9rem 1.8rem; 
+            border: none; 
+            border-radius: 40px; 
+            font-weight: 700; 
+            font-size: 1rem;
+            letter-spacing: 0.3px;
+            cursor: pointer; 
+            transition: all 0.3s; 
+        }
+        
+        .btn-primary { 
+            background: #6366f1; 
+            color: white; 
+        }
+        
+        .btn-primary:hover { 
+            background: #4f52e0; 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-success { 
+            background: #10b981; 
+            color: white; 
+        }
+        
+        .btn-success:hover { 
+            background: #059669; 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-secondary { 
+            background: #64748b; 
+            color: white; 
+        }
+        
+        .btn-secondary:hover { 
+            background: #475569; 
+            transform: translateY(-2px);
+        }
+        
+        .btn-accept { 
+            background: #10b981; 
+            color: white; 
+            padding: 0.7rem 1.5rem; 
+            font-weight: 700; 
+            font-size: 1rem;
+        }
+        
+        .btn-accept:hover { 
+            background: #059669; 
+        }
+        
+        /* Typography */
+        h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+            margin-bottom: 1.5rem;
+        }
+        
+        h4 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.8rem;
+        }
+        
+        p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #334155;
+        }
+        
+        /* Modal Styles */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: white; 
+            border-radius: 2rem; 
+            padding: 2rem; 
+            max-width: 600px; 
+            width: 90%; 
+            z-index: 1000; 
+            max-height: 80vh; 
+            overflow-y: auto; 
+        }
+        .modal.active { 
+            display: block; 
+        }
+        .modal-backdrop { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.5); 
+            backdrop-filter: blur(5px); 
+            z-index: 999; 
+        }
+        .modal-backdrop.active { 
+            display: block; 
+        }
         
         /* Alert Dialog Styles */
         .alert-dialog {
@@ -130,7 +479,6 @@
 
         .alert-dialog h3 {
             margin-bottom: 0.5rem;
-            font-size: 1.5rem;
         }
 
         .alert-dialog p {
@@ -149,11 +497,6 @@
             transition: all 0.3s;
         }
 
-        .alert-dialog button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.5);
-        }
-
         .overlay {
             position: fixed;
             top: 0;
@@ -169,12 +512,101 @@
             display: block;
         }
         
-        /* Square and bigger textbox for submissions */
+        /* Responsive Design */
+        @media (max-width: 768px) { 
+            .tabs {
+                display: none;
+            }
+            
+            .hamburger-menu {
+                display: block;
+            }
+            
+            .header { 
+                padding: 1rem; 
+            }
+            
+            .logo h2 {
+                font-size: 1.5rem;
+            }
+            
+            .wallet-badge {
+                padding: 0.4rem 1rem;
+                font-size: 1rem;
+            }
+            
+            #userName {
+                font-size: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .stat-card {
+                padding: 1.2rem;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+            
+            .stat-label {
+                font-size: 0.9rem;
+            }
+            
+            .content {
+                padding: 1.5rem;
+            }
+            
+            h3 {
+                font-size: 1.5rem;
+            }
+            
+            .task-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .task-title {
+                font-size: 1.3rem;
+            }
+            
+            .task-amount {
+                font-size: 1.4rem;
+            }
+            
+            .btn {
+                padding: 0.8rem 1.2rem;
+                font-size: 0.95rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-menu {
+                gap: 0.5rem;
+            }
+            
+            .wallet-badge {
+                padding: 0.3rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            #userName {
+                display: none;
+            }
+        }
+        
+        /* Keep all other existing styles */
         .submit-textbox { 
             width: 100%; 
             padding: 1.5rem; 
             border: 3px solid #e2e8f0; 
-            border-radius: 0 !important; /* Square corners */
+            border-radius: 0 !important;
             margin-bottom: 1rem; 
             font-size: 1.1rem; 
             min-height: 200px; 
@@ -187,7 +619,6 @@
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
         }
         
-        /* Fee breakdown styling */
         .fee-breakdown {
             background: #f1f5f9;
             border-radius: 1rem;
@@ -223,7 +654,7 @@
             color: #ef4444;
         }
         .info-text {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: #64748b;
             margin-top: 0.5rem;
             display: flex;
@@ -231,7 +662,6 @@
             gap: 0.3rem;
         }
         
-        /* Message thread styling */
         .message-thread {
             max-height: 500px;
             overflow-y: auto;
@@ -271,7 +701,6 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 0.5rem;
-            font-size: 0.85rem;
         }
         .message-header.user {
             color: rgba(255,255,255,0.8);
@@ -283,11 +712,11 @@
             word-wrap: break-word;
         }
         .message-time {
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             opacity: 0.7;
         }
         .message-status {
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             margin-top: 0.3rem;
             text-align: right;
         }
@@ -305,7 +734,7 @@
             color: white;
             border-radius: 50%;
             padding: 0.2rem 0.5rem;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             margin-left: 0.5rem;
         }
         .compose-area {
@@ -345,43 +774,78 @@
             align-items: center;
         }
         .message-subject {
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 1.1rem;
         }
         .message-subject.unread {
             color: #6366f1;
         }
         .message-excerpt {
             color: #64748b;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             margin-top: 0.3rem;
         }
         
-        input, textarea, select { width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }
         textarea { border-radius: 20px; min-height: 100px; }
-        .submission-card { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
         .flex-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-        .premium-badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
+        .premium-badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-size: 0.9rem; font-weight: 700; }
         .loading { text-align: center; padding: 3rem; color: #64748b; }
         .loading i { font-size: 3rem; margin-bottom: 1rem; color: #6366f1; }
-        .lipwa-badge { background: #8b5cf6; color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .lipwa-badge { background: #8b5cf6; color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-size: 0.9rem; font-weight: 700; display: inline-block; }
         .empty-state { text-align: center; padding: 3rem; color: #64748b; }
         .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
-        .debug-info { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; }
-        .task-detail-item { margin-bottom: 1rem; padding: 0.5rem; background: #f8fafc; border-radius: 0.5rem; }
-        .task-detail-label { font-weight: 600; color: #475569; margin-bottom: 0.25rem; }
-        .task-detail-value { color: #0f172a; }
+        .debug-info { font-size: 0.9rem; color: #94a3b8; margin-top: 0.5rem; }
+        .task-detail-item { margin-bottom: 1rem; padding: 0.8rem; background: #f8fafc; border-radius: 0.5rem; }
+        .task-detail-label { font-weight: 700; color: #475569; margin-bottom: 0.25rem; }
+        .task-detail-value { color: #0f172a; font-size: 1rem; }
         .disabled-btn { background: #94a3b8; cursor: not-allowed; opacity: 0.6; }
-        .disabled-btn:hover { background: #94a3b8; }
-        .withdrawal-warning { color: #ef4444; font-size: 0.9rem; margin-top: 0.5rem; display: none; }
-        .balance-highlight { font-size: 2rem; font-weight: 800; color: #10b981; }
-        .message-unread { background: #6366f120; border-left: 4px solid #6366f1; }
-        .message-time { font-size: 0.8rem; color: #94a3b8; }
-        @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }
+        .withdrawal-warning { color: #ef4444; font-size: 0.95rem; margin-top: 0.5rem; display: none; }
+        .balance-highlight { font-size: 2.4rem; font-weight: 800; color: #10b981; }
+        .message-time { font-size: 0.85rem; color: #94a3b8; }
     </style>
 </head>
 <body>
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileMenu()"></div>
+    <div class="mobile-nav" id="mobileNav">
+        <div class="mobile-nav-header">
+            <h3>🔷 NextGen</h3>
+            <i class="fas fa-times close-menu" onclick="closeMobileMenu()"></i>
+        </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('tasks')">
+            <i class="fas fa-tasks"></i>
+            <span>Available Tasks</span>
+        </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('submissions')">
+            <i class="fas fa-file-alt"></i>
+            <span>My Submissions</span>
+        </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('withdrawals')">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Withdrawals</span>
+        </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('messages')">
+            <i class="fas fa-envelope"></i>
+            <span>Messages</span>
+            <span id="mobileUnreadBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span>
+        </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('profile')">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </div>
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 2px solid #f1f5f9;">
+            <div class="mobile-nav-item" onclick="logout()" style="color: #ef4444;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </div>
+        </div>
+    </div>
+    
     <div class="app-container">
         <div class="header">
+            <div class="hamburger-menu" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
             <div class="logo">
                 <h2>🔷 NextGen Tasks</h2>
             </div>
@@ -394,6 +858,7 @@
         
         <div class="stats-grid" id="statsGrid"></div>
         
+        <!-- Desktop Tabs -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
@@ -448,11 +913,11 @@
         const db = firebase.firestore();
         
         // Fee constants
-        const TRANSACTION_FEE_PERCENT = 3; // 3%
-        const PLATFORM_FEE_PERCENT = 2; // 2%
-        const TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT; // 5%
+        const TRANSACTION_FEE_PERCENT = 3;
+        const PLATFORM_FEE_PERCENT = 2;
+        const TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT;
         
-        // Enable offline persistence with error handling
+        // Enable offline persistence
         db.enablePersistence()
             .then(() => console.log('Persistence enabled'))
             .catch((err) => {
@@ -467,6 +932,33 @@
         let currentUser = null;
         let userData = null;
         let messagesListener = null;
+        
+        // Mobile menu functions - FIXED
+        function toggleMobileMenu() {
+            const mobileNav = document.getElementById('mobileNav');
+            const overlay = document.getElementById('mobileNavOverlay');
+            mobileNav.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        function closeMobileMenu() {
+            document.getElementById('mobileNav').classList.remove('active');
+            document.getElementById('mobileNavOverlay').classList.remove('active');
+        }
+        
+        function handleMobileNavClick(tab) {
+            closeMobileMenu();
+            switchTab(tab);
+            
+            // Update active state in mobile menu
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and highlight the clicked item
+            const clickedItem = event.currentTarget;
+            clickedItem.classList.add('active');
+        }
         
         // Alert functions
         function showAlert(message, type = 'error') {
@@ -506,7 +998,6 @@
         
         // Logout function
         function logout() {
-            // Clean up listeners
             if (messagesListener) {
                 messagesListener();
             }
@@ -514,11 +1005,40 @@
             window.location.href = 'index.html';
         }
         
-        // Tab switching function
+        // Tab switching function - FIXED to handle both desktop and mobile
         function switchTab(tab) {
-            // Update active tab
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            // Update desktop tabs
+            const desktopTabs = document.querySelectorAll('.tab');
+            desktopTabs.forEach(t => t.classList.remove('active'));
+            
+            // Find and activate the correct desktop tab
+            for(let i = 0; i < desktopTabs.length; i++) {
+                const tabText = desktopTabs[i].textContent.toLowerCase();
+                if(tabText.includes(tab) || 
+                   (tab === 'tasks' && tabText.includes('available')) ||
+                   (tab === 'submissions' && tabText.includes('submissions')) ||
+                   (tab === 'withdrawals' && tabText.includes('withdrawals')) ||
+                   (tab === 'messages' && tabText.includes('messages')) ||
+                   (tab === 'profile' && tabText.includes('profile'))) {
+                    desktopTabs[i].classList.add('active');
+                    break;
+                }
+            }
+            
+            // Update mobile menu active state
+            const mobileItems = document.querySelectorAll('.mobile-nav-item');
+            mobileItems.forEach(item => {
+                item.classList.remove('active');
+                const itemText = item.querySelector('span')?.textContent.toLowerCase() || '';
+                if(itemText.includes(tab) || 
+                   (tab === 'tasks' && itemText.includes('available')) ||
+                   (tab === 'submissions' && itemText.includes('submissions')) ||
+                   (tab === 'withdrawals' && itemText.includes('withdrawals')) ||
+                   (tab === 'messages' && itemText.includes('messages')) ||
+                   (tab === 'profile' && itemText.includes('profile'))) {
+                    item.classList.add('active');
+                }
+            });
             
             // Load appropriate content
             switch(tab) {
@@ -537,6 +1057,8 @@
                 case 'profile':
                     loadProfile();
                     break;
+                default:
+                    loadTasks();
             }
         }
         
@@ -547,7 +1069,6 @@
                 return;
             }
             
-            // Check email verification (skip for Google users)
             const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
             if (!user.emailVerified && !isGoogle) {
                 window.location.href = 'index.html';
@@ -555,11 +1076,9 @@
             }
             
             try {
-                // Get user data
                 const doc = await db.collection('users').doc(user.uid).get();
                 
                 if (!doc.exists) {
-                    // Create user document if it doesn't exist
                     await db.collection('users').doc(user.uid).set({
                         email: user.email,
                         displayName: user.displayName || 'User',
@@ -575,14 +1094,12 @@
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
-                    // Fetch the newly created document
                     const newDoc = await db.collection('users').doc(user.uid).get();
                     userData = { id: user.uid, ...newDoc.data() };
                 } else {
                     userData = { id: user.uid, ...doc.data() };
                 }
                 
-                // Check if user is active
                 if (userData.active === false) {
                     await auth.signOut();
                     window.location.href = 'index.html';
@@ -591,17 +1108,11 @@
                 
                 currentUser = user;
                 
-                // Update UI
                 document.getElementById('userName').textContent = userData.displayName;
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
                 
-                // Set up real-time message counter
                 setupMessageCounter();
-                
-                // Load dashboard
                 loadDashboard();
-                
-                // Set up real-time listener for wallet updates
                 setupWalletListener();
                 
             } catch (error) {
@@ -619,19 +1130,26 @@
             messagesListener = db.collection('messages')
                 .where('userId', '==', currentUser.uid)
                 .where('read', '==', false)
-                .where('fromAdmin', '==', true) // Only count messages from admin
+                .where('fromAdmin', '==', true)
                 .onSnapshot((snapshot) => {
                     const unreadCount = snapshot.size;
                     const badge = document.getElementById('unreadMessagesBadge');
+                    const mobileBadge = document.getElementById('mobileUnreadBadge');
                     
                     if (unreadCount > 0) {
-                        badge.textContent = unreadCount;
-                        badge.style.display = 'inline';
+                        if (badge) {
+                            badge.textContent = unreadCount;
+                            badge.style.display = 'inline';
+                        }
+                        if (mobileBadge) {
+                            mobileBadge.textContent = unreadCount;
+                            mobileBadge.style.display = 'inline';
+                        }
                     } else {
-                        badge.style.display = 'none';
+                        if (badge) badge.style.display = 'none';
+                        if (mobileBadge) mobileBadge.style.display = 'none';
                     }
                     
-                    // Update user's unread count in database
                     db.collection('users').doc(currentUser.uid).update({
                         unreadMessages: unreadCount
                     }).catch(err => console.error('Error updating unread count:', err));
@@ -658,12 +1176,10 @@
         // Load Dashboard Stats
         async function loadDashboard() {
             try {
-                // Get fresh user data
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 userData.wallet = userDoc.data().wallet || 0;
                 userData.totalFeesPaid = userDoc.data().totalFeesPaid || 0;
                 
-                // Simple queries without orderBy to avoid index issues
                 const pendingSnapshot = await db.collection('submissions')
                     .where('userId', '==', currentUser.uid)
                     .where('status', '==', 'pending')
@@ -702,11 +1218,10 @@
                     </div>
                 `;
                 
-                // Update wallet display
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
                 
                 // Load tasks by default
-                loadTasks();
+                switchTab('tasks');
                 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
@@ -717,7 +1232,7 @@
                         <div class="stat-label">Balance</div>
                     </div>
                 `;
-                loadTasks();
+                switchTab('tasks');
             }
         }
         
@@ -726,10 +1241,9 @@
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
                 
-                // Get all tasks without orderBy to avoid index issues
                 const snapshot = await db.collection('tasks').get();
                 
-                let html = '<h3 style="margin-bottom:1.5rem;">Available Tasks</h3>';
+                let html = '<h3>Available Tasks</h3>';
                 
                 if (snapshot.empty) {
                     html += `
@@ -740,17 +1254,12 @@
                         </div>
                     `;
                 } else {
-                    // Convert to array for manual filtering and sorting
                     const tasks = [];
                     snapshot.forEach(doc => {
                         const taskData = doc.data();
-                        tasks.push({ 
-                            id: doc.id, 
-                            ...taskData 
-                        });
+                        tasks.push({ id: doc.id, ...taskData });
                     });
                     
-                    // Filter active tasks
                     const activeTasks = tasks.filter(task => task.active === true);
                     
                     if (activeTasks.length === 0) {
@@ -762,7 +1271,6 @@
                             </div>
                         `;
                     } else {
-                        // Sort by createdAt if available (newest first)
                         activeTasks.sort((a, b) => {
                             if (!a.createdAt) return 1;
                             if (!b.createdAt) return -1;
@@ -772,10 +1280,8 @@
                         html += '<div class="task-grid">';
                         
                         for (const task of activeTasks) {
-                            // Check if user has already submitted this task
                             const hasSubmitted = await hasUserSubmitted(task.id);
                             
-                            // Safely handle reward value
                             let rewardValue = 0;
                             if (task.reward) {
                                 rewardValue = parseFloat(task.reward);
@@ -790,7 +1296,7 @@
                             html += `
                                 <div class="task-card">
                                     <h4 class="task-title">${title}</h4>
-                                    <p style="color:#64748b; margin-bottom:1rem;">${description.substring(0, 60)}${description.length > 60 ? '...' : ''}</p>
+                                    <p style="color:#64748b; margin-bottom:1rem;">${description.substring(0, 80)}${description.length > 80 ? '...' : ''}</p>
                                     <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
                                         <span class="badge primary">${category}</span>
                                         <span class="badge warning">${difficulty}</span>
@@ -1019,13 +1525,13 @@
                 closeModal();
                 showAlert('Submission saved successfully!', 'success');
                 
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                loadSubmissions();
+                // Switch to submissions tab
+                switchTab('submissions');
                 
             } catch (error) {
                 console.error('Error saving submission:', error);
                 showAlert('Your work has been submitted successfully. It will be reviewed within 3 hours', 'success');
+                switchTab('submissions');
             }
         }
         
@@ -1038,10 +1544,10 @@
                     .where('userId', '==', currentUser.uid)
                     .get();
                 
-                let html = '<h3 style="margin-bottom:1.5rem;">My Submissions</h3>';
+                let html = '<h3>My Submissions</h3>';
                 
                 if (snapshot.empty) {
-                    html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p><p style="font-size:0.9rem; color:#94a3b8;">Complete some tasks to see them here!</p></div>';
+                    html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p><p style="font-size:0.95rem; color:#94a3b8;">Complete some tasks to see them here!</p></div>';
                 } else {
                     const submissions = [];
                     snapshot.forEach(doc => {
@@ -1068,8 +1574,8 @@
                                     <h4>${sub.taskTitle || 'Untitled Task'}</h4>
                                     <span class="badge ${statusClass}">${sub.status}</span>
                                 </div>
-                                <p style="color:#64748b; margin-bottom:0.5rem;">${sub.workText ? sub.workText.substring(0, 100) : 'No content'}</p>
-                                <div style="display:flex; gap:1rem; font-size:0.9rem; color:#64748b; flex-wrap:wrap;">
+                                <p style="color:#64748b; margin-bottom:0.5rem;">${sub.workText ? sub.workText.substring(0, 120) : 'No content'}</p>
+                                <div style="display:flex; gap:1rem; font-size:0.95rem; color:#64748b; flex-wrap:wrap;">
                                     <span><i class="far fa-calendar"></i> ${submittedDate}</span>
                                     ${sub.score ? `<span>Score: ${sub.score}%</span>` : ''}
                                     ${sub.earned ? `<span>Earned: $${sub.earned.toFixed(2)}</span>` : ''}
@@ -1113,7 +1619,7 @@
                             <h3 style="margin-bottom:1rem;">Premium Feature</h3>
                             <p style="color:#64748b; margin-bottom:2rem;">Withdrawals are only available for premium members.</p>
                             <button class="btn btn-success" onclick="showMembershipPayment()">Upgrade to Premium ($3/month)</button>
-                            <p style="margin-top:1rem; font-size:0.9rem;">Pay via <span class="lipwa-badge">Lipwa.com</span></p>
+                            <p style="margin-top:1rem; font-size:0.95rem;">Pay via <span class="lipwa-badge">Lipwa.com</span></p>
                         </div>
                     `;
                     return;
@@ -1126,7 +1632,7 @@
                     .get();
                 
                 let html = `
-                    <h3 style="margin-bottom:1.5rem;">Withdraw Funds</h3>
+                    <h3>Withdraw Funds</h3>
                     <div style="background:#f8fafc; border-radius:1.5rem; padding:1.5rem; margin-bottom:2rem;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                             <div style="font-size:1.2rem; font-weight:600;">Available Balance:</div>
@@ -1170,13 +1676,13 @@
                         
                         <button class="btn btn-primary" style="width:100%;" onclick="requestWithdrawal()" id="withdrawBtn">Request Withdrawal</button>
                         
-                        <p style="font-size:0.9rem; color:#64748b; margin-top:0.5rem;">
+                        <p style="font-size:0.95rem; color:#64748b; margin-top:0.5rem;">
                             <i class="fas fa-info-circle"></i> 
                             Minimum withdrawal: $5 | Fees: ${TRANSACTION_FEE_PERCENT}% transaction + ${PLATFORM_FEE_PERCENT}% platform
                         </p>
                         
                         ${userData.totalFeesPaid > 0 ? `
-                            <p style="font-size:0.9rem; color:#10b981; margin-top:0.5rem;">
+                            <p style="font-size:0.95rem; color:#10b981; margin-top:0.5rem;">
                                 <i class="fas fa-chart-line"></i> 
                                 Total fees paid to date: $${userData.totalFeesPaid.toFixed(2)}
                             </p>
@@ -1212,12 +1718,12 @@
                                     <span><strong>$${w.amount}</strong> via ${w.method}</span>
                                     <span class="badge ${w.status === 'paid' ? 'success' : w.status === 'rejected' ? 'danger' : 'warning'}">${w.status}</span>
                                 </div>
-                                <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:#64748b;">
+                                <div style="display:flex; justify-content:space-between; font-size:0.9rem; color:#64748b;">
                                     <span>Fees: $${(w.fees || 0).toFixed(2)} (${TRANSACTION_FEE_PERCENT}% + ${PLATFORM_FEE_PERCENT}%)</span>
                                     <span>Net: $${(w.netAmount || 0).toFixed(2)}</span>
                                 </div>
-                                <p style="color:#64748b; font-size:0.9rem;">${w.phone || 'No phone'} • ${requestedDate}</p>
-                                ${w.status === 'rejected' && w.rejectionReason ? `<p style="color:#ef4444; font-size:0.9rem;">Reason: ${w.rejectionReason}</p>` : ''}
+                                <p style="color:#64748b; font-size:0.95rem;">${w.phone || 'No phone'} • ${requestedDate}</p>
+                                ${w.status === 'rejected' && w.rejectionReason ? `<p style="color:#ef4444; font-size:0.95rem;">Reason: ${w.rejectionReason}</p>` : ''}
                             </div>
                         `;
                     });
@@ -1385,12 +1891,11 @@
             }
         }
         
-        // Load Messages - COMPLETELY REWRITTEN with reply functionality
+        // Load Messages
         async function loadMessages() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
                 
-                // Get all messages for this user
                 const snapshot = await db.collection('messages')
                     .where('userId', '==', currentUser.uid)
                     .get();
@@ -1416,20 +1921,17 @@
                         </div>
                     `;
                 } else {
-                    // Group messages by thread (using parentMessageId or id)
                     const messages = [];
                     snapshot.forEach(doc => {
                         messages.push({ id: doc.id, ...doc.data() });
                     });
                     
-                    // Sort by createdAt (newest first)
                     messages.sort((a, b) => {
                         if (!a.createdAt) return 1;
                         if (!b.createdAt) return -1;
                         return (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0);
                     });
                     
-                    // Group messages into threads
                     const threads = {};
                     messages.forEach(msg => {
                         const threadId = msg.parentMessageId || msg.id;
@@ -1446,19 +1948,16 @@
                             threads[threadId].unreadCount++;
                         }
                         
-                        // Sort messages within thread by date
                         threads[threadId].messages.sort((a, b) => {
                             if (!a.createdAt) return 1;
                             if (!b.createdAt) return -1;
                             return (a.createdAt.seconds || 0) - (b.createdAt.seconds || 0);
                         });
                         
-                        // Update last message
                         const lastMsg = threads[threadId].messages[threads[threadId].messages.length - 1];
                         threads[threadId].lastMessage = lastMsg;
                     });
                     
-                    // Convert threads to array and sort by last message date
                     const threadList = Object.values(threads);
                     threadList.sort((a, b) => {
                         const aDate = a.lastMessage.createdAt?.seconds || 0;
@@ -1489,12 +1988,10 @@
                             }
                         }
                         
-                        // Get subject from first message or last message
                         const firstMsg = thread.messages[0];
                         const subject = firstMsg.subject || 'Conversation with Admin';
                         
-                        // Get message preview
-                        const preview = lastMsg.message?.substring(0, 60) || 'No content';
+                        const preview = lastMsg.message?.substring(0, 70) || 'No content';
                         const messageCount = thread.messages.length;
                         
                         html += `
@@ -1506,14 +2003,14 @@
                                                 ${subject}
                                                 ${hasUnread ? `<span class="unread-badge">${thread.unreadCount} new</span>` : ''}
                                             </span>
-                                            <span style="font-size:0.85rem; color:#64748b;">
+                                            <span style="font-size:0.9rem; color:#64748b;">
                                                 <i class="far fa-clock"></i> ${msgDate}
                                             </span>
                                         </div>
                                         <div class="message-excerpt">
-                                            ${preview}${preview.length >= 60 ? '...' : ''}
+                                            ${preview}${preview.length >= 70 ? '...' : ''}
                                         </div>
-                                        <div style="display:flex; gap:1rem; margin-top:0.5rem; font-size:0.8rem; color:#64748b;">
+                                        <div style="display:flex; gap:1rem; margin-top:0.5rem; font-size:0.9rem; color:#64748b;">
                                             <span><i class="far fa-comment"></i> ${messageCount} message${messageCount !== 1 ? 's' : ''}</span>
                                             <span>
                                                 <i class="fas ${lastMsg.fromAdmin ? 'fa-user-shield' : 'fa-user'}"></i>
@@ -1567,7 +2064,7 @@
                     <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Cancel</button>
                 </div>
                 
-                <p style="font-size:0.85rem; color:#64748b; margin-top:1rem; text-align:center;">
+                <p style="font-size:0.9rem; color:#64748b; margin-top:1rem; text-align:center;">
                     <i class="fas fa-info-circle"></i> 
                     Messages are typically responded to within 24 hours.
                 </p>
@@ -1595,7 +2092,6 @@
             }
             
             try {
-                // Create the message
                 const messageData = {
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
@@ -1610,15 +2106,12 @@
                 
                 const docRef = await db.collection('messages').add(messageData);
                 
-                // Also create a thread reference
                 await db.collection('messages').doc(docRef.id).update({
-                    parentMessageId: docRef.id // Self-reference as parent for threading
+                    parentMessageId: docRef.id
                 });
                 
                 closeModal();
                 showAlert('Message sent successfully!', 'success');
-                
-                // Refresh messages
                 loadMessages();
                 
             } catch (error) {
@@ -1630,7 +2123,6 @@
         // View message thread
         async function viewMessageThread(threadId) {
             try {
-                // Get all messages in this thread
                 const snapshot = await db.collection('messages')
                     .where('parentMessageId', '==', threadId)
                     .orderBy('createdAt', 'asc')
@@ -1646,11 +2138,9 @@
                     messages.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Get thread subject from first message
                 const firstMessage = messages[0];
                 const subject = firstMessage.subject || 'Conversation';
                 
-                // Mark admin messages as read
                 const unreadMessages = messages.filter(m => m.fromAdmin && !m.read);
                 for (const msg of unreadMessages) {
                     await db.collection('messages').doc(msg.id).update({
@@ -1659,7 +2149,6 @@
                     });
                 }
                 
-                // Build thread HTML
                 let threadHtml = `
                     <h3 style="margin-bottom:1rem; color:#10b981;">${subject}</h3>
                     <div class="message-thread" id="messageThread">
@@ -1710,7 +2199,6 @@
                 
                 showModal(threadHtml);
                 
-                // Scroll to bottom of thread
                 setTimeout(() => {
                     const thread = document.getElementById('messageThread');
                     if (thread) {
@@ -1739,7 +2227,6 @@
             }
             
             try {
-                // Get the first message to get subject
                 const firstMsgSnapshot = await db.collection('messages')
                     .where('parentMessageId', '==', threadId)
                     .orderBy('createdAt', 'asc')
@@ -1748,7 +2235,6 @@
                 
                 const firstMsg = firstMsgSnapshot.docs[0]?.data();
                 
-                // Create reply
                 await db.collection('messages').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
@@ -1762,7 +2248,6 @@
                     status: 'sent'
                 });
                 
-                // Refresh the thread
                 closeModal();
                 viewMessageThread(threadId);
                 showAlert('Reply sent successfully!', 'success');
@@ -1779,18 +2264,18 @@
                 new Date(userData.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
             
             document.getElementById('content').innerHTML = `
-                <h3 style="margin-bottom:1.5rem;">Profile Settings</h3>
+                <h3>Profile Settings</h3>
                 <div style="background:#f8fafc; border-radius:1.5rem; padding:1.5rem;">
                     <input type="text" id="profileName" value="${userData.displayName || ''}" placeholder="Display Name">
                     <input type="tel" id="profilePhone" value="${userData.phone || ''}" placeholder="Phone Number">
                     <button class="btn btn-primary" style="width:100%;" onclick="updateProfile()">Update Profile</button>
                 </div>
-                <div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:1rem;">
-                    <p><strong>Email:</strong> ${userData.email}</p>
-                    <p><strong>Member since:</strong> ${joinDate}</p>
-                    <p><strong>Wallet Balance:</strong> $${(userData.wallet || 0).toFixed(2)}</p>
-                    <p><strong>Total Fees Paid:</strong> $${(userData.totalFeesPaid || 0).toFixed(2)}</p>
-                    <p><strong>Membership:</strong> 
+                <div style="margin-top:1.5rem; padding:1.5rem; background:#f8fafc; border-radius:1rem;">
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Email:</strong> ${userData.email}</p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Member since:</strong> ${joinDate}</p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Wallet Balance:</strong> $${(userData.wallet || 0).toFixed(2)}</p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Fees Paid:</strong> $${(userData.totalFeesPaid || 0).toFixed(2)}</p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Membership:</strong> 
                         <span class="${userData.membershipPaid ? 'premium-badge' : 'badge warning'}">
                             ${userData.membershipPaid ? 'Premium' : 'Free'}
                         </span>
