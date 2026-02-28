@@ -49,7 +49,7 @@
         .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }  
         .modal-backdrop.active { display: block; }  
         
-        /* New Alert Modal Styles */
+        /* Alert Modal Styles */
         .alert-modal {
             display: none;
             position: fixed;
@@ -541,10 +541,18 @@
         const auth = firebase.auth();  
         const db = firebase.firestore();  
         
+        // Membership constants
+        const MEMBERSHIP_TYPES = {
+            BASIC: 'basic',
+            PREMIUM: 'premium',
+            ELITE: 'elite'
+        };
+        
         // Referral constants  
         const REFERRAL_BONUS_REFERRER = 2; // $2 for referrer  
         const REFERRAL_BONUS_REFERRED = 0.5; // $0.5 for referred  
-          
+        const ELITE_BONUS = 10; // $10 welcome bonus for Elite
+        
         let currentUser = null;  
         let currentTab = 'users';  
         let currentMessageType = 'individual'; // 'individual' or 'broadcast'  
@@ -1333,33 +1341,154 @@
             document.getElementById('content').innerHTML = html;  
         }  
           
-        // Approve Membership  
-        async function approveMembership(userId, paymentId) {  
-            await db.collection('users').doc(userId).update({  
-                membershipPaid: true,  
-                membershipStatus: 'approved'  
-            });  
-              
-            await db.collection('membershipPayments').doc(paymentId).update({  
-                status: 'approved'  
-            });  
-              
-            showAlert('Membership approved', 'success');  
-            loadMemberships();  
-        }  
+        // UPDATED: Approve Membership with full benefits
+        async function approveMembership(userId, paymentId) {
+            try {
+                // 1. Get payment details to know which membership was purchased
+                const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
+                if (!paymentDoc.exists) {
+                    showAlert('Payment record not found', 'error');
+                    return;
+                }
+                const payment = paymentDoc.data();
+                const membershipType = payment.membershipType || 'premium'; // Default to premium if not specified
+
+                // 2. Prepare user update data
+                const userUpdate = {
+                    membershipType: membershipType,
+                    membershipPaid: true,
+                    membershipStatus: 'active',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // 3. Apply membership-specific benefits
+                if (membershipType === MEMBERSHIP_TYPES.ELITE) {
+                    // Add $10 welcome bonus
+                    userUpdate.wallet = firebase.firestore.FieldValue.increment(ELITE_BONUS);
+                    userUpdate.eliteBonusApplied = true;
+                }
+
+                if (membershipType === MEMBERSHIP_TYPES.PREMIUM) {
+                    // Set expiry 1 year from now
+                    const expiryDate = new Date();
+                    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                    userUpdate.membershipExpiry = expiryDate;
+                }
+
+                // 4. Update user document
+                await db.collection('users').doc(userId).update(userUpdate);
+
+                // 5. Mark payment as approved
+                await db.collection('membershipPayments').doc(paymentId).update({
+                    status: 'approved',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 6. Process referral bonuses if the user was referred and upgraded to premium
+                const userDoc = await db.collection('users').doc(userId).get();
+                const userData = userDoc.data();
+                
+                if (userData.referredBy && membershipType === MEMBERSHIP_TYPES.PREMIUM) {
+                    const referrerId = userData.referredBy;
+                    
+                    // Check if bonuses already given to prevent duplicates
+                    const existingBonus = await db.collection('referralBonuses')
+                        .where('referredId', '==', userId)
+                        .where('type', '==', 'referrer')
+                        .get();
+                    
+                    if (existingBonus.empty) {
+                        await db.runTransaction(async (transaction) => {
+                            // Credit referrer
+                            const referrerRef = db.collection('users').doc(referrerId);
+                            const referrerSnap = await transaction.get(referrerRef);
+                            
+                            transaction.update(referrerRef, {
+                                wallet: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRER),
+                                referralEarnings: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRER),
+                                totalReferrals: firebase.firestore.FieldValue.increment(1)
+                            });
+
+                            // Credit referred user
+                            const referredRef = db.collection('users').doc(userId);
+                            transaction.update(referredRef, {
+                                wallet: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED),
+                                referralEarnings: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED)
+                            });
+
+                            // Record bonuses
+                            const bonus1Ref = db.collection('referralBonuses').doc();
+                            transaction.set(bonus1Ref, {
+                                referrerId: referrerId,
+                                referredId: userId,
+                                referredEmail: userData.email,
+                                amount: REFERRAL_BONUS_REFERRER,
+                                type: 'referrer',
+                                creditedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                creditedBy: currentUser.email
+                            });
+
+                            const bonus2Ref = db.collection('referralBonuses').doc();
+                            transaction.set(bonus2Ref, {
+                                referrerId: referrerId,
+                                referredId: userId,
+                                referredEmail: userData.email,
+                                amount: REFERRAL_BONUS_REFERRED,
+                                type: 'referred',
+                                creditedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                creditedBy: currentUser.email
+                            });
+
+                            // Update referral status
+                            const referralQuery = await db.collection('referrals')
+                                .where('referrerId', '==', referrerId)
+                                .where('referredId', '==', userId)
+                                .get();
+                            
+                            if (!referralQuery.empty) {
+                                const referralRef = referralQuery.docs[0].ref;
+                                transaction.update(referralRef, {
+                                    status: 'completed',
+                                    completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                            }
+                        });
+                    }
+                }
+
+                showAlert(`Membership upgraded to ${membershipType.toUpperCase()}!`, 'success');
+                loadMemberships(); // Refresh the pending list
+
+            } catch (error) {
+                console.error('Error approving membership:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
           
         // Reject Membership  
-        async function rejectMembership(userId, paymentId) {  
-            await db.collection('users').doc(userId).update({  
-                membershipStatus: 'rejected'  
-            });  
-              
-            await db.collection('membershipPayments').doc(paymentId).update({  
-                status: 'rejected'  
-            });  
-              
-            showAlert('Membership rejected', 'info');  
-            loadMemberships();  
+        async function rejectMembership(userId, paymentId) {
+            try {
+                // Get payment details to know what was rejected
+                const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
+                const payment = paymentDoc.data();
+                
+                await db.collection('users').doc(userId).update({  
+                    membershipStatus: 'rejected',
+                    membershipRejectionReason: 'Payment verification failed',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });  
+                  
+                await db.collection('membershipPayments').doc(paymentId).update({  
+                    status: 'rejected',
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });  
+                  
+                showAlert(`Membership ${payment.membershipType} rejected`, 'info');  
+                loadMemberships();  
+            } catch (error) {
+                console.error('Error rejecting membership:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
         }  
 
         // Initialize referral collections if they don't exist
