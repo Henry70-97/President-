@@ -31,7 +31,7 @@
             padding: 1rem; 
         }
         
-        /* Header with Hamburger */
+        /* Header */
         .header { 
             background: white; 
             border-radius: 2rem; 
@@ -219,7 +219,7 @@
             letter-spacing: 0.5px;
         }
         
-        /* Tabs - Hidden on mobile */
+        /* Tabs */
         .tabs { 
             display: flex; 
             gap: 0.5rem; 
@@ -258,7 +258,7 @@
             gap: 1.8rem; 
         }
         
-        /* Regular Task Cards (not PDF style) */
+        /* Regular Task Cards */
         .task-card:nth-child(odd) { 
             background: #f8fafc; 
             border-left: 4px solid #6366f1;
@@ -338,15 +338,9 @@
         }
         
         @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.7;
-            }
-            100% {
-                opacity: 1;
-            }
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
         }
         
         .deadline-badge i {
@@ -470,29 +464,387 @@
             box-shadow: none;
         }
         
-        /* Typography */
-        h3 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: -0.5px;
+        /* Membership Packages */
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .package-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .package-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .package-card.basic {
+            border-color: #94a3b8;
+        }
+        
+        .package-card.premium {
+            border-color: #6366f1;
+            background: linear-gradient(145deg, #ffffff, #f5f3ff);
+        }
+        
+        .package-card.elite {
+            border-color: #f59e0b;
+            background: linear-gradient(145deg, #ffffff, #fffbeb);
+        }
+        
+        .package-badge {
+            position: absolute;
+            top: 1rem;
+            right: -2rem;
+            background: #10b981;
+            color: white;
+            padding: 0.3rem 3rem;
+            transform: rotate(45deg);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .package-badge.popular {
+            background: #6366f1;
+        }
+        
+        .package-badge.best-value {
+            background: #f59e0b;
+        }
+        
+        .package-header {
+            text-align: center;
             margin-bottom: 1.5rem;
         }
         
-        h4 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 0.8rem;
+        .package-name {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
         }
         
-        p {
-            font-size: 1rem;
-            line-height: 1.6;
+        .package-card.basic .package-name {
+            color: #475569;
+        }
+        
+        .package-card.premium .package-name {
+            color: #6366f1;
+        }
+        
+        .package-card.elite .package-name {
+            color: #f59e0b;
+        }
+        
+        .package-price {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        
+        .package-price small {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #64748b;
+        }
+        
+        .package-features {
+            list-style: none;
+            margin: 1.5rem 0;
+            padding: 0;
+        }
+        
+        .package-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f1f5f9;
             color: #334155;
         }
         
-        /* Modal Styles - PDF Style Modal */
+        .package-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .package-features i {
+            width: 20px;
+        }
+        
+        .package-features .fa-check-circle {
+            color: #10b981;
+        }
+        
+        .package-features .fa-times-circle {
+            color: #ef4444;
+        }
+        
+        .package-features .fa-star {
+            color: #f59e0b;
+        }
+        
+        .package-features .fa-gem {
+            color: #6366f1;
+        }
+        
+        .package-features .fa-gift {
+            color: #10b981;
+        }
+        
+        .package-features .fa-trophy {
+            color: #f59e0b;
+        }
+        
+        .package-features .fa-percent {
+            color: #6366f1;
+        }
+        
+        .package-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        
+        .package-btn.basic {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        
+        .package-btn.basic:hover {
+            background: #cbd5e1;
+        }
+        
+        .package-btn.premium {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .package-btn.premium:hover {
+            background: #4f52e0;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .package-btn.elite {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .package-btn.elite:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+        }
+        
+        .package-btn.current {
+            background: #10b981;
+            color: white;
+            cursor: default;
+        }
+        
+        .package-btn.current:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .text-success {
+            color: #10b981;
+        }
+        
+        /* Current membership badge */
+        .current-membership {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .current-membership-info h4 {
+            color: #10b981;
+            margin-bottom: 0.3rem;
+        }
+        
+        .current-membership-info p {
+            color: #334155;
+        }
+        
+        .current-membership-badge {
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+        }
+        
+        /* Withdrawal section */
+        .withdrawal-section {
+            background: #f8fafc;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+        
+        .withdrawal-section.disabled {
+            opacity: 0.6;
+        }
+        
+        .withdrawal-section.disabled::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.5);
+            border-radius: 1.5rem;
+            z-index: 1;
+        }
+        
+        .withdrawal-section.disabled .withdrawal-content {
+            filter: blur(1px);
+            pointer-events: none;
+        }
+        
+        .withdrawal-lock-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #ef4444;
+            font-weight: 600;
+        }
+        
+        /* Fee breakdown */
+        .fee-breakdown {
+            background: #f1f5f9;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .fee-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.3rem 0;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+        
+        .fee-row.total {
+            border-bottom: none;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 2px solid #94a3b8;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .fee-label {
+            color: #475569;
+        }
+        
+        .fee-value {
+            font-weight: 600;
+        }
+        
+        .fee-value.positive {
+            color: #10b981;
+        }
+        
+        .fee-value.negative {
+            color: #ef4444;
+        }
+        
+        .info-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .withdrawal-warning {
+            color: #ef4444;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        
+        .balance-highlight {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #10b981;
+        }
+        
+        /* Submission cards */
+        .submission-card { 
+            background: #f8fafc; 
+            border-radius: 1rem; 
+            padding: 1rem; 
+            margin-bottom: 1rem; 
+            border: 1px solid #e2e8f0; 
+        }
+        
+        /* Empty state */
+        .empty-state { 
+            text-align: center; 
+            padding: 3rem; 
+            color: #64748b; 
+        }
+        
+        .empty-state i { 
+            font-size: 4rem; 
+            color: #cbd5e1; 
+            margin-bottom: 1rem; 
+        }
+        
+        /* Loading */
+        .loading { 
+            text-align: center; 
+            padding: 3rem; 
+            color: #64748b; 
+        }
+        
+        .loading i { 
+            font-size: 3rem; 
+            margin-bottom: 1rem; 
+            color: #6366f1; 
+        }
+        
+        /* Modal */
         .modal { 
             display: none; 
             position: fixed; 
@@ -500,9 +852,9 @@
             left: 50%; 
             transform: translate(-50%, -50%); 
             background: white; 
-            border-radius: 0.5rem; 
+            border-radius: 1rem; 
             padding: 0;
-            max-width: 700px; 
+            max-width: 500px; 
             width: 95%; 
             z-index: 1000; 
             max-height: 90vh; 
@@ -528,7 +880,11 @@
             display: block; 
         }
         
-        /* PDF-style Document inside Modal */
+        .modal-content {
+            padding: 2rem;
+        }
+        
+        /* PDF Document Styles */
         .pdf-document {
             background: white;
             font-family: 'Inter', sans-serif;
@@ -771,7 +1127,7 @@
             background: #e2e8f0;
         }
         
-        /* Alert Dialog Styles */
+        /* Alert Dialog */
         .alert-dialog {
             position: fixed;
             top: 50%;
@@ -849,7 +1205,227 @@
             display: block;
         }
         
-        /* Responsive Design */
+        /* Message thread */
+        .message-thread {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .message-bubble {
+            max-width: 80%;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 0.3rem;
+            position: relative;
+        }
+        
+        .message-bubble.user {
+            background: #6366f1;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message-bubble.admin {
+            background: #e2e8f0;
+            color: #0f172a;
+            margin-right: auto;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message-time {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        .message-content {
+            word-wrap: break-word;
+        }
+        
+        .message-status {
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            text-align: right;
+        }
+        
+        .message-status.read {
+            color: #10b981;
+        }
+        
+        .message-status.unread {
+            color: #f59e0b;
+        }
+        
+        .unread-badge {
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        
+        .compose-area {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .message-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.3rem;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message-input:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+        
+        .message-card {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .message-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .message-card.unread {
+            background: #6366f110;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .message-preview {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .message-subject {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .message-subject.unread {
+            color: #6366f1;
+        }
+        
+        .message-excerpt {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-top: 0.3rem;
+        }
+        
+        /* Inputs */
+        input, textarea, select { 
+            width: 100%; 
+            padding: 1rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 40px; 
+            margin-bottom: 1rem; 
+            font-size: 1rem; 
+        }
+        
+        textarea { 
+            border-radius: 20px; 
+            min-height: 100px; 
+        }
+        
+        .submit-textbox { 
+            width: 100%; 
+            padding: 1.5rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 0.3rem;
+            margin-bottom: 1rem; 
+            font-size: 1.1rem; 
+            min-height: 200px; 
+            resize: vertical;
+            background: #f8fafc;
+        }
+        
+        .submit-textbox:focus {
+            border-color: #10b981;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        
+        /* Typography */
+        h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+            margin-bottom: 1.5rem;
+        }
+        
+        h4 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.8rem;
+        }
+        
+        p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #334155;
+        }
+        
+        /* Task detail items */
+        .task-detail-item { 
+            margin-bottom: 1rem; 
+            padding: 0.8rem; 
+            background: #f8fafc; 
+            border-radius: 0.3rem; 
+        }
+        
+        .task-detail-label { 
+            font-weight: 700; 
+            color: #475569; 
+            margin-bottom: 0.25rem; 
+        }
+        
+        .task-detail-value { 
+            color: #0f172a; 
+            font-size: 1rem; 
+        }
+        
+        /* Premium badge */
+        .premium-badge { 
+            background: linear-gradient(135deg, #f59e0b, #fbbf24); 
+            color: white; 
+            padding: 0.4rem 1.2rem; 
+            border-radius: 40px; 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+        }
+        
+        .lipwa-badge { 
+            background: #8b5cf6; 
+            color: white; 
+            padding: 0.4rem 1.2rem; 
+            border-radius: 40px; 
+            font-size: 0.9rem; 
+            font-weight: 700; 
+            display: inline-block; 
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) { 
             .tabs {
                 display: none;
@@ -859,63 +1435,14 @@
                 display: block;
             }
             
-            .header { 
-                padding: 1rem; 
-            }
-            
-            .logo h2 {
-                font-size: 1.5rem;
-            }
-            
-            .wallet-badge {
-                padding: 0.4rem 1rem;
-                font-size: 1rem;
-            }
-            
-            #userName {
-                font-size: 1rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-            
-            .stat-card {
-                padding: 1.2rem;
-            }
-            
-            .stat-value {
-                font-size: 1.8rem;
-            }
-            
-            .stat-label {
-                font-size: 0.9rem;
-            }
-            
-            .content {
-                padding: 1.5rem;
-            }
-            
-            h3 {
-                font-size: 1.5rem;
-            }
-            
-            .task-grid {
+            .packages-grid {
                 grid-template-columns: 1fr;
             }
             
-            .task-title {
-                font-size: 1.3rem;
-            }
-            
-            .task-amount {
-                font-size: 1.4rem;
-            }
-            
-            .btn {
-                padding: 0.8rem 1.2rem;
-                font-size: 0.95rem;
+            .current-membership {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
             }
             
             .pdf-header {
@@ -951,223 +1478,18 @@
         }
         
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
             .user-menu {
                 gap: 0.5rem;
-            }
-            
-            .wallet-badge {
-                padding: 0.3rem 0.8rem;
-                font-size: 0.9rem;
             }
             
             #userName {
                 display: none;
             }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
-        
-        /* Keep all other existing styles */
-        .submit-textbox { 
-            width: 100%; 
-            padding: 1.5rem; 
-            border: 2px solid #e2e8f0; 
-            border-radius: 0.3rem;
-            margin-bottom: 1rem; 
-            font-size: 1.1rem; 
-            min-height: 200px; 
-            resize: vertical;
-            background: #f8fafc;
-        }
-        .submit-textbox:focus {
-            border-color: #10b981;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-        }
-        
-        .fee-breakdown {
-            background: #f1f5f9;
-            border-radius: 0.3rem;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-left: 4px solid #6366f1;
-        }
-        .fee-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            padding: 0.3rem 0;
-            border-bottom: 1px dashed #cbd5e1;
-        }
-        .fee-row.total {
-            border-bottom: none;
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
-            border-top: 2px solid #94a3b8;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        .fee-label {
-            color: #475569;
-        }
-        .fee-value {
-            font-weight: 600;
-        }
-        .fee-value.positive {
-            color: #10b981;
-        }
-        .fee-value.negative {
-            color: #ef4444;
-        }
-        .info-text {
-            font-size: 0.9rem;
-            color: #64748b;
-            margin-top: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        
-        .message-thread {
-            max-height: 500px;
-            overflow-y: auto;
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 0.3rem;
-            margin-bottom: 1rem;
-        }
-        .message-bubble {
-            max-width: 80%;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            border-radius: 0.3rem;
-            position: relative;
-        }
-        .message-bubble.user {
-            background: #6366f1;
-            color: white;
-            margin-left: auto;
-        }
-        .message-bubble.admin {
-            background: #e2e8f0;
-            color: #0f172a;
-            margin-right: auto;
-        }
-        .message-bubble.system {
-            background: #f1f5f9;
-            color: #64748b;
-            margin: 0 auto;
-            text-align: center;
-            font-style: italic;
-            max-width: 100%;
-        }
-        .message-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-        .message-header.user {
-            color: rgba(255,255,255,0.8);
-        }
-        .message-header.admin {
-            color: #64748b;
-        }
-        .message-content {
-            word-wrap: break-word;
-        }
-        .message-time {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-        .message-status {
-            font-size: 0.8rem;
-            margin-top: 0.3rem;
-            text-align: right;
-        }
-        .message-status i {
-            margin-left: 0.2rem;
-        }
-        .message-status.read {
-            color: #10b981;
-        }
-        .message-status.unread {
-            color: #f59e0b;
-        }
-        .unread-badge {
-            background: #ef4444;
-            color: white;
-            border-radius: 50%;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.8rem;
-            margin-left: 0.5rem;
-        }
-        .compose-area {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 2px solid #e2e8f0;
-        }
-        .message-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 0.3rem;
-            font-size: 1rem;
-            resize: vertical;
-            min-height: 80px;
-            margin-bottom: 0.5rem;
-        }
-        .message-input:focus {
-            border-color: #6366f1;
-            outline: none;
-        }
-        .message-card {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .message-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .message-card.unread {
-            background: #6366f110;
-            border-left: 4px solid #6366f1;
-        }
-        .message-preview {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .message-subject {
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        .message-subject.unread {
-            color: #6366f1;
-        }
-        .message-excerpt {
-            color: #64748b;
-            font-size: 0.95rem;
-            margin-top: 0.3rem;
-        }
-        
-        textarea { border-radius: 0.3rem; min-height: 100px; }
-        .flex-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-        .premium-badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-size: 0.9rem; font-weight: 700; }
-        .loading { text-align: center; padding: 3rem; color: #64748b; }
-        .loading i { font-size: 3rem; margin-bottom: 1rem; color: #6366f1; }
-        .lipwa-badge { background: #8b5cf6; color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-size: 0.9rem; font-weight: 700; display: inline-block; }
-        .empty-state { text-align: center; padding: 3rem; color: #64748b; }
-        .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
-        .debug-info { font-size: 0.9rem; color: #94a3b8; margin-top: 0.5rem; }
-        .task-detail-item { margin-bottom: 1rem; padding: 0.8rem; background: #f8fafc; border-radius: 0.3rem; }
-        .task-detail-label { font-weight: 700; color: #475569; margin-bottom: 0.25rem; }
-        .task-detail-value { color: #0f172a; font-size: 1rem; }
-        .disabled-btn { background: #94a3b8; cursor: not-allowed; opacity: 0.6; }
-        .withdrawal-warning { color: #ef4444; font-size: 0.95rem; margin-top: 0.5rem; display: none; }
-        .balance-highlight { font-size: 2.4rem; font-weight: 800; color: #10b981; }
-        .message-time { font-size: 0.85rem; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -1280,6 +1602,27 @@
         const PLATFORM_FEE_PERCENT = 2;
         const TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT;
         
+        // Membership constants
+        const MEMBERSHIP_TYPES = {
+            BASIC: 'basic',
+            PREMIUM: 'premium',
+            ELITE: 'elite'
+        };
+        
+        const MEMBERSHIP_PRICES = {
+            [MEMBERSHIP_TYPES.BASIC]: 0,
+            [MEMBERSHIP_TYPES.PREMIUM]: 3,
+            [MEMBERSHIP_TYPES.ELITE]: 6
+        };
+        
+        const MEMBERSHIP_DURATIONS = {
+            [MEMBERSHIP_TYPES.BASIC]: 'lifetime',
+            [MEMBERSHIP_TYPES.PREMIUM]: 'annual',
+            [MEMBERSHIP_TYPES.ELITE]: 'lifetime'
+        };
+        
+        const ELITE_BONUS = 10;
+        
         // Enable offline persistence
         db.enablePersistence()
             .then(() => console.log('Persistence enabled'))
@@ -1313,12 +1656,10 @@
             closeMobileMenu();
             switchTab(tab);
             
-            // Update active state in mobile menu
             document.querySelectorAll('.mobile-nav-item').forEach(item => {
                 item.classList.remove('active');
             });
             
-            // Find and highlight the clicked item
             const clickedItem = event.currentTarget;
             clickedItem.classList.add('active');
         }
@@ -1370,11 +1711,9 @@
         
         // Tab switching function
         function switchTab(tab) {
-            // Update desktop tabs
             const desktopTabs = document.querySelectorAll('.tab');
             desktopTabs.forEach(t => t.classList.remove('active'));
             
-            // Find and activate the correct desktop tab
             for(let i = 0; i < desktopTabs.length; i++) {
                 const tabText = desktopTabs[i].textContent.toLowerCase();
                 if(tabText.includes(tab) || 
@@ -1388,7 +1727,6 @@
                 }
             }
             
-            // Update mobile menu active state
             const mobileItems = document.querySelectorAll('.mobile-nav-item');
             mobileItems.forEach(item => {
                 item.classList.remove('active');
@@ -1403,7 +1741,6 @@
                 }
             });
             
-            // Load appropriate content
             switch(tab) {
                 case 'tasks':
                     loadTasks();
@@ -1428,7 +1765,6 @@
         // Helper function to check if deadline has passed
         function isDeadlinePassed(deadline) {
             if (!deadline) return false;
-            
             const now = new Date();
             const deadlineDate = deadline.toDate ? deadline.toDate() : new Date(deadline);
             return now > deadlineDate;
@@ -1437,7 +1773,6 @@
         // Helper function to format deadline
         function formatDeadline(deadline) {
             if (!deadline) return 'No deadline';
-            
             const date = deadline.toDate ? deadline.toDate() : new Date(deadline);
             const now = new Date();
             const diffTime = date - now;
@@ -1460,7 +1795,6 @@
         // Helper function to get deadline class
         function getDeadlineClass(deadline) {
             if (!deadline) return '';
-            
             const date = deadline.toDate ? deadline.toDate() : new Date(deadline);
             const now = new Date();
             const diffTime = date - now;
@@ -1500,8 +1834,10 @@
                         wallet: 0,
                         active: true,
                         verified: user.emailVerified || isGoogle,
+                        membershipType: MEMBERSHIP_TYPES.BASIC,
                         membershipPaid: false,
-                        membershipStatus: 'pending',
+                        membershipStatus: 'active',
+                        membershipExpiry: null,
                         totalFeesPaid: 0,
                         unreadMessages: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1511,6 +1847,15 @@
                     userData = { id: user.uid, ...newDoc.data() };
                 } else {
                     userData = { id: user.uid, ...doc.data() };
+                    
+                    // Apply elite bonus if applicable and not already applied
+                    if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
+                        await db.collection('users').doc(user.uid).update({
+                            wallet: firebase.firestore.FieldValue.increment(ELITE_BONUS),
+                            eliteBonusApplied: true
+                        });
+                        userData.wallet = (userData.wallet || 0) + ELITE_BONUS;
+                    }
                 }
                 
                 if (userData.active === false) {
@@ -1592,6 +1937,7 @@
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 userData.wallet = userDoc.data().wallet || 0;
                 userData.totalFeesPaid = userDoc.data().totalFeesPaid || 0;
+                userData.membershipType = userDoc.data().membershipType || MEMBERSHIP_TYPES.BASIC;
                 
                 const pendingSnapshot = await db.collection('submissions')
                     .where('userId', '==', currentUser.uid)
@@ -1632,8 +1978,6 @@
                 `;
                 
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
-                
-                // Load tasks by default
                 switchTab('tasks');
                 
             } catch (error) {
@@ -1649,7 +1993,7 @@
             }
         }
         
-        // Load Tasks - Regular cards (not PDF style)
+        // Load Tasks
         async function loadTasks() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
@@ -1673,7 +2017,6 @@
                         tasks.push({ id: doc.id, ...taskData });
                     });
                     
-                    // Filter active tasks
                     const activeTasks = tasks.filter(task => task.active === true);
                     
                     if (activeTasks.length === 0) {
@@ -1685,7 +2028,6 @@
                             </div>
                         `;
                     } else {
-                        // Sort by createdAt (newest first)
                         activeTasks.sort((a, b) => {
                             if (!a.createdAt) return 1;
                             if (!b.createdAt) return -1;
@@ -1695,14 +2037,9 @@
                         html += '<div class="task-grid">';
                         
                         for (const task of activeTasks) {
-                            // Check if user has already submitted this task
                             const hasSubmitted = await hasUserSubmitted(task.id);
-                            
-                            // Check if deadline has passed
                             const deadlinePassed = isDeadlinePassed(task.deadline);
-                            const canSubmit = !hasSubmitted && !deadlinePassed;
                             
-                            // Safely handle reward value
                             let rewardValue = 0;
                             if (task.reward) {
                                 rewardValue = parseFloat(task.reward);
@@ -1715,7 +2052,6 @@
                             const difficulty = task.difficulty || 'medium';
                             const clientName = task.clientName || 'NextGen Admin';
                             
-                            // Format deadline
                             const deadlineText = formatDeadline(task.deadline);
                             const deadlineClass = getDeadlineClass(task.deadline);
                             
@@ -1804,7 +2140,6 @@
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 const task = taskDoc.data();
                 
-                // Check if deadline has passed
                 const deadlinePassed = isDeadlinePassed(task.deadline);
                 
                 if (deadlinePassed) {
@@ -1816,11 +2151,11 @@
                 
                 if (hasSubmitted) {
                     showModal(`
-                        <div style="text-align: center; padding: 2rem;">
-                            <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;"></i>
-                            <h3 style="margin-bottom:1rem; color:#ef4444;">Already Submitted</h3>
-                            <p style="margin-bottom:1.5rem;">You have already submitted work for this task. Each task can only be submitted once.</p>
-                            <p>If you need to update your submission, please contact support.</p>
+                        <div class="modal-content">
+                            <i class="fas fa-exclamation-circle" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem; display: block; text-align: center;"></i>
+                            <h3 style="margin-bottom:1rem; color:#ef4444; text-align: center;">Already Submitted</h3>
+                            <p style="margin-bottom:1.5rem; text-align: center;">You have already submitted work for this task. Each task can only be submitted once.</p>
+                            <p style="margin-bottom:1.5rem; text-align: center;">If you need to update your submission, please contact support.</p>
                             <div style="display:flex; gap:1rem; margin-top:1.5rem; justify-content: center;">
                                 <button class="btn btn-primary" onclick="closeModal()">Close</button>
                                 <button class="btn btn-secondary" onclick="loadSubmissions()">View My Submissions</button>
@@ -1830,7 +2165,6 @@
                     return;
                 }
                 
-                // Format deadline for display
                 let deadlineInfo = '';
                 if (task.deadline) {
                     const deadlineDate = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
@@ -1844,7 +2178,7 @@
                 }
                 
                 showModal(`
-                    <div style="padding: 2rem;">
+                    <div class="modal-content">
                         <div style="border-bottom: 2px solid #10b981; padding-bottom: 1rem; margin-bottom: 1.5rem;">
                             <h3 style="color:#10b981; margin-bottom:0.3rem;">Submit Work</h3>
                             <p style="color:#64748b; font-size:0.9rem;">${task.title || 'Task'}</p>
@@ -1877,7 +2211,7 @@
             }
         }
         
-        // View Task Details - PDF Style in Modal
+        // View Task Details
         async function viewTaskDetails(taskId) {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -1900,7 +2234,6 @@
                     createdDate = new Date(task.createdAt.seconds * 1000).toLocaleDateString();
                 }
                 
-                // Format deadline
                 let deadlineDisplay = 'No deadline';
                 let deadlineClass = '';
                 if (task.deadline) {
@@ -1919,7 +2252,6 @@
                 
                 const pdfHtml = `
                     <div class="pdf-document">
-                        <!-- PDF Header -->
                         <div class="pdf-header">
                             <div class="pdf-header-left">
                                 <i class="fas fa-file-pdf"></i>
@@ -1931,11 +2263,9 @@
                             <span class="pdf-badge">TASK #${taskId.substring(0, 8)}</span>
                         </div>
                         
-                        <!-- PDF Content -->
                         <div class="pdf-content">
                             <div class="pdf-title">${title}</div>
                             
-                            <!-- Info Grid -->
                             <div class="pdf-grid">
                                 <div class="pdf-grid-item">
                                     <span class="pdf-grid-label">Client</span>
@@ -1963,7 +2293,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Description -->
                             <div class="pdf-section">
                                 <div class="pdf-section-title">
                                     <i class="fas fa-align-left"></i>
@@ -1974,7 +2303,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Instructions -->
                             <div class="pdf-section">
                                 <div class="pdf-section-title">
                                     <i class="fas fa-clipboard-list"></i>
@@ -1985,7 +2313,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Requirements -->
                             <div class="pdf-section">
                                 <div class="pdf-section-title">
                                     <i class="fas fa-check-circle"></i>
@@ -1996,7 +2323,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Deadline -->
                             ${task.deadline ? `
                                 <div class="pdf-deadline-box ${deadlineClass}">
                                     <i class="fas ${deadlineClass === 'expired' ? 'fa-calendar-times' : deadlineClass === 'urgent' ? 'fa-exclamation-circle' : 'fa-calendar-alt'}"></i>
@@ -2004,13 +2330,11 @@
                                 </div>
                             ` : ''}
                             
-                            <!-- Meta Info -->
                             <div style="display: flex; gap: 2rem; margin-bottom: 2rem; font-size: 0.9rem; color: #64748b;">
                                 <span><i class="far fa-calendar-alt"></i> Posted: ${createdDate}</span>
                                 <span><i class="far fa-clock"></i> Task ID: ${taskId}</span>
                             </div>
                             
-                            <!-- Action Buttons -->
                             <div class="pdf-actions">
                                 <button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')">
                                     <i class="fas fa-check-circle"></i> Accept Task
@@ -2021,7 +2345,6 @@
                             </div>
                         </div>
                         
-                        <!-- PDF Footer -->
                         <div class="pdf-footer">
                             <div class="pdf-footer-left">
                                 <i class="fas fa-globe"></i>
@@ -2072,7 +2395,6 @@
             }
             
             try {
-                // Double-check deadline before saving
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 const task = taskDoc.data();
                 
@@ -2107,8 +2429,6 @@
                 
                 closeModal();
                 showAlert('Submission saved successfully!', 'success');
-                
-                // Switch to submissions tab
                 switchTab('submissions');
                 
             } catch (error) {
@@ -2118,7 +2438,7 @@
             }
         }
         
-        // Load Submissions (keep existing code)
+        // Load Submissions
         async function loadSubmissions() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>';
@@ -2187,101 +2507,190 @@
             }
         }
         
-        // Load Withdrawals (keep existing code)
+        // Load Withdrawals - with membership packages
         async function loadWithdrawals() {
             try {
+                // Get fresh user data
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const latestBalance = userDoc.data().wallet || 0;
                 userData.wallet = latestBalance;
                 userData.totalFeesPaid = userDoc.data().totalFeesPaid || 0;
+                userData.membershipType = userDoc.data().membershipType || MEMBERSHIP_TYPES.BASIC;
+                userData.membershipPaid = userDoc.data().membershipPaid || false;
+                userData.eliteBonusApplied = userDoc.data().eliteBonusApplied || false;
                 
                 document.getElementById('walletDisplay').textContent = `$${latestBalance.toFixed(2)}`;
                 
-                if (!userData.membershipPaid) {
-                    document.getElementById('content').innerHTML = `
-                        <div style="text-align:center; padding:3rem;">
-                            <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b; margin-bottom:1rem;"></i>
-                            <h3 style="margin-bottom:1rem;">Premium Feature</h3>
-                            <p style="color:#64748b; margin-bottom:2rem;">Withdrawals are only available for premium members.</p>
-                            <button class="btn btn-success" onclick="showMembershipPayment()">Upgrade to Premium ($3/month)</button>
-                            <p style="margin-top:1rem; font-size:0.95rem;">Pay via <span class="lipwa-badge">Lipwa.com</span></p>
+                // Check if user has elite bonus
+                const hasEliteBonus = userData.membershipType === MEMBERSHIP_TYPES.ELITE && userData.eliteBonusApplied;
+                
+                // Build packages HTML
+                const packagesHtml = `
+                    <h3 style="margin-bottom: 1.5rem;">Membership Packages</h3>
+                    
+                    ${userData.membershipType !== MEMBERSHIP_TYPES.BASIC ? `
+                        <div class="current-membership">
+                            <div class="current-membership-info">
+                                <h4>Current Membership: ${userData.membershipType.charAt(0).toUpperCase() + userData.membershipType.slice(1)}</h4>
+                                <p>${userData.membershipType === MEMBERSHIP_TYPES.ELITE ? '✓ $10 welcome bonus applied' : '✓ Withdrawals enabled'}</p>
+                            </div>
+                            <div class="current-membership-badge">ACTIVE</div>
                         </div>
-                    `;
-                    return;
-                }
+                    ` : ''}
+                    
+                    <div class="packages-grid">
+                        <!-- Basic Package -->
+                        <div class="package-card basic">
+                            <div class="package-header">
+                                <div class="package-name">BASIC</div>
+                                <div class="package-price">FREE <small>lifetime</small></div>
+                            </div>
+                            <ul class="package-features">
+                                <li><i class="fas fa-check-circle"></i> Access to all tasks</li>
+                                <li><i class="fas fa-times-circle"></i> No withdrawals</li>
+                                <li><i class="fas fa-times-circle"></i> No bonus</li>
+                                <li><i class="fas fa-check-circle"></i> Standard support</li>
+                                <li><i class="fas fa-check-circle"></i> Task submissions</li>
+                            </ul>
+                            ${userData.membershipType === MEMBERSHIP_TYPES.BASIC ? 
+                                `<button class="package-btn current" disabled><i class="fas fa-check"></i> Current Plan</button>` : 
+                                `<button class="package-btn basic" onclick="selectMembership('${MEMBERSHIP_TYPES.BASIC}')"><i class="fas fa-arrow-right"></i> Select Basic</button>`
+                            }
+                        </div>
+                        
+                        <!-- Premium Package -->
+                        <div class="package-card premium">
+                            ${userData.membershipType === MEMBERSHIP_TYPES.PREMIUM ? '<div class="package-badge popular">CURRENT</div>' : ''}
+                            <div class="package-header">
+                                <div class="package-name">PREMIUM</div>
+                                <div class="package-price">$3 <small>/ year</small></div>
+                            </div>
+                            <ul class="package-features">
+                                <li><i class="fas fa-check-circle"></i> Access to all tasks</li>
+                                <li><i class="fas fa-check-circle"></i> <strong>Withdrawals enabled</strong></li>
+                                <li><i class="fas fa-star"></i> Priority support</li>
+                                <li><i class="fas fa-chart-line"></i> Higher earning potential</li>
+                                <li><i class="fas fa-gem"></i> Premium badge</li>
+                            </ul>
+                            ${userData.membershipType === MEMBERSHIP_TYPES.PREMIUM ? 
+                                `<button class="package-btn current" disabled><i class="fas fa-check"></i> Current Plan</button>` : 
+                                `<button class="package-btn premium" onclick="selectMembership('${MEMBERSHIP_TYPES.PREMIUM}')"><i class="fas fa-crown"></i> Upgrade to Premium</button>`
+                            }
+                        </div>
+                        
+                        <!-- Elite Package -->
+                        <div class="package-card elite">
+                            ${userData.membershipType === MEMBERSHIP_TYPES.ELITE ? '<div class="package-badge best-value">BEST VALUE</div>' : ''}
+                            <div class="package-header">
+                                <div class="package-name">ELITE</div>
+                                <div class="package-price">$6 <small>lifetime</small></div>
+                            </div>
+                            <ul class="package-features">
+                                <li><i class="fas fa-check-circle"></i> Access to all tasks</li>
+                                <li><i class="fas fa-check-circle"></i> <strong>Withdrawals enabled</strong></li>
+                                <li><i class="fas fa-gift"></i> <strong class="text-success">$${ELITE_BONUS} welcome bonus</strong></li>
+                                <li><i class="fas fa-star"></i> VIP support 24/7</li>
+                                <li><i class="fas fa-trophy"></i> Elite status & perks</li>
+                                <li><i class="fas fa-percent"></i> Reduced fees (coming soon)</li>
+                            </ul>
+                            ${userData.membershipType === MEMBERSHIP_TYPES.ELITE ? 
+                                `<button class="package-btn current" disabled><i class="fas fa-check"></i> Current Plan</button>` : 
+                                `<button class="package-btn elite" onclick="selectMembership('${MEMBERSHIP_TYPES.ELITE}')"><i class="fas fa-gem"></i> Go Elite</button>`
+                            }
+                        </div>
+                    </div>
+                `;
                 
-                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading withdrawals...</p></div>';
+                // Build withdrawal section based on membership
+                const canWithdraw = userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE;
                 
-                const snapshot = await db.collection('withdrawals')
+                const withdrawalSection = `
+                    <div class="withdrawal-section ${!canWithdraw ? 'disabled' : ''}" id="withdrawalSection">
+                        ${!canWithdraw ? `
+                            <div class="withdrawal-lock-message">
+                                <i class="fas fa-lock"></i> Upgrade to Premium or Elite to withdraw
+                            </div>
+                        ` : ''}
+                        
+                        <div class="withdrawal-content">
+                            <h4 style="margin-bottom: 1.5rem;">Withdraw Funds</h4>
+                            
+                            ${userData.membershipType === MEMBERSHIP_TYPES.ELITE && hasEliteBonus ? `
+                                <div style="background: #f0fdf4; border: 1px solid #10b981; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-gift" style="color: #10b981;"></i>
+                                    <span><strong>$${ELITE_BONUS} welcome bonus applied!</strong> Thank you for choosing Elite.</span>
+                                </div>
+                            ` : ''}
+                            
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <div style="font-size:1.2rem; font-weight:600;">Available Balance:</div>
+                                <div class="balance-highlight">$${latestBalance.toFixed(2)}</div>
+                            </div>
+                            
+                            <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" max="${latestBalance}" step="0.01" oninput="updateFeeBreakdown(${latestBalance})">
+                            
+                            <div id="feeBreakdown" class="fee-breakdown" style="display: none;">
+                                <h4 style="margin-bottom:0.8rem; color:#0f172a;">Fee Breakdown</h4>
+                                <div class="fee-row">
+                                    <span class="fee-label">Withdrawal Amount:</span>
+                                    <span class="fee-value" id="displayWithdrawAmount">$0.00</span>
+                                </div>
+                                <div class="fee-row">
+                                    <span class="fee-label">Transaction Fee (${TRANSACTION_FEE_PERCENT}%):</span>
+                                    <span class="fee-value negative" id="displayTransactionFee">-$0.00</span>
+                                </div>
+                                <div class="fee-row">
+                                    <span class="fee-label">Platform Fee (${PLATFORM_FEE_PERCENT}%):</span>
+                                    <span class="fee-value negative" id="displayPlatformFee">-$0.00</span>
+                                </div>
+                                <div class="fee-row total">
+                                    <span class="fee-label">You Will Receive:</span>
+                                    <span class="fee-value positive" id="displayNetAmount">$0.00</span>
+                                </div>
+                                <div class="info-text">
+                                    <i class="fas fa-info-circle"></i>
+                                    Total fees: <span id="displayTotalFees">$0.00</span> (${TOTAL_FEE_PERCENT}%)
+                                </div>
+                            </div>
+                            
+                            <div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div>
+                            
+                            <select id="withdrawMethod" onchange="updateFeeBreakdown(${latestBalance})">
+                                <option value="M-Pesa">M-Pesa</option>
+                                <option value="Airtel Money">Airtel Money</option>
+                            </select>
+                            
+                            <input type="tel" id="withdrawPhone" placeholder="Phone Number (e.g., 0712345678)">
+                            
+                            <button class="btn btn-primary" style="width:100%;" onclick="requestWithdrawal()" id="withdrawBtn" ${!canWithdraw ? 'disabled' : ''}>Request Withdrawal</button>
+                            
+                            <p style="font-size:0.95rem; color:#64748b; margin-top:0.5rem;">
+                                <i class="fas fa-info-circle"></i> 
+                                Minimum withdrawal: $5 | Fees: ${TRANSACTION_FEE_PERCENT}% transaction + ${PLATFORM_FEE_PERCENT}% platform
+                            </p>
+                            
+                            ${userData.totalFeesPaid > 0 ? `
+                                <p style="font-size:0.95rem; color:#10b981; margin-top:0.5rem;">
+                                    <i class="fas fa-chart-line"></i> 
+                                    Total fees paid to date: $${userData.totalFeesPaid.toFixed(2)}
+                                </p>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                // Load withdrawal history
+                const historySnapshot = await db.collection('withdrawals')
                     .where('userId', '==', currentUser.uid)
                     .get();
                 
-                let html = `
-                    <h3 style="margin-bottom: 1.5rem;">Withdraw Funds</h3>
-                    <div style="background:#f8fafc; border-radius:0.5rem; padding:1.5rem; margin-bottom:2rem; border:1px solid #e5e7eb;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                            <div style="font-size:1.2rem; font-weight:600;">Available Balance:</div>
-                            <div class="balance-highlight">$${latestBalance.toFixed(2)}</div>
-                        </div>
-                        
-                        <input type="number" id="withdrawAmount" placeholder="Amount (USD)" min="5" max="${latestBalance}" step="0.01" oninput="updateFeeBreakdown(${latestBalance})">
-                        
-                        <div id="feeBreakdown" class="fee-breakdown" style="display: none;">
-                            <h4 style="margin-bottom:0.8rem; color:#0f172a;">Fee Breakdown</h4>
-                            <div class="fee-row">
-                                <span class="fee-label">Withdrawal Amount:</span>
-                                <span class="fee-value" id="displayWithdrawAmount">$0.00</span>
-                            </div>
-                            <div class="fee-row">
-                                <span class="fee-label">Transaction Fee (${TRANSACTION_FEE_PERCENT}%):</span>
-                                <span class="fee-value negative" id="displayTransactionFee">-$0.00</span>
-                            </div>
-                            <div class="fee-row">
-                                <span class="fee-label">Platform Fee (${PLATFORM_FEE_PERCENT}%):</span>
-                                <span class="fee-value negative" id="displayPlatformFee">-$0.00</span>
-                            </div>
-                            <div class="fee-row total">
-                                <span class="fee-label">You Will Receive:</span>
-                                <span class="fee-value positive" id="displayNetAmount">$0.00</span>
-                            </div>
-                            <div class="info-text">
-                                <i class="fas fa-info-circle"></i>
-                                Total fees: <span id="displayTotalFees">$0.00</span> (${TOTAL_FEE_PERCENT}%)
-                            </div>
-                        </div>
-                        
-                        <div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div>
-                        
-                        <select id="withdrawMethod" onchange="updateFeeBreakdown(${latestBalance})">
-                            <option value="M-Pesa">M-Pesa</option>
-                            <option value="Airtel Money">Airtel Money</option>
-                        </select>
-                        
-                        <input type="tel" id="withdrawPhone" placeholder="Phone Number (e.g., 0712345678)">
-                        
-                        <button class="btn btn-primary" style="width:100%;" onclick="requestWithdrawal()" id="withdrawBtn">Request Withdrawal</button>
-                        
-                        <p style="font-size:0.95rem; color:#64748b; margin-top:0.5rem;">
-                            <i class="fas fa-info-circle"></i> 
-                            Minimum withdrawal: $5 | Fees: ${TRANSACTION_FEE_PERCENT}% transaction + ${PLATFORM_FEE_PERCENT}% platform
-                        </p>
-                        
-                        ${userData.totalFeesPaid > 0 ? `
-                            <p style="font-size:0.95rem; color:#10b981; margin-top:0.5rem;">
-                                <i class="fas fa-chart-line"></i> 
-                                Total fees paid to date: $${userData.totalFeesPaid.toFixed(2)}
-                            </p>
-                        ` : ''}
-                    </div>
-                    
-                    <h4 style="margin-bottom:1rem;">Withdrawal History</h4>
-                `;
+                let historyHtml = '<h4 style="margin-bottom:1rem; margin-top: 2rem;">Withdrawal History</h4>';
                 
-                if (snapshot.empty) {
-                    html += '<div class="empty-state"><i class="fas fa-history"></i><p>No withdrawals yet.</p></div>';
+                if (historySnapshot.empty) {
+                    historyHtml += '<div class="empty-state"><i class="fas fa-history"></i><p>No withdrawals yet.</p></div>';
                 } else {
                     const withdrawals = [];
-                    snapshot.forEach(doc => {
+                    historySnapshot.forEach(doc => {
                         withdrawals.push({ id: doc.id, ...doc.data() });
                     });
                     
@@ -2291,7 +2700,7 @@
                         return (b.requestedAt.seconds || 0) - (a.requestedAt.seconds || 0);
                     });
                     
-                    html += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">';
+                    historyHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">';
                     
                     withdrawals.forEach(w => {
                         let requestedDate = 'N/A';
@@ -2299,7 +2708,7 @@
                             requestedDate = new Date(w.requestedAt.seconds * 1000).toLocaleDateString();
                         }
                         
-                        html += `
+                        historyHtml += `
                             <div class="submission-card" style="padding: 1rem;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
                                     <span><strong>$${w.amount}</strong></span>
@@ -2315,14 +2724,18 @@
                         `;
                     });
                     
-                    html += '</div>';
+                    historyHtml += '</div>';
                 }
                 
-                document.getElementById('content').innerHTML = html;
+                document.getElementById('content').innerHTML = packagesHtml + withdrawalSection + historyHtml;
                 
-                document.getElementById('withdrawAmount').addEventListener('input', function() {
-                    updateFeeBreakdown(latestBalance);
-                });
+                // Add event listener for withdrawal amount
+                const amountInput = document.getElementById('withdrawAmount');
+                if (amountInput) {
+                    amountInput.addEventListener('input', function() {
+                        updateFeeBreakdown(latestBalance);
+                    });
+                }
                 
             } catch (error) {
                 console.error('Error loading withdrawals:', error);
@@ -2337,17 +2750,118 @@
             }
         }
         
+        // Select membership package
+        function selectMembership(membershipType) {
+            if (membershipType === MEMBERSHIP_TYPES.BASIC) {
+                // Basic is free, just update membership
+                updateMembership(membershipType);
+            } else {
+                // Show payment modal for premium or elite
+                showMembershipPayment(membershipType);
+            }
+        }
+        
+        // Show membership payment modal
+        function showMembershipPayment(membershipType) {
+            const price = MEMBERSHIP_PRICES[membershipType];
+            const duration = MEMBERSHIP_DURATIONS[membershipType];
+            const name = membershipType.charAt(0).toUpperCase() + membershipType.slice(1);
+            
+            let bonusText = '';
+            if (membershipType === MEMBERSHIP_TYPES.ELITE) {
+                bonusText = `<p style="color:#10b981; margin-top:0.5rem;"><i class="fas fa-gift"></i> You'll receive a $${ELITE_BONUS} welcome bonus!</p>`;
+            }
+            
+            showModal(`
+                <div class="modal-content">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <i class="fas ${membershipType === MEMBERSHIP_TYPES.PREMIUM ? 'fa-crown' : 'fa-gem'}" style="font-size: 3rem; color: ${membershipType === MEMBERSHIP_TYPES.PREMIUM ? '#6366f1' : '#f59e0b'}; margin-bottom: 1rem;"></i>
+                        <h3 style="margin-bottom:0.5rem;">Upgrade to ${name}</h3>
+                        <p style="color:#64748b;">$${price} ${duration === 'annual' ? 'per year' : 'lifetime'}</p>
+                    </div>
+                    
+                    <div style="background: #f3f4f6; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+                        <p><strong>Pay via LIPANA GATEWAYS:</strong></p>
+                        <p>1. Visit <a href="https://lipana.dev/pay/nextgen-membership" target="_blank">lipwa.com</a></p>
+                        <p>2. Send $${price} to username: <strong>@nextgen</strong></p>
+                        <p>3. Copy the transaction ID</p>
+                        ${bonusText}
+                    </div>
+                    
+                    <input type="text" id="transactionCode" placeholder="Enter Transaction ID">
+                    
+                    <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+                        <button class="btn btn-success" style="flex:2;" onclick="submitMembershipPayment('${membershipType}')">
+                            <i class="fas fa-check"></i> Verify Payment
+                        </button>
+                        <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Cancel</button>
+                    </div>
+                </div>
+            `);
+        }
+        
+        // Submit membership payment
+        async function submitMembershipPayment(membershipType) {
+            const code = document.getElementById('transactionCode')?.value;
+            if (!code) {
+                showAlert('Enter transaction ID', 'error');
+                return;
+            }
+            
+            try {
+                await db.collection('membershipPayments').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    membershipType: membershipType,
+                    transactionCode: code,
+                    amount: MEMBERSHIP_PRICES[membershipType],
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showAlert('Payment proof submitted for review! You will be upgraded once verified.', 'success');
+                closeModal();
+                
+            } catch (error) {
+                console.error('Error submitting payment:', error);
+                showAlert('Error submitting payment', 'error');
+            }
+        }
+        
+        // Update membership directly (for basic)
+        async function updateMembership(membershipType) {
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    membershipType: membershipType,
+                    membershipPaid: membershipType !== MEMBERSHIP_TYPES.BASIC,
+                    membershipStatus: 'active',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                userData.membershipType = membershipType;
+                
+                showAlert(`You are now on the ${membershipType.charAt(0).toUpperCase() + membershipType.slice(1)} plan!`, 'success');
+                loadWithdrawals(); // Reload the page
+                
+            } catch (error) {
+                console.error('Error updating membership:', error);
+                showAlert('Error updating membership', 'error');
+            }
+        }
+        
         // Update fee breakdown
         function updateFeeBreakdown(maxBalance) {
             const amountInput = document.getElementById('withdrawAmount');
+            if (!amountInput) return;
+            
             const amount = parseFloat(amountInput.value) || 0;
             const warning = document.getElementById('withdrawWarning');
             const withdrawBtn = document.getElementById('withdrawBtn');
             const feeBreakdown = document.getElementById('feeBreakdown');
             
             if (amount <= 0) {
-                feeBreakdown.style.display = 'none';
-                warning.style.display = 'none';
+                if (feeBreakdown) feeBreakdown.style.display = 'none';
+                if (warning) warning.style.display = 'none';
                 if (withdrawBtn) withdrawBtn.disabled = false;
                 return;
             }
@@ -2366,16 +2880,16 @@
             if (amount > maxBalance) {
                 warning.style.display = 'block';
                 if (withdrawBtn) withdrawBtn.disabled = true;
-                feeBreakdown.style.display = 'none';
+                if (feeBreakdown) feeBreakdown.style.display = 'none';
             } else if (amount < 5) {
                 warning.textContent = 'Minimum withdrawal amount is $5';
                 warning.style.display = 'block';
                 if (withdrawBtn) withdrawBtn.disabled = true;
-                feeBreakdown.style.display = 'block';
+                if (feeBreakdown) feeBreakdown.style.display = 'block';
             } else {
                 warning.style.display = 'none';
                 if (withdrawBtn) withdrawBtn.disabled = false;
-                feeBreakdown.style.display = 'block';
+                if (feeBreakdown) feeBreakdown.style.display = 'block';
             }
         }
         
@@ -2411,6 +2925,12 @@
                 
                 if (!phone || phone.length < 10) {
                     showAlert('Enter a valid phone number', 'error');
+                    return;
+                }
+                
+                // Double-check membership
+                if (userData.membershipType === MEMBERSHIP_TYPES.BASIC) {
+                    showAlert('You need to upgrade to Premium or Elite to withdraw', 'error');
                     return;
                 }
                 
@@ -2480,7 +3000,7 @@
             }
         }
         
-        // Load Messages (keep existing code)
+        // Load Messages
         async function loadMessages() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
@@ -2633,7 +3153,7 @@
         // Show compose message form
         function showComposeMessage() {
             showModal(`
-                <div style="padding: 2rem;">
+                <div class="modal-content">
                     <div style="border-bottom: 2px solid #10b981; padding-bottom: 1rem; margin-bottom: 1.5rem;">
                         <h3 style="color:#10b981; margin-bottom:0.3rem;">New Message</h3>
                         <p style="color:#64748b; font-size:0.9rem;">Send a message to admin</p>
@@ -2743,7 +3263,7 @@
                 }
                 
                 let threadHtml = `
-                    <div style="padding: 2rem;">
+                    <div class="modal-content">
                         <div style="border-bottom: 2px solid #10b981; padding-bottom: 1rem; margin-bottom: 1.5rem;">
                             <h3 style="color:#10b981; margin-bottom:0.3rem;">${subject}</h3>
                             <p style="color:#64748b; font-size:0.9rem;">Message Thread</p>
@@ -2872,12 +3392,12 @@
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Email:</strong> ${userData.email}</p>
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Member since:</strong> ${joinDate}</p>
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Wallet Balance:</strong> $${(userData.wallet || 0).toFixed(2)}</p>
-                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Fees Paid:</strong> $${(userData.totalFeesPaid || 0).toFixed(2)}</p>
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Membership:</strong> 
-                        <span class="${userData.membershipPaid ? 'premium-badge' : 'badge warning'}">
-                            ${userData.membershipPaid ? 'Premium' : 'Free'}
+                        <span class="${userData.membershipType === MEMBERSHIP_TYPES.ELITE ? 'premium-badge' : userData.membershipType === MEMBERSHIP_TYPES.PREMIUM ? 'badge primary' : 'badge warning'}">
+                            ${(userData.membershipType || MEMBERSHIP_TYPES.BASIC).toUpperCase()}
                         </span>
                     </p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Fees Paid:</strong> $${(userData.totalFeesPaid || 0).toFixed(2)}</p>
                 </div>
                 <div style="margin-top: 1rem; text-align: center; font-size: 0.8rem; color: #94a3b8;">
                     <i class="fas fa-globe"></i> nextgen.joblify.app
@@ -2910,54 +3430,6 @@
             } catch (error) {
                 console.error('Error updating profile:', error);
                 showAlert('Error updating profile', 'error');
-            }
-        }
-        
-        // Show Membership Payment
-        function showMembershipPayment() {
-            showModal(`
-                <div style="padding: 2rem;">
-                    <h3 style="margin-bottom:1rem;">Premium Membership</h3>
-                    <p style="margin-bottom:1rem;">Upgrade to premium for only <strong>$3/Annually</strong></p>
-                    <div style="background:#f3f4f6; padding:1rem; border-radius:0.3rem; margin-bottom:1rem;">
-                        <p><strong>Pay via LIPANA GATEWAYS:</strong></p>
-                        <p>1. Visit <a href="https://lipana.dev/pay/nextgen-membership" target="_blank">lipwa.com</a></p>
-                        <p>2. Send $3 to username: <strong>@nextgen</strong></p>
-                        <p>3. Copy the transaction ID</p>
-                    </div>
-                    <input type="text" id="transactionCode" placeholder="Enter Lipwa Transaction ID">
-                    <button class="btn btn-success" style="width:100%;" onclick="submitPaymentProof()">Submit Payment Proof</button>
-                </div>
-            `);
-        }
-        
-        // Submit Payment Proof
-        async function submitPaymentProof() {
-            const code = document.getElementById('transactionCode').value;
-            if (!code) {
-                showAlert('Enter transaction ID', 'error');
-                return;
-            }
-            
-            try {
-                await db.collection('membershipPayments').add({
-                    userId: currentUser.uid,
-                    userEmail: currentUser.email,
-                    transactionCode: code,
-                    status: 'pending',
-                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                await db.collection('users').doc(currentUser.uid).update({
-                    membershipStatus: 'pending'
-                });
-                
-                closeModal();
-                showAlert('Payment proof submitted for review!', 'success');
-                
-            } catch (error) {
-                console.error('Error submitting payment:', error);
-                showAlert('Error submitting payment', 'error');
             }
         }
     </script>
