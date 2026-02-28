@@ -1872,9 +1872,10 @@
             return userId.substring(0, 8).toUpperCase();
         }
         
-        // Get referral link
+        // UPDATED: Get referral link - FIXED to point to correct registration page
         function getReferralLink() {
-            const baseUrl = window.location.origin + window.location.pathname.replace('dashboard.html', 'index.html');
+            // Get the base URL without the current filename
+            const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1) + 'index.html';
             const referralCode = generateReferralCode(currentUser.uid);
             return `${baseUrl}?ref=${referralCode}`;
         }

@@ -185,6 +185,87 @@
             to { opacity: 1; }
         }
         
+        /* Referral Cards */
+        .referral-card {
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        
+        .referral-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .referral-card.pending {
+            border-left-color: #f59e0b;
+        }
+        
+        .referral-card.completed {
+            border-left-color: #10b981;
+        }
+        
+        .referral-card.rejected {
+            border-left-color: #ef4444;
+        }
+        
+        .referral-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .referral-amount {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+        
+        .referral-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .referral-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #4b5563;
+        }
+        
+        .referral-detail-item i {
+            color: #6366f1;
+            width: 20px;
+        }
+        
+        .bonus-breakdown {
+            background: #f1f5f9;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .bonus-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+        }
+        
+        .bonus-row.referrer {
+            color: #6366f1;
+            font-weight: 600;
+        }
+        
+        .bonus-row.referred {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
         .toast { display: none; } /* Hide old toast */
         
         input, textarea, select { width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 40px; margin-bottom: 1rem; font-size: 1rem; }  
@@ -221,6 +302,7 @@
             <button class="tab" data-tab="submissions">📝 Submissions</button>  
             <button class="tab" data-tab="withdrawals">💰 Withdrawals</button>  
             <button class="tab" data-tab="memberships">👑 Memberships</button>  
+            <button class="tab" data-tab="referrals">🤝 Referrals</button>  
             <button class="tab" data-tab="messages">💬 Messages</button>  
         </div>  
       
@@ -266,6 +348,10 @@
         firebase.initializeApp(firebaseConfig);  
         const auth = firebase.auth();  
         const db = firebase.firestore();  
+        
+        // Referral constants  
+        const REFERRAL_BONUS_REFERRER = 2; // $2 for referrer  
+        const REFERRAL_BONUS_REFERRED = 0.5; // $0.5 for referred  
           
         let currentUser = null;  
         let currentTab = 'users';  
@@ -416,6 +502,7 @@
                 case 'submissions': loadSubmissions(); break;  
                 case 'withdrawals': loadWithdrawals(); break;  
                 case 'memberships': loadMemberships(); break;  
+                case 'referrals': loadReferrals(); break;  
                 case 'messages': loadMessages(); break;  
             }  
         }  
@@ -432,6 +519,15 @@
             const pendingWithdrawals = await db.collection('withdrawals')  
                 .where('status', '==', 'pending')  
                 .get();  
+                
+            let pendingReferrals = { size: 0 };  
+            try {  
+                pendingReferrals = await db.collection('referrals')  
+                    .where('status', '==', 'pending')  
+                    .get();  
+            } catch (error) {  
+                console.warn('Could not fetch pending referrals:', error);  
+            }  
               
             document.getElementById('statsGrid').innerHTML = `  
                 <div class="stat-card">  
@@ -454,18 +550,23 @@
                     <div class="stat-value">${pendingWithdrawals.size}</div>  
                     <div class="stat-label">Pending Withdrawals</div>  
                 </div>  
+                <div class="stat-card">  
+                    <i class="fas fa-users"></i>  
+                    <div class="stat-value">${pendingReferrals.size}</div>  
+                    <div class="stat-label">Pending Referrals</div>  
+                </div>  
             `;  
               
             loadUsers();  
         }  
           
-        // Load Users  
+        // Load Users - Modified to show referral info  
         async function loadUsers() {  
             const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();  
               
             let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>';  
             html += '<table class="data-table">';  
-            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Role</th><th>Status</th><th>Actions</th></tr>';  
+            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Role</th><th>Status</th><th>Actions</th></tr>';  
               
             snapshot.forEach(doc => {  
                 const user = doc.data();  
@@ -474,6 +575,8 @@
                         <td>${user.email}</td>  
                         <td>${user.displayName}</td>  
                         <td>$${user.wallet || 0}</td>  
+                        <td><span class="badge primary">${user.totalReferrals || 0}</span></td>  
+                        <td>$${user.referralEarnings || 0}</td>  
                         <td>${user.role}</td>  
                         <td><span class="badge ${user.active ? 'success' : 'danger'}">${user.active ? 'Active' : 'Inactive'}</span></td>  
                         <td class="action-buttons">  
@@ -563,7 +666,7 @@
             }  
         }  
           
-        // Load Tasks - MODIFIED to show instructions  
+        // Load Tasks  
         async function loadTasks() {  
             const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();  
               
@@ -606,7 +709,7 @@
             document.getElementById('content').innerHTML = html;  
         }  
           
-        // Show Create Task Modal - MODIFIED to include instructions  
+        // Show Create Task Modal  
         function showCreateTask() {  
             showModal(`  
                 <h3 style="margin-bottom:1rem;">Create New Task</h3>  
@@ -643,7 +746,7 @@
             `);  
         }  
           
-        // Create Task - MODIFIED to include instructions  
+        // Create Task  
         async function createTask() {  
             const title = document.getElementById('taskTitle').value;  
             const description = document.getElementById('taskDescription').value;  
@@ -669,7 +772,7 @@
                 description,  
                 clientName: clientName || 'NextGen',  
                 requirements,  
-                instructions, // New field for step-by-step instructions  
+                instructions,  
                 deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
                 reward,  
                 rewardKES: reward * 130,  
@@ -692,7 +795,7 @@
             loadTasks();  
         }  
           
-        // Edit Task - MODIFIED to include instructions  
+        // Edit Task  
         async function editTask(taskId) {  
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
@@ -742,7 +845,7 @@
             `);  
         }  
           
-        // Update Task - MODIFIED to include instructions  
+        // Update Task  
         async function updateTask(taskId) {  
             const title = document.getElementById('editTitle').value;  
             const description = document.getElementById('editDescription').value;  
@@ -781,7 +884,7 @@
             loadTasks();  
         }  
           
-        // View Details - MODIFIED to show instructions  
+        // View Details  
         async function viewRequirements(taskId) {  
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
@@ -819,7 +922,7 @@
             `);  
         }  
           
-        // Load Submissions - MODIFIED to show instructions  
+        // Load Submissions  
         async function loadSubmissions() {  
             const snapshot = await db.collection('submissions')  
                 .where('status', '==', 'pending')  
@@ -1009,7 +1112,9 @@
                     html += `  
                         <div class="submission-card">  
                             <p><strong>User:</strong> ${p.userEmail}</p>  
+                            <p><strong>Membership:</strong> ${p.membershipType || 'Premium'}</p>  
                             <p><strong>Transaction:</strong> ${p.transactionCode}</p>  
+                            <p><strong>Amount:</strong> $${p.amount}</p>  
                             <p><strong>Submitted:</strong> ${p.submittedAt?.toDate().toLocaleString()}</p>  
                             <div class="flex-row">  
                                 <button class="btn btn-success approve-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Approve</button>  
@@ -1050,6 +1155,474 @@
               
             showAlert('Membership rejected', 'info');  
             loadMemberships();  
+        }  
+
+        // Initialize referral collections if they don't exist
+        async function initializeReferralCollections() {
+            try {
+                // Check if referrals collection exists by trying to get a document
+                const testQuery = await db.collection('referrals').limit(1).get();
+                console.log('Referrals collection exists');
+            } catch (error) {
+                console.log('Referrals collection does not exist yet, will be created when needed');
+                // Collection will be created automatically when first document is added
+            }
+            
+            try {
+                // Check if referralBonuses collection exists
+                const testQuery2 = await db.collection('referralBonuses').limit(1).get();
+                console.log('ReferralBonuses collection exists');
+            } catch (error) {
+                console.log('ReferralBonuses collection does not exist yet, will be created when needed');
+            }
+        }
+
+        // Create sample referral data for testing (optional)
+        async function createSampleReferral() {
+            try {
+                showAlert('Creating sample referral data...', 'info', 'Please Wait');
+                
+                // Get first two users
+                const usersSnapshot = await db.collection('users').limit(2).get();
+                
+                if (usersSnapshot.size < 2) {
+                    showAlert('Need at least 2 users to create a sample referral', 'error');
+                    return;
+                }
+                
+                const users = [];
+                usersSnapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
+                
+                // Create a sample referral
+                await db.collection('referrals').add({
+                    referrerId: users[0].id,
+                    referredId: users[1].id,
+                    referredEmail: users[1].email,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showAlert('Sample referral created successfully!', 'success');
+                loadReferrals();
+                
+            } catch (error) {
+                console.error('Error creating sample referral:', error);
+                showAlert('Error creating sample referral: ' + error.message, 'error');
+            }
+        }
+
+        // Load Referrals with graceful error handling  
+        async function loadReferrals() {  
+            try {  
+                document.getElementById('content').innerHTML = `  
+                    <div style="text-align: center; padding: 3rem;">  
+                        <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #6366f1; margin-bottom: 1rem;"></i>  
+                        <h3>Loading Referrals...</h3>  
+                        <p style="color: #64748b;">Please wait while we fetch the referral data.</p>  
+                    </div>  
+                `;  
+                
+                // Check if collections exist and create them if they don't  
+                await initializeReferralCollections();  
+                
+                // Get all referrals  
+                let snapshot;  
+                try {  
+                    snapshot = await db.collection('referrals')  
+                        .orderBy('createdAt', 'desc')  
+                        .get();  
+                } catch (error) {  
+                    console.warn('Error fetching referrals, collection might not exist:', error);  
+                    // If collection doesn't exist, treat as empty  
+                    snapshot = { empty: true, docs: [] };  
+                }  
+                
+                let html = `  
+                    <h3 style="margin-bottom:1.5rem;">Referral Management</h3>  
+                    <div style="margin-bottom: 1.5rem; background: #f8fafc; padding: 1.5rem; border-radius: 1rem;">  
+                        <p><strong>Referral Bonus Structure:</strong></p>  
+                        <ul style="margin-top: 0.5rem;">  
+                            <li><span style="color: #6366f1;">Referrer gets <strong>$${REFERRAL_BONUS_REFERRER}</strong></span> when referred user upgrades to Premium</li>  
+                            <li><span style="color: #10b981;">Referred user gets <strong>$${REFERRAL_BONUS_REFERRED}</strong></span> when they upgrade to Premium</li>  
+                        </ul>  
+                    </div>  
+                `;  
+                
+                if (!snapshot || snapshot.empty) {  
+                    html += `  
+                        <div style="text-align: center; padding: 3rem; background: #f8fafc; border-radius: 1rem;">  
+                            <i class="fas fa-users" style="font-size: 4rem; color: #94a3b8; margin-bottom: 1rem;"></i>  
+                            <h4 style="color: #1e293b; margin-bottom: 0.5rem;">No Referrals Found</h4>  
+                            <p style="color: #64748b;">There are no referrals in the system yet.</p>  
+                            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 1rem;">When users sign up using referral links, they will appear here.</p>  
+                            <button class="btn btn-success" onclick="createSampleReferral()" style="margin-top: 1rem;">  
+                                <i class="fas fa-flask"></i> Create Sample Data  
+                            </button>  
+                        </div>  
+                    `;  
+                } else {  
+                    // Group by status  
+                    const pending = [];  
+                    const completed = [];  
+                    const rejected = [];  
+                    
+                    snapshot.forEach(doc => {  
+                        const referral = { id: doc.id, ...doc.data() };  
+                        if (referral.status === 'pending') pending.push(referral);  
+                        else if (referral.status === 'completed') completed.push(referral);  
+                        else rejected.push(referral);  
+                    });  
+                    
+                    // Pending referrals section  
+                    if (pending.length > 0) {  
+                        html += '<h4 style="margin: 2rem 0 1rem 0; color: #f59e0b;">Pending Referrals ⏳</h4>';  
+                        
+                        for (const referral of pending) {  
+                            try {  
+                                // Get referrer info  
+                                let referrerEmail = 'Unknown';  
+                                try {  
+                                    const referrerDoc = await db.collection('users').doc(referral.referrerId).get();  
+                                    if (referrerDoc.exists) {  
+                                        referrerEmail = referrerDoc.data().email;  
+                                    }  
+                                } catch (e) {  
+                                    console.warn('Could not fetch referrer:', e);  
+                                }  
+                                
+                                // Get referred user info  
+                                let referredName = 'Unknown';  
+                                try {  
+                                    const referredDoc = await db.collection('users').doc(referral.referredId).get();  
+                                    if (referredDoc.exists) {  
+                                        referredName = referredDoc.data().displayName || referredDoc.data().email;  
+                                    }  
+                                } catch (e) {  
+                                    console.warn('Could not fetch referred user:', e);  
+                                }  
+                                
+                                const createdDate = referral.createdAt?.seconds ?   
+                                    new Date(referral.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';  
+                                
+                                html += `  
+                                    <div class="referral-card pending">  
+                                        <div class="referral-header">  
+                                            <div>  
+                                                <span class="badge warning">Pending</span>  
+                                                <span class="referral-amount" style="margin-left: 1rem;">  
+                                                    <i class="fas fa-gift"></i> $${REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED} total  
+                                                </span>  
+                                            </div>  
+                                        </div>  
+                                        
+                                        <div class="referral-details">  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-user"></i>  
+                                                <div>  
+                                                    <strong>Referrer:</strong> ${referrerEmail}<br>  
+                                                    <small>ID: ${referral.referrerId.substring(0, 8)}...</small>  
+                                                </div>  
+                                            </div>  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-user-plus"></i>  
+                                                <div>  
+                                                    <strong>Referred:</strong> ${referral.referredEmail}<br>  
+                                                    <small>ID: ${referral.referredId.substring(0, 8)}...</small>  
+                                                </div>  
+                                            </div>  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-calendar"></i>  
+                                                <div>  
+                                                    <strong>Referred on:</strong> ${createdDate}  
+                                                </div>  
+                                            </div>  
+                                        </div>  
+                                        
+                                        <div class="bonus-breakdown">  
+                                            <h5 style="margin-bottom: 0.5rem;">Bonus Breakdown:</h5>  
+                                            <div class="bonus-row referrer">  
+                                                <span>👤 Referrer</span>  
+                                                <span>+$${REFERRAL_BONUS_REFERRER}</span>  
+                                            </div>  
+                                            <div class="bonus-row referred">  
+                                                <span>👥 Referred</span>  
+                                                <span>+$${REFERRAL_BONUS_REFERRED}</span>  
+                                            </div>  
+                                        </div>  
+                                        
+                                        <div class="flex-row" style="margin-top: 1rem;">  
+                                            <button class="btn btn-success credit-referral-btn"   
+                                                    data-referral-id="${referral.id}"  
+                                                    data-referrer-id="${referral.referrerId}"  
+                                                    data-referred-id="${referral.referredId}"  
+                                                    data-referred-email="${referral.referredEmail}">  
+                                                <i class="fas fa-check-circle"></i> Credit Bonuses  
+                                            </button>  
+                                            <button class="btn btn-danger reject-referral-btn" data-referral-id="${referral.id}">  
+                                                <i class="fas fa-times-circle"></i> Reject  
+                                            </button>  
+                                        </div>  
+                                    </div>  
+                                `;  
+                            } catch (e) {  
+                                console.warn('Error displaying referral:', e);  
+                                // Skip this referral if there's an error  
+                            }  
+                        }  
+                    }  
+                    
+                    // Completed referrals section  
+                    if (completed.length > 0) {  
+                        html += '<h4 style="margin: 2rem 0 1rem 0; color: #10b981;">Completed Referrals ✓</h4>';  
+                        
+                        for (const referral of completed) {  
+                            try {  
+                                const createdDate = referral.createdAt?.seconds ?   
+                                    new Date(referral.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';  
+                                const completedDate = referral.completedAt?.seconds ?   
+                                    new Date(referral.completedAt.seconds * 1000).toLocaleDateString() : 'N/A';  
+                                
+                                html += `  
+                                    <div class="referral-card completed">  
+                                        <div class="referral-header">  
+                                            <div>  
+                                                <span class="badge success">Completed</span>  
+                                            </div>  
+                                            <span class="referral-amount">$${REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED} paid</span>  
+                                        </div>  
+                                        
+                                        <div class="referral-details">  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-user"></i>  
+                                                <span>Referrer: ${referral.referrerId.substring(0, 8)}...</span>  
+                                            </div>  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-user-plus"></i>  
+                                                <span>Referred: ${referral.referredEmail}</span>  
+                                            </div>  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-check-circle"></i>  
+                                                <span>Completed: ${completedDate}</span>  
+                                            </div>  
+                                        </div>  
+                                    </div>  
+                                `;  
+                            } catch (e) {  
+                                console.warn('Error displaying completed referral:', e);  
+                            }  
+                        }  
+                    }  
+                    
+                    // Rejected referrals section  
+                    if (rejected.length > 0) {  
+                        html += '<h4 style="margin: 2rem 0 1rem 0; color: #ef4444;">Rejected Referrals ✗</h4>';  
+                        
+                        for (const referral of rejected) {  
+                            try {  
+                                const createdDate = referral.createdAt?.seconds ?   
+                                    new Date(referral.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';  
+                                
+                                html += `  
+                                    <div class="referral-card rejected">  
+                                        <div class="referral-header">  
+                                            <span class="badge danger">Rejected</span>  
+                                        </div>  
+                                        
+                                        <div class="referral-details">  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-user"></i>  
+                                                <span>Referrer: ${referral.referrerId.substring(0, 8)}...</span>  
+                                            </div>  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-user-plus"></i>  
+                                                <span>Referred: ${referral.referredEmail}</span>  
+                                            </div>  
+                                            <div class="referral-detail-item">  
+                                                <i class="fas fa-calendar"></i>  
+                                                <span>Referred on: ${createdDate}</span>  
+                                            </div>  
+                                        </div>  
+                                    </div>  
+                                `;  
+                            } catch (e) {  
+                                console.warn('Error displaying rejected referral:', e);  
+                            }  
+                        }  
+                    }  
+                    
+                    // If all sections are empty but there are referrals (shouldn't happen, but just in case)  
+                    if (pending.length === 0 && completed.length === 0 && rejected.length === 0 && !snapshot.empty) {  
+                        html += `  
+                            <div style="text-align: center; padding: 2rem;">  
+                                <p>There are ${snapshot.size} referrals but they couldn't be categorized.</p>  
+                            </div>  
+                        `;  
+                    }  
+                }  
+                
+                document.getElementById('content').innerHTML = html;  
+                
+            } catch (error) {  
+                console.error('Error loading referrals:', error);  
+                
+                // Handle specific error types
+                let errorMessage = error.message;
+                let errorTitle = 'Error Loading Referrals';
+                let errorIcon = 'fa-exclamation-triangle';
+                let errorColor = '#ef4444';
+                
+                if (error.code === 'permission-denied') {
+                    errorMessage = 'You don\'t have permission to view referrals. Please check your admin privileges.';
+                    errorTitle = 'Permission Denied';
+                    errorIcon = 'fa-shield-alt';
+                    errorColor = '#f59e0b';
+                } else if (error.message.includes('collection')) {
+                    errorMessage = 'The referrals collection hasn\'t been created yet. It will be created automatically when the first referral is made.';
+                    errorTitle = 'No Referrals Yet';
+                    errorIcon = 'fa-users';
+                    errorColor = '#6366f1';
+                }
+                
+                document.getElementById('content').innerHTML = `  
+                    <div style="text-align: center; padding: 3rem;">  
+                        <i class="fas ${errorIcon}" style="font-size: 4rem; color: ${errorColor}; margin-bottom: 1rem;"></i>  
+                        <h3 style="margin-bottom: 0.5rem;">${errorTitle}</h3>  
+                        <p style="color: #64748b; margin-bottom: 2rem;">${errorMessage}</p>  
+                        <button class="btn btn-primary" onclick="loadReferrals()" style="margin-right: 0.5rem;">  
+                            <i class="fas fa-sync-alt"></i> Try Again  
+                        </button>  
+                        <button class="btn btn-success" onclick="createSampleReferral()">  
+                            <i class="fas fa-flask"></i> Create Sample Data  
+                        </button>  
+                    </div>  
+                `;  
+            }  
+        }  
+          
+        // Credit Referral Bonus  
+        async function creditReferralBonus(referralId, referrerId, referredId, referredEmail) {  
+            try {  
+                showModal(`  
+                    <h3 style="margin-bottom:1rem;">Confirm Referral Bonus</h3>  
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
+                        <p><strong>You are about to credit:</strong></p>  
+                        <ul style="margin-top: 0.5rem;">  
+                            <li><span style="color: #6366f1;">Referrer: <strong>$${REFERRAL_BONUS_REFERRER}</strong></span></li>  
+                            <li><span style="color: #10b981;">Referred User: <strong>$${REFERRAL_BONUS_REFERRED}</strong></span></li>  
+                        </ul>  
+                        <p style="margin-top: 0.5rem; color: #6b7280;">Total: $${REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED}</p>  
+                    </div>  
+                    <p>This action cannot be undone. Are you sure?</p>  
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">  
+                        <button class="btn btn-success" id="confirmCreditBtn"   
+                                data-referral-id="${referralId}"  
+                                data-referrer-id="${referrerId}"  
+                                data-referred-id="${referredId}"  
+                                data-referred-email="${referredEmail}">  
+                            Yes, Credit Bonuses  
+                        </button>  
+                        <button class="btn btn-danger" onclick="closeModal()">Cancel</button>  
+                    </div>  
+                `);  
+            } catch (error) {  
+                console.error('Error showing confirmation:', error);  
+                showAlert('Error: ' + error.message, 'error');  
+            }  
+        }  
+          
+        // Execute Credit Bonus  
+        async function executeCreditBonus(referralId, referrerId, referredId, referredEmail) {  
+            try {  
+                await db.runTransaction(async (transaction) => {  
+                    // Credit referrer  
+                    const referrerRef = db.collection('users').doc(referrerId);  
+                    const referrerSnap = await transaction.get(referrerRef);  
+                    
+                    if (!referrerSnap.exists) {  
+                        throw new Error('Referrer not found');  
+                    }  
+                    
+                    transaction.update(referrerRef, {  
+                        wallet: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRER),  
+                        referralEarnings: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRER),  
+                        totalReferrals: firebase.firestore.FieldValue.increment(1)  
+                    });  
+                    
+                    // Credit referred user  
+                    const referredRef = db.collection('users').doc(referredId);  
+                    const referredSnap = await transaction.get(referredRef);  
+                    
+                    if (!referredSnap.exists) {  
+                        throw new Error('Referred user not found');  
+                    }  
+                    
+                    transaction.update(referredRef, {  
+                        wallet: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED),  
+                        referralEarnings: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED)  
+                    });  
+                    
+                    // Record bonus for referrer  
+                    const bonusRef1 = db.collection('referralBonuses').doc();  
+                    transaction.set(bonusRef1, {  
+                        referrerId: referrerId,  
+                        referredId: referredId,  
+                        referredEmail: referredEmail,  
+                        amount: REFERRAL_BONUS_REFERRER,  
+                        type: 'referrer',  
+                        status: 'paid',  
+                        creditedBy: currentUser.email,  
+                        creditedAt: firebase.firestore.FieldValue.serverTimestamp()  
+                    });  
+                    
+                    // Record bonus for referred  
+                    const bonusRef2 = db.collection('referralBonuses').doc();  
+                    transaction.set(bonusRef2, {  
+                        referrerId: referrerId,  
+                        referredId: referredId,  
+                        referredEmail: referredEmail,  
+                        amount: REFERRAL_BONUS_REFERRED,  
+                        type: 'referred',  
+                        status: 'paid',  
+                        creditedBy: currentUser.email,  
+                        creditedAt: firebase.firestore.FieldValue.serverTimestamp()  
+                    });  
+                    
+                    // Update referral status  
+                    const referralRef = db.collection('referrals').doc(referralId);  
+                    transaction.update(referralRef, {  
+                        status: 'completed',  
+                        completedAt: firebase.firestore.FieldValue.serverTimestamp(),  
+                        completedBy: currentUser.email  
+                    });  
+                });  
+                
+                closeModal();  
+                showAlert('Referral bonuses credited successfully!', 'success');  
+                loadReferrals();  
+                
+            } catch (error) {  
+                console.error('Error crediting referral:', error);  
+                showAlert('Error crediting referral: ' + error.message, 'error');  
+                closeModal();  
+            }  
+        }  
+          
+        // Reject Referral  
+        async function rejectReferral(referralId) {  
+            try {  
+                await db.collection('referrals').doc(referralId).update({  
+                    status: 'rejected',  
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),  
+                    rejectedBy: currentUser.email  
+                });  
+                
+                showAlert('Referral rejected', 'info');  
+                loadReferrals();  
+                
+            } catch (error) {  
+                console.error('Error rejecting referral:', error);  
+                showAlert('Error rejecting referral: ' + error.message, 'error');  
+            }  
         }  
           
         // Load Messages  
@@ -1410,6 +1983,35 @@
                 return;  
             }  
               
+            // Credit Referral button  
+            if (target.classList.contains('credit-referral-btn')) {  
+                const referralId = target.getAttribute('data-referral-id');  
+                const referrerId = target.getAttribute('data-referrer-id');  
+                const referredId = target.getAttribute('data-referred-id');  
+                const referredEmail = target.getAttribute('data-referred-email');  
+                await creditReferralBonus(referralId, referrerId, referredId, referredEmail);  
+                return;  
+            }  
+              
+            // Confirm Credit button (in modal)  
+            if (target.id === 'confirmCreditBtn') {  
+                const referralId = target.getAttribute('data-referral-id');  
+                const referrerId = target.getAttribute('data-referrer-id');  
+                const referredId = target.getAttribute('data-referred-id');  
+                const referredEmail = target.getAttribute('data-referred-email');  
+                await executeCreditBonus(referralId, referrerId, referredId, referredEmail);  
+                return;  
+            }  
+              
+            // Reject Referral button  
+            if (target.classList.contains('reject-referral-btn')) {  
+                const referralId = target.getAttribute('data-referral-id');  
+                if (confirm('Are you sure you want to reject this referral?')) {  
+                    await rejectReferral(referralId);  
+                }  
+                return;  
+            }  
+              
             // Send Individual Message  
             if (target.id === 'sendMessageBtn') {  
                 await sendMessage();  
@@ -1481,6 +2083,12 @@
         window.processWithdrawal = processWithdrawal;  
         window.approveMembership = approveMembership;  
         window.rejectMembership = rejectMembership;  
+        window.loadReferrals = loadReferrals;  
+        window.creditReferralBonus = creditReferralBonus;  
+        window.executeCreditBonus = executeCreditBonus;  
+        window.rejectReferral = rejectReferral;  
+        window.initializeReferralCollections = initializeReferralCollections;  
+        window.createSampleReferral = createSampleReferral;  
         window.sendMessage = sendMessage;  
         window.sendBroadcast = sendBroadcast;  
         window.executeBroadcast = executeBroadcast;  
