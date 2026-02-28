@@ -37,6 +37,43 @@
         .link a { color: #667eea; text-decoration: none; font-weight: 600; cursor: pointer; }
         .info-text { text-align: center; color: #64748b; margin: 1rem 0; font-size: 0.9rem; }
         
+        /* Referral Banner */
+        .referral-banner {
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border-radius: 40px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border: 2px dashed #667eea;
+        }
+        .referral-banner p {
+            color: #4a5568;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        .referral-banner .highlight {
+            font-weight: 700;
+            color: #667eea;
+        }
+        .referral-code {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            border: 2px solid #e2e8f0;
+        }
+        .referral-code span {
+            font-weight: 700;
+            color: #2d3748;
+        }
+        .referral-code i {
+            color: #667eea;
+            cursor: pointer;
+        }
+        
         /* Alert Dialog Styles */
         .alert-dialog {
             position: fixed;
@@ -153,6 +190,17 @@
         
         <!-- Register Form -->
         <div id="registerForm" class="form hidden">
+            <!-- Referral Info Banner -->
+            <div class="referral-banner" id="referralBanner">
+                <p>🎉 <span class="highlight">Earn $2</span> for each friend who upgrades to premium!</p>
+                <p>Your friends get <span class="highlight">$0.5</span> bonus too!</p>
+            </div>
+            
+            <!-- Referral Code Input (hidden by default, shown if referral exists) -->
+            <div class="input-group" id="referralCodeGroup" style="display: none;">
+                <input type="text" id="referralCode" placeholder="Referral code (if any)" value="">
+            </div>
+            
             <div class="input-group">
                 <input type="text" id="regName" placeholder="Full name">
             </div>
@@ -211,6 +259,16 @@
         
         let currentUser = null;
         
+        // Check for referral code in URL on page load
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if (ref) {
+                document.getElementById('referralCode').value = ref;
+                document.getElementById('referralCodeGroup').style.display = 'block';
+            }
+        });
+        
         // Alert functions
         function showAlert(message, type = 'error') {
             const alertDialog = document.getElementById('alertDialog');
@@ -257,12 +315,19 @@
             document.getElementById('verifyEmail').textContent = email;
         }
         
+        // Generate referral code from user ID
+        function generateReferralCode(userId) {
+            // Take first 8 characters of user ID and make it uppercase
+            return userId.substring(0, 8).toUpperCase();
+        }
+        
         // Handle Registration
         async function handleRegister() {
             const name = document.getElementById('regName').value;
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const phone = document.getElementById('regPhone').value;
+            const referralCode = document.getElementById('referralCode').value;
             
             if (!name || !email || !password) {
                 showAlert('Please fill all required fields', 'error');
@@ -278,8 +343,11 @@
                 const cred = await auth.createUserWithEmailAndPassword(email, password);
                 await cred.user.sendEmailVerification();
                 
+                // Generate referral code for the new user
+                const userReferralCode = generateReferralCode(cred.user.uid);
+                
                 // Create user document
-                await db.collection('users').doc(cred.user.uid).set({
+                const userData = {
                     email,
                     displayName: name,
                     phone: phone || '',
@@ -289,8 +357,32 @@
                     verified: false,
                     membershipPaid: false,
                     membershipStatus: 'pending',
+                    referralCode: userReferralCode,
+                    referredBy: null,
+                    referrals: [],
+                    referralEarnings: 0,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                
+                // If there's a referral code, find the referrer
+                if (referralCode) {
+                    // Find user with this referral code
+                    const referrerSnapshot = await db.collection('users')
+                        .where('referralCode', '==', referralCode)
+                        .get();
+                    
+                    if (!referrerSnapshot.empty) {
+                        const referrerDoc = referrerSnapshot.docs[0];
+                        userData.referredBy = referrerDoc.id;
+                        
+                        // Add this user to referrer's referrals array
+                        await db.collection('users').doc(referrerDoc.id).update({
+                            referrals: firebase.firestore.FieldValue.arrayUnion(cred.user.uid)
+                        });
+                    }
+                }
+                
+                await db.collection('users').doc(cred.user.uid).set(userData);
                 
                 showVerifyView(email);
                 showAlert('Verification email sent!', 'success');
@@ -327,6 +419,9 @@
                 const userDoc = await userRef.get();
                 
                 if (!userDoc.exists) {
+                    // Generate referral code
+                    const userReferralCode = generateReferralCode(user.uid);
+                    
                     await userRef.set({
                         email: user.email,
                         displayName: user.displayName,
@@ -337,6 +432,10 @@
                         verified: true,
                         membershipPaid: false,
                         membershipStatus: 'pending',
+                        referralCode: userReferralCode,
+                        referredBy: null,
+                        referrals: [],
+                        referralEarnings: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
@@ -366,6 +465,74 @@
             }
         }
         
+        // Function to handle premium upgrade and referral commission
+        async function handlePremiumUpgrade(userId) {
+            try {
+                const userRef = db.collection('users').doc(userId);
+                const userDoc = await userRef.get();
+                const userData = userDoc.data();
+                
+                // Update user's membership status
+                await userRef.update({
+                    membershipPaid: true,
+                    membershipStatus: 'active',
+                    upgradedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // If user was referred, give commission to referrer
+                if (userData.referredBy) {
+                    const referrerRef = db.collection('users').doc(userData.referredBy);
+                    const referrerDoc = await referrerRef.get();
+                    
+                    if (referrerDoc.exists) {
+                        const referrerData = referrerDoc.data();
+                        
+                        // Update referrer's wallet (+$2)
+                        await referrerRef.update({
+                            wallet: firebase.firestore.FieldValue.increment(2),
+                            referralEarnings: firebase.firestore.FieldValue.increment(2)
+                        });
+                        
+                        // Give $0.5 to the new user as bonus
+                        await userRef.update({
+                            wallet: firebase.firestore.FieldValue.increment(0.5)
+                        });
+                        
+                        // Create transaction records
+                        const batch = db.batch();
+                        
+                        // Referrer transaction
+                        const referrerTransactionRef = db.collection('transactions').doc();
+                        batch.set(referrerTransactionRef, {
+                            userId: userData.referredBy,
+                            type: 'referral_commission',
+                            amount: 2,
+                            description: `Referral commission for user ${userData.displayName}`,
+                            referredUserId: userId,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        // User bonus transaction
+                        const userTransactionRef = db.collection('transactions').doc();
+                        batch.set(userTransactionRef, {
+                            userId: userId,
+                            type: 'referral_bonus',
+                            amount: 0.5,
+                            description: 'Welcome bonus from referral',
+                            referrerId: userData.referredBy,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        await batch.commit();
+                        
+                        console.log('Referral commission processed successfully');
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing premium upgrade:', error);
+            }
+        }
+        
         // Auth State Observer
         auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -379,6 +546,14 @@
                 const userDoc = await db.collection('users').doc(user.uid).get();
                 if (userDoc.exists) {
                     const userData = userDoc.data();
+                    
+                    // Check if user needs a referral code (for existing users)
+                    if (!userData.referralCode) {
+                        const referralCode = generateReferralCode(user.uid);
+                        await db.collection('users').doc(user.uid).update({
+                            referralCode: referralCode
+                        });
+                    }
                     
                     if (userData.active === false) {
                         await auth.signOut();
@@ -394,6 +569,9 @@
                 }
             }
         });
+
+        // Expose functions globally for dashboard use
+        window.processPremiumUpgrade = handlePremiumUpgrade;
     </script>
 </body>
 </html>
