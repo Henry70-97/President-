@@ -1872,12 +1872,11 @@
             return userId.substring(0, 8).toUpperCase();
         }
         
-        // UPDATED: Get referral link - FIXED to point to correct registration page
+        // UPDATED: Get referral link with clean URL format
         function getReferralLink() {
-            // Get the base URL without the current filename
-            const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1) + 'index.html';
             const referralCode = generateReferralCode(currentUser.uid);
-            return `${baseUrl}?ref=${referralCode}`;
+            // Using clean URL format - you can change this to /register/ or /join/ as preferred
+            return `https://genevaproduct.netlify.app/signup/${referralCode}`;
         }
         
         // Copy referral link to clipboard
@@ -1888,6 +1887,17 @@
             }).catch(() => {
                 showAlert('Failed to copy link', 'error');
             });
+        }
+        
+        // Optional: Copy function for multiple link formats
+        function copyToClipboard(elementId) {
+            const input = document.getElementById(elementId);
+            if (input) {
+                input.select();
+                input.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                showAlert('Copied to clipboard!', 'success');
+            }
         }
         
         // Tab switching function
@@ -2969,7 +2979,7 @@
             }
         }
         
-        // Load Referrals - User view only
+        // Load Referrals - UPDATED with clean referral link
         async function loadReferrals() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading referrals...</p></div>';
@@ -3017,7 +3027,7 @@
                 userData.totalReferrals = totalReferrals;
                 userData.referralEarnings = totalEarned;
                 
-                // Build referral stats
+                // Build referral stats with clean link
                 let statsHtml = `
                     <div class="referral-section">
                         <div class="referral-header">
@@ -3041,11 +3051,36 @@
                         </div>
                         
                         <div style="margin: 2rem 0;">
-                            <h4 style="margin-bottom: 1rem;">Your Referral Link</h4>
+                            <h4 style="margin-bottom: 1rem;">Your Referral Link (Clean URL)</h4>
                             <div class="referral-link-box">
                                 <input type="text" id="referralLink" value="${referralLink}" readonly>
                                 <button onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy Link</button>
                             </div>
+                            
+                            <!-- Optional: Show other formats -->
+                            <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 1rem;">
+                                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-info-circle" style="color: #6366f1;"></i> 
+                                    Other formats you can share:
+                                </p>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/register/</span>
+                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://genevaproduct.netlify.app/register/${referralCode}</code>
+                                        <button onclick="copyToClipboardDynamic('https://genevaproduct.netlify.app/register/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/join/</span>
+                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://genevaproduct.netlify.app/join/${referralCode}</code>
+                                        <button onclick="copyToClipboardDynamic('https://genevaproduct.netlify.app/join/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="referral-info">
                                 <div class="referral-info-item">
                                     <i class="fas fa-check-circle"></i>
@@ -3180,6 +3215,15 @@
                     </div>
                 `;
             }
+        }
+        
+        // Helper function to copy dynamic text
+        function copyToClipboardDynamic(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('Copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy', 'error');
+            });
         }
         
         // Select membership package

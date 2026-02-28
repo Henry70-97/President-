@@ -13,6 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Your existing styles remain exactly the same */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
         .auth-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 2rem; padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
@@ -164,6 +165,16 @@
         .overlay.show {
             display: block;
         }
+        
+        /* New URL info style */
+        .url-info {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-top: 1px dashed #e2e8f0;
+        }
     </style>
 </head>
 <body>
@@ -264,34 +275,72 @@
             return userId.substring(0, 8).toUpperCase();
         }
         
+        // NEW: Get referral code from clean URL or query parameter
+        function getReferralCodeFromUrl() {
+            // First check query parameters (backward compatibility)
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryRef = urlParams.get('ref');
+            
+            if (queryRef) {
+                return queryRef;
+            }
+            
+            // Then check for clean URL patterns like /register/CODE or /join/CODE
+            const path = window.location.pathname;
+            
+            // Match patterns: /register/CODE, /join/CODE, /signup/CODE, /ref/CODE, /r/CODE
+            const cleanUrlMatch = path.match(/\/(?:register|join|signup|ref|r)\/([a-zA-Z0-9_-]+)/i);
+            
+            if (cleanUrlMatch && cleanUrlMatch[1]) {
+                return cleanUrlMatch[1];
+            }
+            
+            // Also check for just /CODE at the end (if page is at root)
+            // This would match yoursite.com/CODE
+            if (path.split('/').length === 2 && path !== '/') {
+                const possibleCode = path.substring(1); // Remove leading slash
+                // Only treat as code if it looks like a referral code (alphanumeric, reasonable length)
+                if (possibleCode.length >= 4 && possibleCode.length <= 20 && /^[a-zA-Z0-9_-]+$/.test(possibleCode)) {
+                    return possibleCode;
+                }
+            }
+            
+            return null;
+        }
+        
         // Check for referrer on page load
         async function checkForReferrer() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const referralCode = urlParams.get('ref');
+            const referralCode = getReferralCodeFromUrl();
             
             if (referralCode) {
+                console.log('Referral code detected:', referralCode); // For debugging
+                
+                // Store referral code in session storage for later use
+                sessionStorage.setItem('pendingReferral', referralCode);
+                
+                // Try to get referrer name
                 try {
-                    // Store referral code in session storage for later use
-                    sessionStorage.setItem('pendingReferral', referralCode);
+                    const usersSnapshot = await db.collection('users').get();
+                    let found = false;
                     
-                    // Try to get referrer name (this might fail due to permissions, but we'll try)
-                    try {
-                        const usersSnapshot = await db.collection('users').get();
-                        for (const userDoc of usersSnapshot.docs) {
-                            const userCode = generateReferralCode(userDoc.id);
-                            if (userCode === referralCode) {
-                                const referrerName = userDoc.data().displayName || 'A NextGen user';
-                                showReferrerMessage(referrerName);
-                                break;
-                            }
+                    for (const userDoc of usersSnapshot.docs) {
+                        const userCode = generateReferralCode(userDoc.id);
+                        if (userCode === referralCode) {
+                            const referrerName = userDoc.data().displayName || 'A NextGen user';
+                            showReferrerMessage(referrerName);
+                            found = true;
+                            break;
                         }
-                    } catch (error) {
-                        console.log('Could not fetch referrer name, but referral code saved');
-                        // Still show a generic message
+                    }
+                    
+                    if (!found) {
+                        // Still show generic message if code is present but user not found
                         showReferrerMessage('a NextGen user');
                     }
                 } catch (error) {
-                    console.error('Error in referrer check:', error);
+                    console.log('Could not fetch referrer name, but referral code saved');
+                    // Still show a generic message
+                    showReferrerMessage('a NextGen user');
                 }
             }
         }
@@ -397,8 +446,6 @@
                         }
                     } catch (error) {
                         console.log('Could not verify referrer, but will try to save referral code');
-                        // If we can't verify, we'll still try to use the code
-                        // The admin can manually verify later if needed
                     }
                     
                     // Clear the pending referral
@@ -444,7 +491,6 @@
                         });
                     } catch (error) {
                         console.log('Referral record creation failed, but user was created');
-                        // Don't show error to user, just log it
                     }
                 }
                 
