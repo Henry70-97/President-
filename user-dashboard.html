@@ -13,6 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Keep all your existing styles - they remain the same */
         * { 
             margin: 0; 
             padding: 0; 
@@ -31,7 +32,6 @@
             padding: 1rem; 
         }
         
-        /* Header */
         .header { 
             background: white; 
             border-radius: 2rem; 
@@ -83,7 +83,6 @@
             padding: 0.5rem; 
         }
         
-        /* Hamburger Menu Styles */
         .hamburger-menu {
             display: none;
             font-size: 1.8rem;
@@ -177,7 +176,6 @@
             display: block;
         }
         
-        /* Stats Grid */
         .stats-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
@@ -219,7 +217,6 @@
             letter-spacing: 0.5px;
         }
         
-        /* Tabs */
         .tabs { 
             display: flex; 
             gap: 0.5rem; 
@@ -243,7 +240,6 @@
             color: white; 
         }
         
-        /* Content area */
         .content { 
             background: white; 
             border-radius: 2rem; 
@@ -251,14 +247,12 @@
             min-height: 500px; 
         }
         
-        /* Task Grid */
         .task-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
             gap: 1.8rem; 
         }
         
-        /* Regular Task Cards */
         .task-card:nth-child(odd) { 
             background: #f8fafc; 
             border-left: 4px solid #6366f1;
@@ -289,7 +283,6 @@
             line-height: 1.3;
         }
         
-        /* Client info */
         .client-info {
             display: flex;
             align-items: center;
@@ -308,7 +301,6 @@
             font-size: 0.9rem;
         }
         
-        /* Deadline badge */
         .deadline-badge {
             display: flex;
             align-items: center;
@@ -354,7 +346,6 @@
             letter-spacing: -0.5px;
         }
         
-        /* Expired message */
         .expired-message {
             background: #fee2e2;
             color: #ef4444;
@@ -366,7 +357,6 @@
             margin-top: 0.5rem;
         }
         
-        /* Badges */
         .badge { 
             padding: 0.4rem 1.2rem; 
             border-radius: 40px; 
@@ -396,7 +386,6 @@
             color: #ef4444; 
         }
         
-        /* Buttons */
         .btn { 
             padding: 0.9rem 1.8rem; 
             border: none; 
@@ -610,6 +599,10 @@
             color: #6366f1;
         }
         
+        .package-features .fa-users {
+            color: #6366f1;
+        }
+        
         .package-btn {
             width: 100%;
             padding: 1rem;
@@ -668,7 +661,6 @@
             color: #10b981;
         }
         
-        /* Current membership badge */
         .current-membership {
             background: #f0fdf4;
             border: 2px solid #10b981;
@@ -697,7 +689,164 @@
             font-weight: 600;
         }
         
-        /* Withdrawal section */
+        /* Referral Section - User View */
+        .referral-section {
+            background: linear-gradient(145deg, #f0f9ff, #e6f2ff);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid #6366f1;
+        }
+        
+        .referral-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .referral-header i {
+            font-size: 2.5rem;
+            color: #6366f1;
+        }
+        
+        .referral-header h3 {
+            margin-bottom: 0;
+            color: #6366f1;
+        }
+        
+        .referral-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .referral-stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.2rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .referral-stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #6366f1;
+        }
+        
+        .referral-stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+        
+        .referral-link-box {
+            background: white;
+            border-radius: 40px;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 1rem;
+        }
+        
+        .referral-link-box input {
+            flex: 1;
+            border: none;
+            padding: 0.8rem 1rem;
+            margin: 0;
+            font-size: 0.9rem;
+            background: transparent;
+        }
+        
+        .referral-link-box input:focus {
+            outline: none;
+        }
+        
+        .referral-link-box button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .referral-link-box button:hover {
+            background: #4f52e0;
+        }
+        
+        .referral-info {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .referral-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+        
+        .referral-info-item i {
+            color: #10b981;
+        }
+        
+        .referral-table {
+            margin-top: 2rem;
+            overflow-x: auto;
+        }
+        
+        .referral-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .referral-table th {
+            text-align: left;
+            padding: 1rem;
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+        }
+        
+        .referral-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .referral-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .commission-badge {
+            background: #10b98120;
+            color: #10b981;
+            padding: 0.2rem 0.5rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            background: #f59e0b20;
+            color: #f59e0b;
+            padding: 0.2rem 0.5rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
         .withdrawal-section {
             background: #f8fafc;
             border-radius: 1.5rem;
@@ -745,7 +894,6 @@
             font-weight: 600;
         }
         
-        /* Fee breakdown */
         .fee-breakdown {
             background: #f1f5f9;
             border-radius: 1rem;
@@ -809,7 +957,6 @@
             color: #10b981;
         }
         
-        /* Submission cards */
         .submission-card { 
             background: #f8fafc; 
             border-radius: 1rem; 
@@ -818,7 +965,6 @@
             border: 1px solid #e2e8f0; 
         }
         
-        /* Empty state */
         .empty-state { 
             text-align: center; 
             padding: 3rem; 
@@ -831,7 +977,6 @@
             margin-bottom: 1rem; 
         }
         
-        /* Loading */
         .loading { 
             text-align: center; 
             padding: 3rem; 
@@ -844,7 +989,6 @@
             color: #6366f1; 
         }
         
-        /* Modal */
         .modal { 
             display: none; 
             position: fixed; 
@@ -854,7 +998,7 @@
             background: white; 
             border-radius: 1rem; 
             padding: 0;
-            max-width: 500px; 
+            max-width: 600px; 
             width: 95%; 
             z-index: 1000; 
             max-height: 90vh; 
@@ -884,7 +1028,6 @@
             padding: 2rem;
         }
         
-        /* PDF Document Styles */
         .pdf-document {
             background: white;
             font-family: 'Inter', sans-serif;
@@ -1127,7 +1270,6 @@
             background: #e2e8f0;
         }
         
-        /* Alert Dialog */
         .alert-dialog {
             position: fixed;
             top: 50%;
@@ -1205,7 +1347,6 @@
             display: block;
         }
         
-        /* Message thread */
         .message-thread {
             max-height: 500px;
             overflow-y: auto;
@@ -1331,7 +1472,6 @@
             margin-top: 0.3rem;
         }
         
-        /* Inputs */
         input, textarea, select { 
             width: 100%; 
             padding: 1rem; 
@@ -1364,7 +1504,6 @@
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
         }
         
-        /* Typography */
         h3 {
             font-size: 1.8rem;
             font-weight: 800;
@@ -1386,7 +1525,6 @@
             color: #334155;
         }
         
-        /* Task detail items */
         .task-detail-item { 
             margin-bottom: 1rem; 
             padding: 0.8rem; 
@@ -1405,7 +1543,6 @@
             font-size: 1rem; 
         }
         
-        /* Premium badge */
         .premium-badge { 
             background: linear-gradient(135deg, #f59e0b, #fbbf24); 
             color: white; 
@@ -1425,7 +1562,6 @@
             display: inline-block; 
         }
         
-        /* Responsive */
         @media (max-width: 768px) { 
             .tabs {
                 display: none;
@@ -1443,6 +1579,18 @@
                 flex-direction: column;
                 text-align: center;
                 gap: 1rem;
+            }
+            
+            .referral-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .referral-link-box {
+                flex-direction: column;
+            }
+            
+            .referral-link-box button {
+                width: 100%;
             }
             
             .pdf-header {
@@ -1512,6 +1660,10 @@
             <i class="fas fa-money-bill-wave"></i>
             <span>Withdrawals</span>
         </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('referrals')">
+            <i class="fas fa-users"></i>
+            <span>Referrals</span>
+        </div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('messages')">
             <i class="fas fa-envelope"></i>
             <span>Messages</span>
@@ -1551,6 +1703,7 @@
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
             <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
+            <button class="tab" onclick="switchTab('referrals')">👥 Referrals</button>
             <button class="tab" onclick="switchTab('messages')">
                 💬 Messages 
                 <span id="unreadMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span>
@@ -1622,6 +1775,10 @@
         };
         
         const ELITE_BONUS = 10;
+        
+        // Referral constants - amounts that admin will credit
+        const REFERRAL_BONUS_REFERRER = 2; // $2 for referrer when referred upgrades to premium
+        const REFERRAL_BONUS_REFERRED = 0.5; // $0.5 for referred when they upgrade to premium
         
         // Enable offline persistence
         db.enablePersistence()
@@ -1709,6 +1866,29 @@
             window.location.href = 'index.html';
         }
         
+        // Generate referral code from user ID
+        function generateReferralCode(userId) {
+            // Take first 8 characters of user ID and make it uppercase
+            return userId.substring(0, 8).toUpperCase();
+        }
+        
+        // Get referral link
+        function getReferralLink() {
+            const baseUrl = window.location.origin + window.location.pathname.replace('dashboard.html', 'index.html');
+            const referralCode = generateReferralCode(currentUser.uid);
+            return `${baseUrl}?ref=${referralCode}`;
+        }
+        
+        // Copy referral link to clipboard
+        function copyReferralLink() {
+            const link = getReferralLink();
+            navigator.clipboard.writeText(link).then(() => {
+                showAlert('Referral link copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy link', 'error');
+            });
+        }
+        
         // Tab switching function
         function switchTab(tab) {
             const desktopTabs = document.querySelectorAll('.tab');
@@ -1720,6 +1900,7 @@
                    (tab === 'tasks' && tabText.includes('available')) ||
                    (tab === 'submissions' && tabText.includes('submissions')) ||
                    (tab === 'withdrawals' && tabText.includes('withdrawals')) ||
+                   (tab === 'referrals' && tabText.includes('referrals')) ||
                    (tab === 'messages' && tabText.includes('messages')) ||
                    (tab === 'profile' && tabText.includes('profile'))) {
                     desktopTabs[i].classList.add('active');
@@ -1735,6 +1916,7 @@
                    (tab === 'tasks' && itemText.includes('available')) ||
                    (tab === 'submissions' && itemText.includes('submissions')) ||
                    (tab === 'withdrawals' && itemText.includes('withdrawals')) ||
+                   (tab === 'referrals' && itemText.includes('referrals')) ||
                    (tab === 'messages' && itemText.includes('messages')) ||
                    (tab === 'profile' && itemText.includes('profile'))) {
                     item.classList.add('active');
@@ -1750,6 +1932,9 @@
                     break;
                 case 'withdrawals':
                     loadWithdrawals();
+                    break;
+                case 'referrals':
+                    loadReferrals();
                     break;
                 case 'messages':
                     loadMessages();
@@ -1826,6 +2011,23 @@
                 const doc = await db.collection('users').doc(user.uid).get();
                 
                 if (!doc.exists) {
+                    // Check if user was referred (from URL)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const referralCode = urlParams.get('ref');
+                    let referredBy = null;
+                    
+                    if (referralCode) {
+                        // Find user with this referral code
+                        const usersSnapshot = await db.collection('users').get();
+                        for (const userDoc of usersSnapshot.docs) {
+                            const userCode = generateReferralCode(userDoc.id);
+                            if (userCode === referralCode) {
+                                referredBy = userDoc.id;
+                                break;
+                            }
+                        }
+                    }
+                    
                     await db.collection('users').doc(user.uid).set({
                         email: user.email,
                         displayName: user.displayName || 'User',
@@ -1840,8 +2042,22 @@
                         membershipExpiry: null,
                         totalFeesPaid: 0,
                         unreadMessages: 0,
+                        referredBy: referredBy,
+                        totalReferrals: 0,
+                        referralEarnings: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+                    
+                    // Create referral record if they were referred
+                    if (referredBy) {
+                        await db.collection('referrals').add({
+                            referrerId: referredBy,
+                            referredId: user.uid,
+                            referredEmail: user.email,
+                            status: 'pending',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
                     
                     const newDoc = await db.collection('users').doc(user.uid).get();
                     userData = { id: user.uid, ...newDoc.data() };
@@ -1938,6 +2154,8 @@
                 userData.wallet = userDoc.data().wallet || 0;
                 userData.totalFeesPaid = userDoc.data().totalFeesPaid || 0;
                 userData.membershipType = userDoc.data().membershipType || MEMBERSHIP_TYPES.BASIC;
+                userData.totalReferrals = userDoc.data().totalReferrals || 0;
+                userData.referralEarnings = userDoc.data().referralEarnings || 0;
                 
                 const pendingSnapshot = await db.collection('submissions')
                     .where('userId', '==', currentUser.uid)
@@ -1971,9 +2189,9 @@
                         <div class="stat-label">Approved</div>
                     </div>
                     <div class="stat-card">
-                        <i class="fas fa-dollar-sign"></i>
-                        <div class="stat-value">$${totalEarned.toFixed(2)}</div>
-                        <div class="stat-label">Total Earned</div>
+                        <i class="fas fa-users"></i>
+                        <div class="stat-value">${userData.totalReferrals || 0}</div>
+                        <div class="stat-label">Referrals</div>
                     </div>
                 `;
                 
@@ -2507,7 +2725,7 @@
             }
         }
         
-        // Load Withdrawals - with membership packages
+        // Load Withdrawals with membership packages
         async function loadWithdrawals() {
             try {
                 // Get fresh user data
@@ -2745,6 +2963,219 @@
                         <h4>Error Loading Withdrawals</h4>
                         <p>${error.message}</p>
                         <button class="btn btn-primary" onclick="loadWithdrawals()" style="margin-top:1rem;">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load Referrals - User view only
+        async function loadReferrals() {
+            try {
+                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading referrals...</p></div>';
+                
+                // Get referral stats
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                const referralCode = generateReferralCode(currentUser.uid);
+                const referralLink = getReferralLink();
+                
+                // Get referred users
+                let referredSnapshot = { empty: true, docs: [] };
+                try {
+                    referredSnapshot = await db.collection('users')
+                        .where('referredBy', '==', currentUser.uid)
+                        .get();
+                } catch (error) {
+                    console.warn('Could not fetch referred users:', error);
+                }
+                
+                // Get referral bonuses
+                let bonusesSnapshot = { empty: true, docs: [] };
+                try {
+                    bonusesSnapshot = await db.collection('referralBonuses')
+                        .where('referrerId', '==', currentUser.uid)
+                        .orderBy('createdAt', 'desc')
+                        .get();
+                } catch (error) {
+                    console.warn('Could not fetch referral bonuses:', error);
+                }
+                
+                const totalReferrals = referredSnapshot.size;
+                
+                let totalEarned = 0;
+                const bonuses = [];
+                
+                if (!bonusesSnapshot.empty) {
+                    bonusesSnapshot.forEach(doc => {
+                        const bonus = doc.data();
+                        totalEarned += bonus.amount;
+                        bonuses.push({ id: doc.id, ...bonus });
+                    });
+                }
+                
+                // Update user's referral stats in local data
+                userData.totalReferrals = totalReferrals;
+                userData.referralEarnings = totalEarned;
+                
+                // Build referral stats
+                let statsHtml = `
+                    <div class="referral-section">
+                        <div class="referral-header">
+                            <i class="fas fa-users"></i>
+                            <h3>Referral Program</h3>
+                        </div>
+                        
+                        <div class="referral-stats">
+                            <div class="referral-stat-card">
+                                <div class="referral-stat-value">${totalReferrals}</div>
+                                <div class="referral-stat-label">Total Referrals</div>
+                            </div>
+                            <div class="referral-stat-card">
+                                <div class="referral-stat-value">$${totalEarned.toFixed(2)}</div>
+                                <div class="referral-stat-label">Earned from Referrals</div>
+                            </div>
+                            <div class="referral-stat-card">
+                                <div class="referral-stat-value">$${REFERRAL_BONUS_REFERRER}</div>
+                                <div class="referral-stat-label">Per Premium Upgrade</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 2rem 0;">
+                            <h4 style="margin-bottom: 1rem;">Your Referral Link</h4>
+                            <div class="referral-link-box">
+                                <input type="text" id="referralLink" value="${referralLink}" readonly>
+                                <button onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy Link</button>
+                            </div>
+                            <div class="referral-info">
+                                <div class="referral-info-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>You get <strong>$${REFERRAL_BONUS_REFERRER}</strong> when referred user upgrades to Premium</span>
+                                </div>
+                                <div class="referral-info-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Referred user gets <strong>$${REFERRAL_BONUS_REFERRED}</strong> when they upgrade to Premium</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Build referred users table
+                let referralsHtml = '<h4 style="margin-bottom: 1rem;">Your Referrals</h4>';
+                
+                if (referredSnapshot.empty) {
+                    referralsHtml += `
+                        <div class="empty-state">
+                            <i class="fas fa-user-plus"></i>
+                            <p>You haven't referred anyone yet.</p>
+                            <p style="font-size:0.9rem;">Share your referral link to earn bonuses!</p>
+                        </div>
+                    `;
+                } else {
+                    referralsHtml += `
+                        <div class="referral-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Joined</th>
+                                        <th>Status</th>
+                                        <th>Bonus Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    for (const doc of referredSnapshot.docs) {
+                        const referred = doc.data();
+                        const joinedDate = referred.createdAt?.seconds ? 
+                            new Date(referred.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                        
+                        // Check if this referral has earned a bonus
+                        const bonusEarned = bonuses.find(b => b.referredId === doc.id && b.type === 'referrer');
+                        
+                        const status = referred.membershipType === MEMBERSHIP_TYPES.PREMIUM ? 
+                            '<span class="badge primary">Premium</span>' : 
+                            referred.membershipType === MEMBERSHIP_TYPES.ELITE ?
+                            '<span class="badge warning">Elite</span>' :
+                            '<span class="badge">Basic</span>';
+                        
+                        let bonusStatus = '-';
+                        if (bonusEarned) {
+                            bonusStatus = `<span class="commission-badge">$${bonusEarned.amount.toFixed(2)} paid</span>`;
+                        } else if (referred.membershipType === MEMBERSHIP_TYPES.PREMIUM) {
+                            bonusStatus = '<span class="status-badge">Pending approval</span>';
+                        }
+                        
+                        referralsHtml += `
+                            <tr>
+                                <td>${referred.email}</td>
+                                <td>${joinedDate}</td>
+                                <td>${status}</td>
+                                <td>${bonusStatus}</td>
+                            </tr>
+                        `;
+                    }
+                    
+                    referralsHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                // Build bonus history
+                let bonusHtml = '<h4 style="margin: 2rem 0 1rem 0;">Bonus History</h4>';
+                
+                if (bonuses.length === 0) {
+                    bonusHtml += '<p style="color:#64748b;">No bonuses earned yet.</p>';
+                } else {
+                    bonusHtml += `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+                    `;
+                    
+                    bonuses.forEach(bonus => {
+                        const date = bonus.creditedAt?.seconds ? 
+                            new Date(bonus.creditedAt.seconds * 1000).toLocaleDateString() : 
+                            bonus.createdAt?.seconds ? new Date(bonus.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                        
+                        bonusHtml += `
+                            <div class="submission-card" style="padding: 1rem;">
+                                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom:0.5rem;">
+                                    <span><i class="fas fa-gift" style="color:#10b981;"></i> <strong>$${bonus.amount.toFixed(2)}</strong></span>
+                                    <span class="commission-badge">${bonus.type === 'referrer' ? 'Referrer' : 'Referred'}</span>
+                                </div>
+                                <p style="color:#64748b; font-size:0.85rem; margin-bottom:0.3rem;">From: ${bonus.referredEmail || 'Referral'}</p>
+                                <p style="color:#94a3b8; font-size:0.75rem;">${date}</p>
+                            </div>
+                        `;
+                    });
+                    
+                    bonusHtml += '</div>';
+                }
+                
+                document.getElementById('content').innerHTML = statsHtml + referralsHtml + bonusHtml;
+                
+                // Update user document with latest stats
+                try {
+                    await db.collection('users').doc(currentUser.uid).update({
+                        totalReferrals: totalReferrals,
+                        referralEarnings: totalEarned
+                    });
+                } catch (error) {
+                    console.warn('Could not update referral stats:', error);
+                }
+                
+            } catch (error) {
+                console.error('Error loading referrals:', error);
+                
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
+                        <h4>Error Loading Referrals</h4>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadReferrals()" style="margin-top:1rem;">
+                            <i class="fas fa-sync-alt"></i> Try Again
+                        </button>
                     </div>
                 `;
             }
@@ -3397,6 +3828,8 @@
                             ${(userData.membershipType || MEMBERSHIP_TYPES.BASIC).toUpperCase()}
                         </span>
                     </p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Referrals:</strong> ${userData.totalReferrals || 0}</p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Referral Earnings:</strong> $${(userData.referralEarnings || 0).toFixed(2)}</p>
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Fees Paid:</strong> $${(userData.totalFeesPaid || 0).toFixed(2)}</p>
                 </div>
                 <div style="margin-top: 1rem; text-align: center; font-size: 0.8rem; color: #94a3b8;">
