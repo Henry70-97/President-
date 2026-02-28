@@ -1,0 +1,24 @@
+[[redirects]]
+  from = "/register/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/join/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/user-dashboard"
+  to = "/user-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin-dashboard"
+  to = "/admin-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
