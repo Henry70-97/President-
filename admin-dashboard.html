@@ -43,6 +43,7 @@
         .btn-danger { background: #ef4444; color: white; }  
         .btn-warning { background: #f59e0b; color: white; }  
         .btn-info { background: #3b82f6; color: white; }  
+        .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }  
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }  
         .modal.active { display: block; }  
         .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }  
@@ -185,7 +186,7 @@
             to { opacity: 1; }
         }
         
-        /* Referral Cards */
+        /* Enhanced Referral Cards */
         .referral-card {
             background: #f8fafc;
             border-radius: 1rem;
@@ -193,77 +194,262 @@
             margin-bottom: 1rem;
             border-left: 4px solid;
             transition: transform 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         .referral-card:hover {
             transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         .referral-card.pending {
             border-left-color: #f59e0b;
+            background: linear-gradient(to right, #fff7ed, #ffffff);
         }
         
         .referral-card.completed {
             border-left-color: #10b981;
+            background: linear-gradient(to right, #f0fdf4, #ffffff);
         }
         
         .referral-card.rejected {
             border-left-color: #ef4444;
+            background: linear-gradient(to right, #fef2f2, #ffffff);
         }
         
         .referral-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .referral-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
         
         .referral-amount {
             font-size: 1.2rem;
             font-weight: 700;
             color: #10b981;
+            background: #10b98120;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
         }
         
-        .referral-details {
+        /* User Info Cards */
+        .user-info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
         
-        .referral-detail-item {
+        .user-info-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .user-info-card.referrer {
+            border-top: 3px solid #6366f1;
+        }
+        
+        .user-info-card.referred {
+            border-top: 3px solid #10b981;
+        }
+        
+        .user-info-header {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            color: #4b5563;
+            margin-bottom: 1rem;
+            color: #1e293b;
         }
         
-        .referral-detail-item i {
+        .user-info-header i {
+            font-size: 1.2rem;
+        }
+        
+        .user-info-header.referrer i {
             color: #6366f1;
-            width: 20px;
         }
         
-        .bonus-breakdown {
-            background: #f1f5f9;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin: 1rem 0;
+        .user-info-header.referred i {
+            color: #10b981;
         }
         
-        .bonus-row {
+        .user-detail-row {
             display: flex;
             justify-content: space-between;
-            padding: 0.3rem 0;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #e2e8f0;
         }
         
-        .bonus-row.referrer {
-            color: #6366f1;
+        .user-detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .user-detail-label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .user-detail-value {
             font-weight: 600;
+            color: #1e293b;
         }
         
-        .bonus-row.referred {
+        .user-detail-value.highlight {
             color: #10b981;
+        }
+        
+        /* Membership Status */
+        .membership-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
             font-weight: 600;
+        }
+        
+        .membership-status.basic {
+            background: #94a3b820;
+            color: #475569;
+        }
+        
+        .membership-status.premium {
+            background: #6366f120;
+            color: #6366f1;
+        }
+        
+        .membership-status.elite {
+            background: #f59e0b20;
+            color: #f59e0b;
+        }
+        
+        /* Timeline */
+        .referral-timeline {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 0.75rem;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 0;
+        }
+        
+        .timeline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #94a3b8;
+        }
+        
+        .timeline-dot.completed {
+            background: #10b981;
+        }
+        
+        .timeline-dot.pending {
+            background: #f59e0b;
+        }
+        
+        .timeline-content {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            color: #475569;
+        }
+        
+        /* Action Buttons */
+        .referral-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.7rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+        
+        .action-btn.approve {
+            background: #10b981;
+            color: white;
+        }
+        
+        .action-btn.approve:hover {
+            background: #059669;
+        }
+        
+        .action-btn.reject {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .action-btn.reject:hover {
+            background: #dc2626;
+        }
+        
+        .action-btn.view {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .action-btn.view:hover {
+            background: #4f52e0;
+        }
+        
+        /* Stats Cards */
+        .referral-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .referral-stat-card {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .referral-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+        
+        .referral-stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
         }
         
         .toast { display: none; } /* Hide old toast */
@@ -278,7 +464,13 @@
         .client-badge { background: #e0e7ff; color: #3730a3; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
         .task-requirements { background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; font-size: 0.9rem; margin: 0.5rem 0; }  
         .instructions-badge { background: #dbeafe; color: #1e40af; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
-        @media (max-width: 768px) { .header { flex-direction: column; gap: 1rem; text-align: center; } }  
+        
+        @media (max-width: 768px) { 
+            .header { flex-direction: column; gap: 1rem; text-align: center; }
+            .user-info-grid { grid-template-columns: 1fr; }
+            .referral-actions { flex-direction: column; }
+            .action-btn { width: 100%; }
+        }  
     </style>  
 </head>  
 <body>  
@@ -383,7 +575,7 @@
             loadDashboard();  
         });  
           
-        // NEW Alert Modal Function  
+        // Alert Modal Function  
         function showAlert(message, type = 'success', title = '') {  
             const alertModal = document.getElementById('alertModal');  
             const alertBackdrop = document.getElementById('alertBackdrop');  
@@ -463,13 +655,24 @@
           
         // Format date for display  
         function formatDate(date) {  
-            if (!date) return 'No deadline';  
+            if (!date) return 'N/A';  
             if (date.toDate) date = date.toDate();  
             return new Date(date).toLocaleDateString('en-US', {  
                 year: 'numeric',  
                 month: 'short',  
-                day: 'numeric'  
+                day: 'numeric',  
+                hour: '2-digit',  
+                minute: '2-digit'  
             });  
+        }  
+          
+        // Format currency  
+        function formatCurrency(amount) {  
+            return new Intl.NumberFormat('en-US', {  
+                style: 'currency',  
+                currency: 'USD',  
+                minimumFractionDigits: 2  
+            }).format(amount || 0);  
         }  
           
         // Check if deadline is approaching  
@@ -566,10 +769,11 @@
               
             let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>';  
             html += '<table class="data-table">';  
-            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Role</th><th>Status</th><th>Actions</th></tr>';  
+            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Role</th><th>Status</th><th>Actions</th></tr>';  
               
             snapshot.forEach(doc => {  
                 const user = doc.data();  
+                const membershipClass = user.membershipType === 'elite' ? 'warning' : user.membershipType === 'premium' ? 'primary' : 'info';  
                 html += `  
                     <tr>  
                         <td>${user.email}</td>  
@@ -577,6 +781,7 @@
                         <td>$${user.wallet || 0}</td>  
                         <td><span class="badge primary">${user.totalReferrals || 0}</span></td>  
                         <td>$${user.referralEarnings || 0}</td>  
+                        <td><span class="badge ${membershipClass}">${(user.membershipType || 'basic').toUpperCase()}</span></td>  
                         <td>${user.role}</td>  
                         <td><span class="badge ${user.active ? 'success' : 'danger'}">${user.active ? 'Active' : 'Inactive'}</span></td>  
                         <td class="action-buttons">  
@@ -1160,16 +1365,13 @@
         // Initialize referral collections if they don't exist
         async function initializeReferralCollections() {
             try {
-                // Check if referrals collection exists by trying to get a document
                 const testQuery = await db.collection('referrals').limit(1).get();
                 console.log('Referrals collection exists');
             } catch (error) {
                 console.log('Referrals collection does not exist yet, will be created when needed');
-                // Collection will be created automatically when first document is added
             }
             
             try {
-                // Check if referralBonuses collection exists
                 const testQuery2 = await db.collection('referralBonuses').limit(1).get();
                 console.log('ReferralBonuses collection exists');
             } catch (error) {
@@ -1177,12 +1379,11 @@
             }
         }
 
-        // Create sample referral data for testing (optional)
+        // Create sample referral data for testing
         async function createSampleReferral() {
             try {
                 showAlert('Creating sample referral data...', 'info', 'Please Wait');
                 
-                // Get first two users
                 const usersSnapshot = await db.collection('users').limit(2).get();
                 
                 if (usersSnapshot.size < 2) {
@@ -1193,7 +1394,6 @@
                 const users = [];
                 usersSnapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
                 
-                // Create a sample referral
                 await db.collection('referrals').add({
                     referrerId: users[0].id,
                     referredId: users[1].id,
@@ -1211,7 +1411,190 @@
             }
         }
 
-        // Load Referrals with graceful error handling  
+        // Show Referral Details Modal
+        async function showReferralDetails(referralId, referrerData, referredData, referral) {
+            const createdDate = referral.createdAt?.seconds ? formatDate(referral.createdAt) : 'N/A';
+            
+            let timelineHtml = `
+                <div class="timeline-item">
+                    <div class="timeline-dot completed"></div>
+                    <div class="timeline-content">
+                        <span>Referral created</span>
+                        <span>${createdDate}</span>
+                    </div>
+                </div>
+            `;
+            
+            if (referral.status === 'completed') {
+                const completedDate = referral.completedAt?.seconds ? formatDate(referral.completedAt) : 'N/A';
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-dot completed"></div>
+                        <div class="timeline-content">
+                            <span>Bonuses paid</span>
+                            <span>${completedDate}</span>
+                        </div>
+                    </div>
+                `;
+            } else if (referral.status === 'rejected') {
+                const rejectedDate = referral.rejectedAt?.seconds ? formatDate(referral.rejectedAt) : 'N/A';
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-dot danger"></div>
+                        <div class="timeline-content">
+                            <span>Referral rejected</span>
+                            <span>${rejectedDate}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            showModal(`
+                <h3 style="margin-bottom:1.5rem;">Referral Details</h3>
+                
+                <div class="user-info-grid">
+                    <!-- Referrer Info -->
+                    <div class="user-info-card referrer">
+                        <div class="user-info-header referrer">
+                            <i class="fas fa-user"></i>
+                            <h4>Referrer</h4>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Email</span>
+                            <span class="user-detail-value">${referrerData.email}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Name</span>
+                            <span class="user-detail-value">${referrerData.displayName || 'N/A'}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">User ID</span>
+                            <span class="user-detail-value"><small>${referral.referrerId}</small></span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Wallet Balance</span>
+                            <span class="user-detail-value highlight">${formatCurrency(referrerData.wallet || 0)}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Membership</span>
+                            <span class="user-detail-value">
+                                <span class="membership-status ${referrerData.membershipType || 'basic'}">
+                                    ${(referrerData.membershipType || 'basic').toUpperCase()}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Total Referrals</span>
+                            <span class="user-detail-value">${referrerData.totalReferrals || 0}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Referral Earnings</span>
+                            <span class="user-detail-value highlight">${formatCurrency(referrerData.referralEarnings || 0)}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Referred User Info -->
+                    <div class="user-info-card referred">
+                        <div class="user-info-header referred">
+                            <i class="fas fa-user-plus"></i>
+                            <h4>Referred User</h4>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Email</span>
+                            <span class="user-detail-value">${referredData.email}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Name</span>
+                            <span class="user-detail-value">${referredData.displayName || 'N/A'}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">User ID</span>
+                            <span class="user-detail-value"><small>${referral.referredId}</small></span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Wallet Balance</span>
+                            <span class="user-detail-value highlight">${formatCurrency(referredData.wallet || 0)}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Membership</span>
+                            <span class="user-detail-value">
+                                <span class="membership-status ${referredData.membershipType || 'basic'}">
+                                    ${(referredData.membershipType || 'basic').toUpperCase()}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Joined</span>
+                            <span class="user-detail-value">${referredData.createdAt ? formatDate(referredData.createdAt) : 'N/A'}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Upgraded to Premium?</span>
+                            <span class="user-detail-value">
+                                ${referredData.membershipType === 'premium' || referredData.membershipType === 'elite' 
+                                    ? '<span class="badge success">Yes</span>' 
+                                    : '<span class="badge warning">No</span>'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bonus Breakdown -->
+                <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0;">
+                    <h4 style="margin-bottom: 1rem;">Bonus Breakdown</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: white; padding: 1rem; border-radius: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-user" style="color: #6366f1;"></i>
+                                <span style="font-weight: 600;">Referrer Bonus</span>
+                            </div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">
+                                ${formatCurrency(REFERRAL_BONUS_REFERRER)}
+                            </div>
+                        </div>
+                        <div style="background: white; padding: 1rem; border-radius: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-user-plus" style="color: #10b981;"></i>
+                                <span style="font-weight: 600;">Referred Bonus</span>
+                            </div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">
+                                ${formatCurrency(REFERRAL_BONUS_REFERRED)}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed #cbd5e1;">
+                        <div style="display: flex; justify-content: space-between; font-weight: 700;">
+                            <span>Total Bonus</span>
+                            <span style="color: #10b981;">${formatCurrency(REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED)}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Timeline -->
+                <div class="referral-timeline">
+                    <h4 style="margin-bottom: 1rem;">Timeline</h4>
+                    ${timelineHtml}
+                </div>
+                
+                <!-- Actions -->
+                <div class="referral-actions">
+                    ${referral.status === 'pending' && (referredData.membershipType === 'premium' || referredData.membershipType === 'elite') ? `
+                        <button class="action-btn approve" onclick="creditReferralBonus('${referralId}', '${referral.referrerId}', '${referral.referredId}', '${referral.referredEmail}')">
+                            <i class="fas fa-check-circle"></i> Approve & Credit Bonuses
+                        </button>
+                    ` : ''}
+                    ${referral.status === 'pending' ? `
+                        <button class="action-btn reject" onclick="rejectReferral('${referralId}')">
+                            <i class="fas fa-times-circle"></i> Reject
+                        </button>
+                    ` : ''}
+                    <button class="action-btn view" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            `);
+        }
+
+        // Load Referrals with enhanced details
         async function loadReferrals() {  
             try {  
                 document.getElementById('content').innerHTML = `  
@@ -1222,10 +1605,8 @@
                     </div>  
                 `;  
                 
-                // Check if collections exist and create them if they don't  
                 await initializeReferralCollections();  
                 
-                // Get all referrals  
                 let snapshot;  
                 try {  
                     snapshot = await db.collection('referrals')  
@@ -1233,12 +1614,51 @@
                         .get();  
                 } catch (error) {  
                     console.warn('Error fetching referrals, collection might not exist:', error);  
-                    // If collection doesn't exist, treat as empty  
                     snapshot = { empty: true, docs: [] };  
                 }  
                 
+                // Calculate stats
+                let totalPending = 0;
+                let totalCompleted = 0;
+                let totalRejected = 0;
+                let totalBonusPaid = 0;
+                
+                if (!snapshot.empty) {
+                    snapshot.forEach(doc => {
+                        const referral = doc.data();
+                        const status = referral.status || 'pending';
+                        if (status === 'pending') totalPending++;
+                        else if (status === 'completed') {
+                            totalCompleted++;
+                            totalBonusPaid += REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED;
+                        }
+                        else if (status === 'rejected') totalRejected++;
+                    });
+                }
+                
                 let html = `  
                     <h3 style="margin-bottom:1.5rem;">Referral Management</h3>  
+                    
+                    <!-- Stats Overview -->
+                    <div class="referral-stats-grid">
+                        <div class="referral-stat-card">
+                            <div class="referral-stat-value">${totalPending}</div>
+                            <div class="referral-stat-label">Pending</div>
+                        </div>
+                        <div class="referral-stat-card">
+                            <div class="referral-stat-value">${totalCompleted}</div>
+                            <div class="referral-stat-label">Completed</div>
+                        </div>
+                        <div class="referral-stat-card">
+                            <div class="referral-stat-value">${totalRejected}</div>
+                            <div class="referral-stat-label">Rejected</div>
+                        </div>
+                        <div class="referral-stat-card">
+                            <div class="referral-stat-value">${formatCurrency(totalBonusPaid)}</div>
+                            <div class="referral-stat-label">Total Bonuses Paid</div>
+                        </div>
+                    </div>
+                    
                     <div style="margin-bottom: 1.5rem; background: #f8fafc; padding: 1.5rem; border-radius: 1rem;">  
                         <p><strong>Referral Bonus Structure:</strong></p>  
                         <ul style="margin-top: 0.5rem;">  
@@ -1261,16 +1681,24 @@
                         </div>  
                     `;  
                 } else {  
-                    // Group by status  
+                    // Group by status
                     const pending = [];  
                     const completed = [];  
                     const rejected = [];  
+                    const unknown = [];
                     
                     snapshot.forEach(doc => {  
                         const referral = { id: doc.id, ...doc.data() };  
-                        if (referral.status === 'pending') pending.push(referral);  
-                        else if (referral.status === 'completed') completed.push(referral);  
-                        else rejected.push(referral);  
+                        const status = referral.status || 'pending';
+                        
+                        if (status === 'pending') pending.push(referral);  
+                        else if (status === 'completed') completed.push(referral);  
+                        else if (status === 'rejected') rejected.push(referral);  
+                        else {
+                            console.warn('Referral with unknown status:', referral);
+                            pending.push({...referral, status: 'pending'});
+                            unknown.push(referral);
+                        }
                     });  
                     
                     // Pending referrals section  
@@ -1280,93 +1708,71 @@
                         for (const referral of pending) {  
                             try {  
                                 // Get referrer info  
-                                let referrerEmail = 'Unknown';  
+                                let referrerData = { email: 'Unknown', displayName: 'Unknown', wallet: 0, membershipType: 'basic' };
                                 try {  
                                     const referrerDoc = await db.collection('users').doc(referral.referrerId).get();  
                                     if (referrerDoc.exists) {  
-                                        referrerEmail = referrerDoc.data().email;  
+                                        referrerData = referrerDoc.data();
                                     }  
                                 } catch (e) {  
                                     console.warn('Could not fetch referrer:', e);  
                                 }  
                                 
                                 // Get referred user info  
-                                let referredName = 'Unknown';  
+                                let referredData = { email: 'Unknown', displayName: 'Unknown', wallet: 0, membershipType: 'basic' };
                                 try {  
                                     const referredDoc = await db.collection('users').doc(referral.referredId).get();  
                                     if (referredDoc.exists) {  
-                                        referredName = referredDoc.data().displayName || referredDoc.data().email;  
+                                        referredData = referredDoc.data();
                                     }  
                                 } catch (e) {  
                                     console.warn('Could not fetch referred user:', e);  
                                 }  
                                 
                                 const createdDate = referral.createdAt?.seconds ?   
-                                    new Date(referral.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';  
+                                    formatDate(referral.createdAt) : 'N/A';  
+                                
+                                const hasUpgraded = referredData.membershipType === 'premium' || referredData.membershipType === 'elite';
                                 
                                 html += `  
-                                    <div class="referral-card pending">  
+                                    <div class="referral-card pending" onclick="showReferralDetails('${referral.id}', ${JSON.stringify(referrerData).replace(/'/g, "&apos;")}, ${JSON.stringify(referredData).replace(/'/g, "&apos;")}, ${JSON.stringify(referral).replace(/'/g, "&apos;")})" style="cursor: pointer;">  
                                         <div class="referral-header">  
-                                            <div>  
+                                            <div class="referral-badges">  
                                                 <span class="badge warning">Pending</span>  
-                                                <span class="referral-amount" style="margin-left: 1rem;">  
-                                                    <i class="fas fa-gift"></i> $${REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED} total  
-                                                </span>  
+                                                ${hasUpgraded ? 
+                                                    `<span class="badge success">Upgraded to ${referredData.membershipType}</span>` : 
+                                                    `<span class="badge info">Not Upgraded</span>`
+                                                }  
+                                            </div>  
+                                            <span class="referral-amount">  
+                                                <i class="fas fa-gift"></i> ${formatCurrency(REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED)}  
+                                            </span>  
+                                        </div>  
+                                        
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">👤 Referrer</div>  
+                                                <div style="font-weight: 600;">${referrerData.email}</div>  
+                                                <div style="font-size: 0.9rem; color: #475569;">Wallet: ${formatCurrency(referrerData.wallet || 0)}</div>  
+                                            </div>  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">👥 Referred</div>  
+                                                <div style="font-weight: 600;">${referral.referredEmail}</div>  
+                                                <div style="font-size: 0.9rem; color: #475569;">Membership: ${(referredData.membershipType || 'basic').toUpperCase()}</div>  
+                                            </div>  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">📅 Referred on</div>  
+                                                <div>${createdDate}</div>  
                                             </div>  
                                         </div>  
                                         
-                                        <div class="referral-details">  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-user"></i>  
-                                                <div>  
-                                                    <strong>Referrer:</strong> ${referrerEmail}<br>  
-                                                    <small>ID: ${referral.referrerId.substring(0, 8)}...</small>  
-                                                </div>  
-                                            </div>  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-user-plus"></i>  
-                                                <div>  
-                                                    <strong>Referred:</strong> ${referral.referredEmail}<br>  
-                                                    <small>ID: ${referral.referredId.substring(0, 8)}...</small>  
-                                                </div>  
-                                            </div>  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-calendar"></i>  
-                                                <div>  
-                                                    <strong>Referred on:</strong> ${createdDate}  
-                                                </div>  
-                                            </div>  
-                                        </div>  
-                                        
-                                        <div class="bonus-breakdown">  
-                                            <h5 style="margin-bottom: 0.5rem;">Bonus Breakdown:</h5>  
-                                            <div class="bonus-row referrer">  
-                                                <span>👤 Referrer</span>  
-                                                <span>+$${REFERRAL_BONUS_REFERRER}</span>  
-                                            </div>  
-                                            <div class="bonus-row referred">  
-                                                <span>👥 Referred</span>  
-                                                <span>+$${REFERRAL_BONUS_REFERRED}</span>  
-                                            </div>  
-                                        </div>  
-                                        
-                                        <div class="flex-row" style="margin-top: 1rem;">  
-                                            <button class="btn btn-success credit-referral-btn"   
-                                                    data-referral-id="${referral.id}"  
-                                                    data-referrer-id="${referral.referrerId}"  
-                                                    data-referred-id="${referral.referredId}"  
-                                                    data-referred-email="${referral.referredEmail}">  
-                                                <i class="fas fa-check-circle"></i> Credit Bonuses  
-                                            </button>  
-                                            <button class="btn btn-danger reject-referral-btn" data-referral-id="${referral.id}">  
-                                                <i class="fas fa-times-circle"></i> Reject  
-                                            </button>  
+                                        <div style="font-size: 0.9rem; color: #64748b; padding-top: 0.5rem; border-top: 1px dashed #e2e8f0;">  
+                                            <i class="fas fa-info-circle"></i> Click to view full details and take action  
                                         </div>  
                                     </div>  
                                 `;  
                             } catch (e) {  
                                 console.warn('Error displaying referral:', e);  
-                                // Skip this referral if there's an error  
                             }  
                         }  
                     }  
@@ -1377,32 +1783,30 @@
                         
                         for (const referral of completed) {  
                             try {  
-                                const createdDate = referral.createdAt?.seconds ?   
-                                    new Date(referral.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';  
-                                const completedDate = referral.completedAt?.seconds ?   
-                                    new Date(referral.completedAt.seconds * 1000).toLocaleDateString() : 'N/A';  
+                                const createdDate = referral.createdAt?.seconds ? formatDate(referral.createdAt) : 'N/A';  
+                                const completedDate = referral.completedAt?.seconds ? formatDate(referral.completedAt) : 'N/A';  
                                 
                                 html += `  
                                     <div class="referral-card completed">  
                                         <div class="referral-header">  
-                                            <div>  
+                                            <div class="referral-badges">  
                                                 <span class="badge success">Completed</span>  
                                             </div>  
-                                            <span class="referral-amount">$${REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED} paid</span>  
+                                            <span class="referral-amount">${formatCurrency(REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED)} paid</span>  
                                         </div>  
                                         
-                                        <div class="referral-details">  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-user"></i>  
-                                                <span>Referrer: ${referral.referrerId.substring(0, 8)}...</span>  
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">Referrer</div>  
+                                                <div><small>ID: ${referral.referrerId.substring(0, 8)}...</small></div>  
                                             </div>  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-user-plus"></i>  
-                                                <span>Referred: ${referral.referredEmail}</span>  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">Referred</div>  
+                                                <div>${referral.referredEmail}</div>  
                                             </div>  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-check-circle"></i>  
-                                                <span>Completed: ${completedDate}</span>  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">Completed</div>  
+                                                <div>${completedDate}</div>  
                                             </div>  
                                         </div>  
                                     </div>  
@@ -1419,8 +1823,7 @@
                         
                         for (const referral of rejected) {  
                             try {  
-                                const createdDate = referral.createdAt?.seconds ?   
-                                    new Date(referral.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';  
+                                const createdDate = referral.createdAt?.seconds ? formatDate(referral.createdAt) : 'N/A';  
                                 
                                 html += `  
                                     <div class="referral-card rejected">  
@@ -1428,18 +1831,18 @@
                                             <span class="badge danger">Rejected</span>  
                                         </div>  
                                         
-                                        <div class="referral-details">  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-user"></i>  
-                                                <span>Referrer: ${referral.referrerId.substring(0, 8)}...</span>  
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">Referrer</div>  
+                                                <div><small>ID: ${referral.referrerId.substring(0, 8)}...</small></div>  
                                             </div>  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-user-plus"></i>  
-                                                <span>Referred: ${referral.referredEmail}</span>  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">Referred</div>  
+                                                <div>${referral.referredEmail}</div>  
                                             </div>  
-                                            <div class="referral-detail-item">  
-                                                <i class="fas fa-calendar"></i>  
-                                                <span>Referred on: ${createdDate}</span>  
+                                            <div>  
+                                                <div style="color: #64748b; font-size: 0.85rem;">Referred on</div>  
+                                                <div>${createdDate}</div>  
                                             </div>  
                                         </div>  
                                     </div>  
@@ -1450,11 +1853,12 @@
                         }  
                     }  
                     
-                    // If all sections are empty but there are referrals (shouldn't happen, but just in case)  
-                    if (pending.length === 0 && completed.length === 0 && rejected.length === 0 && !snapshot.empty) {  
+                    if (unknown.length > 0) {  
                         html += `  
-                            <div style="text-align: center; padding: 2rem;">  
-                                <p>There are ${snapshot.size} referrals but they couldn't be categorized.</p>  
+                            <div style="margin-top: 1rem; padding: 0.5rem; background: #f1f5f9; border-radius: 0.5rem;">  
+                                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">  
+                                    <i class="fas fa-info-circle"></i> ${unknown.length} referral(s) with missing status have been shown in Pending section.  
+                                </p>  
                             </div>  
                         `;  
                     }  
@@ -1465,7 +1869,6 @@
             } catch (error) {  
                 console.error('Error loading referrals:', error);  
                 
-                // Handle specific error types
                 let errorMessage = error.message;
                 let errorTitle = 'Error Loading Referrals';
                 let errorIcon = 'fa-exclamation-triangle';
@@ -1851,6 +2254,12 @@
         // Event Delegation for all buttons  
         document.addEventListener('click', async (e) => {  
             const target = e.target;  
+            
+            // Handle referral card clicks (but not when clicking on buttons inside)
+            if (target.classList.contains('referral-card') && !target.closest('button')) {
+                // The click is handled by the onclick attribute
+                return;
+            }
               
             // Logout button  
             if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {  
@@ -2089,6 +2498,7 @@
         window.rejectReferral = rejectReferral;  
         window.initializeReferralCollections = initializeReferralCollections;  
         window.createSampleReferral = createSampleReferral;  
+        window.showReferralDetails = showReferralDetails;  
         window.sendMessage = sendMessage;  
         window.sendBroadcast = sendBroadcast;  
         window.executeBroadcast = executeBroadcast;  
