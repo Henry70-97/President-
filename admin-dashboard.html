@@ -170,6 +170,123 @@
             background: #2563eb;
         }
         
+        /* Settings Cards */
+        .settings-section {
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .settings-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .settings-card h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        
+        .settings-card h4 i {
+            color: #6366f1;
+        }
+        
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+        
+        .settings-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .settings-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .settings-value.highlight {
+            color: #10b981;
+        }
+        
+        .settings-input {
+            width: 120px;
+            padding: 0.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 40px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        
+        .settings-input:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+        
+        .currency-symbol {
+            position: relative;
+        }
+        
+        .currency-symbol:before {
+            content: '$';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+        
+        .currency-symbol input {
+            padding-left: 25px;
+        }
+        
+        /* Fee Breakdown Preview */
+        .fee-preview {
+            background: #f1f5f9;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .fee-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+        
+        .fee-row:last-child {
+            border-bottom: none;
+        }
+        
+        .fee-total {
+            font-weight: 700;
+            color: #10b981;
+        }
+        
         /* Membership Package Cards */
         .packages-grid {
             display: grid;
@@ -287,6 +404,33 @@
         .feature-controls {
             display: flex;
             gap: 0.3rem;
+        }
+        
+        /* Withdrawal History Stats */
+        .stats-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stats-mini-card {
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .stats-mini-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+        
+        .stats-mini-label {
+            color: #64748b;
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
         }
         
         @keyframes slideIn {
@@ -615,6 +759,7 @@
             <button class="tab" data-tab="memberships">👑 Memberships</button>  
             <button class="tab" data-tab="referrals">🤝 Referrals</button>  
             <button class="tab" data-tab="messages">💬 Messages</button>  
+            <button class="tab" data-tab="settings">⚙️ Settings</button>  
         </div>  
       
         <div class="content" id="content"></div>  
@@ -665,6 +810,17 @@
             BASIC: 'basic',
             PREMIUM: 'premium',
             ELITE: 'elite'
+        };
+        
+        // Default fee settings
+        const DEFAULT_FEE_SETTINGS = {
+            transactionFeePercent: 3,
+            platformFeePercent: 2,
+            minimumWithdrawal: 5,
+            withdrawalMethods: ['M-Pesa', 'Airtel Money', 'Bank Transfer'],
+            exchangeRate: 130, // USD to KES
+            maxWithdrawalPerDay: 1000,
+            maxWithdrawalPerMonth: 5000
         };
         
         // Default membership packages (fallback if not set in Firestore)
@@ -718,18 +874,18 @@
             }
         };
         
-        // Global variable to store membership packages
+        // Global variables
+        let currentUser = null;  
+        let currentTab = 'users';  
+        let currentMessageType = 'individual';
         let membershipPackages = null;
+        let feeSettings = null;
         
         // Referral constants  
         const REFERRAL_BONUS_REFERRER = 2; // $2 for referrer  
         const REFERRAL_BONUS_REFERRED = 0.5; // $0.5 for referred  
         const ELITE_BONUS = 10; // $10 welcome bonus for Elite
         
-        let currentUser = null;  
-        let currentTab = 'users';  
-        let currentMessageType = 'individual'; // 'individual' or 'broadcast'  
-          
         // Check auth state  
         auth.onAuthStateChanged(async (user) => {  
             if (!user) {  
@@ -753,8 +909,9 @@
             currentUser = user;  
             document.getElementById('adminName').textContent = doc.data().displayName;  
             
-            // Load membership packages
+            // Load settings
             await loadMembershipPackages();
+            await loadFeeSettings();
               
             loadDashboard();  
         });  
@@ -793,6 +950,44 @@
             } catch (error) {
                 console.error('Error saving membership packages:', error);
                 showAlert('Error saving packages: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        // Load fee settings from Firestore
+        async function loadFeeSettings() {
+            try {
+                const doc = await db.collection('settings').doc('feeSettings').get();
+                
+                if (doc.exists) {
+                    feeSettings = doc.data();
+                    console.log('Loaded fee settings from Firestore:', feeSettings);
+                } else {
+                    // Initialize with defaults if not exists
+                    feeSettings = DEFAULT_FEE_SETTINGS;
+                    
+                    // Create default settings in Firestore
+                    await db.collection('settings').doc('feeSettings').set(DEFAULT_FEE_SETTINGS);
+                    console.log('Created default fee settings in Firestore');
+                }
+            } catch (error) {
+                console.error('Error loading fee settings:', error);
+                feeSettings = DEFAULT_FEE_SETTINGS;
+            }
+            
+            return feeSettings;
+        }
+        
+        // Save fee settings to Firestore
+        async function saveFeeSettings(settings) {
+            try {
+                await db.collection('settings').doc('feeSettings').set(settings);
+                feeSettings = settings;
+                showAlert('Fee settings updated successfully!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error saving fee settings:', error);
+                showAlert('Error saving settings: ' + error.message, 'error');
                 return false;
             }
         }
@@ -942,6 +1137,7 @@
                 case 'memberships': loadMemberships(); break;  
                 case 'referrals': loadReferrals(); break;  
                 case 'messages': loadMessages(); break;  
+                case 'settings': loadSettings(); break;  
             }  
         }  
           
@@ -1215,7 +1411,7 @@
                 instructions,  
                 deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
                 reward,  
-                rewardKES: reward * 130,  
+                rewardKES: reward * (feeSettings?.exchangeRate || 130),  
                 category,  
                 difficulty,  
                 active: true,  
@@ -1314,7 +1510,7 @@
                 instructions,  
                 deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
                 reward,  
-                rewardKES: reward * 130,  
+                rewardKES: reward * (feeSettings?.exchangeRate || 130),  
                 category,  
                 difficulty  
             });  
@@ -1536,7 +1732,300 @@
             loadWithdrawals();  
         }  
         
-        // NEW FUNCTION: Show Edit Membership Packages Modal
+        // Show Edit Fee Settings Modal
+        function showEditFeeSettings() {
+            if (!feeSettings) {
+                showAlert('Fee settings not loaded', 'error');
+                return;
+            }
+            
+            const methodsHtml = feeSettings.withdrawalMethods.map((method, index) => `
+                <div class="feature-item">
+                    <input type="text" class="method-input" data-index="${index}" value="${method}" placeholder="Withdrawal method">
+                    <div class="feature-controls">
+                        <button class="btn btn-sm btn-success add-method" data-index="${index + 1}"><i class="fas fa-plus"></i></button>
+                        <button class="btn btn-sm btn-danger remove-method" data-index="${index}" ${feeSettings.withdrawalMethods.length <= 1 ? 'disabled' : ''}><i class="fas fa-minus"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            
+            const totalFeePercent = (feeSettings.transactionFeePercent || 0) + (feeSettings.platformFeePercent || 0);
+            
+            showModal(`
+                <h3 style="margin-bottom:1.5rem;">Withdrawal & Fee Settings</h3>
+                
+                <div class="settings-section">
+                    <h4 style="margin-bottom:1rem;">💰 Fee Configuration</h4>
+                    
+                    <div class="settings-row">
+                        <span class="settings-label">Transaction Fee (%)</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="number" id="transactionFeePercent" class="settings-input" value="${feeSettings.transactionFeePercent || 3}" min="0" max="100" step="0.1">
+                            <span>%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-row">
+                        <span class="settings-label">Platform Fee (%)</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="number" id="platformFeePercent" class="settings-input" value="${feeSettings.platformFeePercent || 2}" min="0" max="100" step="0.1">
+                            <span>%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-row" style="background: #6366f110; padding: 0.75rem; border-radius: 0.5rem; margin-top: 0.5rem;">
+                        <span class="settings-label" style="font-weight: 600;">Total Fee</span>
+                        <span class="settings-value highlight" id="totalFeeDisplay">${totalFeePercent.toFixed(1)}%</span>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4 style="margin-bottom:1rem;">💵 Withdrawal Limits</h4>
+                    
+                    <div class="settings-row">
+                        <span class="settings-label">Minimum Withdrawal ($)</span>
+                        <div class="currency-symbol">
+                            <input type="number" id="minimumWithdrawal" class="settings-input" value="${feeSettings.minimumWithdrawal || 5}" min="0" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-row">
+                        <span class="settings-label">Maximum Per Day ($)</span>
+                        <div class="currency-symbol">
+                            <input type="number" id="maxWithdrawalPerDay" class="settings-input" value="${feeSettings.maxWithdrawalPerDay || 1000}" min="0" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="settings-row">
+                        <span class="settings-label">Maximum Per Month ($)</span>
+                        <div class="currency-symbol">
+                            <input type="number" id="maxWithdrawalPerMonth" class="settings-input" value="${feeSettings.maxWithdrawalPerMonth || 5000}" min="0" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4 style="margin-bottom:1rem;">💱 Exchange Rate</h4>
+                    
+                    <div class="settings-row">
+                        <span class="settings-label">USD to KES Rate</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span>1 USD =</span>
+                            <input type="number" id="exchangeRate" class="settings-input" value="${feeSettings.exchangeRate || 130}" min="0" step="0.1">
+                            <span>KES</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h4 style="margin-bottom:1rem;">📱 Withdrawal Methods</h4>
+                    
+                    <div id="methods-list">
+                        ${methodsHtml}
+                    </div>
+                    
+                    <div class="fee-preview">
+                        <h5 style="margin-bottom:0.5rem;">Fee Preview (based on $100)</h5>
+                        <div class="fee-row">
+                            <span>Withdrawal: $100</span>
+                            <span id="previewAmount">$100.00</span>
+                        </div>
+                        <div class="fee-row">
+                            <span>Transaction Fee (${feeSettings.transactionFeePercent || 3}%):</span>
+                            <span id="previewTransactionFee">-$${((feeSettings.transactionFeePercent || 3)).toFixed(2)}</span>
+                        </div>
+                        <div class="fee-row">
+                            <span>Platform Fee (${feeSettings.platformFeePercent || 2}%):</span>
+                            <span id="previewPlatformFee">-$${((feeSettings.platformFeePercent || 2)).toFixed(2)}</span>
+                        </div>
+                        <div class="fee-row fee-total">
+                            <span>User Receives:</span>
+                            <span id="previewNet">$${(100 - (feeSettings.transactionFeePercent || 3) - (feeSettings.platformFeePercent || 2)).toFixed(2)}</span>
+                        </div>
+                        <div class="fee-row">
+                            <span>KES Equivalent:</span>
+                            <span id="previewKES">KES ${((100 - (feeSettings.transactionFeePercent || 3) - (feeSettings.platformFeePercent || 2)) * (feeSettings.exchangeRate || 130)).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button class="btn btn-success" id="saveFeeSettingsBtn">Save Settings</button>
+                    <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                </div>
+            `);
+            
+            // Add event listeners after modal is shown
+            setTimeout(() => {
+                document.getElementById('transactionFeePercent').addEventListener('input', updateFeePreview);
+                document.getElementById('platformFeePercent').addEventListener('input', updateFeePreview);
+                document.getElementById('exchangeRate').addEventListener('input', updateFeePreview);
+                
+                document.querySelectorAll('.add-method').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const index = parseInt(this.getAttribute('data-index'));
+                        addWithdrawalMethod(index);
+                    });
+                });
+                
+                document.querySelectorAll('.remove-method').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const index = parseInt(this.getAttribute('data-index'));
+                        removeWithdrawalMethod(index);
+                    });
+                });
+                
+                document.getElementById('saveFeeSettingsBtn').addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await saveFeeSettings();
+                });
+                
+                updateFeePreview();
+            }, 100);
+        }
+        
+        // Update fee preview
+        function updateFeePreview() {
+            const transactionFee = parseFloat(document.getElementById('transactionFeePercent')?.value) || 0;
+            const platformFee = parseFloat(document.getElementById('platformFeePercent')?.value) || 0;
+            const exchangeRate = parseFloat(document.getElementById('exchangeRate')?.value) || 130;
+            const amount = 100; // Example amount
+            
+            const totalFees = transactionFee + platformFee;
+            const netAmount = amount - totalFees;
+            
+            document.getElementById('totalFeeDisplay').textContent = totalFees.toFixed(1) + '%';
+            document.getElementById('previewTransactionFee').textContent = '-$' + transactionFee.toFixed(2);
+            document.getElementById('previewPlatformFee').textContent = '-$' + platformFee.toFixed(2);
+            document.getElementById('previewNet').textContent = '$' + netAmount.toFixed(2);
+            document.getElementById('previewKES').textContent = 'KES ' + (netAmount * exchangeRate).toFixed(2);
+        }
+        
+        // Add withdrawal method
+        function addWithdrawalMethod(index) {
+            const methodsList = document.getElementById('methods-list');
+            const newMethod = document.createElement('div');
+            newMethod.className = 'feature-item';
+            newMethod.innerHTML = `
+                <input type="text" class="method-input" data-index="${index}" value="New Method" placeholder="Withdrawal method">
+                <div class="feature-controls">
+                    <button class="btn btn-sm btn-success add-method" data-index="${index + 1}"><i class="fas fa-plus"></i></button>
+                    <button class="btn btn-sm btn-danger remove-method" data-index="${index}"><i class="fas fa-minus"></i></button>
+                </div>
+            `;
+            
+            const methods = methodsList.children;
+            if (index >= methods.length) {
+                methodsList.appendChild(newMethod);
+            } else {
+                methodsList.insertBefore(newMethod, methods[index]);
+            }
+            
+            reindexMethods();
+            
+            // Add event listeners to new buttons
+            newMethod.querySelector('.add-method').addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const idx = parseInt(this.getAttribute('data-index'));
+                addWithdrawalMethod(idx);
+            });
+            
+            newMethod.querySelector('.remove-method').addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const idx = parseInt(this.getAttribute('data-index'));
+                removeWithdrawalMethod(idx);
+            });
+        }
+        
+        // Remove withdrawal method
+        function removeWithdrawalMethod(index) {
+            const methodsList = document.getElementById('methods-list');
+            if (methodsList.children.length <= 1) {
+                showAlert('Cannot remove last method', 'warning');
+                return;
+            }
+            
+            methodsList.removeChild(methodsList.children[index]);
+            reindexMethods();
+        }
+        
+        // Reindex methods
+        function reindexMethods() {
+            const methodsList = document.getElementById('methods-list');
+            Array.from(methodsList.children).forEach((child, newIndex) => {
+                child.querySelectorAll('[data-index]').forEach(el => {
+                    el.setAttribute('data-index', newIndex);
+                });
+            });
+        }
+        
+        // Save Fee Settings
+        async function saveFeeSettings() {
+            try {
+                const transactionFeePercent = parseFloat(document.getElementById('transactionFeePercent').value) || 3;
+                const platformFeePercent = parseFloat(document.getElementById('platformFeePercent').value) || 2;
+                const minimumWithdrawal = parseFloat(document.getElementById('minimumWithdrawal').value) || 5;
+                const maxWithdrawalPerDay = parseFloat(document.getElementById('maxWithdrawalPerDay').value) || 1000;
+                const maxWithdrawalPerMonth = parseFloat(document.getElementById('maxWithdrawalPerMonth').value) || 5000;
+                const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 130;
+                
+                // Collect methods
+                const methods = [];
+                document.querySelectorAll('.method-input').forEach(input => {
+                    const value = input.value.trim();
+                    if (value) {
+                        methods.push(value);
+                    }
+                });
+                
+                if (methods.length === 0) {
+                    showAlert('At least one withdrawal method is required', 'error');
+                    return;
+                }
+                
+                const settings = {
+                    transactionFeePercent,
+                    platformFeePercent,
+                    minimumWithdrawal,
+                    maxWithdrawalPerDay,
+                    maxWithdrawalPerMonth,
+                    exchangeRate,
+                    withdrawalMethods: methods
+                };
+                
+                const success = await saveFeeSettingsToFirestore(settings);
+                if (success) {
+                    closeModal();
+                    loadSettings(); // Refresh the settings tab
+                }
+            } catch (error) {
+                console.error('Error saving fee settings:', error);
+                showAlert('Error saving settings: ' + error.message, 'error');
+            }
+        }
+        
+        // Save fee settings to Firestore (renamed to avoid conflict)
+        async function saveFeeSettingsToFirestore(settings) {
+            try {
+                await db.collection('settings').doc('feeSettings').set(settings);
+                feeSettings = settings;
+                showAlert('Fee settings updated successfully!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error saving fee settings:', error);
+                showAlert('Error saving settings: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        // Show Edit Membership Packages Modal
         function showEditPackages() {
             if (!membershipPackages) {
                 showAlert('Membership packages not loaded', 'error');
@@ -1642,6 +2131,11 @@
                         removeFeature(type, index);
                     });
                 });
+                
+                document.getElementById('savePackagesBtn').addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    await savePackages();
+                });
             }, 100);
         }
         
@@ -1681,6 +2175,21 @@
             
             // Reindex all features
             reindexFeatures(type);
+            
+            // Add event listeners to new buttons
+            newFeature.querySelector('.add-feature').addEventListener('click', function(e) {
+                e.preventDefault();
+                const t = this.getAttribute('data-type');
+                const idx = parseInt(this.getAttribute('data-index'));
+                addFeature(t, idx);
+            });
+            
+            newFeature.querySelector('.remove-feature').addEventListener('click', function(e) {
+                e.preventDefault();
+                const t = this.getAttribute('data-type');
+                const idx = parseInt(this.getAttribute('data-index'));
+                removeFeature(t, idx);
+            });
         }
         
         // Helper function to remove a feature
@@ -1705,51 +2214,56 @@
             });
         }
         
-        // NEW FUNCTION: Save Membership Packages
+        // Save Membership Packages
         async function savePackages() {
-            const updatedPackages = {};
-            
-            for (const type of Object.keys(membershipPackages)) {
-                const pkg = {
-                    name: document.querySelector(`.package-name-input[data-type="${type}"]`).value,
-                    price: parseFloat(document.querySelector(`.package-price-input[data-type="${type}"]`).value) || 0,
-                    duration: document.querySelector(`.package-duration-input[data-type="${type}"]`).value,
-                    features: [],
-                    color: membershipPackages[type].color, // Keep original color
-                    buttonClass: membershipPackages[type].buttonClass, // Keep original button class
-                    badge: document.querySelector(`.package-badge-input[data-type="${type}"]`).value || null
-                };
+            try {
+                const updatedPackages = {};
                 
-                if (type === 'elite') {
-                    pkg.welcomeBonus = parseFloat(document.querySelector(`.welcome-bonus-input[data-type="${type}"]`).value) || 10;
+                for (const type of Object.keys(membershipPackages)) {
+                    const pkg = {
+                        name: document.querySelector(`.package-name-input[data-type="${type}"]`).value,
+                        price: parseFloat(document.querySelector(`.package-price-input[data-type="${type}"]`).value) || 0,
+                        duration: document.querySelector(`.package-duration-input[data-type="${type}"]`).value,
+                        features: [],
+                        color: membershipPackages[type].color,
+                        buttonClass: membershipPackages[type].buttonClass,
+                        badge: document.querySelector(`.package-badge-input[data-type="${type}"]`).value || null
+                    };
+                    
+                    if (type === 'elite') {
+                        pkg.welcomeBonus = parseFloat(document.querySelector(`.welcome-bonus-input[data-type="${type}"]`).value) || 10;
+                    }
+                    
+                    // Collect features
+                    const featureItems = document.querySelectorAll(`#features-${type} .feature-item`);
+                    featureItems.forEach(item => {
+                        const included = item.querySelector('.feature-included').checked;
+                        const text = item.querySelector('.feature-text').value;
+                        const icon = item.querySelector('.feature-icon').value;
+                        const highlight = item.querySelector('.feature-highlight')?.checked || false;
+                        
+                        if (text.trim()) {
+                            const feature = { text: text.trim(), included, icon };
+                            if (highlight) feature.highlight = true;
+                            pkg.features.push(feature);
+                        }
+                    });
+                    
+                    updatedPackages[type] = pkg;
                 }
                 
-                // Collect features
-                const featureItems = document.querySelectorAll(`#features-${type} .feature-item`);
-                featureItems.forEach(item => {
-                    const included = item.querySelector('.feature-included').checked;
-                    const text = item.querySelector('.feature-text').value;
-                    const icon = item.querySelector('.feature-icon').value;
-                    const highlight = item.querySelector('.feature-highlight')?.checked || false;
-                    
-                    if (text.trim()) {
-                        const feature = { text: text.trim(), included, icon };
-                        if (highlight) feature.highlight = true;
-                        pkg.features.push(feature);
-                    }
-                });
-                
-                updatedPackages[type] = pkg;
-            }
-            
-            const success = await saveMembershipPackages(updatedPackages);
-            if (success) {
-                closeModal();
-                loadMemberships(); // Refresh the memberships tab
+                const success = await saveMembershipPackages(updatedPackages);
+                if (success) {
+                    closeModal();
+                    loadMemberships();
+                }
+            } catch (error) {
+                console.error('Error saving packages:', error);
+                showAlert('Error saving packages: ' + error.message, 'error');
             }
         }
         
-        // UPDATED: Load Memberships with package management
+        // Load Memberships with package management
         async function loadMemberships() {  
             // Get pending payments
             const snapshot = await db.collection('membershipPayments')  
@@ -1842,7 +2356,7 @@
             document.getElementById('content').innerHTML = html;  
         }  
         
-        // UPDATED: Approve Membership with dynamic package benefits
+        // Approve Membership with dynamic package benefits
         async function approveMembership(userId, paymentId) {
             try {
                 // Get payment details to know which membership was purchased
@@ -1994,6 +2508,125 @@
                 showAlert('Error: ' + error.message, 'error');
             }
         }  
+
+        // Load Settings Tab
+        async function loadSettings() {
+            if (!feeSettings) {
+                await loadFeeSettings();
+            }
+            
+            if (!membershipPackages) {
+                await loadMembershipPackages();
+            }
+            
+            const totalFees = (feeSettings.transactionFeePercent || 0) + (feeSettings.platformFeePercent || 0);
+            
+            // Calculate withdrawal statistics
+            const withdrawalsSnapshot = await db.collection('withdrawals').get();
+            let totalWithdrawn = 0;
+            let totalFeesCollected = 0;
+            let pendingCount = 0;
+            
+            withdrawalsSnapshot.forEach(doc => {
+                const w = doc.data();
+                if (w.status === 'paid') {
+                    totalWithdrawn += w.amount || 0;
+                    totalFeesCollected += w.fees || 0;
+                } else if (w.status === 'pending') {
+                    pendingCount++;
+                }
+            });
+            
+            let html = `
+                <h3 style="margin-bottom:1.5rem;">System Settings</h3>
+                
+                <div class="stats-mini-grid">
+                    <div class="stats-mini-card">
+                        <div class="stats-mini-value">${formatCurrency(totalWithdrawn)}</div>
+                        <div class="stats-mini-label">Total Withdrawn</div>
+                    </div>
+                    <div class="stats-mini-card">
+                        <div class="stats-mini-value">${formatCurrency(totalFeesCollected)}</div>
+                        <div class="stats-mini-label">Fees Collected</div>
+                    </div>
+                    <div class="stats-mini-card">
+                        <div class="stats-mini-value">${pendingCount}</div>
+                        <div class="stats-mini-label">Pending Withdrawals</div>
+                    </div>
+                    <div class="stats-mini-card">
+                        <div class="stats-mini-value">${feeSettings.withdrawalMethods.length}</div>
+                        <div class="stats-mini-label">Payment Methods</div>
+                    </div>
+                </div>
+                
+                <div class="settings-grid">
+                    <!-- Fee Settings Card -->
+                    <div class="settings-card">
+                        <h4><i class="fas fa-percent"></i> Fee Configuration</h4>
+                        <div class="settings-row">
+                            <span class="settings-label">Transaction Fee</span>
+                            <span class="settings-value">${feeSettings.transactionFeePercent || 3}%</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Platform Fee</span>
+                            <span class="settings-value">${feeSettings.platformFeePercent || 2}%</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Total Fee</span>
+                            <span class="settings-value highlight">${totalFees}%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Withdrawal Limits Card -->
+                    <div class="settings-card">
+                        <h4><i class="fas fa-chart-line"></i> Withdrawal Limits</h4>
+                        <div class="settings-row">
+                            <span class="settings-label">Minimum</span>
+                            <span class="settings-value">${formatCurrency(feeSettings.minimumWithdrawal || 5)}</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Per Day</span>
+                            <span class="settings-value">${formatCurrency(feeSettings.maxWithdrawalPerDay || 1000)}</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Per Month</span>
+                            <span class="settings-value">${formatCurrency(feeSettings.maxWithdrawalPerMonth || 5000)}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Exchange Rate Card -->
+                    <div class="settings-card">
+                        <h4><i class="fas fa-exchange-alt"></i> Exchange Rate</h4>
+                        <div class="settings-row">
+                            <span class="settings-label">USD to KES</span>
+                            <span class="settings-value">1 USD = ${feeSettings.exchangeRate || 130} KES</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Withdrawal Methods Card -->
+                    <div class="settings-card">
+                        <h4><i class="fas fa-credit-card"></i> Payment Methods</h4>
+                        ${feeSettings.withdrawalMethods.map(method => `
+                            <div class="settings-row">
+                                <span class="settings-label">✓</span>
+                                <span class="settings-value">${method}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="showEditFeeSettings()">
+                        <i class="fas fa-edit"></i> Edit Fee Settings
+                    </button>
+                    <button class="btn btn-success" onclick="showEditPackages()">
+                        <i class="fas fa-box"></i> Edit Membership Packages
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('content').innerHTML = html;
+        }
 
         // Initialize referral collections if they don't exist
         async function initializeReferralCollections() {
@@ -3026,14 +3659,29 @@
             }  
             
             // Edit Packages button
-            if (target.classList.contains('edit-packages-btn') || (target.id === 'editPackagesBtn')) {
+            if (target.classList.contains('edit-packages-btn') || target.id === 'editPackagesBtn' || 
+                (target.closest('button') && target.closest('button').textContent.includes('Edit Packages'))) {
                 showEditPackages();
                 return;
             }
             
             // Save Packages button
-            if (target.id === 'savePackagesBtn') {
+            if (target.id === 'savePackagesBtn' || (target.closest('button') && target.closest('button').id === 'savePackagesBtn')) {
+                e.preventDefault();
                 await savePackages();
+                return;
+            }
+            
+            // Edit Fee Settings button
+            if (target.id === 'editFeeSettingsBtn' || (target.closest('button') && target.closest('button').textContent.includes('Edit Fee Settings'))) {
+                showEditFeeSettings();
+                return;
+            }
+            
+            // Save Fee Settings button
+            if (target.id === 'saveFeeSettingsBtn' || (target.closest('button') && target.closest('button').id === 'saveFeeSettingsBtn')) {
+                e.preventDefault();
+                await saveFeeSettings();
                 return;
             }
               
@@ -3136,8 +3784,11 @@
         window.reviewSubmission = reviewSubmission;  
         window.processWithdrawal = processWithdrawal;  
         window.loadMembershipPackages = loadMembershipPackages;  
+        window.loadFeeSettings = loadFeeSettings;  
         window.showEditPackages = showEditPackages;  
         window.savePackages = savePackages;  
+        window.showEditFeeSettings = showEditFeeSettings;  
+        window.saveFeeSettings = saveFeeSettings;  
         window.approveMembership = approveMembership;  
         window.rejectMembership = rejectMembership;  
         window.loadReferrals = loadReferrals;  

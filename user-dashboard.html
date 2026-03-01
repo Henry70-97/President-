@@ -453,6 +453,38 @@
             box-shadow: none;
         }
         
+        /* WhatsApp Group Button */
+        .whatsapp-group-btn {
+            background: #25D366;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.95rem;
+        }
+        
+        .whatsapp-group-btn:hover {
+            background: #128C7E;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
+        }
+        
+        .whatsapp-group-btn i {
+            font-size: 1.2rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
         /* Membership Packages */
         .packages-grid {
             display: grid;
@@ -489,6 +521,28 @@
         .package-card.elite {
             border-color: #f59e0b;
             background: linear-gradient(145deg, #ffffff, #fffbeb);
+        }
+        
+        /* Disabled package styles */
+        .package-card.disabled-package {
+            opacity: 0.7;
+            filter: grayscale(0.5);
+            cursor: not-allowed;
+        }
+        
+        .package-card.disabled-package:hover {
+            transform: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .package-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .package-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
         }
         
         .package-badge {
@@ -687,6 +741,38 @@
             padding: 0.5rem 1.5rem;
             border-radius: 40px;
             font-weight: 600;
+        }
+        
+        /* Upgrade banner */
+        .upgrade-banner {
+            background: linear-gradient(135deg, #f59e0b20, #fbbf2420);
+            border: 2px solid #f59e0b;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .upgrade-banner i {
+            color: #f59e0b;
+            font-size: 1.5rem;
+        }
+        
+        .upgrade-banner-content {
+            flex: 1;
+        }
+        
+        .upgrade-banner-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 0.2rem;
+        }
+        
+        .upgrade-banner-text {
+            color: #92400e;
+            font-size: 0.9rem;
         }
         
         /* Referral Section - User View */
@@ -1660,9 +1746,10 @@
             <i class="fas fa-money-bill-wave"></i>
             <span>Withdrawals</span>
         </div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('referrals')">
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('recommendations')">
             <i class="fas fa-users"></i>
-            <span>Referrals</span>
+            <span>Recommendations</span>
+            <span id="mobileUnreadBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span>
         </div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('messages')">
             <i class="fas fa-envelope"></i>
@@ -1672,6 +1759,11 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('profile')">
             <i class="fas fa-user"></i>
             <span>Profile</span>
+        </div>
+        <!-- WhatsApp Group Link in Mobile Menu -->
+        <div class="mobile-nav-item" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t', '_blank')" style="color: #25D366;">
+            <i class="fab fa-whatsapp"></i>
+            <span>Join WhatsApp Group</span>
         </div>
         <div style="margin-top: 2rem; padding-top: 1rem; border-top: 2px solid #f1f5f9;">
             <div class="mobile-nav-item" onclick="logout()" style="color: #ef4444;">
@@ -1689,10 +1781,17 @@
             <div class="logo">
                 <h2>🔷 NextGen Tasks</h2>
             </div>
-            <div class="user-menu">
-                <div class="wallet-badge" id="walletDisplay">$0.00</div>
-                <span id="userName">Loading...</span>
-                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            <div class="header-actions">
+                <!-- WhatsApp Group Button in Desktop Header -->
+                <button class="whatsapp-group-btn" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t', '_blank')">
+                    <i class="fab fa-whatsapp"></i>
+                    <span class="desktop-only">Join WhatsApp Group</span>
+                </button>
+                <div class="user-menu">
+                    <div class="wallet-badge" id="walletDisplay">$0.00</div>
+                    <span id="userName">Loading...</span>
+                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
             </div>
         </div>
         
@@ -1703,7 +1802,7 @@
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
             <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
-            <button class="tab" onclick="switchTab('referrals')">👥 Referrals</button>
+            <button class="tab" onclick="switchTab('recommendations')">👥 Recommendations</button>
             <button class="tab" onclick="switchTab('messages')">
                 💬 Messages 
                 <span id="unreadMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span>
@@ -1734,6 +1833,38 @@
         <button onclick="hideAlert()">OK</button>
     </div>
     
+    <style>
+        /* Additional styles for WhatsApp button */
+        .desktop-only {
+            display: inline;
+        }
+        
+        @media (max-width: 768px) {
+            .desktop-only {
+                display: none;
+            }
+            
+            .whatsapp-group-btn {
+                padding: 0.5rem;
+            }
+            
+            .whatsapp-group-btn i {
+                font-size: 1.5rem;
+                margin: 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .whatsapp-group-btn {
+                padding: 0.5rem;
+            }
+            
+            .whatsapp-group-btn span {
+                display: none;
+            }
+        }
+    </style>
+    
     <script>
         // Firebase Config
         const firebaseConfig = {
@@ -1750,10 +1881,64 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
         
-        // Fee constants
-        const TRANSACTION_FEE_PERCENT = 3;
-        const PLATFORM_FEE_PERCENT = 2;
-        const TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT;
+        // Fee constants - will be loaded from Firestore
+        let TRANSACTION_FEE_PERCENT = 3; // Default fallback
+        let PLATFORM_FEE_PERCENT = 2;    // Default fallback
+        let TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT;
+        
+        // Function to load fee settings from Firestore
+        async function loadFeeSettings() {
+            try {
+                const doc = await db.collection('settings').doc('fees').get();
+                
+                if (doc.exists) {
+                    const feeData = doc.data();
+                    TRANSACTION_FEE_PERCENT = feeData.transactionFee || 3;
+                    PLATFORM_FEE_PERCENT = feeData.platformFee || 2;
+                    TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT;
+                    
+                    console.log('Loaded fee settings from Firestore:', {
+                        transactionFee: TRANSACTION_FEE_PERCENT,
+                        platformFee: PLATFORM_FEE_PERCENT
+                    });
+                } else {
+                    // Initialize default fees if not exists
+                    await db.collection('settings').doc('fees').set({
+                        transactionFee: 3,
+                        platformFee: 2,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    console.log('Created default fee settings in Firestore');
+                }
+            } catch (error) {
+                console.error('Error loading fee settings:', error);
+                // Keep default values
+            }
+            
+            // Set up real-time listener for fee changes
+            db.collection('settings').doc('fees')
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const feeData = doc.data();
+                        TRANSACTION_FEE_PERCENT = feeData.transactionFee || 3;
+                        PLATFORM_FEE_PERCENT = feeData.platformFee || 2;
+                        TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT;
+                        
+                        console.log('Fee settings updated:', {
+                            transactionFee: TRANSACTION_FEE_PERCENT,
+                            platformFee: PLATFORM_FEE_PERCENT
+                        });
+                        
+                        // If withdrawal tab is currently open, refresh it
+                        const activeTab = document.querySelector('.tab.active');
+                        if (activeTab && activeTab.textContent.includes('Withdrawals')) {
+                            loadWithdrawals();
+                        }
+                    }
+                }, (error) => {
+                    console.error('Fee listener error:', error);
+                });
+        }
         
         // Membership constants
         const MEMBERSHIP_TYPES = {
@@ -1769,7 +1954,7 @@
                 price: 0,
                 duration: 'lifetime',
                 features: [
-                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Access to tasks below $3', included: true, icon: 'fa-check-circle' },
                     { text: 'Withdrawals', included: false, icon: 'fa-times-circle' },
                     { text: 'Welcome bonus', included: false, icon: 'fa-times-circle' },
                     { text: 'Standard support', included: true, icon: 'fa-check-circle' },
@@ -1784,7 +1969,7 @@
                 price: 3,
                 duration: 'annual',
                 features: [
-                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Access to tasks below $3', included: true, icon: 'fa-check-circle' },
                     { text: 'Withdrawals enabled', included: true, icon: 'fa-check-circle', highlight: true },
                     { text: 'Priority support', included: true, icon: 'fa-star' },
                     { text: 'Higher earning potential', included: true, icon: 'fa-chart-line' },
@@ -1799,7 +1984,7 @@
                 price: 6,
                 duration: 'lifetime',
                 features: [
-                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Access to ALL tasks (including $3+)', included: true, icon: 'fa-check-circle', highlight: true },
                     { text: 'Withdrawals enabled', included: true, icon: 'fa-check-circle', highlight: true },
                     { text: 'Welcome bonus', included: true, icon: 'fa-gift', highlight: true, bonus: true },
                     { text: 'VIP support 24/7', included: true, icon: 'fa-star' },
@@ -1977,7 +2162,7 @@
             }
         }
         
-        // Tab switching function
+        // Tab switching function - updated to handle 'recommendations'
         function switchTab(tab) {
             const desktopTabs = document.querySelectorAll('.tab');
             desktopTabs.forEach(t => t.classList.remove('active'));
@@ -1988,7 +2173,7 @@
                    (tab === 'tasks' && tabText.includes('available')) ||
                    (tab === 'submissions' && tabText.includes('submissions')) ||
                    (tab === 'withdrawals' && tabText.includes('withdrawals')) ||
-                   (tab === 'referrals' && tabText.includes('referrals')) ||
+                   (tab === 'recommendations' && tabText.includes('recommendations')) ||
                    (tab === 'messages' && tabText.includes('messages')) ||
                    (tab === 'profile' && tabText.includes('profile'))) {
                     desktopTabs[i].classList.add('active');
@@ -2004,7 +2189,7 @@
                    (tab === 'tasks' && itemText.includes('available')) ||
                    (tab === 'submissions' && itemText.includes('submissions')) ||
                    (tab === 'withdrawals' && itemText.includes('withdrawals')) ||
-                   (tab === 'referrals' && itemText.includes('referrals')) ||
+                   (tab === 'recommendations' && itemText.includes('recommendations')) ||
                    (tab === 'messages' && itemText.includes('messages')) ||
                    (tab === 'profile' && itemText.includes('profile'))) {
                     item.classList.add('active');
@@ -2021,8 +2206,8 @@
                 case 'withdrawals':
                     loadWithdrawals();
                     break;
-                case 'referrals':
-                    loadReferrals();
+                case 'recommendations':
+                    loadReferrals(); // This function remains the same, just renamed in UI
                     break;
                 case 'messages':
                     loadMessages();
@@ -2174,6 +2359,8 @@
                 document.getElementById('userName').textContent = userData.displayName;
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
                 
+                // Load fee settings first
+                await loadFeeSettings();
                 setupMessageCounter();
                 await loadMembershipPackages(); // Load membership packages
                 loadDashboard();
@@ -2281,7 +2468,7 @@
                     <div class="stat-card">
                         <i class="fas fa-users"></i>
                         <div class="stat-value">${userData.totalReferrals || 0}</div>
-                        <div class="stat-label">Referrals</div>
+                        <div class="stat-label">Recommendations</div>
                     </div>
                 `;
                 
@@ -2301,7 +2488,7 @@
             }
         }
         
-        // Load Tasks
+        // Load Tasks with membership-based filtering
         async function loadTasks() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
@@ -2336,89 +2523,171 @@
                             </div>
                         `;
                     } else {
+                        // Sort tasks by creation date
                         activeTasks.sort((a, b) => {
                             if (!a.createdAt) return 1;
                             if (!b.createdAt) return -1;
                             return (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0);
                         });
                         
-                        html += '<div class="task-grid">';
+                        // Get user's membership type
+                        const userMembership = userData.membershipType || MEMBERSHIP_TYPES.BASIC;
                         
-                        for (const task of activeTasks) {
-                            const hasSubmitted = await hasUserSubmitted(task.id);
-                            const deadlinePassed = isDeadlinePassed(task.deadline);
+                        // Filter tasks based on membership
+                        let filteredTasks = activeTasks;
+                        
+                        // If user is BASIC or PREMIUM, only show tasks below $3
+                        if (userMembership === MEMBERSHIP_TYPES.BASIC || userMembership === MEMBERSHIP_TYPES.PREMIUM) {
+                            filteredTasks = activeTasks.filter(task => {
+                                const reward = parseFloat(task.reward) || 0;
+                                return reward < 3; // Tasks below $3
+                            });
+                        }
+                        // ELITE users see all tasks (no filtering)
+                        
+                        if (filteredTasks.length === 0) {
+                            if (userMembership === MEMBERSHIP_TYPES.BASIC || userMembership === MEMBERSHIP_TYPES.PREMIUM) {
+                                html += `
+                                    <div class="empty-state">
+                                        <i class="fas fa-tasks"></i>
+                                        <h4>No Available Tasks</h4>
+                                        <p>There are currently no tasks below $3 available.</p>
+                                        <p style="font-size:0.95rem; color:#6366f1; margin-top:0.5rem;">
+                                            <i class="fas fa-crown"></i> 
+                                            Upgrade to Elite to access high-paying tasks ($$3+)
+                                        </p>
+                                    </div>
+                                `;
+                            } else {
+                                html += `
+                                    <div class="empty-state">
+                                        <i class="fas fa-tasks"></i>
+                                        <h4>No Tasks Available</h4>
+                                        <p>Check back later for new tasks.</p>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            html += '<div class="task-grid">';
                             
-                            let rewardValue = 0;
-                            if (task.reward) {
-                                rewardValue = parseFloat(task.reward);
-                                if (isNaN(rewardValue)) rewardValue = 0;
+                            // Show membership info banner for non-Elite users
+                            if (userMembership !== MEMBERSHIP_TYPES.ELITE) {
+                                html += `
+                                    <div style="grid-column: 1 / -1; margin-bottom: 1rem;">
+                                        <div style="background: #f0f9ff; border: 2px solid #6366f1; border-radius: 1rem; padding: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                                            <i class="fas fa-crown" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                                            <div style="flex: 1;">
+                                                <p style="font-weight: 600; color: #0f172a; margin-bottom: 0.2rem;">
+                                                    Showing tasks below $3
+                                                </p>
+                                                <p style="color: #64748b; font-size: 0.9rem;">
+                                                    Upgrade to Elite to access all tasks including high-paying ones ($$3+)
+                                                </p>
+                                            </div>
+                                            <button class="btn btn-primary" onclick="switchTab('withdrawals')" style="padding: 0.5rem 1.5rem;">
+                                                <i class="fas fa-arrow-up"></i> Upgrade
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
                             }
                             
-                            const title = task.title || 'Untitled Task';
-                            const description = task.description || 'No description provided';
-                            const category = task.category || 'other';
-                            const difficulty = task.difficulty || 'medium';
-                            const clientName = task.clientName || 'NextGen Admin';
-                            
-                            const deadlineText = formatDeadline(task.deadline);
-                            const deadlineClass = getDeadlineClass(task.deadline);
-                            
-                            html += `
-                                <div class="task-card">
-                                    <h4 class="task-title">${title}</h4>
-                                    
-                                    <div class="client-info">
-                                        <i class="fas fa-user-circle"></i>
-                                        <span>Client: <strong>${clientName}</strong></span>
-                                    </div>
-                                    
-                                    ${task.deadline ? `
-                                        <div class="deadline-badge ${deadlineClass}">
-                                            <i class="fas ${deadlineClass === 'expired' ? 'fa-calendar-times' : deadlineClass === 'urgent' ? 'fa-exclamation-circle' : 'fa-calendar-alt'}"></i>
-                                            <span>Deadline: ${deadlineText}</span>
+                            for (const task of filteredTasks) {
+                                const hasSubmitted = await hasUserSubmitted(task.id);
+                                const deadlinePassed = isDeadlinePassed(task.deadline);
+                                
+                                let rewardValue = 0;
+                                if (task.reward) {
+                                    rewardValue = parseFloat(task.reward);
+                                    if (isNaN(rewardValue)) rewardValue = 0;
+                                }
+                                
+                                const title = task.title || 'Untitled Task';
+                                const description = task.description || 'No description provided';
+                                const category = task.category || 'other';
+                                const difficulty = task.difficulty || 'medium';
+                                const clientName = task.clientName || 'NextGen Admin';
+                                
+                                const deadlineText = formatDeadline(task.deadline);
+                                const deadlineClass = getDeadlineClass(task.deadline);
+                                
+                                // Add a badge for high-paying tasks
+                                const isHighValue = rewardValue >= 3;
+                                
+                                html += `
+                                    <div class="task-card">
+                                        <h4 class="task-title">${title}</h4>
+                                        
+                                        <div class="client-info">
+                                            <i class="fas fa-user-circle"></i>
+                                            <span>Client: <strong>${clientName}</strong></span>
                                         </div>
-                                    ` : ''}
-                                    
-                                    <p style="color:#64748b; margin-bottom:1rem;">${description.substring(0, 80)}${description.length > 80 ? '...' : ''}</p>
-                                    
-                                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
-                                        <span class="badge primary">${category}</span>
-                                        <span class="badge warning">${difficulty}</span>
-                                    </div>
-                                    
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                                        <span class="task-amount">$${rewardValue.toFixed(2)}</span>
-                                    </div>
-                                    
-                                    ${deadlinePassed && !hasSubmitted ? `
-                                        <div class="expired-message">
-                                            <i class="fas fa-clock"></i> Submission deadline has passed
+                                        
+                                        ${task.deadline ? `
+                                            <div class="deadline-badge ${deadlineClass}">
+                                                <i class="fas ${deadlineClass === 'expired' ? 'fa-calendar-times' : deadlineClass === 'urgent' ? 'fa-exclamation-circle' : 'fa-calendar-alt'}"></i>
+                                                <span>Deadline: ${deadlineText}</span>
+                                            </div>
+                                        ` : ''}
+                                        
+                                        ${isHighValue && userMembership === MEMBERSHIP_TYPES.ELITE ? `
+                                            <div class="deadline-badge" style="background: #f59e0b20; color: #f59e0b; margin-bottom: 0.5rem;">
+                                                <i class="fas fa-crown"></i>
+                                                <span>High-Paying Task</span>
+                                            </div>
+                                        ` : ''}
+                                        
+                                        <p style="color:#64748b; margin-bottom:1rem;">${description.substring(0, 80)}${description.length > 80 ? '...' : ''}</p>
+                                        
+                                        <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+                                            <span class="badge primary">${category}</span>
+                                            <span class="badge warning">${difficulty}</span>
+                                            ${isHighValue ? '<span class="badge danger"><i class="fas fa-star"></i> Premium</span>' : ''}
                                         </div>
-                                    ` : ''}
-                                    
-                                    <div style="display:flex; gap:0.5rem; justify-content:space-between;">
-                                        <button class="btn btn-secondary" onclick="viewTaskDetails('${task.id}')" style="padding:0.5rem 1rem; flex:1;">
-                                            <i class="fas fa-eye"></i> Details
-                                        </button>
-                                        ${!hasSubmitted ? 
-                                            (deadlinePassed ? 
-                                                `<button class="btn btn-disabled" disabled style="flex:2; opacity:0.6;">
-                                                    <i class="fas fa-ban"></i> Deadline Passed
-                                                </button>` : 
-                                                `<button class="btn btn-accept" onclick="acceptTask('${task.id}')" style="flex:2;">
-                                                    Accept Task
+                                        
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                            <span class="task-amount">$${rewardValue.toFixed(2)}</span>
+                                            ${isHighValue && userMembership !== MEMBERSHIP_TYPES.ELITE ? 
+                                                `<span class="badge primary" style="background:#6366f120;">
+                                                    <i class="fas fa-lock"></i> Elite Only
+                                                </span>` : ''}
+                                        </div>
+                                        
+                                        ${deadlinePassed && !hasSubmitted ? `
+                                            <div class="expired-message">
+                                                <i class="fas fa-clock"></i> Submission deadline has passed
+                                            </div>
+                                        ` : ''}
+                                        
+                                        <div style="display:flex; gap:0.5rem; justify-content:space-between;">
+                                            <button class="btn btn-secondary" onclick="viewTaskDetails('${task.id}')" style="padding:0.5rem 1rem; flex:1;">
+                                                <i class="fas fa-eye"></i> Details
+                                            </button>
+                                            ${!hasSubmitted ? 
+                                                (deadlinePassed ? 
+                                                    `<button class="btn btn-disabled" disabled style="flex:2; opacity:0.6;">
+                                                        <i class="fas fa-ban"></i> Deadline Passed
+                                                    </button>` : 
+                                                    // Check if user can accept the task
+                                                    (userMembership !== MEMBERSHIP_TYPES.ELITE && isHighValue) ?
+                                                    `<button class="btn btn-disabled" disabled style="flex:2; opacity:0.6;">
+                                                        <i class="fas fa-lock"></i> Elite Only
+                                                    </button>` :
+                                                    `<button class="btn btn-accept" onclick="acceptTask('${task.id}')" style="flex:2;">
+                                                        Accept Task
+                                                    </button>`
+                                                ) : 
+                                                `<button class="btn btn-success" disabled style="flex:2; opacity:0.6;">
+                                                    <i class="fas fa-check"></i> Completed
                                                 </button>`
-                                            ) : 
-                                            `<button class="btn btn-success" disabled style="flex:2; opacity:0.6;">
-                                                <i class="fas fa-check"></i> Completed
-                                            </button>`
-                                        }
+                                            }
+                                        </div>
                                     </div>
-                                </div>
-                            `;
+                                `;
+                            }
+                            
+                            html += '</div>';
                         }
-                        
-                        html += '</div>';
                     }
                 }
                 
@@ -2442,7 +2711,7 @@
             showSubmitForm(taskId);
         }
         
-        // Show Submit Form
+        // Show Submit Form - Modified to check task value restrictions
         async function showSubmitForm(taskId) {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -2452,6 +2721,35 @@
                 
                 if (deadlinePassed) {
                     showAlert('This task has expired. Submissions are no longer accepted.', 'error');
+                    return;
+                }
+                
+                // Check if user can submit this task based on reward value
+                const rewardValue = parseFloat(task.reward) || 0;
+                const userMembership = userData.membershipType || MEMBERSHIP_TYPES.BASIC;
+                
+                // If task is $3 or more and user is not Elite, block submission
+                if (rewardValue >= 3 && userMembership !== MEMBERSHIP_TYPES.ELITE) {
+                    showModal(`
+                        <div class="modal-content">
+                            <i class="fas fa-crown" style="font-size: 4rem; color: #f59e0b; margin-bottom: 1rem; display: block; text-align: center;"></i>
+                            <h3 style="margin-bottom:1rem; color:#0f172a; text-align: center;">Elite Only Task</h3>
+                            <p style="margin-bottom:1rem; text-align: center;">
+                                This task pays <strong>$${rewardValue.toFixed(2)}</strong> and requires Elite membership.
+                            </p>
+                            <p style="margin-bottom:1.5rem; text-align: center; color:#64748b;">
+                                Upgrade to Elite to access high-paying tasks and maximize your earnings!
+                            </p>
+                            <div style="display:flex; gap:1rem; margin-top:1.5rem; justify-content: center;">
+                                <button class="btn btn-primary" onclick="switchTab('withdrawals'); closeModal();">
+                                    <i class="fas fa-arrow-up"></i> Upgrade Now
+                                </button>
+                                <button class="btn btn-secondary" onclick="closeModal()">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    `);
                     return;
                 }
                 
@@ -2519,7 +2817,7 @@
             }
         }
         
-        // View Task Details
+        // View Task Details - Updated with membership requirement
         async function viewTaskDetails(taskId) {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -2557,6 +2855,11 @@
                 const difficulty = task.difficulty || 'medium';
                 const requirements = task.requirements || 'No specific requirements.';
                 const clientName = task.clientName || 'NextGen Admin';
+                
+                // Check membership requirement
+                const isHighValue = rewardValue >= 3;
+                const userMembership = userData.membershipType || MEMBERSHIP_TYPES.BASIC;
+                const canAccept = !isHighValue || userMembership === MEMBERSHIP_TYPES.ELITE;
                 
                 const pdfHtml = `
                     <div class="pdf-document">
@@ -2599,6 +2902,14 @@
                                         <i class="fas fa-dollar-sign"></i> $${rewardValue.toFixed(2)}
                                     </span>
                                 </div>
+                                ${isHighValue ? `
+                                    <div class="pdf-grid-item">
+                                        <span class="pdf-grid-label">Requirement</span>
+                                        <span class="pdf-grid-value">
+                                            <i class="fas fa-crown" style="color: #f59e0b;"></i> Elite Membership Required
+                                        </span>
+                                    </div>
+                                ` : ''}
                             </div>
                             
                             <div class="pdf-section">
@@ -2638,15 +2949,30 @@
                                 </div>
                             ` : ''}
                             
+                            ${isHighValue && !canAccept ? `
+                                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                                    <i class="fas fa-crown" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                                    <div>
+                                        <p style="font-weight: 600; color: #92400e;">Elite Membership Required</p>
+                                        <p style="color: #92400e; font-size: 0.9rem;">This high-paying task requires Elite membership. Upgrade to access tasks paying $3 and above.</p>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
                             <div style="display: flex; gap: 2rem; margin-bottom: 2rem; font-size: 0.9rem; color: #64748b;">
                                 <span><i class="far fa-calendar-alt"></i> Posted: ${createdDate}</span>
                                 <span><i class="far fa-clock"></i> Task ID: ${taskId}</span>
                             </div>
                             
                             <div class="pdf-actions">
-                                <button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')">
-                                    <i class="fas fa-check-circle"></i> Accept Task
-                                </button>
+                                ${canAccept ? 
+                                    `<button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')">
+                                        <i class="fas fa-check-circle"></i> Accept Task
+                                    </button>` : 
+                                    `<button class="pdf-btn pdf-btn-secondary" onclick="switchTab('withdrawals'); closeModal();">
+                                        <i class="fas fa-arrow-up"></i> Upgrade to Elite
+                                    </button>`
+                                }
                                 <button class="pdf-btn pdf-btn-secondary" onclick="closeModal()">
                                     <i class="fas fa-times"></i> Close
                                 </button>
@@ -2815,7 +3141,7 @@
             }
         }
         
-        // Load Withdrawals with dynamic membership packages
+        // Load Withdrawals with dynamic membership packages and disable lower packages
         async function loadWithdrawals() {
             try {
                 // Load packages if not loaded
@@ -2845,6 +3171,15 @@
                                  userData.membershipExpiry.toDate && 
                                  new Date() > userData.membershipExpiry.toDate();
                 
+                // Define package hierarchy (higher index = higher tier)
+                const packageHierarchy = {
+                    [MEMBERSHIP_TYPES.BASIC]: 1,
+                    [MEMBERSHIP_TYPES.PREMIUM]: 2,
+                    [MEMBERSHIP_TYPES.ELITE]: 3
+                };
+                
+                const currentTierLevel = packageHierarchy[userData.membershipType] || 1;
+                
                 // Build packages HTML
                 let packagesHtml = `
                     <h3 style="margin-bottom: 1.5rem;">Membership Packages</h3>
@@ -2864,6 +3199,32 @@
                             </div>
                             <div class="current-membership-badge">ACTIVE</div>
                         </div>
+                        
+                        ${userData.membershipType !== MEMBERSHIP_TYPES.ELITE ? `
+                            <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 1rem; padding: 1rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+                                <i class="fas fa-arrow-up" style="color: #f59e0b; font-size: 1.5rem;"></i>
+                                <div style="flex: 1;">
+                                    <p style="font-weight: 600; color: #92400e; margin-bottom: 0.2rem;">
+                                        You can only upgrade, not downgrade
+                                    </p>
+                                    <p style="color: #92400e; font-size: 0.9rem;">
+                                        Lower tier packages are disabled. You can upgrade to a higher package for more benefits.
+                                    </p>
+                                </div>
+                            </div>
+                        ` : `
+                            <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 1rem; padding: 1rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+                                <i class="fas fa-crown" style="color: #10b981; font-size: 1.5rem;"></i>
+                                <div style="flex: 1;">
+                                    <p style="font-weight: 600; color: #10b981; margin-bottom: 0.2rem;">
+                                        You're on our highest tier!
+                                    </p>
+                                    <p style="color: #10b981; font-size: 0.9rem;">
+                                        Enjoy all premium features including access to high-paying tasks.
+                                    </p>
+                                </div>
+                            </div>
+                        `}
                     ` : ''}
                     
                     <div class="packages-grid">
@@ -2872,6 +3233,10 @@
                 // Loop through all package types
                 for (const [type, pkg] of Object.entries(membershipPackages)) {
                     const isCurrent = userData.membershipType === type;
+                    const packageTierLevel = packageHierarchy[type] || 1;
+                    const isLowerTier = packageTierLevel < currentTierLevel;
+                    const isHigherTier = packageTierLevel > currentTierLevel;
+                    
                     const packageClass = type === MEMBERSHIP_TYPES.BASIC ? 'basic' : 
                                         type === MEMBERSHIP_TYPES.PREMIUM ? 'premium' : 'elite';
                     
@@ -2895,12 +3260,42 @@
                         `;
                     });
                     
+                    // Determine button state and styling
+                    let buttonHtml = '';
+                    if (isCurrent) {
+                        buttonHtml = `<button class="package-btn current" disabled>
+                            <i class="fas fa-check"></i> Current Plan
+                        </button>`;
+                    } else if (isLowerTier && userData.membershipType !== MEMBERSHIP_TYPES.BASIC) {
+                        // Lower tier packages are disabled (can't downgrade)
+                        buttonHtml = `<button class="package-btn ${packageClass}" disabled style="opacity: 0.5; cursor: not-allowed;">
+                            <i class="fas fa-ban"></i> Cannot Downgrade
+                        </button>`;
+                    } else {
+                        // Higher tier or same tier (but not current) - available for upgrade
+                        const actionText = type === MEMBERSHIP_TYPES.BASIC ? 'Select Basic' : 
+                                          type === MEMBERSHIP_TYPES.PREMIUM ? 'Upgrade to Premium' : 'Go Elite';
+                        
+                        const upgradeIcon = isHigherTier ? 'fa-arrow-up' : 'fa-arrow-right';
+                        
+                        buttonHtml = `<button class="package-btn ${packageClass}" 
+                                                 onclick="selectMembership('${type}')">
+                                            <i class="fas ${upgradeIcon}"></i> ${actionText}
+                                        </button>`;
+                    }
+                    
+                    // Add disabled class to package card for lower tiers
+                    const cardDisabledClass = isLowerTier && !isCurrent ? 'disabled-package' : '';
+                    
                     packagesHtml += `
-                        <div class="package-card ${packageClass}">
+                        <div class="package-card ${packageClass} ${cardDisabledClass}" 
+                             ${isLowerTier && !isCurrent ? 'style="opacity: 0.7; filter: grayscale(0.5);"' : ''}>
                             ${pkg.badge && isCurrent ? 
                                 `<div class="package-badge ${pkg.badge}">CURRENT</div>` : 
-                                pkg.badge && !isCurrent ? 
-                                `<div class="package-badge ${pkg.badge}">${pkg.badge.toUpperCase()}</div>` : ''}
+                                pkg.badge && !isCurrent && !isLowerTier ? 
+                                `<div class="package-badge ${pkg.badge}">${pkg.badge.toUpperCase()}</div>` : 
+                                isLowerTier && !isCurrent ?
+                                `<div class="package-badge" style="background: #64748b;">LOCKED</div>` : ''}
                             
                             <div class="package-header">
                                 <div class="package-name">${pkg.name}</div>
@@ -2914,17 +3309,13 @@
                                 ${featuresHtml}
                             </ul>
                             
-                            ${isCurrent ? 
-                                `<button class="package-btn current" disabled>
-                                    <i class="fas fa-check"></i> Current Plan
-                                </button>` : 
-                                `<button class="package-btn ${packageClass}" 
-                                         onclick="selectMembership('${type}')">
-                                    <i class="fas fa-arrow-right"></i> 
-                                    ${type === MEMBERSHIP_TYPES.BASIC ? 'Select Basic' : 
-                                      type === MEMBERSHIP_TYPES.PREMIUM ? 'Upgrade to Premium' : 'Go Elite'}
-                                </button>`
-                            }
+                            ${buttonHtml}
+                            
+                            ${isLowerTier && !isCurrent ? `
+                                <p style="font-size: 0.8rem; color: #64748b; text-align: center; margin-top: 0.5rem;">
+                                    <i class="fas fa-lock"></i> Upgrade to access
+                                </p>
+                            ` : ''}
                         </div>
                     `;
                 }
@@ -3081,255 +3472,44 @@
             }
         }
         
-        // Load Referrals - UPDATED with clean referral link
-        async function loadReferrals() {
-            try {
-                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading referrals...</p></div>';
-                
-                // Get referral stats
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const referralCode = generateReferralCode(currentUser.uid);
-                const referralLink = getReferralLink();
-                
-                // Get referred users
-                let referredSnapshot = { empty: true, docs: [] };
-                try {
-                    referredSnapshot = await db.collection('users')
-                        .where('referredBy', '==', currentUser.uid)
-                        .get();
-                } catch (error) {
-                    console.warn('Could not fetch referred users:', error);
-                }
-                
-                // Get referral bonuses
-                let bonusesSnapshot = { empty: true, docs: [] };
-                try {
-                    bonusesSnapshot = await db.collection('referralBonuses')
-                        .where('referrerId', '==', currentUser.uid)
-                        .orderBy('createdAt', 'desc')
-                        .get();
-                } catch (error) {
-                    console.warn('Could not fetch referral bonuses:', error);
-                }
-                
-                const totalReferrals = referredSnapshot.size;
-                
-                let totalEarned = 0;
-                const bonuses = [];
-                
-                if (!bonusesSnapshot.empty) {
-                    bonusesSnapshot.forEach(doc => {
-                        const bonus = doc.data();
-                        totalEarned += bonus.amount;
-                        bonuses.push({ id: doc.id, ...bonus });
-                    });
-                }
-                
-                // Update user's referral stats in local data
-                userData.totalReferrals = totalReferrals;
-                userData.referralEarnings = totalEarned;
-                
-                // Build referral stats with clean link
-                let statsHtml = `
-                    <div class="referral-section">
-                        <div class="referral-header">
-                            <i class="fas fa-users"></i>
-                            <h3>Referral Program</h3>
-                        </div>
-                        
-                        <div class="referral-stats">
-                            <div class="referral-stat-card">
-                                <div class="referral-stat-value">${totalReferrals}</div>
-                                <div class="referral-stat-label">Total Referrals</div>
-                            </div>
-                            <div class="referral-stat-card">
-                                <div class="referral-stat-value">$${totalEarned.toFixed(2)}</div>
-                                <div class="referral-stat-label">Earned from Referrals</div>
-                            </div>
-                            <div class="referral-stat-card">
-                                <div class="referral-stat-value">$${REFERRAL_BONUS_REFERRER}</div>
-                                <div class="referral-stat-label">Per Premium Upgrade</div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin: 2rem 0;">
-                            <h4 style="margin-bottom: 1rem;">Your Referral Link (Clean URL)</h4>
-                            <div class="referral-link-box">
-                                <input type="text" id="referralLink" value="${referralLink}" readonly>
-                                <button onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy Link</button>
-                            </div>
-                            
-                            <!-- Optional: Show other formats -->
-                            <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 1rem;">
-                                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 0.5rem;">
-                                    <i class="fas fa-info-circle" style="color: #6366f1;"></i> 
-                                    Other formats you can share:
-                                </p>
-                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/register/</span>
-                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/register/${referralCode}</code>
-                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/register/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/join/</span>
-                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/join/${referralCode}</code>
-                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/join/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="referral-info">
-                                <div class="referral-info-item">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>You get <strong>$${REFERRAL_BONUS_REFERRER}</strong> when referred user upgrades to Premium</span>
-                                </div>
-                                <div class="referral-info-item">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Referred user gets <strong>$${REFERRAL_BONUS_REFERRED}</strong> when they upgrade to Premium</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // Build referred users table
-                let referralsHtml = '<h4 style="margin-bottom: 1rem;">Your Referrals</h4>';
-                
-                if (referredSnapshot.empty) {
-                    referralsHtml += `
-                        <div class="empty-state">
-                            <i class="fas fa-user-plus"></i>
-                            <p>You haven't referred anyone yet.</p>
-                            <p style="font-size:0.9rem;">Share your referral link to earn bonuses!</p>
-                        </div>
-                    `;
-                } else {
-                    referralsHtml += `
-                        <div class="referral-table">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Email</th>
-                                        <th>Joined</th>
-                                        <th>Status</th>
-                                        <th>Bonus Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
-                    
-                    for (const doc of referredSnapshot.docs) {
-                        const referred = doc.data();
-                        const joinedDate = referred.createdAt?.seconds ? 
-                            new Date(referred.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-                        
-                        // Check if this referral has earned a bonus
-                        const bonusEarned = bonuses.find(b => b.referredId === doc.id && b.type === 'referrer');
-                        
-                        const status = referred.membershipType === MEMBERSHIP_TYPES.PREMIUM ? 
-                            '<span class="badge primary">Premium</span>' : 
-                            referred.membershipType === MEMBERSHIP_TYPES.ELITE ?
-                            '<span class="badge warning">Elite</span>' :
-                            '<span class="badge">Basic</span>';
-                        
-                        let bonusStatus = '-';
-                        if (bonusEarned) {
-                            bonusStatus = `<span class="commission-badge">$${bonusEarned.amount.toFixed(2)} paid</span>`;
-                        } else if (referred.membershipType === MEMBERSHIP_TYPES.PREMIUM) {
-                            bonusStatus = '<span class="status-badge">Pending approval</span>';
-                        }
-                        
-                        referralsHtml += `
-                            <tr>
-                                <td>${referred.email}</td>
-                                <td>${joinedDate}</td>
-                                <td>${status}</td>
-                                <td>${bonusStatus}</td>
-                            </tr>
-                        `;
-                    }
-                    
-                    referralsHtml += `
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
-                }
-                
-                // Build bonus history
-                let bonusHtml = '<h4 style="margin: 2rem 0 1rem 0;">Bonus History</h4>';
-                
-                if (bonuses.length === 0) {
-                    bonusHtml += '<p style="color:#64748b;">No bonuses earned yet.</p>';
-                } else {
-                    bonusHtml += `
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
-                    `;
-                    
-                    bonuses.forEach(bonus => {
-                        const date = bonus.creditedAt?.seconds ? 
-                            new Date(bonus.creditedAt.seconds * 1000).toLocaleDateString() : 
-                            bonus.createdAt?.seconds ? new Date(bonus.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
-                        
-                        bonusHtml += `
-                            <div class="submission-card" style="padding: 1rem;">
-                                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom:0.5rem;">
-                                    <span><i class="fas fa-gift" style="color:#10b981;"></i> <strong>$${bonus.amount.toFixed(2)}</strong></span>
-                                    <span class="commission-badge">${bonus.type === 'referrer' ? 'Referrer' : 'Referred'}</span>
-                                </div>
-                                <p style="color:#64748b; font-size:0.85rem; margin-bottom:0.3rem;">From: ${bonus.referredEmail || 'Referral'}</p>
-                                <p style="color:#94a3b8; font-size:0.75rem;">${date}</p>
-                            </div>
-                        `;
-                    });
-                    
-                    bonusHtml += '</div>';
-                }
-                
-                document.getElementById('content').innerHTML = statsHtml + referralsHtml + bonusHtml;
-                
-                // Update user document with latest stats
-                try {
-                    await db.collection('users').doc(currentUser.uid).update({
-                        totalReferrals: totalReferrals,
-                        referralEarnings: totalEarned
-                    });
-                } catch (error) {
-                    console.warn('Could not update referral stats:', error);
-                }
-                
-            } catch (error) {
-                console.error('Error loading referrals:', error);
-                
-                document.getElementById('content').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
-                        <h4>Error Loading Referrals</h4>
-                        <p>${error.message}</p>
-                        <button class="btn btn-primary" onclick="loadReferrals()" style="margin-top:1rem;">
-                            <i class="fas fa-sync-alt"></i> Try Again
-                        </button>
-                    </div>
-                `;
-            }
-        }
-        
-        // Helper function to copy dynamic text
-        function copyToClipboardDynamic(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showAlert('Copied to clipboard!', 'success');
-            }).catch(() => {
-                showAlert('Failed to copy', 'error');
-            });
-        }
-        
-        // Select membership package
+        // Also update selectMembership function to prevent downgrades
         function selectMembership(membershipType) {
+            // Define package hierarchy
+            const packageHierarchy = {
+                [MEMBERSHIP_TYPES.BASIC]: 1,
+                [MEMBERSHIP_TYPES.PREMIUM]: 2,
+                [MEMBERSHIP_TYPES.ELITE]: 3
+            };
+            
+            const currentTierLevel = packageHierarchy[userData.membershipType] || 1;
+            const selectedTierLevel = packageHierarchy[membershipType] || 1;
+            
+            // Check if trying to downgrade
+            if (selectedTierLevel < currentTierLevel && userData.membershipType !== MEMBERSHIP_TYPES.BASIC) {
+                showModal(`
+                    <div class="modal-content">
+                        <i class="fas fa-ban" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem; display: block; text-align: center;"></i>
+                        <h3 style="margin-bottom:1rem; color:#ef4444; text-align: center;">Cannot Downgrade</h3>
+                        <p style="margin-bottom:1.5rem; text-align: center;">
+                            You cannot downgrade to a lower tier package. You can only upgrade to higher tiers.
+                        </p>
+                        <p style="margin-bottom:1.5rem; text-align: center; color:#64748b;">
+                            If you need assistance, please contact support.
+                        </p>
+                        <div style="display:flex; gap:1rem; margin-top:1.5rem; justify-content: center;">
+                            <button class="btn btn-primary" onclick="closeModal()">OK</button>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+            
+            if (membershipType === MEMBERSHIP_TYPES.BASIC && userData.membershipType !== MEMBERSHIP_TYPES.BASIC) {
+                // Already handled by hierarchy check, but just in case
+                showAlert('You cannot downgrade to Basic', 'error');
+                return;
+            }
+            
             if (membershipType === MEMBERSHIP_TYPES.BASIC) {
                 // Basic is free, just update membership
                 updateMembership(membershipType);
@@ -3445,7 +3625,7 @@
             }
         }
         
-        // Update fee breakdown
+        // Update fee breakdown - now uses dynamic fee percentages
         function updateFeeBreakdown(maxBalance) {
             const amountInput = document.getElementById('withdrawAmount');
             if (!amountInput) return;
@@ -3489,7 +3669,7 @@
             }
         }
         
-        // Request Withdrawal
+        // Request Withdrawal - now uses dynamic fee percentages
         async function requestWithdrawal() {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
@@ -3594,6 +3774,253 @@
                 console.error('Error requesting withdrawal:', error);
                 showAlert(error.message || 'Error requesting withdrawal', 'error');
             }
+        }
+        
+        // Load Referrals - renamed to Recommendations in UI but function stays the same
+        async function loadReferrals() {
+            try {
+                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading recommendations...</p></div>';
+                
+                // Get referral stats
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                const referralCode = generateReferralCode(currentUser.uid);
+                const referralLink = getReferralLink();
+                
+                // Get referred users
+                let referredSnapshot = { empty: true, docs: [] };
+                try {
+                    referredSnapshot = await db.collection('users')
+                        .where('referredBy', '==', currentUser.uid)
+                        .get();
+                } catch (error) {
+                    console.warn('Could not fetch referred users:', error);
+                }
+                
+                // Get referral bonuses
+                let bonusesSnapshot = { empty: true, docs: [] };
+                try {
+                    bonusesSnapshot = await db.collection('referralBonuses')
+                        .where('referrerId', '==', currentUser.uid)
+                        .orderBy('createdAt', 'desc')
+                        .get();
+                } catch (error) {
+                    console.warn('Could not fetch referral bonuses:', error);
+                }
+                
+                const totalReferrals = referredSnapshot.size;
+                
+                let totalEarned = 0;
+                const bonuses = [];
+                
+                if (!bonusesSnapshot.empty) {
+                    bonusesSnapshot.forEach(doc => {
+                        const bonus = doc.data();
+                        totalEarned += bonus.amount;
+                        bonuses.push({ id: doc.id, ...bonus });
+                    });
+                }
+                
+                // Update user's referral stats in local data
+                userData.totalReferrals = totalReferrals;
+                userData.referralEarnings = totalEarned;
+                
+                // Build referral stats with clean link - Updated to use "Recommendations"
+                let statsHtml = `
+                    <div class="referral-section">
+                        <div class="referral-header">
+                            <i class="fas fa-users"></i>
+                            <h3>Recommendations Program</h3>
+                        </div>
+                        
+                        <div class="referral-stats">
+                            <div class="referral-stat-card">
+                                <div class="referral-stat-value">${totalReferrals}</div>
+                                <div class="referral-stat-label">Total Recommendations</div>
+                            </div>
+                            <div class="referral-stat-card">
+                                <div class="referral-stat-value">$${totalEarned.toFixed(2)}</div>
+                                <div class="referral-stat-label">Earned from Recommendations</div>
+                            </div>
+                            <div class="referral-stat-card">
+                                <div class="referral-stat-value">$${REFERRAL_BONUS_REFERRER}</div>
+                                <div class="referral-stat-label">Per Premium Upgrade</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 2rem 0;">
+                            <h4 style="margin-bottom: 1rem;">Your Recommendation Link (Clean URL)</h4>
+                            <div class="referral-link-box">
+                                <input type="text" id="referralLink" value="${referralLink}" readonly>
+                                <button onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy Link</button>
+                            </div>
+                            
+                            <!-- Optional: Show other formats -->
+                            <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 1rem;">
+                                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-info-circle" style="color: #6366f1;"></i> 
+                                    Other formats you can share:
+                                </p>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/register/</span>
+                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/register/${referralCode}</code>
+                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/register/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/join/</span>
+                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/join/${referralCode}</code>
+                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/join/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="referral-info">
+                                <div class="referral-info-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>You get <strong>$${REFERRAL_BONUS_REFERRER}</strong> when recommended user upgrades to Premium</span>
+                                </div>
+                                <div class="referral-info-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Recommended user gets <strong>$${REFERRAL_BONUS_REFERRED}</strong> when they upgrade to Premium</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Build referred users table - Updated to use "Recommendations"
+                let referralsHtml = '<h4 style="margin-bottom: 1rem;">Your Recommendations</h4>';
+                
+                if (referredSnapshot.empty) {
+                    referralsHtml += `
+                        <div class="empty-state">
+                            <i class="fas fa-user-plus"></i>
+                            <p>You haven't recommended anyone yet.</p>
+                            <p style="font-size:0.9rem;">Share your recommendation link to earn bonuses!</p>
+                        </div>
+                    `;
+                } else {
+                    referralsHtml += `
+                        <div class="referral-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Joined</th>
+                                        <th>Status</th>
+                                        <th>Bonus Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    for (const doc of referredSnapshot.docs) {
+                        const referred = doc.data();
+                        const joinedDate = referred.createdAt?.seconds ? 
+                            new Date(referred.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                        
+                        // Check if this referral has earned a bonus
+                        const bonusEarned = bonuses.find(b => b.referredId === doc.id && b.type === 'referrer');
+                        
+                        const status = referred.membershipType === MEMBERSHIP_TYPES.PREMIUM ? 
+                            '<span class="badge primary">Premium</span>' : 
+                            referred.membershipType === MEMBERSHIP_TYPES.ELITE ?
+                            '<span class="badge warning">Elite</span>' :
+                            '<span class="badge">Basic</span>';
+                        
+                        let bonusStatus = '-';
+                        if (bonusEarned) {
+                            bonusStatus = `<span class="commission-badge">$${bonusEarned.amount.toFixed(2)} paid</span>`;
+                        } else if (referred.membershipType === MEMBERSHIP_TYPES.PREMIUM) {
+                            bonusStatus = '<span class="status-badge">Pending approval</span>';
+                        }
+                        
+                        referralsHtml += `
+                            <tr>
+                                <td>${referred.email}</td>
+                                <td>${joinedDate}</td>
+                                <td>${status}</td>
+                                <td>${bonusStatus}</td>
+                            </tr>
+                        `;
+                    }
+                    
+                    referralsHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                // Build bonus history
+                let bonusHtml = '<h4 style="margin: 2rem 0 1rem 0;">Bonus History</h4>';
+                
+                if (bonuses.length === 0) {
+                    bonusHtml += '<p style="color:#64748b;">No bonuses earned yet.</p>';
+                } else {
+                    bonusHtml += `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+                    `;
+                    
+                    bonuses.forEach(bonus => {
+                        const date = bonus.creditedAt?.seconds ? 
+                            new Date(bonus.creditedAt.seconds * 1000).toLocaleDateString() : 
+                            bonus.createdAt?.seconds ? new Date(bonus.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
+                        
+                        bonusHtml += `
+                            <div class="submission-card" style="padding: 1rem;">
+                                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom:0.5rem;">
+                                    <span><i class="fas fa-gift" style="color:#10b981;"></i> <strong>$${bonus.amount.toFixed(2)}</strong></span>
+                                    <span class="commission-badge">${bonus.type === 'referrer' ? 'Referrer' : 'Referred'}</span>
+                                </div>
+                                <p style="color:#64748b; font-size:0.85rem; margin-bottom:0.3rem;">From: ${bonus.referredEmail || 'Recommendation'}</p>
+                                <p style="color:#94a3b8; font-size:0.75rem;">${date}</p>
+                            </div>
+                        `;
+                    });
+                    
+                    bonusHtml += '</div>';
+                }
+                
+                document.getElementById('content').innerHTML = statsHtml + referralsHtml + bonusHtml;
+                
+                // Update user document with latest stats
+                try {
+                    await db.collection('users').doc(currentUser.uid).update({
+                        totalReferrals: totalReferrals,
+                        referralEarnings: totalEarned
+                    });
+                } catch (error) {
+                    console.warn('Could not update referral stats:', error);
+                }
+                
+            } catch (error) {
+                console.error('Error loading recommendations:', error);
+                
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
+                        <h4>Error Loading Recommendations</h4>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadReferrals()" style="margin-top:1rem;">
+                            <i class="fas fa-sync-alt"></i> Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Helper function to copy dynamic text
+        function copyToClipboardDynamic(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('Copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy', 'error');
+            });
         }
         
         // Load Messages
@@ -4000,8 +4427,8 @@
                             ${userData.membershipExpiry.toDate().toLocaleDateString()}
                         </p>
                     ` : ''}
-                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Referrals:</strong> ${userData.totalReferrals || 0}</p>
-                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Referral Earnings:</strong> $${(userData.referralEarnings || 0).toFixed(2)}</p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Recommendations:</strong> ${userData.totalReferrals || 0}</p>
+                    <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Recommendation Earnings:</strong> $${(userData.referralEarnings || 0).toFixed(2)}</p>
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Fees Paid:</strong> $${(userData.totalFeesPaid || 0).toFixed(2)}</p>
                 </div>
                 <div style="margin-top: 1rem; text-align: center; font-size: 0.8rem; color: #94a3b8;">
