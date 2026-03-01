@@ -170,6 +170,125 @@
             background: #2563eb;
         }
         
+        /* Membership Package Cards */
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .package-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border: 2px solid #e2e8f0;
+            position: relative;
+        }
+        
+        .package-card.basic { border-color: #94a3b8; }
+        .package-card.premium { border-color: #6366f1; }
+        .package-card.elite { border-color: #f59e0b; }
+        
+        .package-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .package-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .package-price {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #6366f1;
+        }
+        
+        .package-price small {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #64748b;
+        }
+        
+        .package-features {
+            margin: 1rem 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .package-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .package-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .package-features .fa-check-circle {
+            color: #10b981;
+        }
+        
+        .package-features .fa-times-circle {
+            color: #ef4444;
+        }
+        
+        .feature-highlight {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .package-badge {
+            position: absolute;
+            top: 1rem;
+            right: -1rem;
+            background: #10b981;
+            color: white;
+            padding: 0.2rem 2rem;
+            transform: rotate(45deg);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .package-badge.popular {
+            background: #6366f1;
+        }
+        
+        .package-badge.best-value {
+            background: #f59e0b;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-item input[type="text"] {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .feature-item input[type="checkbox"] {
+            width: auto;
+            margin-bottom: 0;
+        }
+        
+        .feature-controls {
+            display: flex;
+            gap: 0.3rem;
+        }
+        
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -548,6 +667,60 @@
             ELITE: 'elite'
         };
         
+        // Default membership packages (fallback if not set in Firestore)
+        const DEFAULT_MEMBERSHIP_PACKAGES = {
+            basic: {
+                name: 'BASIC',
+                price: 0,
+                duration: 'lifetime',
+                features: [
+                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Withdrawals', included: false, icon: 'fa-times-circle' },
+                    { text: 'Welcome bonus', included: false, icon: 'fa-times-circle' },
+                    { text: 'Standard support', included: true, icon: 'fa-check-circle' },
+                    { text: 'Task submissions', included: true, icon: 'fa-check-circle' }
+                ],
+                color: '#94a3b8',
+                buttonClass: 'basic',
+                badge: null
+            },
+            premium: {
+                name: 'PREMIUM',
+                price: 3,
+                duration: 'annual',
+                features: [
+                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Withdrawals enabled', included: true, icon: 'fa-check-circle', highlight: true },
+                    { text: 'Priority support', included: true, icon: 'fa-star' },
+                    { text: 'Higher earning potential', included: true, icon: 'fa-chart-line' },
+                    { text: 'Premium badge', included: true, icon: 'fa-gem' }
+                ],
+                color: '#6366f1',
+                buttonClass: 'premium',
+                badge: 'popular'
+            },
+            elite: {
+                name: 'ELITE',
+                price: 6,
+                duration: 'lifetime',
+                welcomeBonus: 10,
+                features: [
+                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Withdrawals enabled', included: true, icon: 'fa-check-circle', highlight: true },
+                    { text: 'Welcome bonus', included: true, icon: 'fa-gift', highlight: true, bonus: true },
+                    { text: 'VIP support 24/7', included: true, icon: 'fa-star' },
+                    { text: 'Elite status & perks', included: true, icon: 'fa-trophy' },
+                    { text: 'Reduced fees (coming soon)', included: true, icon: 'fa-percent' }
+                ],
+                color: '#f59e0b',
+                buttonClass: 'elite',
+                badge: 'best-value'
+            }
+        };
+        
+        // Global variable to store membership packages
+        let membershipPackages = null;
+        
         // Referral constants  
         const REFERRAL_BONUS_REFERRER = 2; // $2 for referrer  
         const REFERRAL_BONUS_REFERRED = 0.5; // $0.5 for referred  
@@ -579,9 +752,63 @@
               
             currentUser = user;  
             document.getElementById('adminName').textContent = doc.data().displayName;  
+            
+            // Load membership packages
+            await loadMembershipPackages();
               
             loadDashboard();  
         });  
+        
+        // Load membership packages from Firestore
+        async function loadMembershipPackages() {
+            try {
+                const doc = await db.collection('settings').doc('membershipPackages').get();
+                
+                if (doc.exists) {
+                    membershipPackages = doc.data();
+                    console.log('Loaded membership packages from Firestore:', membershipPackages);
+                } else {
+                    // Initialize with defaults if not exists
+                    membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
+                    
+                    // Create default packages in Firestore
+                    await db.collection('settings').doc('membershipPackages').set(DEFAULT_MEMBERSHIP_PACKAGES);
+                    console.log('Created default membership packages in Firestore');
+                }
+            } catch (error) {
+                console.error('Error loading membership packages:', error);
+                membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
+            }
+            
+            return membershipPackages;
+        }
+        
+        // Save membership packages to Firestore
+        async function saveMembershipPackages(packages) {
+            try {
+                await db.collection('settings').doc('membershipPackages').set(packages);
+                membershipPackages = packages;
+                showAlert('Membership packages updated successfully!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error saving membership packages:', error);
+                showAlert('Error saving packages: ' + error.message, 'error');
+                return false;
+            }
+        }
+        
+        // Get package by type
+        function getPackageByType(type) {
+            if (!membershipPackages) return DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
+            return membershipPackages[type] || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
+        }
+        
+        // Get welcome bonus amount
+        function getWelcomeBonus(type) {
+            if (type !== MEMBERSHIP_TYPES.ELITE) return 0;
+            const pkg = getPackageByType(type);
+            return pkg.welcomeBonus || ELITE_BONUS;
+        }
           
         // Alert Modal Function  
         function showAlert(message, type = 'success', title = '') {  
@@ -1308,25 +1535,299 @@
             showAlert('Withdrawal marked as paid', 'success');  
             loadWithdrawals();  
         }  
-          
-        // Load Memberships  
+        
+        // NEW FUNCTION: Show Edit Membership Packages Modal
+        function showEditPackages() {
+            if (!membershipPackages) {
+                showAlert('Membership packages not loaded', 'error');
+                return;
+            }
+            
+            let packagesHtml = `
+                <h3 style="margin-bottom:1.5rem;">Edit Membership Packages</h3>
+                <p style="margin-bottom:1rem; color:#64748b;">Customize the membership packages that users see. Changes will take effect immediately.</p>
+            `;
+            
+            for (const [type, pkg] of Object.entries(membershipPackages)) {
+                const packageClass = type === 'basic' ? 'basic' : type === 'premium' ? 'premium' : 'elite';
+                const featuresHtml = pkg.features.map((feature, index) => `
+                    <div class="feature-item">
+                        <input type="checkbox" class="feature-included" data-type="${type}" data-index="${index}" ${feature.included ? 'checked' : ''}>
+                        <input type="text" class="feature-text" data-type="${type}" data-index="${index}" value="${feature.text}" placeholder="Feature description">
+                        <select class="feature-icon" data-type="${type}" data-index="${index}">
+                            <option value="fa-check-circle" ${feature.icon === 'fa-check-circle' ? 'selected' : ''}>Check</option>
+                            <option value="fa-times-circle" ${feature.icon === 'fa-times-circle' ? 'selected' : ''}>Times</option>
+                            <option value="fa-star" ${feature.icon === 'fa-star' ? 'selected' : ''}>Star</option>
+                            <option value="fa-gem" ${feature.icon === 'fa-gem' ? 'selected' : ''}>Gem</option>
+                            <option value="fa-gift" ${feature.icon === 'fa-gift' ? 'selected' : ''}>Gift</option>
+                            <option value="fa-trophy" ${feature.icon === 'fa-trophy' ? 'selected' : ''}>Trophy</option>
+                            <option value="fa-percent" ${feature.icon === 'fa-percent' ? 'selected' : ''}>Percent</option>
+                            <option value="fa-users" ${feature.icon === 'fa-users' ? 'selected' : ''}>Users</option>
+                            <option value="fa-chart-line" ${feature.icon === 'fa-chart-line' ? 'selected' : ''}>Chart</option>
+                        </select>
+                        <input type="checkbox" class="feature-highlight" data-type="${type}" data-index="${index}" ${feature.highlight ? 'checked' : ''}> <small>Highlight</small>
+                        <div class="feature-controls">
+                            <button class="btn btn-sm btn-success add-feature" data-type="${type}" data-index="${index + 1}"><i class="fas fa-plus"></i></button>
+                            <button class="btn btn-sm btn-danger remove-feature" data-type="${type}" data-index="${index}" ${pkg.features.length <= 1 ? 'disabled' : ''}><i class="fas fa-minus"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                packagesHtml += `
+                    <div class="package-card ${packageClass}" style="margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4>${pkg.name} Package</h4>
+                            <span class="badge ${type}">${type.toUpperCase()}</span>
+                        </div>
+                        
+                        <div class="flex-row" style="margin-bottom: 1rem;">
+                            <input type="text" class="package-name-input" data-type="${type}" value="${pkg.name}" placeholder="Package Name" style="flex: 1;">
+                            <input type="number" class="package-price-input" data-type="${type}" value="${pkg.price}" placeholder="Price" step="0.01" min="0" style="width: 100px;">
+                            <select class="package-duration-input" data-type="${type}" style="width: 120px;">
+                                <option value="lifetime" ${pkg.duration === 'lifetime' ? 'selected' : ''}>Lifetime</option>
+                                <option value="annual" ${pkg.duration === 'annual' ? 'selected' : ''}>Annual</option>
+                                <option value="monthly" ${pkg.duration === 'monthly' ? 'selected' : ''}>Monthly</option>
+                            </select>
+                        </div>
+                        
+                        ${type === 'elite' ? `
+                            <div style="margin-bottom: 1rem;">
+                                <label>Welcome Bonus ($):</label>
+                                <input type="number" class="welcome-bonus-input" data-type="${type}" value="${pkg.welcomeBonus || 10}" step="0.01" min="0">
+                            </div>
+                        ` : ''}
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label>Badge Text (optional):</label>
+                            <input type="text" class="package-badge-input" data-type="${type}" value="${pkg.badge || ''}" placeholder="e.g., popular, best-value">
+                        </div>
+                        
+                        <h5 style="margin-bottom: 0.5rem;">Features:</h5>
+                        <div class="features-list" id="features-${type}">
+                            ${featuresHtml}
+                        </div>
+                        
+                        <div style="margin-top: 1rem;">
+                            <button class="btn btn-sm btn-info add-feature-bottom" data-type="${type}" data-index="${pkg.features.length}">+ Add Feature</button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            packagesHtml += `
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button class="btn btn-success" id="savePackagesBtn">Save All Changes</button>
+                    <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                </div>
+            `;
+            
+            showModal(packagesHtml);
+            
+            // Add event listeners for dynamic feature buttons
+            setTimeout(() => {
+                document.querySelectorAll('.add-feature, .add-feature-bottom').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const type = this.getAttribute('data-type');
+                        const index = parseInt(this.getAttribute('data-index'));
+                        addFeature(type, index);
+                    });
+                });
+                
+                document.querySelectorAll('.remove-feature').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const type = this.getAttribute('data-type');
+                        const index = parseInt(this.getAttribute('data-index'));
+                        removeFeature(type, index);
+                    });
+                });
+            }, 100);
+        }
+        
+        // Helper function to add a feature
+        function addFeature(type, index) {
+            const featuresList = document.getElementById(`features-${type}`);
+            const newFeature = document.createElement('div');
+            newFeature.className = 'feature-item';
+            newFeature.innerHTML = `
+                <input type="checkbox" class="feature-included" data-type="${type}" data-index="${index}" checked>
+                <input type="text" class="feature-text" data-type="${type}" data-index="${index}" value="New feature" placeholder="Feature description">
+                <select class="feature-icon" data-type="${type}" data-index="${index}">
+                    <option value="fa-check-circle" selected>Check</option>
+                    <option value="fa-times-circle">Times</option>
+                    <option value="fa-star">Star</option>
+                    <option value="fa-gem">Gem</option>
+                    <option value="fa-gift">Gift</option>
+                    <option value="fa-trophy">Trophy</option>
+                    <option value="fa-percent">Percent</option>
+                    <option value="fa-users">Users</option>
+                    <option value="fa-chart-line">Chart</option>
+                </select>
+                <input type="checkbox" class="feature-highlight" data-type="${type}" data-index="${index}"> <small>Highlight</small>
+                <div class="feature-controls">
+                    <button class="btn btn-sm btn-success add-feature" data-type="${type}" data-index="${index + 1}"><i class="fas fa-plus"></i></button>
+                    <button class="btn btn-sm btn-danger remove-feature" data-type="${type}" data-index="${index}"><i class="fas fa-minus"></i></button>
+                </div>
+            `;
+            
+            // Insert at the correct position
+            const features = featuresList.children;
+            if (index >= features.length) {
+                featuresList.appendChild(newFeature);
+            } else {
+                featuresList.insertBefore(newFeature, features[index]);
+            }
+            
+            // Reindex all features
+            reindexFeatures(type);
+        }
+        
+        // Helper function to remove a feature
+        function removeFeature(type, index) {
+            const featuresList = document.getElementById(`features-${type}`);
+            if (featuresList.children.length <= 1) {
+                showAlert('Cannot remove last feature', 'warning');
+                return;
+            }
+            
+            featuresList.removeChild(featuresList.children[index]);
+            reindexFeatures(type);
+        }
+        
+        // Helper function to reindex features
+        function reindexFeatures(type) {
+            const featuresList = document.getElementById(`features-${type}`);
+            Array.from(featuresList.children).forEach((child, newIndex) => {
+                child.querySelectorAll('[data-index]').forEach(el => {
+                    el.setAttribute('data-index', newIndex);
+                });
+            });
+        }
+        
+        // NEW FUNCTION: Save Membership Packages
+        async function savePackages() {
+            const updatedPackages = {};
+            
+            for (const type of Object.keys(membershipPackages)) {
+                const pkg = {
+                    name: document.querySelector(`.package-name-input[data-type="${type}"]`).value,
+                    price: parseFloat(document.querySelector(`.package-price-input[data-type="${type}"]`).value) || 0,
+                    duration: document.querySelector(`.package-duration-input[data-type="${type}"]`).value,
+                    features: [],
+                    color: membershipPackages[type].color, // Keep original color
+                    buttonClass: membershipPackages[type].buttonClass, // Keep original button class
+                    badge: document.querySelector(`.package-badge-input[data-type="${type}"]`).value || null
+                };
+                
+                if (type === 'elite') {
+                    pkg.welcomeBonus = parseFloat(document.querySelector(`.welcome-bonus-input[data-type="${type}"]`).value) || 10;
+                }
+                
+                // Collect features
+                const featureItems = document.querySelectorAll(`#features-${type} .feature-item`);
+                featureItems.forEach(item => {
+                    const included = item.querySelector('.feature-included').checked;
+                    const text = item.querySelector('.feature-text').value;
+                    const icon = item.querySelector('.feature-icon').value;
+                    const highlight = item.querySelector('.feature-highlight')?.checked || false;
+                    
+                    if (text.trim()) {
+                        const feature = { text: text.trim(), included, icon };
+                        if (highlight) feature.highlight = true;
+                        pkg.features.push(feature);
+                    }
+                });
+                
+                updatedPackages[type] = pkg;
+            }
+            
+            const success = await saveMembershipPackages(updatedPackages);
+            if (success) {
+                closeModal();
+                loadMemberships(); // Refresh the memberships tab
+            }
+        }
+        
+        // UPDATED: Load Memberships with package management
         async function loadMemberships() {  
+            // Get pending payments
             const snapshot = await db.collection('membershipPayments')  
                 .where('status', '==', 'pending')  
                 .get();  
-              
-            let html = '<h3 style="margin-bottom:1.5rem;">Pending Memberships</h3>';  
+            
+            let html = `  
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">  
+                    <h3>Membership Management</h3>  
+                    <button class="btn btn-primary" onclick="showEditPackages()">✏️ Edit Packages</button>  
+                </div>  
+                
+                <!-- Current Package Preview -->
+                <h4 style="margin: 2rem 0 1rem 0;">Current Package Configuration</h4>  
+                <div class="packages-grid">  
+            `;  
+            
+            // Show current packages
+            for (const [type, pkg] of Object.entries(membershipPackages)) {  
+                const packageClass = type === 'basic' ? 'basic' : type === 'premium' ? 'premium' : 'elite';  
+                
+                let featuresHtml = '';  
+                pkg.features.forEach(feature => {  
+                    const iconClass = feature.included ?   
+                        (feature.icon || 'fa-check-circle') : 'fa-times-circle';  
+                    const iconColor = feature.included ?   
+                        (feature.highlight ? 'feature-highlight' : '') : '';  
+                    
+                    featuresHtml += `  
+                        <li>  
+                            <i class="fas ${iconClass} ${iconColor}"></i>  
+                            <span ${feature.highlight ? 'class="feature-highlight"' : ''}>  
+                                ${feature.text}  
+                                ${feature.bonus && pkg.welcomeBonus ?   
+                                    ` <strong>$${pkg.welcomeBonus}</strong>` : ''}  
+                            </span>  
+                        </li>  
+                    `;  
+                });  
+                
+                html += `  
+                    <div class="package-card ${packageClass}">  
+                        ${pkg.badge ? `<div class="package-badge ${pkg.badge}">${pkg.badge.toUpperCase()}</div>` : ''}  
+                        <div class="package-header">  
+                            <div class="package-name">${pkg.name}</div>  
+                            <div class="package-price">  
+                                ${pkg.price === 0 ? 'FREE' : '$' + pkg.price}   
+                                <small>${pkg.duration}</small>  
+                            </div>  
+                        </div>  
+                        <ul class="package-features">  
+                            ${featuresHtml}  
+                        </ul>  
+                    </div>  
+                `;  
+            }  
+            
+            html += '</div>';  
+            
+            // Pending payments section  
+            html += '<h4 style="margin: 2rem 0 1rem 0;">Pending Membership Payments</h4>';  
               
             if (snapshot.empty) {  
                 html += '<p>No pending memberships.</p>';  
             } else {  
                 snapshot.forEach(doc => {  
                     const p = doc.data();  
+                    const pkg = getPackageByType(p.membershipType || 'premium');  
+                    
                     html += `  
                         <div class="submission-card">  
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">  
+                                <h4 style="margin:0;">${pkg.name} Upgrade Request</h4>  
+                                <span class="badge warning">PENDING</span>  
+                            </div>  
                             <p><strong>User:</strong> ${p.userEmail}</p>  
-                            <p><strong>Membership:</strong> ${p.membershipType || 'Premium'}</p>  
-                            <p><strong>Transaction:</strong> ${p.transactionCode}</p>  
+                            <p><strong>Membership:</strong> ${pkg.name}</p>  
+                            <p><strong>Transaction ID:</strong> ${p.transactionCode}</p>  
                             <p><strong>Amount:</strong> $${p.amount}</p>  
                             <p><strong>Submitted:</strong> ${p.submittedAt?.toDate().toLocaleString()}</p>  
                             <div class="flex-row">  
@@ -1340,20 +1841,23 @@
               
             document.getElementById('content').innerHTML = html;  
         }  
-          
-        // UPDATED: Approve Membership with full benefits
+        
+        // UPDATED: Approve Membership with dynamic package benefits
         async function approveMembership(userId, paymentId) {
             try {
-                // 1. Get payment details to know which membership was purchased
+                // Get payment details to know which membership was purchased
                 const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
                 if (!paymentDoc.exists) {
                     showAlert('Payment record not found', 'error');
                     return;
                 }
                 const payment = paymentDoc.data();
-                const membershipType = payment.membershipType || 'premium'; // Default to premium if not specified
+                const membershipType = payment.membershipType || 'premium';
+                
+                // Get package details
+                const pkg = getPackageByType(membershipType);
 
-                // 2. Prepare user update data
+                // Prepare user update data
                 const userUpdate = {
                     membershipType: membershipType,
                     membershipPaid: true,
@@ -1361,30 +1865,30 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // 3. Apply membership-specific benefits
-                if (membershipType === MEMBERSHIP_TYPES.ELITE) {
-                    // Add $10 welcome bonus
-                    userUpdate.wallet = firebase.firestore.FieldValue.increment(ELITE_BONUS);
+                // Apply membership-specific benefits
+                if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus) {
+                    // Add welcome bonus
+                    userUpdate.wallet = firebase.firestore.FieldValue.increment(pkg.welcomeBonus);
                     userUpdate.eliteBonusApplied = true;
                 }
 
-                if (membershipType === MEMBERSHIP_TYPES.PREMIUM) {
+                if (membershipType === MEMBERSHIP_TYPES.PREMIUM && pkg.duration === 'annual') {
                     // Set expiry 1 year from now
                     const expiryDate = new Date();
                     expiryDate.setFullYear(expiryDate.getFullYear() + 1);
                     userUpdate.membershipExpiry = expiryDate;
                 }
 
-                // 4. Update user document
+                // Update user document
                 await db.collection('users').doc(userId).update(userUpdate);
 
-                // 5. Mark payment as approved
+                // Mark payment as approved
                 await db.collection('membershipPayments').doc(paymentId).update({
                     status: 'approved',
                     approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // 6. Process referral bonuses if the user was referred and upgraded to premium
+                // Process referral bonuses if the user was referred and upgraded to premium
                 const userDoc = await db.collection('users').doc(userId).get();
                 const userData = userDoc.data();
                 
@@ -1456,7 +1960,7 @@
                     }
                 }
 
-                showAlert(`Membership upgraded to ${membershipType.toUpperCase()}!`, 'success');
+                showAlert(`Membership upgraded to ${pkg.name}!`, 'success');
                 loadMemberships(); // Refresh the pending list
 
             } catch (error) {
@@ -2520,6 +3024,18 @@
                 await rejectMembership(userId, paymentId);  
                 return;  
             }  
+            
+            // Edit Packages button
+            if (target.classList.contains('edit-packages-btn') || (target.id === 'editPackagesBtn')) {
+                showEditPackages();
+                return;
+            }
+            
+            // Save Packages button
+            if (target.id === 'savePackagesBtn') {
+                await savePackages();
+                return;
+            }
               
             // Credit Referral button  
             if (target.classList.contains('credit-referral-btn')) {  
@@ -2619,6 +3135,9 @@
         window.viewRequirements = viewRequirements;  
         window.reviewSubmission = reviewSubmission;  
         window.processWithdrawal = processWithdrawal;  
+        window.loadMembershipPackages = loadMembershipPackages;  
+        window.showEditPackages = showEditPackages;  
+        window.savePackages = savePackages;  
         window.approveMembership = approveMembership;  
         window.rejectMembership = rejectMembership;  
         window.loadReferrals = loadReferrals;  

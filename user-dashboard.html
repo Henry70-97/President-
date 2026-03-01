@@ -1762,19 +1762,96 @@
             ELITE: 'elite'
         };
         
-        const MEMBERSHIP_PRICES = {
-            [MEMBERSHIP_TYPES.BASIC]: 0,
-            [MEMBERSHIP_TYPES.PREMIUM]: 3,
-            [MEMBERSHIP_TYPES.ELITE]: 6
+        // Default membership packages (fallback if not set in Firestore)
+        const DEFAULT_MEMBERSHIP_PACKAGES = {
+            basic: {
+                name: 'BASIC',
+                price: 0,
+                duration: 'lifetime',
+                features: [
+                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Withdrawals', included: false, icon: 'fa-times-circle' },
+                    { text: 'Welcome bonus', included: false, icon: 'fa-times-circle' },
+                    { text: 'Standard support', included: true, icon: 'fa-check-circle' },
+                    { text: 'Task submissions', included: true, icon: 'fa-check-circle' }
+                ],
+                color: '#94a3b8',
+                buttonClass: 'basic',
+                badge: null
+            },
+            premium: {
+                name: 'PREMIUM',
+                price: 3,
+                duration: 'annual',
+                features: [
+                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Withdrawals enabled', included: true, icon: 'fa-check-circle', highlight: true },
+                    { text: 'Priority support', included: true, icon: 'fa-star' },
+                    { text: 'Higher earning potential', included: true, icon: 'fa-chart-line' },
+                    { text: 'Premium badge', included: true, icon: 'fa-gem' }
+                ],
+                color: '#6366f1',
+                buttonClass: 'premium',
+                badge: 'popular'
+            },
+            elite: {
+                name: 'ELITE',
+                price: 6,
+                duration: 'lifetime',
+                features: [
+                    { text: 'Access to all tasks', included: true, icon: 'fa-check-circle' },
+                    { text: 'Withdrawals enabled', included: true, icon: 'fa-check-circle', highlight: true },
+                    { text: 'Welcome bonus', included: true, icon: 'fa-gift', highlight: true, bonus: true },
+                    { text: 'VIP support 24/7', included: true, icon: 'fa-star' },
+                    { text: 'Elite status & perks', included: true, icon: 'fa-trophy' },
+                    { text: 'Reduced fees (coming soon)', included: true, icon: 'fa-percent' }
+                ],
+                color: '#f59e0b',
+                buttonClass: 'elite',
+                badge: 'best-value',
+                welcomeBonus: 10
+            }
         };
         
-        const MEMBERSHIP_DURATIONS = {
-            [MEMBERSHIP_TYPES.BASIC]: 'lifetime',
-            [MEMBERSHIP_TYPES.PREMIUM]: 'annual',
-            [MEMBERSHIP_TYPES.ELITE]: 'lifetime'
-        };
+        // Global variable to store membership packages
+        let membershipPackages = null;
         
-        const ELITE_BONUS = 10;
+        // Function to load membership packages from Firestore
+        async function loadMembershipPackages() {
+            try {
+                const doc = await db.collection('settings').doc('membershipPackages').get();
+                
+                if (doc.exists) {
+                    membershipPackages = doc.data();
+                    console.log('Loaded membership packages from Firestore:', membershipPackages);
+                } else {
+                    // Initialize with defaults if not exists
+                    membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
+                    
+                    // Create default packages in Firestore
+                    await db.collection('settings').doc('membershipPackages').set(DEFAULT_MEMBERSHIP_PACKAGES);
+                    console.log('Created default membership packages in Firestore');
+                }
+            } catch (error) {
+                console.error('Error loading membership packages:', error);
+                membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
+            }
+            
+            return membershipPackages;
+        }
+        
+        // Get package by type
+        function getPackageByType(type) {
+            if (!membershipPackages) return DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
+            return membershipPackages[type] || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
+        }
+        
+        // Get welcome bonus amount
+        function getWelcomeBonus(type) {
+            if (type !== MEMBERSHIP_TYPES.ELITE) return 0;
+            const pkg = getPackageByType(type);
+            return pkg.welcomeBonus || 10;
+        }
         
         // Referral constants - amounts that admin will credit
         const REFERRAL_BONUS_REFERRER = 2; // $2 for referrer when referred upgrades to premium
@@ -2076,12 +2153,13 @@
                     userData = { id: user.uid, ...doc.data() };
                     
                     // Apply elite bonus if applicable and not already applied
+                    const welcomeBonus = getWelcomeBonus(MEMBERSHIP_TYPES.ELITE);
                     if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
                         await db.collection('users').doc(user.uid).update({
-                            wallet: firebase.firestore.FieldValue.increment(ELITE_BONUS),
+                            wallet: firebase.firestore.FieldValue.increment(welcomeBonus),
                             eliteBonusApplied: true
                         });
-                        userData.wallet = (userData.wallet || 0) + ELITE_BONUS;
+                        userData.wallet = (userData.wallet || 0) + welcomeBonus;
                     }
                 }
                 
@@ -2097,6 +2175,7 @@
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
                 
                 setupMessageCounter();
+                await loadMembershipPackages(); // Load membership packages
                 loadDashboard();
                 setupWalletListener();
                 
@@ -2736,9 +2815,14 @@
             }
         }
         
-        // Load Withdrawals with membership packages
+        // Load Withdrawals with dynamic membership packages
         async function loadWithdrawals() {
             try {
+                // Load packages if not loaded
+                if (!membershipPackages) {
+                    await loadMembershipPackages();
+                }
+                
                 // Get fresh user data
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const latestBalance = userDoc.data().wallet || 0;
@@ -2747,91 +2831,109 @@
                 userData.membershipType = userDoc.data().membershipType || MEMBERSHIP_TYPES.BASIC;
                 userData.membershipPaid = userDoc.data().membershipPaid || false;
                 userData.eliteBonusApplied = userDoc.data().eliteBonusApplied || false;
+                userData.membershipExpiry = userDoc.data().membershipExpiry;
                 
                 document.getElementById('walletDisplay').textContent = `$${latestBalance.toFixed(2)}`;
                 
-                // Check if user has elite bonus
+                // Get current package
+                const currentPackage = getPackageByType(userData.membershipType);
+                const welcomeBonus = getWelcomeBonus(userData.membershipType);
                 const hasEliteBonus = userData.membershipType === MEMBERSHIP_TYPES.ELITE && userData.eliteBonusApplied;
                 
+                // Check if membership is expired
+                const isExpired = userData.membershipExpiry && 
+                                 userData.membershipExpiry.toDate && 
+                                 new Date() > userData.membershipExpiry.toDate();
+                
                 // Build packages HTML
-                const packagesHtml = `
+                let packagesHtml = `
                     <h3 style="margin-bottom: 1.5rem;">Membership Packages</h3>
                     
                     ${userData.membershipType !== MEMBERSHIP_TYPES.BASIC ? `
                         <div class="current-membership">
                             <div class="current-membership-info">
-                                <h4>Current Membership: ${userData.membershipType.charAt(0).toUpperCase() + userData.membershipType.slice(1)}</h4>
-                                <p>${userData.membershipType === MEMBERSHIP_TYPES.ELITE ? '✓ $10 welcome bonus applied' : '✓ Withdrawals enabled'}</p>
+                                <h4>Current Membership: ${currentPackage.name}</h4>
+                                <p>
+                                    ${userData.membershipType === MEMBERSHIP_TYPES.ELITE && hasEliteBonus ? 
+                                        '✓ Welcome bonus applied' : 
+                                        userData.membershipType !== MEMBERSHIP_TYPES.BASIC ? '✓ Withdrawals enabled' : ''}
+                                    ${userData.membershipExpiry ? 
+                                        `<br><small>Expires: ${userData.membershipExpiry.toDate().toLocaleDateString()}</small>` : ''}
+                                    ${isExpired ? '<br><small style="color:#ef4444;">Expired - Please renew</small>' : ''}
+                                </p>
                             </div>
                             <div class="current-membership-badge">ACTIVE</div>
                         </div>
                     ` : ''}
                     
                     <div class="packages-grid">
-                        <!-- Basic Package -->
-                        <div class="package-card basic">
-                            <div class="package-header">
-                                <div class="package-name">BASIC</div>
-                                <div class="package-price">FREE <small>lifetime</small></div>
-                            </div>
-                            <ul class="package-features">
-                                <li><i class="fas fa-check-circle"></i> Access to all tasks</li>
-                                <li><i class="fas fa-times-circle"></i> No withdrawals</li>
-                                <li><i class="fas fa-times-circle"></i> No bonus</li>
-                                <li><i class="fas fa-check-circle"></i> Standard support</li>
-                                <li><i class="fas fa-check-circle"></i> Task submissions</li>
-                            </ul>
-                            ${userData.membershipType === MEMBERSHIP_TYPES.BASIC ? 
-                                `<button class="package-btn current" disabled><i class="fas fa-check"></i> Current Plan</button>` : 
-                                `<button class="package-btn basic" onclick="selectMembership('${MEMBERSHIP_TYPES.BASIC}')"><i class="fas fa-arrow-right"></i> Select Basic</button>`
-                            }
-                        </div>
-                        
-                        <!-- Premium Package -->
-                        <div class="package-card premium">
-                            ${userData.membershipType === MEMBERSHIP_TYPES.PREMIUM ? '<div class="package-badge popular">CURRENT</div>' : ''}
-                            <div class="package-header">
-                                <div class="package-name">PREMIUM</div>
-                                <div class="package-price">$3 <small>/ year</small></div>
-                            </div>
-                            <ul class="package-features">
-                                <li><i class="fas fa-check-circle"></i> Access to all tasks</li>
-                                <li><i class="fas fa-check-circle"></i> <strong>Withdrawals enabled</strong></li>
-                                <li><i class="fas fa-star"></i> Priority support</li>
-                                <li><i class="fas fa-chart-line"></i> Higher earning potential</li>
-                                <li><i class="fas fa-gem"></i> Premium badge</li>
-                            </ul>
-                            ${userData.membershipType === MEMBERSHIP_TYPES.PREMIUM ? 
-                                `<button class="package-btn current" disabled><i class="fas fa-check"></i> Current Plan</button>` : 
-                                `<button class="package-btn premium" onclick="selectMembership('${MEMBERSHIP_TYPES.PREMIUM}')"><i class="fas fa-crown"></i> Upgrade to Premium</button>`
-                            }
-                        </div>
-                        
-                        <!-- Elite Package -->
-                        <div class="package-card elite">
-                            ${userData.membershipType === MEMBERSHIP_TYPES.ELITE ? '<div class="package-badge best-value">BEST VALUE</div>' : ''}
-                            <div class="package-header">
-                                <div class="package-name">ELITE</div>
-                                <div class="package-price">$6 <small>lifetime</small></div>
-                            </div>
-                            <ul class="package-features">
-                                <li><i class="fas fa-check-circle"></i> Access to all tasks</li>
-                                <li><i class="fas fa-check-circle"></i> <strong>Withdrawals enabled</strong></li>
-                                <li><i class="fas fa-gift"></i> <strong class="text-success">$${ELITE_BONUS} welcome bonus</strong></li>
-                                <li><i class="fas fa-star"></i> VIP support 24/7</li>
-                                <li><i class="fas fa-trophy"></i> Elite status & perks</li>
-                                <li><i class="fas fa-percent"></i> Reduced fees (coming soon)</li>
-                            </ul>
-                            ${userData.membershipType === MEMBERSHIP_TYPES.ELITE ? 
-                                `<button class="package-btn current" disabled><i class="fas fa-check"></i> Current Plan</button>` : 
-                                `<button class="package-btn elite" onclick="selectMembership('${MEMBERSHIP_TYPES.ELITE}')"><i class="fas fa-gem"></i> Go Elite</button>`
-                            }
-                        </div>
-                    </div>
                 `;
                 
+                // Loop through all package types
+                for (const [type, pkg] of Object.entries(membershipPackages)) {
+                    const isCurrent = userData.membershipType === type;
+                    const packageClass = type === MEMBERSHIP_TYPES.BASIC ? 'basic' : 
+                                        type === MEMBERSHIP_TYPES.PREMIUM ? 'premium' : 'elite';
+                    
+                    // Build features list
+                    let featuresHtml = '';
+                    pkg.features.forEach(feature => {
+                        const iconClass = feature.included ? 
+                            (feature.icon || 'fa-check-circle') : 'fa-times-circle';
+                        const iconColor = feature.included ? 
+                            (feature.highlight ? 'text-success' : '') : '';
+                        
+                        featuresHtml += `
+                            <li>
+                                <i class="fas ${iconClass} ${iconColor}"></i>
+                                <span ${feature.highlight ? 'class="text-success"' : ''}>
+                                    ${feature.text}
+                                    ${feature.bonus && pkg.welcomeBonus ? 
+                                        ` <strong>$${pkg.welcomeBonus}</strong>` : ''}
+                                </span>
+                            </li>
+                        `;
+                    });
+                    
+                    packagesHtml += `
+                        <div class="package-card ${packageClass}">
+                            ${pkg.badge && isCurrent ? 
+                                `<div class="package-badge ${pkg.badge}">CURRENT</div>` : 
+                                pkg.badge && !isCurrent ? 
+                                `<div class="package-badge ${pkg.badge}">${pkg.badge.toUpperCase()}</div>` : ''}
+                            
+                            <div class="package-header">
+                                <div class="package-name">${pkg.name}</div>
+                                <div class="package-price">
+                                    ${pkg.price === 0 ? 'FREE' : '$' + pkg.price} 
+                                    <small>${pkg.duration}</small>
+                                </div>
+                            </div>
+                            
+                            <ul class="package-features">
+                                ${featuresHtml}
+                            </ul>
+                            
+                            ${isCurrent ? 
+                                `<button class="package-btn current" disabled>
+                                    <i class="fas fa-check"></i> Current Plan
+                                </button>` : 
+                                `<button class="package-btn ${packageClass}" 
+                                         onclick="selectMembership('${type}')">
+                                    <i class="fas fa-arrow-right"></i> 
+                                    ${type === MEMBERSHIP_TYPES.BASIC ? 'Select Basic' : 
+                                      type === MEMBERSHIP_TYPES.PREMIUM ? 'Upgrade to Premium' : 'Go Elite'}
+                                </button>`
+                            }
+                        </div>
+                    `;
+                }
+                
+                packagesHtml += '</div>';
+                
                 // Build withdrawal section based on membership
-                const canWithdraw = userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE;
+                const canWithdraw = userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || 
+                                   userData.membershipType === MEMBERSHIP_TYPES.ELITE;
                 
                 const withdrawalSection = `
                     <div class="withdrawal-section ${!canWithdraw ? 'disabled' : ''}" id="withdrawalSection">
@@ -2847,7 +2949,7 @@
                             ${userData.membershipType === MEMBERSHIP_TYPES.ELITE && hasEliteBonus ? `
                                 <div style="background: #f0fdf4; border: 1px solid #10b981; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="fas fa-gift" style="color: #10b981;"></i>
-                                    <span><strong>$${ELITE_BONUS} welcome bonus applied!</strong> Thank you for choosing Elite.</span>
+                                    <span><strong>$${welcomeBonus} welcome bonus applied!</strong> Thank you for choosing Elite.</span>
                                 </div>
                             ` : ''}
                             
@@ -3067,14 +3169,14 @@
                                     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
                                         <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/register/</span>
                                         <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/register/${referralCode}</code>
-                                        <button onclick="copyToClipboardDynamic('https://next gen.joblify.top/register/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
+                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/register/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
                                         <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/join/</span>
-                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://next gen.joblify.top/join/${referralCode}</code>
-                                        <button onclick="copyToClipboardDynamic('https://next gen.joblify.top/join/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
+                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/join/${referralCode}</code>
+                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/join/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
@@ -3239,19 +3341,23 @@
         
         // Show membership payment modal
         function showMembershipPayment(membershipType) {
-            const price = MEMBERSHIP_PRICES[membershipType];
-            const duration = MEMBERSHIP_DURATIONS[membershipType];
-            const name = membershipType.charAt(0).toUpperCase() + membershipType.slice(1);
+            const pkg = getPackageByType(membershipType);
+            const price = pkg.price;
+            const duration = pkg.duration;
+            const name = pkg.name;
             
             let bonusText = '';
-            if (membershipType === MEMBERSHIP_TYPES.ELITE) {
-                bonusText = `<p style="color:#10b981; margin-top:0.5rem;"><i class="fas fa-gift"></i> You'll receive a $${ELITE_BONUS} welcome bonus!</p>`;
+            if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus) {
+                bonusText = `<p style="color:#10b981; margin-top:0.5rem;">
+                    <i class="fas fa-gift"></i> You'll receive a $${pkg.welcomeBonus} welcome bonus!
+                </p>`;
             }
             
             showModal(`
                 <div class="modal-content">
                     <div style="text-align: center; margin-bottom: 1.5rem;">
-                        <i class="fas ${membershipType === MEMBERSHIP_TYPES.PREMIUM ? 'fa-crown' : 'fa-gem'}" style="font-size: 3rem; color: ${membershipType === MEMBERSHIP_TYPES.PREMIUM ? '#6366f1' : '#f59e0b'}; margin-bottom: 1rem;"></i>
+                        <i class="fas ${membershipType === MEMBERSHIP_TYPES.PREMIUM ? 'fa-crown' : 'fa-gem'}" 
+                           style="font-size: 3rem; color: ${membershipType === MEMBERSHIP_TYPES.PREMIUM ? '#6366f1' : '#f59e0b'}; margin-bottom: 1rem;"></i>
                         <h3 style="margin-bottom:0.5rem;">Upgrade to ${name}</h3>
                         <p style="color:#64748b;">$${price} ${duration === 'annual' ? 'per year' : 'lifetime'}</p>
                     </div>
@@ -3284,13 +3390,17 @@
                 return;
             }
             
+            const pkg = getPackageByType(membershipType);
+            
             try {
                 await db.collection('membershipPayments').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     membershipType: membershipType,
+                    membershipName: pkg.name,
                     transactionCode: code,
-                    amount: MEMBERSHIP_PRICES[membershipType],
+                    amount: pkg.price,
+                    duration: pkg.duration,
                     status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
@@ -3307,16 +3417,26 @@
         // Update membership directly (for basic)
         async function updateMembership(membershipType) {
             try {
-                await db.collection('users').doc(currentUser.uid).update({
+                const pkg = getPackageByType(membershipType);
+                const updateData = {
                     membershipType: membershipType,
                     membershipPaid: membershipType !== MEMBERSHIP_TYPES.BASIC,
                     membershipStatus: 'active',
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                
+                // Set expiry date for premium (annual)
+                if (membershipType === MEMBERSHIP_TYPES.PREMIUM && pkg.duration === 'annual') {
+                    const expiryDate = new Date();
+                    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                    updateData.membershipExpiry = firebase.firestore.Timestamp.fromDate(expiryDate);
+                }
+                
+                await db.collection('users').doc(currentUser.uid).update(updateData);
                 
                 userData.membershipType = membershipType;
                 
-                showAlert(`You are now on the ${membershipType.charAt(0).toUpperCase() + membershipType.slice(1)} plan!`, 'success');
+                showAlert(`You are now on the ${pkg.name} plan!`, 'success');
                 loadWithdrawals(); // Reload the page
                 
             } catch (error) {
@@ -3857,6 +3977,8 @@
             const joinDate = userData.createdAt && userData.createdAt.seconds ? 
                 new Date(userData.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
             
+            const currentPkg = getPackageByType(userData.membershipType);
+            
             document.getElementById('content').innerHTML = `
                 <h3 style="margin-bottom: 1.5rem;">Profile Settings</h3>
                 <div style="background:#f8fafc; border-radius:0.5rem; padding:1.5rem; border:1px solid #e5e7eb;">
@@ -3870,9 +3992,14 @@
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Wallet Balance:</strong> $${(userData.wallet || 0).toFixed(2)}</p>
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Membership:</strong> 
                         <span class="${userData.membershipType === MEMBERSHIP_TYPES.ELITE ? 'premium-badge' : userData.membershipType === MEMBERSHIP_TYPES.PREMIUM ? 'badge primary' : 'badge warning'}">
-                            ${(userData.membershipType || MEMBERSHIP_TYPES.BASIC).toUpperCase()}
+                            ${currentPkg.name}
                         </span>
                     </p>
+                    ${userData.membershipExpiry ? `
+                        <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Membership Expiry:</strong> 
+                            ${userData.membershipExpiry.toDate().toLocaleDateString()}
+                        </p>
+                    ` : ''}
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Referrals:</strong> ${userData.totalReferrals || 0}</p>
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Referral Earnings:</strong> $${(userData.referralEarnings || 0).toFixed(2)}</p>
                     <p style="font-size:1rem; margin-bottom:0.5rem;"><strong>Total Fees Paid:</strong> $${(userData.totalFeesPaid || 0).toFixed(2)}</p>
