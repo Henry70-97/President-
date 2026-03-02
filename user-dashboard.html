@@ -2472,8 +2472,8 @@
             showSubmitForm(taskId);
         }
         
-        // UPDATED: Show Submit Form with Preview option
-        async function showSubmitForm(taskId) {
+        // UPDATED: Show Submit Form with work preservation
+        async function showSubmitForm(taskId, existingWork = '') {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 const task = taskDoc.data();
@@ -2524,7 +2524,7 @@
                         </div>
                         
                         <p style="margin-bottom:0.5rem; color:#64748b;">Your Work:</p>
-                        <textarea id="workText" class="submit-textbox" placeholder="Enter your work here... Make sure to provide all required details." style="min-height:200px;"></textarea>
+                        <textarea id="workText" class="submit-textbox" placeholder="Enter your work here... Make sure to provide all required details." style="min-height:200px;">${existingWork}</textarea>
                         
                         <div style="display:flex; gap:1rem; margin-top:1.5rem;">
                             <button class="btn btn-primary" style="flex:1;" onclick="previewSubmission('${taskId}')">
@@ -2543,12 +2543,15 @@
             }
         }
 
-        // NEW: Preview Submission
+        // UPDATED: Preview Submission with proper word count
         async function previewSubmission(taskId) {
             const work = document.getElementById('workText').value;
             
-            if (!work || work.length < 20) {
-                showAlert('Please provide more detailed work (at least 20 characters)', 'error');
+            // Count words properly
+            const wordCount = work.trim().split(/\s+/).filter(word => word.length > 0).length;
+            
+            if (wordCount < 20) {
+                showAlert(`Please provide at least 20 words. Current word count: ${wordCount}`, 'error');
                 return;
             }
             
@@ -2572,6 +2575,10 @@
                                 <i class="fas fa-tag" style="color:#10b981;"></i>
                                 <span><strong>Reward:</strong> $${(parseFloat(task.reward) || 0).toFixed(2)}</span>
                             </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                                <i class="fas fa-file-word" style="color:#6366f1;"></i>
+                                <span><strong>Word Count:</strong> ${wordCount} words</span>
+                            </div>
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -2590,7 +2597,7 @@
                             <button class="btn btn-success" style="flex:2;" onclick="saveSubmission('${taskId}')">
                                 <i class="fas fa-check-circle"></i> Confirm & Submit
                             </button>
-                            <button class="btn btn-primary" style="flex:1;" onclick="showSubmitForm('${taskId}')">
+                            <button class="btn btn-primary" style="flex:1;" onclick="showSubmitForm('${taskId}', ${JSON.stringify(work)})">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
                             <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">
@@ -2610,12 +2617,15 @@
             }
         }
 
-        // UPDATED: Save Submission with loading and success states
+        // UPDATED: Save Submission with proper word count validation
         async function saveSubmission(taskId) {
             const work = document.getElementById('workText')?.value;
             
-            if (!work || work.length < 20) {
-                showAlert('Please provide more detailed work (at least 20 characters)', 'error');
+            // Count words properly
+            const wordCount = work.trim().split(/\s+/).filter(word => word.length > 0).length;
+            
+            if (wordCount < 20) {
+                showAlert(`Please provide at least 20 words. Current word count: ${wordCount}`, 'error');
                 return;
             }
             
@@ -2645,6 +2655,7 @@
                     taskTitle: task.title || 'Untitled Task',
                     workText: work,
                     status: 'pending',
+                    wordCount: wordCount,
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
@@ -2657,7 +2668,7 @@
                     <div class="modal-content" style="text-align: center;">
                         <i class="fas fa-check-circle" style="font-size: 4rem; color: #10b981; margin-bottom: 1rem;"></i>
                         <h3 style="margin-bottom: 1rem; color: #10b981;">Submission Successful!</h3>
-                        <p style="margin-bottom: 1rem; color: #64748b;">Your work has been submitted successfully.</p>
+                        <p style="margin-bottom: 0.5rem; color: #64748b;">Your work (${wordCount} words) has been submitted successfully.</p>
                         <p style="margin-bottom: 1.5rem; color: #64748b;">It will be reviewed within 24 hours.</p>
                         <div style="display:flex; gap:1rem; justify-content: center;">
                             <button class="btn btn-success" onclick="loadSubmissions()">
@@ -2678,7 +2689,7 @@
                         <h3 style="margin-bottom: 1rem; color: #ef4444;">Submission Failed</h3>
                         <p style="margin-bottom: 1.5rem; color: #64748b;">${error.message || 'An error occurred while submitting.'}</p>
                         <div style="display:flex; gap:1rem; justify-content: center;">
-                            <button class="btn btn-primary" onclick="showSubmitForm('${taskId}')">
+                            <button class="btn btn-primary" onclick="showSubmitForm('${taskId}', ${JSON.stringify(work)})">
                                 <i class="fas fa-redo"></i> Try Again
                             </button>
                             <button class="btn btn-secondary" onclick="closeModal()">
@@ -2803,6 +2814,7 @@
                                 <div style="display:flex; gap:0.5rem; font-size:0.8rem; color:#64748b; flex-wrap:wrap; margin-bottom:0.3rem;">
                                     <span><i class="far fa-calendar"></i> ${submittedDate}</span>
                                     ${sub.earned ? `<span><i class="fas fa-dollar-sign"></i> $${sub.earned.toFixed(2)}</span>` : ''}
+                                    ${sub.wordCount ? `<span><i class="fas fa-file-word"></i> ${sub.wordCount} words</span>` : ''}
                                 </div>
                                 ${sub.review ? `<p style="margin-top:0.3rem; background:#f1f5f9; padding:0.4rem; border-radius:0.3rem; font-size:0.8rem;"><strong>Feedback:</strong> ${sub.review}</p>` : ''}
                             </div>
