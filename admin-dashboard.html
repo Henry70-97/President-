@@ -1,53 +1,53 @@
-<!DOCTYPE html>  
-<html lang="en">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">  
-    <title>NextGen · Admin Dashboard</title>  
-    <!-- Firebase -->  
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>  
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>  
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>  
-    <!-- Font Awesome -->  
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">  
-    <!-- Google Fonts -->  
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">  
-    <style>  
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }  
-        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }  
-        .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }  
-        .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; }  
-        .logo h2 { background: linear-gradient(135deg, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }  
-        .admin-badge { background: #ef4444; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.9rem; }  
-        .logout-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }  
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }  
-        .stat-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 1.5rem; padding: 1.5rem; color: white; border: 1px solid rgba(255,255,255,0.2); }  
-        .stat-card i { font-size: 2rem; color: #818cf8; margin-bottom: 0.5rem; }  
-        .stat-value { font-size: 2rem; font-weight: 700; }  
-        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }  
-        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }  
-        .tab.active { background: #6366f1; }  
-        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 500px; }  
-        .data-table { width: 100%; border-collapse: collapse; }  
-        .data-table th { text-align: left; padding: 1rem; background: #f8fafc; }  
-        .data-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; }  
-        .badge { padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }  
-        .badge.success { background: #10b98120; color: #10b981; border: 1px solid #10b981; }  
-        .badge.warning { background: #f59e0b20; color: #f59e0b; border: 1px solid #f59e0b; }  
-        .badge.danger { background: #ef444420; color: #ef4444; border: 1px solid #ef4444; }  
-        .badge.primary { background: #6366f120; color: #6366f1; border: 1px solid #6366f1; }  
-        .badge.info { background: #3b82f620; color: #3b82f6; border: 1px solid #3b82f6; }  
-        .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; margin: 0.2rem; pointer-events: auto; }  
-        .btn-primary { background: #6366f1; color: white; }  
-        .btn-success { background: #10b981; color: white; }  
-        .btn-danger { background: #ef4444; color: white; }  
-        .btn-warning { background: #f59e0b; color: white; }  
-        .btn-info { background: #3b82f6; color: white; }  
-        .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }  
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }  
-        .modal.active { display: block; }  
-        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }  
-        .modal-backdrop.active { display: block; }  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>NextGen · Admin Dashboard</title>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+        .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; }
+        .logo h2 { background: linear-gradient(135deg, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .admin-badge { background: #ef4444; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.9rem; }
+        .logout-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 1.5rem; padding: 1.5rem; color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .stat-card i { font-size: 2rem; color: #818cf8; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .tab.active { background: #6366f1; }
+        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 500px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 1rem; background: #f8fafc; }
+        .data-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; }
+        .badge { padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+        .badge.success { background: #10b98120; color: #10b981; border: 1px solid #10b981; }
+        .badge.warning { background: #f59e0b20; color: #f59e0b; border: 1px solid #f59e0b; }
+        .badge.danger { background: #ef444420; color: #ef4444; border: 1px solid #ef4444; }
+        .badge.primary { background: #6366f120; color: #6366f1; border: 1px solid #6366f1; }
+        .badge.info { background: #3b82f620; color: #3b82f6; border: 1px solid #3b82f6; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; margin: 0.2rem; pointer-events: auto; }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-info { background: #3b82f6; color: white; }
+        .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
+        .modal.active { display: block; }
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
+        .modal-backdrop.active { display: block; }
         
         /* Alert Modal Styles */
         .alert-modal {
@@ -910,8 +910,13 @@
             document.getElementById('adminName').textContent = doc.data().displayName;  
             
             // Load settings
-            await loadMembershipPackages();
-            await loadFeeSettings();
+            try {
+                await loadMembershipPackages();
+                await loadFeeSettings();
+            } catch (e) {
+                console.error('Error loading settings:', e);
+                showAlert('Error loading settings. Some features may not work.', 'error');
+            }
               
             loadDashboard();  
         });  
@@ -1382,7 +1387,7 @@
             `);  
         }  
           
-        // Create Task  
+        // Create Task (FIXED: properly assign taskRef and use taskId)  
         async function createTask() {  
             const title = document.getElementById('taskTitle').value;  
             const description = document.getElementById('taskDescription').value;  
@@ -1403,25 +1408,40 @@
             const deadlineDate = new Date(deadline);  
             deadlineDate.setHours(23, 59, 59, 999); // End of the selected day  
               
-            await db.collection('tasks').add({  
-                title,  
-                description,  
-                clientName: clientName || 'NextGen',  
-                requirements,  
-                instructions,  
-                deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
-                reward,  
-                rewardKES: reward * (feeSettings?.exchangeRate || 130),  
-                category,  
-                difficulty,  
-                active: true,  
-                submissionsCount: 0,  
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()  
-            });  
-              
-            closeModal();  
-            showAlert('Task created successfully', 'success');  
-            loadTasks();  
+            try {  
+                const taskRef = await db.collection('tasks').add({  
+                    title,  
+                    description,  
+                    clientName: clientName || 'NextGen',  
+                    requirements,  
+                    instructions,  
+                    deadline: firebase.firestore.Timestamp.fromDate(deadlineDate),  
+                    reward,  
+                    rewardKES: reward * (feeSettings?.exchangeRate || 130),  
+                    category,  
+                    difficulty,  
+                    active: true,  
+                    submissionsCount: 0,  
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()  
+                });  
+
+                const taskId = taskRef.id;  
+
+                // Send notification to all users about new task  
+                await sendNotificationToAll(  
+                    'New Task Available',  
+                    `A new task "${title}" paying $${reward} has been posted.`,  
+                    'task',  
+                    `task:${taskId}`  
+                );  
+
+                closeModal();  
+                showAlert('Task created successfully', 'success');  
+                loadTasks();  
+            } catch (error) {  
+                console.error('Error creating task or sending notification:', error);  
+                showAlert('Error creating task: ' + error.message, 'error');  
+            }  
         }  
           
         // Toggle Task  
@@ -1675,11 +1695,34 @@
                     tasksCompleted: firebase.firestore.FieldValue.increment(1)  
                 });  
                 showAlert(`Submission approved! User earned $${earned.toFixed(2)}`, 'success');  
+
+                // Send notification to user  
+                await sendNotification(  
+                    sub.userId,  
+                    'Submission Approved',  
+                    `Your submission for task "${sub.taskTitle}" has been approved! You earned $${earned.toFixed(2)}.`,  
+                    'submission',  
+                    `submission:${subId}`  
+                );  
             } else if (approved && score < 50) {  
                 status = 'rejected';  
                 showAlert('Submission rejected (score below 50%)', 'warning');  
+                await sendNotification(  
+                    sub.userId,  
+                    'Submission Rejected',  
+                    `Your submission for task "${sub.taskTitle}" was rejected because the score (${score}) was below 50%. Feedback: ${review}`,  
+                    'submission',  
+                    `submission:${subId}`  
+                );  
             } else {  
                 showAlert('Submission rejected', 'info');  
+                await sendNotification(  
+                    sub.userId,  
+                    'Submission Rejected',  
+                    `Your submission for task "${sub.taskTitle}" has been rejected. Feedback: ${review}`,  
+                    'submission',  
+                    `submission:${subId}`  
+                );  
             }  
               
             await db.collection('submissions').doc(subId).update({  
@@ -2384,6 +2427,15 @@
                     // Add welcome bonus
                     userUpdate.wallet = firebase.firestore.FieldValue.increment(pkg.welcomeBonus);
                     userUpdate.eliteBonusApplied = true;
+
+                    // Send notification about welcome bonus
+                    await sendNotification(
+                        userId,
+                        'Welcome to Elite!',
+                        `Your Elite membership is active! You've received a $${pkg.welcomeBonus} welcome bonus.`,
+                        'membership',
+                        null
+                    );
                 }
 
                 if (membershipType === MEMBERSHIP_TYPES.PREMIUM && pkg.duration === 'annual') {
@@ -2471,6 +2523,22 @@
                                 });
                             }
                         });
+
+                        // Send notifications to both users
+                        await sendNotification(
+                            referrerId,
+                            'Referral Bonus!',
+                            `Your referral just upgraded to Premium! You earned $${REFERRAL_BONUS_REFERRER}.`,
+                            'referral',
+                            null
+                        );
+                        await sendNotification(
+                            userId,
+                            'Referral Bonus!',
+                            `You earned $${REFERRAL_BONUS_REFERRED} for upgrading!`,
+                            'referral',
+                            null
+                        );
                     }
                 }
 
@@ -2500,6 +2568,15 @@
                     status: 'rejected',
                     rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });  
+
+                // Send notification
+                await sendNotification(
+                    userId,
+                    'Membership Payment Rejected',
+                    `Your ${payment.membershipType} payment could not be verified. Please contact support.`,
+                    'membership',
+                    null
+                );
                   
                 showAlert(`Membership ${payment.membershipType} rejected`, 'info');  
                 loadMemberships();  
@@ -3294,7 +3371,390 @@
             }  
         }  
           
-        // Load Messages  
+        // ========== FIXED NOTIFICATION FUNCTIONS ==========
+
+        // Debug function to test notifications
+        async function debugNotifications() {
+            console.log('🔍 Starting notification debug...');
+            
+            try {
+                // Check current user
+                console.log('Current user:', currentUser?.uid);
+                
+                // Check if notifications collection is accessible
+                const testQuery = await db.collection('notifications').limit(1).get();
+                console.log('Notifications collection accessible, size:', testQuery.size);
+                
+                // Try to send a test notification
+                const testNotif = {
+                    userId: currentUser?.uid || 'test',
+                    title: 'Debug Test',
+                    message: 'This is a debug test',
+                    type: 'info',
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                console.log('Attempting to write test notification:', testNotif);
+                
+                const docRef = await db.collection('notifications').add(testNotif);
+                console.log('✅ Test notification written with ID:', docRef.id);
+                
+                // Read it back
+                const readDoc = await docRef.get();
+                console.log('Test notification data:', readDoc.data());
+                
+                showAlert('Debug successful! Check console for details.', 'success');
+                
+            } catch (error) {
+                console.error('❌ Debug failed:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                console.error('Error details:', error);
+                
+                showAlert(`Debug failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Send a notification to a specific user
+        async function sendNotification(userId, title, message, type = 'info', link = null) {
+            console.log(`📨 sendNotification called:`, { userId, title, message, type, link });
+            
+            // Validate inputs
+            if (!userId) {
+                console.error('❌ No userId provided');
+                showAlert('Cannot send notification: No user selected', 'error');
+                return false;
+            }
+            
+            if (!title || !title.trim()) {
+                console.error('❌ No title provided');
+                showAlert('Please enter a notification title', 'error');
+                return false;
+            }
+            
+            if (!message || !message.trim()) {
+                console.error('❌ No message provided');
+                showAlert('Please enter a notification message', 'error');
+                return false;
+            }
+            
+            try {
+                // Verify user exists
+                console.log(`Checking if user ${userId} exists...`);
+                const userDoc = await db.collection('users').doc(userId).get();
+                
+                if (!userDoc.exists) {
+                    console.error(`❌ User ${userId} does not exist`);
+                    showAlert('Selected user does not exist', 'error');
+                    return false;
+                }
+                
+                const userData = userDoc.data();
+                console.log(`✅ User found: ${userData.email || userId}`);
+                
+                // Prepare notification data
+                const notificationData = {
+                    userId: userId,
+                    title: title.trim(),
+                    message: message.trim(),
+                    type: type || 'info',
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                // Add optional fields
+                if (link && link.trim()) {
+                    notificationData.link = link.trim();
+                }
+                
+                // Add user email for reference
+                if (userData.email) {
+                    notificationData.userEmail = userData.email;
+                }
+                
+                console.log('📝 Writing notification to Firestore:', notificationData);
+                
+                // Write to Firestore
+                const docRef = await db.collection('notifications').add(notificationData);
+                console.log(`✅ Notification written successfully! ID: ${docRef.id}`);
+                
+                // Verify it was written
+                const verifyDoc = await docRef.get();
+                if (verifyDoc.exists) {
+                    console.log('✅ Verification: Notification exists in database');
+                } else {
+                    console.warn('⚠️ Verification: Notification not found after write');
+                }
+                
+                showAlert(`✅ Notification sent to ${userData.email || 'user'}`, 'success');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Error in sendNotification:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                // Handle specific Firebase errors
+                if (error.code === 'permission-denied') {
+                    showAlert('Permission denied. Check Firestore security rules for "notifications" collection.', 'error');
+                } else if (error.code === 'not-found') {
+                    showAlert('Collection "notifications" not found. Please create it in Firestore.', 'error');
+                } else if (error.code === 'invalid-argument') {
+                    showAlert('Invalid notification data format', 'error');
+                } else {
+                    showAlert(`Failed to send notification: ${error.message}`, 'error');
+                }
+                
+                return false;
+            }
+        }
+
+        // Send notification to all users (broadcast)
+        async function sendNotificationToAll(title, message, type = 'info', link = null) {
+            console.log(`📢 sendNotificationToAll called:`, { title, message, type, link });
+            
+            // Validate inputs
+            if (!title || !title.trim()) {
+                showAlert('Please enter a notification title', 'error');
+                return false;
+            }
+            
+            if (!message || !message.trim()) {
+                showAlert('Please enter a notification message', 'error');
+                return false;
+            }
+            
+            try {
+                // Get all users
+                console.log('Fetching all users...');
+                const usersSnapshot = await db.collection('users').get();
+                
+                if (usersSnapshot.empty) {
+                    console.warn('No users found');
+                    showAlert('No users found to send notifications to', 'warning');
+                    return false;
+                }
+                
+                const userCount = usersSnapshot.size;
+                console.log(`✅ Found ${userCount} users`);
+                
+                // Show progress
+                showAlert(`Preparing to send to ${userCount} users...`, 'info', 'Please Wait');
+                
+                // Batch write in chunks (Firestore batch limit is 500)
+                const BATCH_SIZE = 400;
+                let batch = db.batch();
+                let operationCount = 0;
+                let successCount = 0;
+                let failedCount = 0;
+                
+                for (const userDoc of usersSnapshot.docs) {
+                    try {
+                        const userData = userDoc.data();
+                        
+                        // Prepare notification data
+                        const notificationData = {
+                            userId: userDoc.id,
+                            title: title.trim(),
+                            message: message.trim(),
+                            type: type || 'info',
+                            read: false,
+                            isBroadcast: true,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        
+                        // Add optional fields
+                        if (link && link.trim()) {
+                            notificationData.link = link.trim();
+                        }
+                        
+                        if (userData.email) {
+                            notificationData.userEmail = userData.email;
+                        }
+                        
+                        // Add to batch
+                        const notifRef = db.collection('notifications').doc();
+                        batch.set(notifRef, notificationData);
+                        operationCount++;
+                        successCount++;
+                        
+                        // Commit batch when reaching limit
+                        if (operationCount >= BATCH_SIZE) {
+                            console.log(`Committing batch of ${operationCount} notifications...`);
+                            await batch.commit();
+                            console.log('✅ Batch committed');
+                            batch = db.batch();
+                            operationCount = 0;
+                        }
+                        
+                    } catch (userError) {
+                        console.error(`Error preparing notification for user ${userDoc.id}:`, userError);
+                        failedCount++;
+                    }
+                }
+                
+                // Commit any remaining notifications
+                if (operationCount > 0) {
+                    console.log(`Committing final batch of ${operationCount} notifications...`);
+                    await batch.commit();
+                    console.log('✅ Final batch committed');
+                }
+                
+                // Log the broadcast in messages collection for history
+                try {
+                    await db.collection('messages').add({
+                        userId: 'BROADCAST',
+                        isBroadcast: true,
+                        title: title.trim(),
+                        message: message.trim(),
+                        type: type,
+                        sentCount: successCount,
+                        failedCount: failedCount,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        sentBy: currentUser?.email || 'admin',
+                        sentById: currentUser?.uid
+                    });
+                    console.log('✅ Broadcast logged in messages collection');
+                } catch (logError) {
+                    console.warn('Could not log broadcast to messages:', logError);
+                }
+                
+                console.log(`✅ Broadcast complete: ${successCount} successful, ${failedCount} failed`);
+                showAlert(`✅ Broadcast sent to ${successCount} users!`, 'success');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Error in sendNotificationToAll:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                if (error.code === 'permission-denied') {
+                    showAlert('Permission denied. Check Firestore security rules.', 'error');
+                } else {
+                    showAlert(`Failed to broadcast: ${error.message}`, 'error');
+                }
+                return false;
+            }
+        }
+
+        // Function to send individual notification from form
+        async function sendIndividualNotification() {
+            console.log('sendIndividualNotification called');
+            
+            // Get form values
+            const userId = document.getElementById('notifUser')?.value;
+            const title = document.getElementById('notifTitle')?.value;
+            const message = document.getElementById('notifMessage')?.value;
+            const type = document.getElementById('notifType')?.value;
+            const link = document.getElementById('notifLink')?.value;
+            
+            console.log('Form values:', { userId, title, message, type, link });
+            
+            // Validate
+            if (!userId) {
+                showAlert('Please select a user', 'error');
+                return;
+            }
+            
+            if (!title || !title.trim()) {
+                showAlert('Please enter a notification title', 'error');
+                return;
+            }
+            
+            if (!message || !message.trim()) {
+                showAlert('Please enter a notification message', 'error');
+                return;
+            }
+            
+            // Send notification
+            const success = await sendNotification(userId, title, message, type, link);
+            
+            if (success) {
+                // Clear form
+                document.getElementById('notifTitle').value = '';
+                document.getElementById('notifMessage').value = '';
+                document.getElementById('notifLink').value = '';
+                
+                // Hide form
+                document.getElementById('individualNotificationForm').style.display = 'none';
+            }
+        }
+
+        // Function to send broadcast notification from form
+        async function sendBroadcastNotification() {
+            console.log('sendBroadcastNotification called');
+            
+            // Get form values
+            const title = document.getElementById('broadcastNotifTitle')?.value;
+            const message = document.getElementById('broadcastNotifMessage')?.value;
+            const type = document.getElementById('broadcastNotifType')?.value;
+            const link = document.getElementById('broadcastNotifLink')?.value;
+            
+            console.log('Broadcast form values:', { title, message, type, link });
+            
+            // Validate
+            if (!title || !title.trim()) {
+                showAlert('Please enter a notification title', 'error');
+                return;
+            }
+            
+            if (!message || !message.trim()) {
+                showAlert('Please enter a notification message', 'error');
+                return;
+            }
+            
+            // Show confirmation modal
+            showModal(`
+                <h3 style="margin-bottom:1rem; color: #f59e0b;">Confirm Broadcast Notification</h3>
+                <div style="background: #f59e0b20; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <p><strong>⚠️ You are about to send a notification to ALL users</strong></p>
+                    <p>Please review your notification:</p>
+                </div>
+                
+                <p><strong>Title:</strong> ${title}</p>
+                <p><strong>Message:</strong> ${message}</p>
+                <p><strong>Type:</strong> ${type}</p>
+                ${link ? `<p><strong>Link:</strong> ${link}</p>` : ''}
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button class="btn btn-success" id="confirmBroadcastNotifBtn">Yes, Send to All</button>
+                    <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                </div>
+            `);
+        }
+
+        // Execute broadcast notification after confirmation
+        async function executeBroadcastNotification() {
+            console.log('executeBroadcastNotification called');
+            
+            // Get form values again (they're still in the form)
+            const title = document.getElementById('broadcastNotifTitle')?.value;
+            const message = document.getElementById('broadcastNotifMessage')?.value;
+            const type = document.getElementById('broadcastNotifType')?.value;
+            const link = document.getElementById('broadcastNotifLink')?.value;
+            
+            closeModal(); // Close confirmation modal
+            
+            // Send broadcast
+            showAlert('Sending broadcast...', 'info', 'Please Wait');
+            
+            const success = await sendNotificationToAll(title, message, type, link);
+            
+            if (success) {
+                // Clear form
+                document.getElementById('broadcastNotifTitle').value = '';
+                document.getElementById('broadcastNotifMessage').value = '';
+                document.getElementById('broadcastNotifLink').value = '';
+                
+                // Hide form
+                document.getElementById('broadcastNotificationForm').style.display = 'none';
+            }
+        }
+
+        // ========== END FIXED NOTIFICATION FUNCTIONS ==========
+          
+        // Load Messages (updated with notification sending options)
         async function loadMessages() {  
             const users = await db.collection('users').get();  
               
@@ -3362,6 +3822,55 @@
                         </button>  
                     </div>  
                 </div>  
+
+                <!-- Send Notification Forms -->
+                <div style="display: flex; gap: 1rem; margin: 2rem 0 1rem 0;">  
+                    <button class="btn btn-success" id="individualNotificationBtn">🔔 Send Individual Notification</button>  
+                    <button class="btn btn-warning" id="broadcastNotificationBtn">🔔 Broadcast Notification</button>  
+                </div>  
+
+                <!-- Individual Notification Form -->
+                <div id="individualNotificationForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: none;">  
+                    <h4 style="margin-bottom:1rem;">Send Individual Notification</h4>  
+                    <select id="notifUser">  
+                        <option value="">Select User</option>  
+                        ${options}  
+                    </select>  
+                    <input type="text" id="notifTitle" placeholder="Notification Title">  
+                    <textarea id="notifMessage" placeholder="Notification Message"></textarea>  
+                    <select id="notifType">  
+                        <option value="info">Info</option>  
+                        <option value="success">Success</option>  
+                        <option value="warning">Warning</option>  
+                        <option value="error">Error</option>  
+                        <option value="task">Task</option>  
+                        <option value="submission">Submission</option>  
+                        <option value="withdrawal">Withdrawal</option>  
+                        <option value="referral">Referral</option>  
+                    </select>  
+                    <input type="text" id="notifLink" placeholder="Deep link (e.g., task:123, submission:456) - optional">  
+                    <button class="btn btn-success" id="sendIndividualNotifBtn">Send Notification</button>  
+                </div>  
+
+                <!-- Broadcast Notification Form -->
+                <div id="broadcastNotificationForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: none;">  
+                    <h4 style="margin-bottom:1rem; color: #f59e0b;">Broadcast Notification to All Users</h4>  
+                    <div style="background: #f59e0b20; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
+                        <p style="margin: 0;"><strong>⚠️ Important:</strong> This notification will be sent to ALL registered users (${users.size} users total).</p>  
+                    </div>  
+                    <input type="text" id="broadcastNotifTitle" placeholder="Notification Title">  
+                    <textarea id="broadcastNotifMessage" placeholder="Notification Message"></textarea>  
+                    <select id="broadcastNotifType">  
+                        <option value="info">Info</option>  
+                        <option value="success">Success</option>  
+                        <option value="warning">Warning</option>  
+                        <option value="error">Error</option>  
+                        <option value="task">Task</option>  
+                        <option value="announcement">Announcement</option>  
+                    </select>  
+                    <input type="text" id="broadcastNotifLink" placeholder="Deep link (optional)">  
+                    <button class="btn btn-warning" id="sendBroadcastNotifBtn">Broadcast Notification</button>  
+                </div>  
                   
                 <h4 style="margin-bottom:1rem; display: flex; justify-content: space-between; align-items: center;">  
                     <span>Recent Messages</span>  
@@ -3397,6 +3906,9 @@
                 message,  
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()  
             });  
+
+            // Also send a notification  
+            await sendNotification(userId, 'New Message from Admin', message, 'message', null);  
               
             showAlert('Message sent successfully', 'success');  
             document.getElementById('messageText').value = '';  
@@ -3517,252 +4029,291 @@
             `);  
         }  
           
-        // Event Delegation for all buttons  
+        // Event Delegation for all buttons (wrapped in try/catch to log errors)  
         document.addEventListener('click', async (e) => {  
-            const target = e.target;  
+            try {  
+                const target = e.target;  
             
-            // Handle referral card clicks (but not when clicking on buttons inside)
-            if (target.classList.contains('referral-card') && !target.closest('button')) {
-                // The click is handled by the onclick attribute
-                return;
-            }
-              
-            // Logout button  
-            if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {  
-                logout();  
-                return;  
-            }  
-              
-            // Tab buttons  
-            if (target.classList.contains('tab') || target.closest('.tab')) {  
-                const tab = target.closest('.tab') || target;  
-                const tabName = tab.getAttribute('data-tab');  
-                if (tabName) {  
-                    switchTab(tabName);  
+                // Handle referral card clicks (but not when clicking on buttons inside)
+                if (target.classList.contains('referral-card') && !target.closest('button')) {
+                    // The click is handled by the onclick attribute
+                    return;
+                }
+                  
+                // Logout button  
+                if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {  
+                    logout();  
+                    return;  
                 }  
-                return;  
-            }  
-              
-            // Close modal button  
-            if (target.id === 'closeModalBtn' || target.closest('#closeModalBtn') || target.classList.contains('modal-backdrop')) {  
-                closeModal();  
-                return;  
-            }  
-              
-            // Adjust Wallet button  
-            if (target.classList.contains('adjust-wallet-btn')) {  
-                const userId = target.getAttribute('data-user-id');  
-                const userName = target.getAttribute('data-user-name');  
-                const wallet = target.getAttribute('data-wallet');  
-                showAdjustWallet(userId, userName, parseFloat(wallet || 0));  
-                return;  
-            }  
-              
-            // Apply Adjustment button (inside modal)  
-            if (target.classList.contains('apply-adjustment-btn')) {  
-                const userId = target.getAttribute('data-user-id');  
-                await adjustWallet(userId);  
-                return;  
-            }  
-              
-            // Toggle User Status  
-            if (target.classList.contains('toggle-status-btn')) {  
-                const userId = target.getAttribute('data-user-id');  
-                const newStatus = target.getAttribute('data-new-status') === 'true';  
-                await toggleUserStatus(userId, newStatus);  
-                return;  
-            }  
-              
-            // Make Admin  
-            if (target.classList.contains('make-admin-btn')) {  
-                const userId = target.getAttribute('data-user-id');  
-                await makeAdmin(userId);  
-                return;  
-            }  
-              
-            // Create Task button  
-            if (target.id === 'createTaskBtn') {  
-                showCreateTask();  
-                return;  
-            }  
-              
-            // Create Task Confirm button  
-            if (target.id === 'createTaskConfirmBtn') {  
-                await createTask();  
-                return;  
-            }  
-              
-            // Edit Task button  
-            if (target.classList.contains('edit-task-btn')) {  
-                const taskId = target.getAttribute('data-task-id');  
-                await editTask(taskId);  
-                return;  
-            }  
-              
-            // Update Task button  
-            if (target.id === 'updateTaskBtn') {  
-                const taskId = target.getAttribute('data-task-id');  
-                await updateTask(taskId);  
-                return;  
-            }  
-              
-            // Toggle Task button  
-            if (target.classList.contains('toggle-task-btn')) {  
-                const taskId = target.getAttribute('data-task-id');  
-                const newStatus = target.getAttribute('data-new-status') === 'true';  
-                await toggleTask(taskId, newStatus);  
-                return;  
-            }  
-              
-            // View Requirements button  
-            if (target.classList.contains('view-requirements-btn')) {  
-                const taskId = target.getAttribute('data-task-id');  
-                await viewRequirements(taskId);  
-                return;  
-            }  
-              
-            // Approve Submission  
-            if (target.classList.contains('approve-submission')) {  
-                const subId = target.getAttribute('data-sub-id');  
-                await reviewSubmission(subId, true);  
-                return;  
-            }  
-              
-            // Reject Submission  
-            if (target.classList.contains('reject-submission')) {  
-                const subId = target.getAttribute('data-sub-id');  
-                await reviewSubmission(subId, false);  
-                return;  
-            }  
-              
-            // Process Withdrawal  
-            if (target.classList.contains('process-withdrawal')) {  
-                const withdrawalId = target.getAttribute('data-withdrawal-id');  
-                await processWithdrawal(withdrawalId);  
-                return;  
-            }  
-              
-            // Approve Membership  
-            if (target.classList.contains('approve-membership')) {  
-                const userId = target.getAttribute('data-user-id');  
-                const paymentId = target.getAttribute('data-payment-id');  
-                await approveMembership(userId, paymentId);  
-                return;  
-            }  
-              
-            // Reject Membership  
-            if (target.classList.contains('reject-membership')) {  
-                const userId = target.getAttribute('data-user-id');  
-                const paymentId = target.getAttribute('data-payment-id');  
-                await rejectMembership(userId, paymentId);  
-                return;  
-            }  
-            
-            // Edit Packages button
-            if (target.classList.contains('edit-packages-btn') || target.id === 'editPackagesBtn' || 
-                (target.closest('button') && target.closest('button').textContent.includes('Edit Packages'))) {
-                showEditPackages();
-                return;
-            }
-            
-            // Save Packages button
-            if (target.id === 'savePackagesBtn' || (target.closest('button') && target.closest('button').id === 'savePackagesBtn')) {
-                e.preventDefault();
-                await savePackages();
-                return;
-            }
-            
-            // Edit Fee Settings button
-            if (target.id === 'editFeeSettingsBtn' || (target.closest('button') && target.closest('button').textContent.includes('Edit Fee Settings'))) {
-                showEditFeeSettings();
-                return;
-            }
-            
-            // Save Fee Settings button
-            if (target.id === 'saveFeeSettingsBtn' || (target.closest('button') && target.closest('button').id === 'saveFeeSettingsBtn')) {
-                e.preventDefault();
-                await saveFeeSettings();
-                return;
-            }
-              
-            // Credit Referral button  
-            if (target.classList.contains('credit-referral-btn')) {  
-                const referralId = target.getAttribute('data-referral-id');  
-                const referrerId = target.getAttribute('data-referrer-id');  
-                const referredId = target.getAttribute('data-referred-id');  
-                const referredEmail = target.getAttribute('data-referred-email');  
-                await creditReferralBonus(referralId, referrerId, referredId, referredEmail);  
-                return;  
-            }  
-              
-            // Confirm Credit button (in modal)  
-            if (target.id === 'confirmCreditBtn') {  
-                const referralId = target.getAttribute('data-referral-id');  
-                const referrerId = target.getAttribute('data-referrer-id');  
-                const referredId = target.getAttribute('data-referred-id');  
-                const referredEmail = target.getAttribute('data-referred-email');  
-                await executeCreditBonus(referralId, referrerId, referredId, referredEmail);  
-                return;  
-            }  
-              
-            // Reject Referral button  
-            if (target.classList.contains('reject-referral-btn')) {  
-                const referralId = target.getAttribute('data-referral-id');  
-                if (confirm('Are you sure you want to reject this referral?')) {  
-                    await rejectReferral(referralId);  
+                  
+                // Tab buttons  
+                if (target.classList.contains('tab') || target.closest('.tab')) {  
+                    const tab = target.closest('.tab') || target;  
+                    const tabName = tab.getAttribute('data-tab');  
+                    if (tabName) {  
+                        switchTab(tabName);  
+                    }  
+                    return;  
                 }  
-                return;  
-            }  
-              
-            // Send Individual Message  
-            if (target.id === 'sendMessageBtn') {  
-                await sendMessage();  
-                return;  
-            }  
-              
-            // Individual Message button  
-            if (target.id === 'individualMessageBtn') {  
-                currentMessageType = 'individual';  
-                document.getElementById('individualMessageForm').style.display = 'block';  
-                document.getElementById('broadcastMessageForm').style.display = 'none';  
-                target.classList.add('btn-primary');  
-                document.getElementById('broadcastMessageBtn').classList.remove('btn-primary');  
-                return;  
-            }  
-              
-            // Broadcast Message button  
-            if (target.id === 'broadcastMessageBtn') {  
-                currentMessageType = 'broadcast';  
-                document.getElementById('broadcastMessageForm').style.display = 'block';  
-                document.getElementById('individualMessageForm').style.display = 'none';  
-                target.classList.add('btn-primary');  
-                document.getElementById('individualMessageBtn').classList.remove('btn-primary');  
-                return;  
-            }  
-              
-            // Send Broadcast button  
-            if (target.id === 'sendBroadcastBtn' || target.closest('#sendBroadcastBtn')) {  
-                await sendBroadcast();  
-                return;  
-            }  
-              
-            // Preview Broadcast button  
-            if (target.id === 'previewBroadcastBtn') {  
-                previewBroadcast();  
-                return;  
-            }  
-              
-            // Confirm Broadcast button (in modal)  
-            if (target.id === 'confirmBroadcastBtn') {  
-                await executeBroadcast();  
-                return;  
-            }  
-              
-            // Cancel Broadcast button (in modal)  
-            if (target.id === 'cancelBroadcastBtn') {  
-                closeModal();  
-                return;  
-            }  
+                  
+                // Close modal button  
+                if (target.id === 'closeModalBtn' || target.closest('#closeModalBtn') || target.classList.contains('modal-backdrop')) {  
+                    closeModal();  
+                    return;  
+                }  
+                  
+                // Adjust Wallet button  
+                if (target.classList.contains('adjust-wallet-btn')) {  
+                    const userId = target.getAttribute('data-user-id');  
+                    const userName = target.getAttribute('data-user-name');  
+                    const wallet = target.getAttribute('data-wallet');  
+                    showAdjustWallet(userId, userName, parseFloat(wallet || 0));  
+                    return;  
+                }  
+                  
+                // Apply Adjustment button (inside modal)  
+                if (target.classList.contains('apply-adjustment-btn')) {  
+                    const userId = target.getAttribute('data-user-id');  
+                    await adjustWallet(userId);  
+                    return;  
+                }  
+                  
+                // Toggle User Status  
+                if (target.classList.contains('toggle-status-btn')) {  
+                    const userId = target.getAttribute('data-user-id');  
+                    const newStatus = target.getAttribute('data-new-status') === 'true';  
+                    await toggleUserStatus(userId, newStatus);  
+                    return;  
+                }  
+                  
+                // Make Admin  
+                if (target.classList.contains('make-admin-btn')) {  
+                    const userId = target.getAttribute('data-user-id');  
+                    await makeAdmin(userId);  
+                    return;  
+                }  
+                  
+                // Create Task button  
+                if (target.id === 'createTaskBtn') {  
+                    showCreateTask();  
+                    return;  
+                }  
+                  
+                // Create Task Confirm button  
+                if (target.id === 'createTaskConfirmBtn') {  
+                    await createTask();  
+                    return;  
+                }  
+                  
+                // Edit Task button  
+                if (target.classList.contains('edit-task-btn')) {  
+                    const taskId = target.getAttribute('data-task-id');  
+                    await editTask(taskId);  
+                    return;  
+                }  
+                  
+                // Update Task button  
+                if (target.id === 'updateTaskBtn') {  
+                    const taskId = target.getAttribute('data-task-id');  
+                    await updateTask(taskId);  
+                    return;  
+                }  
+                  
+                // Toggle Task button  
+                if (target.classList.contains('toggle-task-btn')) {  
+                    const taskId = target.getAttribute('data-task-id');  
+                    const newStatus = target.getAttribute('data-new-status') === 'true';  
+                    await toggleTask(taskId, newStatus);  
+                    return;  
+                }  
+                  
+                // View Requirements button  
+                if (target.classList.contains('view-requirements-btn')) {  
+                    const taskId = target.getAttribute('data-task-id');  
+                    await viewRequirements(taskId);  
+                    return;  
+                }  
+                  
+                // Approve Submission  
+                if (target.classList.contains('approve-submission')) {  
+                    const subId = target.getAttribute('data-sub-id');  
+                    await reviewSubmission(subId, true);  
+                    return;  
+                }  
+                  
+                // Reject Submission  
+                if (target.classList.contains('reject-submission')) {  
+                    const subId = target.getAttribute('data-sub-id');  
+                    await reviewSubmission(subId, false);  
+                    return;  
+                }  
+                  
+                // Process Withdrawal  
+                if (target.classList.contains('process-withdrawal')) {  
+                    const withdrawalId = target.getAttribute('data-withdrawal-id');  
+                    await processWithdrawal(withdrawalId);  
+                    return;  
+                }  
+                  
+                // Approve Membership  
+                if (target.classList.contains('approve-membership')) {  
+                    const userId = target.getAttribute('data-user-id');  
+                    const paymentId = target.getAttribute('data-payment-id');  
+                    await approveMembership(userId, paymentId);  
+                    return;  
+                }  
+                  
+                // Reject Membership  
+                if (target.classList.contains('reject-membership')) {  
+                    const userId = target.getAttribute('data-user-id');  
+                    const paymentId = target.getAttribute('data-payment-id');  
+                    await rejectMembership(userId, paymentId);  
+                    return;  
+                }  
+                
+                // Edit Packages button
+                if (target.classList.contains('edit-packages-btn') || target.id === 'editPackagesBtn' || 
+                    (target.closest('button') && target.closest('button').textContent.includes('Edit Packages'))) {
+                    showEditPackages();
+                    return;
+                }
+                
+                // Save Packages button
+                if (target.id === 'savePackagesBtn' || (target.closest('button') && target.closest('button').id === 'savePackagesBtn')) {
+                    e.preventDefault();
+                    await savePackages();
+                    return;
+                }
+                
+                // Edit Fee Settings button
+                if (target.id === 'editFeeSettingsBtn' || (target.closest('button') && target.closest('button').textContent.includes('Edit Fee Settings'))) {
+                    showEditFeeSettings();
+                    return;
+                }
+                
+                // Save Fee Settings button
+                if (target.id === 'saveFeeSettingsBtn' || (target.closest('button') && target.closest('button').id === 'saveFeeSettingsBtn')) {
+                    e.preventDefault();
+                    await saveFeeSettings();
+                    return;
+                }
+                  
+                // Credit Referral button  
+                if (target.classList.contains('credit-referral-btn')) {  
+                    const referralId = target.getAttribute('data-referral-id');  
+                    const referrerId = target.getAttribute('data-referrer-id');  
+                    const referredId = target.getAttribute('data-referred-id');  
+                    const referredEmail = target.getAttribute('data-referred-email');  
+                    await creditReferralBonus(referralId, referrerId, referredId, referredEmail);  
+                    return;  
+                }  
+                  
+                // Confirm Credit button (in modal)  
+                if (target.id === 'confirmCreditBtn') {  
+                    const referralId = target.getAttribute('data-referral-id');  
+                    const referrerId = target.getAttribute('data-referrer-id');  
+                    const referredId = target.getAttribute('data-referred-id');  
+                    const referredEmail = target.getAttribute('data-referred-email');  
+                    await executeCreditBonus(referralId, referrerId, referredId, referredEmail);  
+                    return;  
+                }  
+                  
+                // Reject Referral button  
+                if (target.classList.contains('reject-referral-btn')) {  
+                    const referralId = target.getAttribute('data-referral-id');  
+                    if (confirm('Are you sure you want to reject this referral?')) {  
+                        await rejectReferral(referralId);  
+                    }  
+                    return;  
+                }  
+                  
+                // Send Individual Message  
+                if (target.id === 'sendMessageBtn') {  
+                    await sendMessage();  
+                    return;  
+                }  
+                  
+                // Individual Message button  
+                if (target.id === 'individualMessageBtn') {  
+                    currentMessageType = 'individual';  
+                    document.getElementById('individualMessageForm').style.display = 'block';  
+                    document.getElementById('broadcastMessageForm').style.display = 'none';  
+                    target.classList.add('btn-primary');  
+                    document.getElementById('broadcastMessageBtn').classList.remove('btn-primary');  
+                    return;  
+                }  
+                  
+                // Broadcast Message button  
+                if (target.id === 'broadcastMessageBtn') {  
+                    currentMessageType = 'broadcast';  
+                    document.getElementById('broadcastMessageForm').style.display = 'block';  
+                    document.getElementById('individualMessageForm').style.display = 'none';  
+                    target.classList.add('btn-primary');  
+                    document.getElementById('individualMessageBtn').classList.remove('btn-primary');  
+                    return;  
+                }  
+                  
+                // Send Broadcast button  
+                if (target.id === 'sendBroadcastBtn' || target.closest('#sendBroadcastBtn')) {  
+                    await sendBroadcast();  
+                    return;  
+                }  
+                  
+                // Preview Broadcast button  
+                if (target.id === 'previewBroadcastBtn') {  
+                    previewBroadcast();  
+                    return;  
+                }  
+                  
+                // Confirm Broadcast button (in modal)  
+                if (target.id === 'confirmBroadcastBtn') {  
+                    await executeBroadcast();  
+                    return;  
+                }  
+                  
+                // Cancel Broadcast button (in modal)  
+                if (target.id === 'cancelBroadcastBtn') {  
+                    closeModal();  
+                    return;  
+                }  
+
+                // Toggle Individual Notification Form  
+                if (target.id === 'individualNotificationBtn') {  
+                    const form = document.getElementById('individualNotificationForm');  
+                    form.style.display = form.style.display === 'none' ? 'block' : 'none';  
+                    document.getElementById('broadcastNotificationForm').style.display = 'none';  
+                    return;  
+                }  
+
+                // Toggle Broadcast Notification Form  
+                if (target.id === 'broadcastNotificationBtn') {  
+                    const form = document.getElementById('broadcastNotificationForm');  
+                    form.style.display = form.style.display === 'none' ? 'block' : 'none';  
+                    document.getElementById('individualNotificationForm').style.display = 'none';  
+                    return;  
+                }  
+
+                // Send Individual Notification  
+                if (target.id === 'sendIndividualNotifBtn') {  
+                    await sendIndividualNotification();  
+                    return;  
+                }  
+
+                // Send Broadcast Notification (opens confirmation modal)  
+                if (target.id === 'sendBroadcastNotifBtn') {  
+                    await sendBroadcastNotification();  
+                    return;  
+                }  
+
+                // Confirm Broadcast Notification  
+                if (target.id === 'confirmBroadcastNotifBtn') {  
+                    await executeBroadcastNotification();  
+                    return;  
+                }  
+            } catch (error) {
+                console.error('Error in click handler:', error);
+                showAlert('An error occurred: ' + error.message, 'error');
+            }
         });  
           
         // Make functions globally available  
@@ -3802,6 +4353,12 @@
         window.sendBroadcast = sendBroadcast;  
         window.executeBroadcast = executeBroadcast;  
         window.previewBroadcast = previewBroadcast;  
+        window.sendNotification = sendNotification;  
+        window.sendNotificationToAll = sendNotificationToAll;  
+        window.sendIndividualNotification = sendIndividualNotification;  
+        window.sendBroadcastNotification = sendBroadcastNotification;  
+        window.executeBroadcastNotification = executeBroadcastNotification;  
+        window.debugNotifications = debugNotifications;
     </script>  
 </body>  
 </html>
