@@ -484,6 +484,200 @@
             gap: 1rem;
         }
         
+        /* Enhanced Recommendation Styles - RESTORED */
+        .referral-section {
+            background: linear-gradient(145deg, #f0f9ff, #e6f2ff);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid #6366f1;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+        }
+        
+        .referral-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .referral-header i {
+            font-size: 2.5rem;
+            color: #6366f1;
+        }
+        
+        .referral-header h3 {
+            margin-bottom: 0;
+            color: #6366f1;
+        }
+        
+        .referral-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .referral-stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.2rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        
+        .referral-stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15);
+        }
+        
+        .referral-stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #6366f1;
+        }
+        
+        .referral-stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+        
+        .referral-link-box {
+            background: white;
+            border-radius: 40px;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.03);
+        }
+        
+        .referral-link-box input {
+            flex: 1;
+            border: none;
+            padding: 0.8rem 1rem;
+            margin: 0;
+            font-size: 0.9rem;
+            background: transparent;
+        }
+        
+        .referral-link-box input:focus {
+            outline: none;
+        }
+        
+        .referral-link-box button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .referral-link-box button:hover {
+            background: #4f52e0;
+            transform: scale(1.02);
+        }
+        
+        .referral-info {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .referral-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+        
+        .referral-info-item i {
+            color: #10b981;
+        }
+        
+        .referral-table {
+            margin-top: 2rem;
+            overflow-x: auto;
+            border-radius: 1rem;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 0.5rem;
+        }
+        
+        .referral-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .referral-table th {
+            text-align: left;
+            padding: 1rem;
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+        }
+        
+        .referral-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .referral-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .commission-badge {
+            background: #10b98120;
+            color: #10b981;
+            padding: 0.2rem 0.5rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            background: #f59e0b20;
+            color: #f59e0b;
+            padding: 0.2rem 0.5rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        /* Large Textbox for Work Submission - RESTORED */
+        .submit-textbox { 
+            width: 100%; 
+            padding: 1.5rem; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 1rem;
+            margin-bottom: 1rem; 
+            font-size: 1.1rem; 
+            min-height: 200px; 
+            max-height: 400px;
+            resize: vertical;
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .submit-textbox:focus {
+            border-color: #10b981;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        
         /* Notification Styles */
         .notification-wrapper {
             position: relative;
@@ -2056,7 +2250,7 @@
             }
         });
         
-        // Set up real-time message counter - FIXED
+        // Set up real-time message counter
         function setupMessageCounter() {
             if (messagesListener) messagesListener();
             
@@ -2320,8 +2514,8 @@
                             <strong>Task Instructions:</strong><br>
                             ${task.instructions || 'No specific instructions provided.'}
                         </div>
-                        <textarea id="workText" class="submit-textbox" placeholder="Enter your work here..."></textarea>
-                        <button class="btn btn-success" style="width:100%;" onclick="saveSubmission('${taskId}')">
+                        <textarea id="workText" class="submit-textbox" placeholder="Enter your work here... Make sure to provide all required details."></textarea>
+                        <button class="btn btn-success" style="width:100%; padding:1rem; font-weight:700;" onclick="saveSubmission('${taskId}')">
                             <i class="fas fa-paper-plane"></i> Submit Your Work
                         </button>
                     </div>
@@ -2747,7 +2941,7 @@
             }
         }
         
-        // Load Referrals
+        // Load Referrals - RESTORED with full functionality
         async function loadReferrals() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading recommendations...</p></div>';
@@ -2764,7 +2958,28 @@
                     console.warn('Could not fetch referred users:', error);
                 }
                 
+                let bonusesSnapshot = { empty: true, docs: [] };
+                try {
+                    bonusesSnapshot = await db.collection('referralBonuses')
+                        .where('referrerId', '==', currentUser.uid)
+                        .orderBy('creditedAt', 'desc')
+                        .get();
+                } catch (error) {
+                    console.warn('Could not fetch referral bonuses:', error);
+                }
+                
                 const totalReferrals = referredSnapshot.size;
+                
+                let totalEarned = 0;
+                const bonuses = [];
+                
+                if (!bonusesSnapshot.empty) {
+                    bonusesSnapshot.forEach(doc => {
+                        const bonus = doc.data();
+                        totalEarned += bonus.amount;
+                        bonuses.push({ id: doc.id, ...bonus });
+                    });
+                }
                 
                 let statsHtml = `
                     <div class="referral-section">
@@ -2772,17 +2987,61 @@
                             <i class="fas fa-users"></i>
                             <h3>Recommendations Program</h3>
                         </div>
+                        
                         <div class="referral-stats">
                             <div class="referral-stat-card">
                                 <div class="referral-stat-value">${totalReferrals}</div>
                                 <div class="referral-stat-label">Total Recommendations</div>
                             </div>
+                            <div class="referral-stat-card">
+                                <div class="referral-stat-value">$${totalEarned.toFixed(2)}</div>
+                                <div class="referral-stat-label">Earned from Recommendations</div>
+                            </div>
+                            <div class="referral-stat-card">
+                                <div class="referral-stat-value">$${REFERRAL_BONUS_REFERRER}</div>
+                                <div class="referral-stat-label">Per Premium Upgrade</div>
+                            </div>
                         </div>
+                        
                         <div style="margin: 2rem 0;">
-                            <h4>Your Recommendation Link</h4>
+                            <h4 style="margin-bottom: 1rem;">Your Recommendation Link</h4>
                             <div class="referral-link-box">
                                 <input type="text" value="${referralLink}" readonly>
-                                <button onclick="copyReferralLink()">Copy</button>
+                                <button onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy Link</button>
+                            </div>
+                            
+                            <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 1rem;">
+                                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-info-circle" style="color: #6366f1;"></i> 
+                                    Other formats you can share:
+                                </p>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/register/</span>
+                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/register/${referralCode}</code>
+                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/register/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/join/</span>
+                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/join/${referralCode}</code>
+                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/join/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="referral-info">
+                                <div class="referral-info-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>You get <strong>$${REFERRAL_BONUS_REFERRER}</strong> when recommended user upgrades to Premium</span>
+                                </div>
+                                <div class="referral-info-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Recommended user gets <strong>$${REFERRAL_BONUS_REFERRED}</strong> when they upgrade to Premium</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2808,7 +3067,6 @@
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
                 
-                // Simple query first to avoid index issues
                 const snapshot = await db.collection('messages')
                     .where('userId', '==', currentUser.uid)
                     .get();
@@ -2835,7 +3093,6 @@
                         </div>
                     `;
                 } else {
-                    // Group messages by parent ID
                     const threads = new Map();
                     
                     snapshot.forEach(doc => {
@@ -2855,13 +3112,11 @@
                         const thread = threads.get(threadId);
                         thread.messages.push(msg);
                         
-                        // Update last message
                         if (!thread.lastMessage.createdAt || 
                             (msg.createdAt && msg.createdAt.seconds > (thread.lastMessage.createdAt?.seconds || 0))) {
                             thread.lastMessage = msg;
                         }
                         
-                        // Count unread messages from admin
                         if (msg.fromAdmin && !msg.read) {
                             thread.unreadCount++;
                         }
@@ -2914,13 +3169,11 @@
             } catch (error) {
                 console.error('Error loading messages:', error);
                 
-                // Show user-friendly error with instructions
                 document.getElementById('content').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-database" style="color:#f59e0b;"></i>
                         <h4>Messages Loading...</h4>
                         <p>Please wait while we set up the messages.</p>
-                        <p style="font-size:0.85rem; color:#94a3b8;">This may take a moment on first load.</p>
                         <button class="btn btn-primary" onclick="loadMessages()" style="margin-top:1rem;">
                             <i class="fas fa-sync-alt"></i> Try Again
                         </button>
@@ -2995,7 +3248,6 @@
                     messages.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Mark unread messages as read
                 const unreadMessages = messages.filter(m => m.fromAdmin && !m.read);
                 for (const msg of unreadMessages) {
                     await db.collection('messages').doc(msg.id).update({ read: true });
@@ -3077,20 +3329,18 @@
             
             if (notificationsListener) notificationsListener();
             
-            // Use onSnapshot for real-time updates
             notificationsListener = db.collection('notifications')
                 .where('userId', '==', currentUser.uid)
                 .onSnapshot((snapshot) => {
+                    console.log('Notifications snapshot received:', snapshot.size);
                     updateNotificationBadges(snapshot);
                     
                     if (notificationsPanelVisible) {
-                        // Get the 20 most recent for the panel
                         const recentSnapshot = snapshot.docs.slice(0, 20);
                         renderNotificationsPanel(recentSnapshot);
                     }
                 }, (error) => {
                     console.error('Notifications listener error:', error);
-                    // Don't retry immediately, but show user-friendly message
                     if (notificationsPanelVisible) {
                         document.getElementById('notificationsList').innerHTML = `
                             <div class="empty-state" style="padding:2rem;">
@@ -3103,7 +3353,6 @@
                 });
         }
 
-        // Retry function
         function retryNotifications() {
             if (notificationsListener) notificationsListener();
             setupNotificationsListener();
@@ -3117,7 +3366,8 @@
                     return !data.read;
                 }).length;
                 
-                // Update bell badge
+                console.log('Unread count:', unreadCount);
+                
                 const badge = document.getElementById('notificationBadge');
                 if (badge) {
                     if (unreadCount > 0) {
@@ -3128,7 +3378,6 @@
                     }
                 }
                 
-                // Update tab badge
                 const tabBadge = document.getElementById('unreadNotifBadge');
                 if (tabBadge) {
                     if (unreadCount > 0) {
@@ -3139,7 +3388,6 @@
                     }
                 }
                 
-                // Update mobile badge
                 const mobileBadge = document.getElementById('mobileNotifBadge');
                 if (mobileBadge) {
                     if (unreadCount > 0) {
@@ -3160,7 +3408,6 @@
             panel.classList.toggle('active', notificationsPanelVisible);
             
             if (notificationsPanelVisible) {
-                // Show loading state
                 document.getElementById('notificationsList').innerHTML = `
                     <div class="empty-state" style="padding:2rem;">
                         <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:#6366f1;"></i>
@@ -3168,7 +3415,6 @@
                     </div>
                 `;
                 
-                // Fetch notifications
                 loadNotificationsForPanel();
             }
         }
@@ -3181,29 +3427,19 @@
                     .limit(20)
                     .get();
                 
+                console.log('Panel notifications loaded:', snapshot.size);
                 renderNotificationsPanel(snapshot);
             } catch (error) {
                 console.error('Error loading notifications for panel:', error);
                 
-                // Check if it's an index error
-                if (error.message && error.message.includes('index')) {
-                    document.getElementById('notificationsList').innerHTML = `
-                        <div class="empty-state" style="padding:2rem;">
-                            <i class="fas fa-database" style="color:#f59e0b; font-size:2rem;"></i>
-                            <p style="margin-top:0.5rem;">Setting up notifications...</p>
-                            <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.5rem;">Please wait or click retry</p>
-                            <button onclick="loadNotificationsForPanel()" class="btn btn-primary btn-sm" style="margin-top:0.5rem;">Retry</button>
-                        </div>
-                    `;
-                } else {
-                    document.getElementById('notificationsList').innerHTML = `
-                        <div class="empty-state" style="padding:2rem;">
-                            <i class="fas fa-exclamation-triangle" style="color:#ef4444; font-size:2rem;"></i>
-                            <p style="margin-top:0.5rem;">Error loading notifications</p>
-                            <button onclick="loadNotificationsForPanel()" class="btn btn-primary btn-sm" style="margin-top:0.5rem;">Retry</button>
-                        </div>
-                    `;
-                }
+                document.getElementById('notificationsList').innerHTML = `
+                    <div class="empty-state" style="padding:2rem;">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444; font-size:2rem;"></i>
+                        <p style="margin-top:0.5rem;">Error loading notifications</p>
+                        <p style="font-size:0.8rem; color:#94a3b8;">${error.message}</p>
+                        <button onclick="loadNotificationsForPanel()" class="btn btn-primary btn-sm" style="margin-top:0.5rem;">Retry</button>
+                    </div>
+                `;
             }
         }
 
@@ -3227,7 +3463,6 @@
                 const unreadClass = notif.read ? '' : 'unread';
                 const time = notif.createdAt ? formatRelativeTime(notif.createdAt.toDate()) : '';
                 
-                // Choose icon based on type
                 let icon = 'fa-bell';
                 let iconColor = '';
                 if (notif.type === 'message') {
@@ -3289,7 +3524,6 @@
 
         async function handleNotificationClick(notificationId, link) {
             try {
-                // Mark as read
                 await db.collection('notifications').doc(notificationId).update({
                     read: true
                 });
@@ -3297,7 +3531,6 @@
                 console.error('Error marking notification as read:', error);
             }
             
-            // Handle link if present
             if (link) {
                 if (link.startsWith('task:')) {
                     const taskId = link.replace('task:', '');
@@ -3315,7 +3548,6 @@
                 }
             }
             
-            // Close panel
             const panel = document.getElementById('notificationsPanel');
             panel.classList.remove('active');
             notificationsPanelVisible = false;
@@ -3356,6 +3588,8 @@
                     .orderBy('createdAt', 'desc')
                     .get();
                 
+                console.log('Notifications page loaded:', snapshot.size);
+                
                 let html = `
                     <div class="notifications-page">
                         <div class="messages-header">
@@ -3375,7 +3609,6 @@
                         </div>
                     `;
                 } else {
-                    // Group by date
                     const today = [];
                     const yesterday = [];
                     const older = [];
@@ -3469,31 +3702,16 @@
             } catch (error) {
                 console.error('Error loading notifications page:', error);
                 
-                // Check if it's an index error
-                if (error.message && error.message.includes('index')) {
-                    document.getElementById('content').innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-database" style="color:#f59e0b; font-size:4rem;"></i>
-                            <h4>Setting Up Notifications</h4>
-                            <p>Please wait while we configure the notifications.</p>
-                            <p style="font-size:0.85rem; color:#94a3b8;">This may take a moment on first load.</p>
-                            <button class="btn btn-primary" onclick="loadNotificationsPage()" style="margin-top:1rem;">
-                                <i class="fas fa-sync-alt"></i> Retry
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    document.getElementById('content').innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-exclamation-triangle" style="color:#ef4444; font-size:4rem;"></i>
-                            <h4>Error Loading Notifications</h4>
-                            <p>${error.message}</p>
-                            <button class="btn btn-primary" onclick="loadNotificationsPage()" style="margin-top:1rem;">
-                                <i class="fas fa-sync-alt"></i> Try Again
-                            </button>
-                        </div>
-                    `;
-                }
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444; font-size:4rem;"></i>
+                        <h4>Error Loading Notifications</h4>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadNotificationsPage()" style="margin-top:1rem;">
+                            <i class="fas fa-sync-alt"></i> Try Again
+                        </button>
+                    </div>
+                `;
             }
         }
 
@@ -3506,7 +3724,6 @@
             }
         }
 
-        // Close panel when clicking outside
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('notificationsPanel');
             const bell = document.querySelector('.notification-bell');
