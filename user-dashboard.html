@@ -246,6 +246,129 @@
             min-height: 500px; 
         }
         
+        /* Filter Bar Styles */
+        .filter-bar {
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .filter-title {
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-select, .filter-input {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-select:hover, .filter-input:hover {
+            border-color: #6366f1;
+        }
+        
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .filter-btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .filter-btn.apply {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .filter-btn.apply:hover {
+            background: #4f52e0;
+            transform: translateY(-2px);
+        }
+        
+        .filter-btn.reset {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        
+        .filter-btn.reset:hover {
+            background: #cbd5e1;
+        }
+        
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .filter-tag {
+            background: #e2e8f0;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .filter-tag i {
+            cursor: pointer;
+            color: #ef4444;
+            margin-left: 0.3rem;
+        }
+        
         .task-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
@@ -452,7 +575,87 @@
             box-shadow: none;
         }
         
-        /* WhatsApp Group Button */
+        /* Section Cards */
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-card {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #e2e8f0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-5px);
+            border-color: #6366f1;
+            box-shadow: 0 20px 30px rgba(99, 102, 241, 0.1);
+        }
+        
+        .section-card i {
+            font-size: 3rem;
+            color: #6366f1;
+            margin-bottom: 1rem;
+        }
+        
+        .section-card h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-card p {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .section-card .coming-soon-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #f59e0b;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        .escrow-message {
+            text-align: center;
+            padding: 3rem;
+            background: #fef3c7;
+            border-radius: 2rem;
+            border: 2px solid #f59e0b;
+        }
+        
+        .escrow-message i {
+            font-size: 4rem;
+            color: #f59e0b;
+            margin-bottom: 1rem;
+        }
+        
+        .escrow-message h3 {
+            color: #0f172a;
+            margin-bottom: 1rem;
+        }
+        
+        .escrow-message p {
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+        
         .whatsapp-group-btn {
             background: #25D366;
             color: white;
@@ -483,180 +686,6 @@
             align-items: center;
             gap: 1rem;
         }
-        
-        /* Enhanced Recommendation Styles */
-        .referral-section {
-            background: linear-gradient(145deg, #f0f9ff, #e6f2ff);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            border: 2px solid #6366f1;
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
-        }
-        
-        .referral-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .referral-header i {
-            font-size: 2.5rem;
-            color: #6366f1;
-        }
-        
-        .referral-header h3 {
-            margin-bottom: 0;
-            color: #6366f1;
-        }
-        
-        .referral-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .referral-stat-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.2rem;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-        
-        .referral-stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15);
-        }
-        
-        .referral-stat-value {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #6366f1;
-        }
-        
-        .referral-stat-label {
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-top: 0.3rem;
-        }
-        
-        .referral-link-box {
-            background: white;
-            border-radius: 40px;
-            padding: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            border: 2px solid #e2e8f0;
-            margin-bottom: 1rem;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.03);
-        }
-        
-        .referral-link-box input {
-            flex: 1;
-            border: none;
-            padding: 0.8rem 1rem;
-            margin: 0;
-            font-size: 0.9rem;
-            background: transparent;
-        }
-        
-        .referral-link-box input:focus {
-            outline: none;
-        }
-        
-        .referral-link-box button {
-            background: #6366f1;
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-        
-        .referral-link-box button:hover {
-            background: #4f52e0;
-            transform: scale(1.02);
-        }
-        
-        .referral-info {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 1rem;
-        }
-        
-        .referral-info-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #475569;
-            font-size: 0.95rem;
-        }
-        
-        .referral-info-item i {
-            color: #10b981;
-        }
-        
-        .referral-table {
-            margin-top: 2rem;
-            overflow-x: auto;
-            border-radius: 1rem;
-            background: white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            padding: 0.5rem;
-        }
-        
-        .referral-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .referral-table th {
-            text-align: left;
-            padding: 1rem;
-            background: #f1f5f9;
-            color: #475569;
-            font-weight: 600;
-        }
-        
-        .referral-table td {
-            padding: 1rem;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .referral-table tr:hover {
-            background: #f8fafc;
-        }
-        
-        .commission-badge {
-            background: #10b98120;
-            color: #10b981;
-            padding: 0.2rem 0.5rem;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .status-badge {
-            background: #f59e0b20;
-            color: #f59e0b;
-            padding: 0.2rem 0.5rem;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        /* ===== SMART SUBMISSION UI ===== */
         
         .smart-submission {
             max-width: 800px;
@@ -948,7 +977,6 @@
             20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
         
-        /* Notification Styles */
         .notification-wrapper {
             position: relative;
             margin-right: 1rem;
@@ -1146,7 +1174,6 @@
             font-size: 0.9rem;
         }
         
-        /* Notifications Page */
         .notifications-page {
             max-width: 800px;
             margin: 0 auto;
@@ -1181,7 +1208,6 @@
             color: white;
         }
         
-        /* Messages Styles */
         .messages-container {
             max-width: 800px;
             margin: 0 auto;
@@ -1387,7 +1413,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Withdrawal specific styles */
         .withdrawal-section { 
             background: #f8fafc; 
             border-radius: 1.5rem; 
@@ -1921,6 +1946,14 @@
             .message-preview {
                 font-size: 0.9rem;
             }
+            
+            .filter-row {
+                flex-direction: column;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1968,6 +2001,18 @@
             <i class="fas fa-tasks"></i>
             <span>Available Tasks</span>
         </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('transcription')">
+            <i class="fas fa-microphone"></i>
+            <span>Transcription Tasks</span>
+        </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('design')">
+            <i class="fas fa-pencil-ruler"></i>
+            <span>Design Tasks</span>
+        </div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('projects')">
+            <i class="fas fa-project-diagram"></i>
+            <span>Projects</span>
+        </div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('submissions')">
             <i class="fas fa-file-alt"></i>
             <span>My Submissions</span>
@@ -1975,11 +2020,6 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('withdrawals')">
             <i class="fas fa-money-bill-wave"></i>
             <span>Withdrawals</span>
-        </div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('recommendations')">
-            <i class="fas fa-users"></i>
-            <span>Recommendations</span>
-            <span id="mobileUnreadBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span>
         </div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('messages')">
             <i class="fas fa-envelope"></i>
@@ -2054,12 +2094,14 @@
         
         <div class="stats-grid" id="statsGrid"></div>
         
-        <!-- Desktop Tabs -->
+        <!-- Desktop Tabs - Recommendations removed -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
+            <button class="tab" onclick="switchTab('transcription')">🎤 Transcription</button>
+            <button class="tab" onclick="switchTab('design')">✏️ Design Tasks</button>
+            <button class="tab" onclick="switchTab('projects')">📊 Projects</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
             <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
-            <button class="tab" onclick="switchTab('recommendations')">👥 Recommendations</button>
             <button class="tab" onclick="switchTab('messages')">
                 💬 Messages 
                 <span id="unreadMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span>
@@ -2179,7 +2221,7 @@
         
         let membershipPackages = null;
         
-        // Referral constants
+        // Referral constants - kept for compatibility but not used
         const REFERRAL_BONUS_REFERRER = 2;
         const REFERRAL_BONUS_REFERRED = 0.5;
         
@@ -2263,34 +2305,9 @@
             window.location.href = 'index.html';
         }
         
-        // Generate referral code
+        // Generate referral code (kept for compatibility)
         function generateReferralCode(userId) {
             return userId.substring(0, 8).toUpperCase();
-        }
-        
-        // Get referral link
-        function getReferralLink() {
-            const referralCode = generateReferralCode(currentUser.uid);
-            return `https://nextgen.joblify.top/signup/${referralCode}`;
-        }
-        
-        // Copy referral link
-        function copyReferralLink() {
-            const link = getReferralLink();
-            navigator.clipboard.writeText(link).then(() => {
-                showAlert('Referral link copied to clipboard!', 'success');
-            }).catch(() => {
-                showAlert('Failed to copy link', 'error');
-            });
-        }
-        
-        // Copy function for multiple link formats
-        function copyToClipboardDynamic(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showAlert('Copied to clipboard!', 'success');
-            }).catch(() => {
-                showAlert('Failed to copy', 'error');
-            });
         }
         
         // Tab switching function
@@ -2302,9 +2319,11 @@
                 const tabText = desktopTabs[i].textContent.toLowerCase();
                 if(tabText.includes(tab) || 
                    (tab === 'tasks' && tabText.includes('available')) ||
+                   (tab === 'transcription' && tabText.includes('transcription')) ||
+                   (tab === 'design' && tabText.includes('design')) ||
+                   (tab === 'projects' && tabText.includes('projects')) ||
                    (tab === 'submissions' && tabText.includes('submissions')) ||
                    (tab === 'withdrawals' && tabText.includes('withdrawals')) ||
-                   (tab === 'recommendations' && tabText.includes('recommendations')) ||
                    (tab === 'messages' && tabText.includes('messages')) ||
                    (tab === 'notifications' && tabText.includes('notifications')) ||
                    (tab === 'profile' && tabText.includes('profile'))) {
@@ -2319,9 +2338,11 @@
                 const itemText = item.querySelector('span')?.textContent.toLowerCase() || '';
                 if(itemText.includes(tab) || 
                    (tab === 'tasks' && itemText.includes('available')) ||
+                   (tab === 'transcription' && itemText.includes('transcription')) ||
+                   (tab === 'design' && itemText.includes('design')) ||
+                   (tab === 'projects' && itemText.includes('projects')) ||
                    (tab === 'submissions' && itemText.includes('submissions')) ||
                    (tab === 'withdrawals' && itemText.includes('withdrawals')) ||
-                   (tab === 'recommendations' && itemText.includes('recommendations')) ||
                    (tab === 'messages' && itemText.includes('messages')) ||
                    (tab === 'notifications' && itemText.includes('notifications')) ||
                    (tab === 'profile' && itemText.includes('profile'))) {
@@ -2331,14 +2352,67 @@
             
             switch(tab) {
                 case 'tasks': loadTasks(); break;
+                case 'transcription': showEscrowMessage('Transcription Tasks'); break;
+                case 'design': showEscrowMessage('Design Tasks'); break;
+                case 'projects': showEscrowMessage('Projects'); break;
                 case 'submissions': loadSubmissions(); break;
                 case 'withdrawals': loadWithdrawals(); break;
-                case 'recommendations': loadReferrals(); break;
                 case 'messages': loadMessages(); break;
                 case 'notifications': loadNotificationsPage(); break;
                 case 'profile': loadProfile(); break;
                 default: loadTasks();
             }
+        }
+        
+        // Show escrow membership required message
+        function showEscrowMessage(sectionName) {
+            document.getElementById('content').innerHTML = `
+                <div class="escrow-message">
+                    <i class="fas fa-lock"></i>
+                    <h3>🔒 ${sectionName}</h3>
+                    <p>This section requires an escrow membership to access.</p>
+                    <p>Please upgrade your membership to unlock premium features.</p>
+                    <button class="btn btn-primary" onclick="showMembershipOptions()">
+                        <i class="fas fa-crown"></i> Upgrade Membership
+                    </button>
+                    <button class="btn btn-secondary" onclick="switchTab('tasks')" style="margin-left: 1rem;">
+                        <i class="fas fa-arrow-left"></i> Back to Tasks
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Show membership options
+        function showMembershipOptions() {
+            showModal(`
+                <div class="modal-content" style="text-align: center;">
+                    <i class="fas fa-crown" style="font-size: 4rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                    <h3 style="margin-bottom: 1rem;">Upgrade Your Membership</h3>
+                    <p style="margin-bottom: 2rem;">Choose the plan that works best for you</p>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 1rem; border: 2px solid #6366f1;">
+                            <h4 style="color: #6366f1;">Premium Membership</h4>
+                            <p style="font-size: 1.5rem; font-weight: 700;">$3/year</p>
+                            <p style="color: #64748b; margin: 0.5rem 0;">✓ Access to all sections</p>
+                            <p style="color: #64748b;">✓ Withdrawal enabled</p>
+                            <p style="color: #64748b;">✓ Priority support</p>
+                        </div>
+                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 1rem; border: 2px solid #f59e0b;">
+                            <h4 style="color: #f59e0b;">Elite Membership</h4>
+                            <p style="font-size: 1.5rem; font-weight: 700;">$6/year</p>
+                            <p style="color: #64748b; margin: 0.5rem 0;">✓ All Premium features</p>
+                            <p style="color: #64748b;">✓ $10 welcome bonus</p>
+                            <p style="color: #64748b;">✓ VIP support 24/7</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="showMembershipPayment('premium')" style="margin-top: 1.5rem;">
+                        Upgrade to Premium
+                    </button>
+                    <button class="btn btn-primary" onclick="closeModal()" style="margin-top: 1rem;">
+                        Close
+                    </button>
+                </div>
+            `);
         }
         
         // Helper functions
@@ -2614,7 +2688,7 @@
                     <div class="stat-card">
                         <i class="fas fa-users"></i>
                         <div class="stat-value">${userData.totalReferrals || 0}</div>
-                        <div class="stat-label">Recommendations</div>
+                        <div class="stat-label">Referrals</div>
                     </div>
                 `;
                 
@@ -2634,96 +2708,49 @@
             }
         }
         
-        // Load Tasks
+        // Load Tasks with Sorting and Filtering
+        let allTasks = [];
+        let filteredTasks = [];
+        let currentFilters = {
+            category: 'all',
+            deadline: 'all',
+            amount: 'all',
+            difficulty: 'all',
+            sortBy: 'newest'
+        };
+        
         async function loadTasks() {
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
                 
                 const snapshot = await db.collection('tasks').get();
                 
-                let html = '<h3 style="margin-bottom: 2rem;">Available Tasks</h3>';
-                
                 if (snapshot.empty) {
-                    html += `<div class="empty-state"><i class="fas fa-tasks"></i><h4>No Tasks Available</h4><p>Check back later for new tasks.</p></div>`;
-                } else {
-                    const tasks = [];
-                    snapshot.forEach(doc => {
-                        const taskData = doc.data();
-                        tasks.push({ id: doc.id, ...taskData });
-                    });
-                    
-                    const activeTasks = tasks.filter(task => task.active === true);
-                    
-                    if (activeTasks.length === 0) {
-                        html += `<div class="empty-state"><i class="fas fa-tasks"></i><h4>No Active Tasks</h4><p>All tasks are currently inactive.</p></div>`;
-                    } else {
-                        activeTasks.sort((a, b) => {
-                            if (!a.createdAt) return 1;
-                            if (!b.createdAt) return -1;
-                            return (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0);
-                        });
-                        
-                        html += '<div class="task-grid">';
-                        
-                        for (const task of activeTasks) {
-                            const hasSubmitted = await hasUserSubmitted(task.id);
-                            const deadlinePassed = isDeadlinePassed(task.deadline);
-                            
-                            let rewardValue = parseFloat(task.reward) || 0;
-                            
-                            html += `
-                                <div class="task-card">
-                                    <h4 class="task-title">${task.title || 'Untitled Task'}</h4>
-                                    <div class="client-info">
-                                        <i class="fas fa-user-circle"></i>
-                                        <span>Client: <strong>${task.clientName || 'NextGen Admin'}</strong></span>
-                                    </div>
-                                    ${task.deadline ? `
-                                        <div class="deadline-badge ${getDeadlineClass(task.deadline)}">
-                                            <i class="fas ${deadlinePassed ? 'fa-calendar-times' : 'fa-calendar-alt'}"></i>
-                                            <span>Deadline: ${formatDeadline(task.deadline)}</span>
-                                        </div>
-                                    ` : ''}
-                                    <p style="color:#64748b; margin-bottom:1rem;">${(task.description || '').substring(0, 80)}${(task.description || '').length > 80 ? '...' : ''}</p>
-                                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
-                                        <span class="badge primary">${task.category || 'other'}</span>
-                                        <span class="badge warning">${task.difficulty || 'medium'}</span>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                                        <span class="task-amount">$${rewardValue.toFixed(2)}</span>
-                                    </div>
-                                    ${deadlinePassed && !hasSubmitted ? `
-                                        <div class="expired-message">
-                                            <i class="fas fa-clock"></i> Submission deadline has passed
-                                        </div>
-                                    ` : ''}
-                                    <div style="display:flex; gap:0.5rem; justify-content:space-between;">
-                                        <button class="btn btn-secondary" onclick="viewTaskDetails('${task.id}')" style="padding:0.5rem 1rem; flex:1;">
-                                            <i class="fas fa-eye"></i> Details
-                                        </button>
-                                        ${!hasSubmitted ? 
-                                            (deadlinePassed ? 
-                                                `<button class="btn btn-disabled" disabled style="flex:2; opacity:0.6;">
-                                                    <i class="fas fa-ban"></i> Deadline Passed
-                                                </button>` : 
-                                                `<button class="btn btn-accept" onclick="acceptTask('${task.id}')" style="flex:2;">
-                                                    Accept Task
-                                                </button>`
-                                            ) : 
-                                            `<button class="btn btn-success" disabled style="flex:2; opacity:0.6;">
-                                                <i class="fas fa-check"></i> Completed
-                                            </button>`
-                                        }
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        
-                        html += '</div>';
-                    }
+                    document.getElementById('content').innerHTML = `
+                        <h3 style="margin-bottom: 2rem;">Available Tasks</h3>
+                        <div class="empty-state"><i class="fas fa-tasks"></i><h4>No Tasks Available</h4><p>Check back later for new tasks.</p></div>
+                    `;
+                    return;
                 }
                 
-                document.getElementById('content').innerHTML = html;
+                allTasks = [];
+                snapshot.forEach(doc => {
+                    const taskData = doc.data();
+                    if (taskData.active === true) {
+                        allTasks.push({ id: doc.id, ...taskData });
+                    }
+                });
+                
+                if (allTasks.length === 0) {
+                    document.getElementById('content').innerHTML = `
+                        <h3 style="margin-bottom: 2rem;">Available Tasks</h3>
+                        <div class="empty-state"><i class="fas fa-tasks"></i><h4>No Active Tasks</h4><p>All tasks are currently inactive.</p></div>
+                    `;
+                    return;
+                }
+                
+                filteredTasks = [...allTasks];
+                renderTasks();
                 
             } catch (error) {
                 console.error('Error loading tasks:', error);
@@ -2736,6 +2763,291 @@
                     </div>
                 `;
             }
+        }
+        
+        function applyFilters() {
+            filteredTasks = allTasks.filter(task => {
+                // Category filter
+                if (currentFilters.category !== 'all' && task.category !== currentFilters.category) {
+                    return false;
+                }
+                
+                // Difficulty filter
+                if (currentFilters.difficulty !== 'all' && task.difficulty !== currentFilters.difficulty) {
+                    return false;
+                }
+                
+                // Amount filter
+                if (currentFilters.amount !== 'all') {
+                    const reward = parseFloat(task.reward) || 0;
+                    const [min, max] = currentFilters.amount.split('-').map(Number);
+                    if (max) {
+                        if (reward < min || reward > max) return false;
+                    } else {
+                        // Handle "10+" case
+                        if (reward < min) return false;
+                    }
+                }
+                
+                // Deadline filter
+                if (currentFilters.deadline !== 'all') {
+                    if (!task.deadline) return false;
+                    
+                    const now = new Date();
+                    const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
+                    const diffDays = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+                    
+                    if (currentFilters.deadline === 'urgent' && diffDays > 1) return false;
+                    if (currentFilters.deadline === 'week' && diffDays > 7) return false;
+                    if (currentFilters.deadline === 'expired' && !isDeadlinePassed(task.deadline)) return false;
+                }
+                
+                return true;
+            });
+            
+            // Apply sorting
+            switch(currentFilters.sortBy) {
+                case 'newest':
+                    filteredTasks.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                    break;
+                case 'oldest':
+                    filteredTasks.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+                    break;
+                case 'amount-high':
+                    filteredTasks.sort((a, b) => (parseFloat(b.reward) || 0) - (parseFloat(a.reward) || 0));
+                    break;
+                case 'amount-low':
+                    filteredTasks.sort((a, b) => (parseFloat(a.reward) || 0) - (parseFloat(b.reward) || 0));
+                    break;
+                case 'deadline-urgent':
+                    filteredTasks.sort((a, b) => {
+                        if (!a.deadline) return 1;
+                        if (!b.deadline) return -1;
+                        const aDate = a.deadline.toDate ? a.deadline.toDate() : new Date(a.deadline);
+                        const bDate = b.deadline.toDate ? b.deadline.toDate() : new Date(b.deadline);
+                        return aDate - bDate;
+                    });
+                    break;
+            }
+            
+            renderTasks();
+            updateActiveFilters();
+        }
+        
+        function resetFilters() {
+            currentFilters = {
+                category: 'all',
+                deadline: 'all',
+                amount: 'all',
+                difficulty: 'all',
+                sortBy: 'newest'
+            };
+            
+            // Reset select elements
+            document.getElementById('categoryFilter').value = 'all';
+            document.getElementById('deadlineFilter').value = 'all';
+            document.getElementById('amountFilter').value = 'all';
+            document.getElementById('difficultyFilter').value = 'all';
+            document.getElementById('sortFilter').value = 'newest';
+            
+            filteredTasks = [...allTasks];
+            renderTasks();
+            document.getElementById('activeFilters').innerHTML = '';
+        }
+        
+        function updateActiveFilters() {
+            const container = document.getElementById('activeFilters');
+            if (!container) return;
+            
+            let html = '';
+            
+            if (currentFilters.category !== 'all') {
+                html += `<span class="filter-tag">Category: ${currentFilters.category} <i class="fas fa-times" onclick="removeFilter('category')"></i></span>`;
+            }
+            if (currentFilters.deadline !== 'all') {
+                let deadlineText = currentFilters.deadline === 'urgent' ? 'Urgent (< 1 day)' : 
+                                 currentFilters.deadline === 'week' ? 'This Week' : 'Expired';
+                html += `<span class="filter-tag">Deadline: ${deadlineText} <i class="fas fa-times" onclick="removeFilter('deadline')"></i></span>`;
+            }
+            if (currentFilters.amount !== 'all') {
+                html += `<span class="filter-tag">Amount: $${currentFilters.amount} <i class="fas fa-times" onclick="removeFilter('amount')"></i></span>`;
+            }
+            if (currentFilters.difficulty !== 'all') {
+                html += `<span class="filter-tag">Level: ${currentFilters.difficulty} <i class="fas fa-times" onclick="removeFilter('difficulty')"></i></span>`;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function removeFilter(filterName) {
+            currentFilters[filterName] = 'all';
+            
+            // Update select element
+            const selectMap = {
+                'category': 'categoryFilter',
+                'deadline': 'deadlineFilter',
+                'amount': 'amountFilter',
+                'difficulty': 'difficultyFilter'
+            };
+            
+            if (selectMap[filterName]) {
+                document.getElementById(selectMap[filterName]).value = 'all';
+            }
+            
+            applyFilters();
+        }
+        
+        async function renderTasks() {
+            let html = '<h3 style="margin-bottom: 2rem;">Available Tasks</h3>';
+            
+            // Filter Bar
+            html += `
+                <div class="filter-bar">
+                    <div class="filter-title">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Filter & Sort Tasks</span>
+                    </div>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label>Category</label>
+                            <select id="categoryFilter" class="filter-select" onchange="currentFilters.category = this.value; applyFilters()">
+                                <option value="all">All Categories</option>
+                                <option value="writing">Writing</option>
+                                <option value="data-entry">Data Entry</option>
+                                <option value="research">Research</option>
+                                <option value="translation">Translation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Deadline</label>
+                            <select id="deadlineFilter" class="filter-select" onchange="currentFilters.deadline = this.value; applyFilters()">
+                                <option value="all">All Deadlines</option>
+                                <option value="urgent">Urgent (< 1 day)</option>
+                                <option value="week">This Week</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Amount</label>
+                            <select id="amountFilter" class="filter-select" onchange="currentFilters.amount = this.value; applyFilters()">
+                                <option value="all">All Amounts</option>
+                                <option value="0-5">$0 - $5</option>
+                                <option value="5-10">$5 - $10</option>
+                                <option value="10-20">$10 - $20</option>
+                                <option value="20-50">$20 - $50</option>
+                                <option value="50-999">$50+</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Difficulty Level</label>
+                            <select id="difficultyFilter" class="filter-select" onchange="currentFilters.difficulty = this.value; applyFilters()">
+                                <option value="all">All Levels</option>
+                                <option value="beginner">Beginner</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Sort By</label>
+                            <select id="sortFilter" class="filter-select" onchange="currentFilters.sortBy = this.value; applyFilters()">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="amount-high">Amount: High to Low</option>
+                                <option value="amount-low">Amount: Low to High</option>
+                                <option value="deadline-urgent">Deadline: Urgent First</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-actions">
+                            <button class="filter-btn reset" onclick="resetFilters()">
+                                <i class="fas fa-redo-alt"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="activeFilters" class="active-filters"></div>
+                </div>
+            `;
+            
+            if (filteredTasks.length === 0) {
+                html += `<div class="empty-state"><i class="fas fa-filter"></i><h4>No Tasks Match Your Filters</h4><p>Try adjusting your filter criteria.</p></div>`;
+            } else {
+                html += `<div class="task-count" style="margin-bottom: 1rem; color: #64748b;">Found ${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}</div>`;
+                html += '<div class="task-grid">';
+                
+                for (const task of filteredTasks) {
+                    const hasSubmitted = await hasUserSubmitted(task.id);
+                    const deadlinePassed = isDeadlinePassed(task.deadline);
+                    
+                    let rewardValue = parseFloat(task.reward) || 0;
+                    
+                    html += `
+                        <div class="task-card">
+                            <h4 class="task-title">${task.title || 'Untitled Task'}</h4>
+                            <div class="client-info">
+                                <i class="fas fa-user-circle"></i>
+                                <span>Client: <strong>${task.clientName || 'NextGen Admin'}</strong></span>
+                            </div>
+                            ${task.deadline ? `
+                                <div class="deadline-badge ${getDeadlineClass(task.deadline)}">
+                                    <i class="fas ${deadlinePassed ? 'fa-calendar-times' : 'fa-calendar-alt'}"></i>
+                                    <span>Deadline: ${formatDeadline(task.deadline)}</span>
+                                </div>
+                            ` : ''}
+                            <p style="color:#64748b; margin-bottom:1rem;">${(task.description || '').substring(0, 80)}${(task.description || '').length > 80 ? '...' : ''}</p>
+                            <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+                                <span class="badge primary">${task.category || 'other'}</span>
+                                <span class="badge warning">${task.difficulty || 'medium'}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <span class="task-amount">$${rewardValue.toFixed(2)}</span>
+                            </div>
+                            ${deadlinePassed && !hasSubmitted ? `
+                                <div class="expired-message">
+                                    <i class="fas fa-clock"></i> Submission deadline has passed
+                                </div>
+                            ` : ''}
+                            <div style="display:flex; gap:0.5rem; justify-content:space-between;">
+                                <button class="btn btn-secondary" onclick="viewTaskDetails('${task.id}')" style="padding:0.5rem 1rem; flex:1;">
+                                    <i class="fas fa-eye"></i> Details
+                                </button>
+                                ${!hasSubmitted ? 
+                                    (deadlinePassed ? 
+                                        `<button class="btn btn-disabled" disabled style="flex:2; opacity:0.6;">
+                                            <i class="fas fa-ban"></i> Deadline Passed
+                                        </button>` : 
+                                        `<button class="btn btn-accept" onclick="acceptTask('${task.id}')" style="flex:2;">
+                                            Accept Task
+                                        </button>`
+                                    ) : 
+                                    `<button class="btn btn-success" disabled style="flex:2; opacity:0.6;">
+                                        <i class="fas fa-check"></i> Completed
+                                    </button>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+            }
+            
+            document.getElementById('content').innerHTML = html;
+            
+            // Set select values based on current filters
+            setTimeout(() => {
+                if (document.getElementById('categoryFilter')) document.getElementById('categoryFilter').value = currentFilters.category;
+                if (document.getElementById('deadlineFilter')) document.getElementById('deadlineFilter').value = currentFilters.deadline;
+                if (document.getElementById('amountFilter')) document.getElementById('amountFilter').value = currentFilters.amount;
+                if (document.getElementById('difficultyFilter')) document.getElementById('difficultyFilter').value = currentFilters.difficulty;
+                if (document.getElementById('sortFilter')) document.getElementById('sortFilter').value = currentFilters.sortBy;
+            }, 100);
         }
         
         function acceptTask(taskId) {
@@ -3435,126 +3747,6 @@
             } catch (error) {
                 console.error('Error requesting withdrawal:', error);
                 showAlert('Error requesting withdrawal', 'error');
-            }
-        }
-        
-        // Load Referrals
-        async function loadReferrals() {
-            try {
-                document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading recommendations...</p></div>';
-                
-                const referralCode = generateReferralCode(currentUser.uid);
-                const referralLink = getReferralLink();
-                
-                let referredSnapshot = { empty: true, docs: [] };
-                try {
-                    referredSnapshot = await db.collection('users')
-                        .where('referredBy', '==', currentUser.uid)
-                        .get();
-                } catch (error) {
-                    console.warn('Could not fetch referred users:', error);
-                }
-                
-                let bonusesSnapshot = { empty: true, docs: [] };
-                try {
-                    bonusesSnapshot = await db.collection('referralBonuses')
-                        .where('referrerId', '==', currentUser.uid)
-                        .orderBy('creditedAt', 'desc')
-                        .get();
-                } catch (error) {
-                    console.warn('Could not fetch referral bonuses:', error);
-                }
-                
-                const totalReferrals = referredSnapshot.size;
-                
-                let totalEarned = 0;
-                const bonuses = [];
-                
-                if (!bonusesSnapshot.empty) {
-                    bonusesSnapshot.forEach(doc => {
-                        const bonus = doc.data();
-                        totalEarned += bonus.amount;
-                        bonuses.push({ id: doc.id, ...bonus });
-                    });
-                }
-                
-                let statsHtml = `
-                    <div class="referral-section">
-                        <div class="referral-header">
-                            <i class="fas fa-users"></i>
-                            <h3>Recommendations Program</h3>
-                        </div>
-                        
-                        <div class="referral-stats">
-                            <div class="referral-stat-card">
-                                <div class="referral-stat-value">${totalReferrals}</div>
-                                <div class="referral-stat-label">Total Recommendations</div>
-                            </div>
-                            <div class="referral-stat-card">
-                                <div class="referral-stat-value">$${totalEarned.toFixed(2)}</div>
-                                <div class="referral-stat-label">Earned from Recommendations</div>
-                            </div>
-                            <div class="referral-stat-card">
-                                <div class="referral-stat-value">$${REFERRAL_BONUS_REFERRER}</div>
-                                <div class="referral-stat-label">Per Premium Upgrade</div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin: 2rem 0;">
-                            <h4 style="margin-bottom: 1rem;">Your Recommendation Link</h4>
-                            <div class="referral-link-box">
-                                <input type="text" value="${referralLink}" readonly>
-                                <button onclick="copyReferralLink()"><i class="fas fa-copy"></i> Copy Link</button>
-                            </div>
-                            
-                            <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 1rem;">
-                                <p style="font-size: 0.9rem; color: #475569; margin-bottom: 0.5rem;">
-                                    <i class="fas fa-info-circle" style="color: #6366f1;"></i> 
-                                    Other formats you can share:
-                                </p>
-                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/register/</span>
-                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/register/${referralCode}</code>
-                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/register/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                                        <span style="background: #e2e8f0; padding: 0.2rem 0.5rem; border-radius: 40px;">/join/</span>
-                                        <code style="background: white; padding: 0.3rem 0.5rem; border-radius: 40px;">https://nextgen.joblify.top/join/${referralCode}</code>
-                                        <button onclick="copyToClipboardDynamic('https://nextgen.joblify.top/join/${referralCode}')" style="background: none; border: none; color: #6366f1; cursor: pointer;">
-                                            <i class="fas fa-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="referral-info">
-                                <div class="referral-info-item">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>You get <strong>$${REFERRAL_BONUS_REFERRER}</strong> when recommended user upgrades to Premium</span>
-                                </div>
-                                <div class="referral-info-item">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Recommended user gets <strong>$${REFERRAL_BONUS_REFERRED}</strong> when they upgrade to Premium</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                document.getElementById('content').innerHTML = statsHtml;
-                
-            } catch (error) {
-                console.error('Error loading recommendations:', error);
-                document.getElementById('content').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h4>Error Loading Recommendations</h4>
-                        <button class="btn btn-primary" onclick="loadReferrals()">Try Again</button>
-                    </div>
-                `;
             }
         }
         
