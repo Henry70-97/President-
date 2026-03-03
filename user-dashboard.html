@@ -31,6 +31,60 @@
             padding: 1rem; 
         }
         
+        /* ---------- Mini TV / News Bar ---------- */
+        .news-tv-container {
+            background: #0b0f18;
+            border-radius: 1.8rem;
+            padding: 0.8rem 1rem 1rem 1rem;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 1px 4px rgba(255,255,255,0.1);
+            border: 1px solid #2d3748;
+        }
+        .news-header {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 0.6rem;
+            padding-left: 0.5rem;
+        }
+        .live-badge {
+            background: #dc2626;
+            color: white;
+            font-weight: 700;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: pulseLive 1.5s infinite;
+        }
+        .news-header span {
+            color: #b0c4de;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .tv-screen {
+            background: #000000;
+            border-radius: 1rem;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            border: 2px solid #4b5563;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+        }
+        .tv-screen iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        @keyframes pulseLive {
+            0% { opacity: 1; background-color: #b91c1c; }
+            50% { opacity: 0.85; background-color: #dc2626; }
+            100% { opacity: 1; background-color: #b91c1c; }
+        }
+        
         .header { 
             background: white; 
             border-radius: 2rem; 
@@ -2049,6 +2103,19 @@
     </div>
     
     <div class="app-container">
+        <!-- ========== LIVE AL JAZEERA TV MINI SCREEN ========== -->
+        <div class="news-tv-container">
+            <div class="news-header">
+                <span class="live-badge">🔴 LIVE</span>
+                <span><i class="fas fa-satellite-dish" style="color:#10b981;"></i> Al Jazeera English · 24/7 News</span>
+            </div>
+            <div class="tv-screen">
+                <!-- Al Jazeera English YouTube embed (live stream) -->
+                <iframe src="https://www.youtube.com/embed/live_stream?channel=UCyeQ24M7HaR-03KkPvNcgqg&autoplay=1&mute=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+        </div>
+        <!-- ==================================================== -->
+        
         <div class="header">
             <div class="hamburger-menu" onclick="toggleMobileMenu()">
                 <i class="fas fa-bars"></i>
