@@ -574,6 +574,127 @@
         }
         .btn-cancel:hover { background: #f1f5f9; transform: translateY(-2px); }
 
+        /* -------------------- PDF TASK DETAILS STYLES -------------------- */
+        .pdf-document {
+            background: white;
+            font-family: 'Inter', sans-serif;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        .pdf-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #10b981;
+        }
+        .pdf-header h2 { margin: 0; font-size: 1.5rem; }
+        .pdf-badge {
+            background: #10b981;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .pdf-content {
+            padding: 2rem;
+        }
+        .pdf-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 1rem;
+        }
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .pdf-grid-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .pdf-grid-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        .pdf-grid-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pdf-grid-value i { color: #10b981; width: 20px; }
+        .pdf-section {
+            margin-bottom: 2rem;
+        }
+        .pdf-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pdf-section-title i { color: #10b981; }
+        .pdf-section-content {
+            background: #f8fafc;
+            padding: 1.2rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #10b981;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #334155;
+        }
+        .pdf-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .pdf-btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .pdf-btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        .pdf-btn-primary:hover { background: #059669; }
+        .pdf-btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+        .pdf-btn-secondary:hover { background: #e2e8f0; }
+
         /* -------------------- LOADING / EMPTY STATES -------------------- */
         .loading-spinner {
             display: inline-block;
@@ -1149,6 +1270,7 @@
 
         // -------------------- CONSTANTS --------------------
         let TRANSACTION_FEE_PERCENT = 3, PLATFORM_FEE_PERCENT = 2, TOTAL_FEE_PERCENT = 5;
+        let MIN_WITHDRAWAL = 5; // default, will be updated from Firestore
         const MEMBERSHIP_TYPES = { BASIC: 'basic', PREMIUM: 'premium', ELITE: 'elite' };
         const DEFAULT_MEMBERSHIP_PACKAGES = {
             basic: { name: 'BASIC', price: 0, duration: 'lifetime', features: [], color: '#94a3b8', buttonClass: 'basic', badge: null },
@@ -1187,6 +1309,18 @@
             } catch (e) {
                 console.error('Error fetching admin ID:', e);
                 return null;
+            }
+        }
+
+        // -------------------- LOAD WITHDRAWAL SETTINGS --------------------
+        async function loadWithdrawalSettings() {
+            try {
+                const doc = await db.collection('settings').doc('withdrawal').get();
+                if (doc.exists) {
+                    MIN_WITHDRAWAL = doc.data().minAmount || 5;
+                }
+            } catch (e) {
+                console.error('Error loading withdrawal settings:', e);
             }
         }
 
@@ -1503,7 +1637,9 @@
                 currentUser = user;
                 document.getElementById('userName').textContent = userData.displayName;
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
-                await loadFeeSettings(); await loadMembershipPackages();
+                await loadFeeSettings(); 
+                await loadMembershipPackages();
+                await loadWithdrawalSettings(); // load min withdrawal amount
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
                 loadDashboard();
                 refreshMirror();
@@ -1719,14 +1855,14 @@
                         <div class="pdf-content">
                             <div class="pdf-title">${escapeHtml(task.title)}</div>
                             <div class="pdf-grid">
-                                <div><span class="pdf-grid-label">Client</span><span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span></div>
-                                <div><span class="pdf-grid-label">Reward</span><span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> $${(parseFloat(task.reward)||0).toFixed(2)}</span></div>
+                                <div class="pdf-grid-item"><span class="pdf-grid-label">Client</span><span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span></div>
+                                <div class="pdf-grid-item"><span class="pdf-grid-label">Reward</span><span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> $${(parseFloat(task.reward)||0).toFixed(2)}</span></div>
                             </div>
                             <div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div><div class="pdf-section-content">${escapeHtml(task.description||'No description')}</div></div>
                             <div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div><div class="pdf-section-content">${escapeHtml(task.instructions||'No instructions')}</div></div>
                             <div class="pdf-actions">
-                                <button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')">Accept Task</button>
-                                <button class="pdf-btn pdf-btn-secondary" onclick="closeModal()">Close</button>
+                                <button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button>
+                                <button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button>
                             </div>
                         </div>
                     </div>
@@ -1854,7 +1990,7 @@
                     wordCount: wc,
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                await db.collection('tasks').doc(taskId).update({ submissionsCount: firebase.firestore.FieldValue.increment(1) });
+                // Do NOT update task submissionsCount due to permissions; rely on Cloud Function
                 sessionStorage.removeItem('pendingSubmission');
                 showModal(`
                     <div class="modal-content" style="text-align:center;">
@@ -1866,7 +2002,10 @@
                     </div>
                 `);
                 refreshMirror();
-            } catch (e) { showAlert('Error saving submission','error'); }
+            } catch (e) { 
+                console.error('Error saving submission:', e);
+                showAlert('Error saving submission. Please try again.', 'error'); 
+            }
         }
 
         // -------------------- SUBMISSIONS --------------------
@@ -1921,9 +2060,9 @@
                             <span class="balance-highlight">$${bal.toFixed(2)}</span>
                         </div>
                         <div class="input-group">
-                            <label for="withdrawAmount">Amount (USD)</label>
+                            <label for="withdrawAmount">Amount (USD) - Minimum $${MIN_WITHDRAWAL}</label>
                             <i class="fas fa-dollar-sign input-icon"></i>
-                            <input type="number" id="withdrawAmount" placeholder="0.00" min="5" max="${bal}" step="0.01" oninput="updateFeeBreakdown(${bal})">
+                            <input type="number" id="withdrawAmount" placeholder="0.00" min="${MIN_WITHDRAWAL}" max="${bal}" step="0.01" oninput="updateFeeBreakdown(${bal})">
                         </div>
                         <div id="feeBreakdown" class="fee-breakdown" style="display:none;"></div>
                         <div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div>
@@ -1981,7 +2120,7 @@
             const amt = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             const phone = document.getElementById('withdrawPhone').value;
-            if (!amt || amt < 5) { showAlert('Minimum $5','error'); return; }
+            if (!amt || amt < MIN_WITHDRAWAL) { showAlert(`Minimum withdrawal is $${MIN_WITHDRAWAL}`,'error'); return; }
             try {
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const bal = userDoc.data().wallet || 0;
@@ -2054,7 +2193,7 @@
             }
         }
 
-        // -------------------- MESSAGES (fixed thread display) --------------------
+        // -------------------- MESSAGES (fixed with custom ID for parentMessageId) --------------------
         async function loadMessages() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
@@ -2129,26 +2268,32 @@
         }
 
         async function sendMessage() {
+            if (!currentUser) { showAlert('You must be logged in','error'); return; }
             const subj = document.getElementById('messageSubject')?.value;
             const msg = document.getElementById('messageContent')?.value;
             if (!subj || !msg) { showAlert('Please fill all fields','error'); return; }
             const admin = await getAdminId();
             if (!admin) { showAlert('Cannot send message: admin not found','error'); return; }
             try {
-                const ref = await db.collection('messages').add({
+                // Generate a custom ID to use as parentMessageId
+                const threadId = db.collection('messages').doc().id;
+                await db.collection('messages').doc(threadId).set({
                     senderId: currentUser.uid,
                     recipientId: admin,
                     fromAdmin: false,
                     subject: subj,
                     message: msg,
+                    parentMessageId: threadId,
                     read: false,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                await db.collection('messages').doc(ref.id).update({ parentMessageId: ref.id });
                 closeModal();
                 showAlert('Message sent!','success');
                 loadMessages();
-            } catch (e) { showAlert('Error sending message','error'); }
+            } catch (e) { 
+                console.error('Error sending message:', e);
+                showAlert('Error sending message','error'); 
+            }
         }
 
         async function viewMessageThread(threadId) {
@@ -2194,6 +2339,7 @@
         }
 
         async function sendReply(threadId) {
+            if (!currentUser) { showAlert('You must be logged in','error'); return; }
             const reply = document.getElementById('replyMessage')?.value;
             if (!reply) { showAlert('Please enter a reply','error'); return; }
             const admin = await getAdminId();
@@ -2211,7 +2357,10 @@
                 closeModal();
                 viewMessageThread(threadId);
                 showAlert('Reply sent!','success');
-            } catch (e) { showAlert('Error sending reply','error'); }
+            } catch (e) { 
+                console.error('Error sending reply:', e);
+                showAlert('Error sending reply','error'); 
+            }
         }
 
         // -------------------- NOTIFICATIONS --------------------
