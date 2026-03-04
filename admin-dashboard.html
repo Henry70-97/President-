@@ -43,6 +43,7 @@
         .btn-danger { background: #ef4444; color: white; }
         .btn-warning { background: #f59e0b; color: white; }
         .btn-info { background: #3b82f6; color: white; }
+        .btn-secondary { background: #64748b; color: white; }
         .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
         .modal.active { display: block; }
@@ -1199,39 +1200,73 @@
             loadUsers();  
         }  
           
-        // Load Users - Modified to show referral info  
-        async function loadUsers() {  
-            const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();  
-              
-            let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>';  
-            html += '<table class="data-table">';  
-            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Role</th><th>Status</th><th>Actions</th></tr>';  
-              
-            snapshot.forEach(doc => {  
-                const user = doc.data();  
-                const membershipClass = user.membershipType === 'elite' ? 'warning' : user.membershipType === 'premium' ? 'primary' : 'info';  
-                html += `  
-                    <tr>  
-                        <td>${user.email}</td>  
-                        <td>${user.displayName}</td>  
-                        <td>$${user.wallet || 0}</td>  
-                        <td><span class="badge primary">${user.totalReferrals || 0}</span></td>  
-                        <td>$${user.referralEarnings || 0}</td>  
-                        <td><span class="badge ${membershipClass}">${(user.membershipType || 'basic').toUpperCase()}</span></td>  
-                        <td>${user.role}</td>  
-                        <td><span class="badge ${user.active ? 'success' : 'danger'}">${user.active ? 'Active' : 'Inactive'}</span></td>  
-                        <td class="action-buttons">  
-                            <button class="btn btn-primary toggle-status-btn" data-user-id="${doc.id}" data-new-status="${!user.active}">${user.active ? 'Deactivate' : 'Activate'}</button>  
-                            <button class="btn btn-success adjust-wallet-btn" data-user-id="${doc.id}" data-user-name="${user.displayName}" data-wallet="${user.wallet || 0}">Adjust Wallet</button>  
-                            ${user.role !== 'admin' ? `<button class="btn btn-warning make-admin-btn" data-user-id="${doc.id}">Make Admin</button>` : ''}  
-                        </td>  
-                    </tr>  
-                `;  
-            });  
-              
-            html += '</table>';  
-            document.getElementById('content').innerHTML = html;  
-        }  
+        // ==================== NEW: Verified / Frozen / Delete Functions ====================
+        async function toggleVerified(userId, newStatus) {
+            await db.collection('users').doc(userId).update({ verified: newStatus });
+            showAlert(`User verified status set to ${newStatus}`, 'success');
+            loadUsers();
+        }
+
+        async function toggleFrozen(userId, newStatus) {
+            await db.collection('users').doc(userId).update({ frozen: newStatus });
+            showAlert(`User frozen status set to ${newStatus}`, 'success');
+            loadUsers();
+        }
+
+        async function deleteUser(userId, userEmail) {
+            if (!confirm(`Are you sure you want to delete user ${userEmail}? This action cannot be undone.`)) return;
+            try {
+                await db.collection('users').doc(userId).delete();
+                showAlert(`User ${userEmail} deleted successfully`, 'success');
+                loadUsers();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showAlert('Error deleting user: ' + error.message, 'error');
+            }
+        }
+        // ===============================================================================
+
+        // Load Users – with new columns for Verified, Frozen and action buttons
+        async function loadUsers() { 
+            const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get(); 
+             
+            let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>'; 
+            html += '<table class="data-table">'; 
+            html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Status</th><th>Actions</th></tr>'; 
+             
+            snapshot.forEach(doc => { 
+                const user = doc.data(); 
+                const membershipClass = user.membershipType === 'elite' ? 'warning' : user.membershipType === 'premium' ? 'primary' : 'info'; 
+                const verified = user.verified === true; 
+                const frozen = user.frozen === true; 
+                const active = user.active !== false; // default true
+                html += ` 
+                    <tr> 
+                        <td>${user.email}</td> 
+                        <td>${user.displayName}</td> 
+                        <td>$${user.wallet || 0}</td> 
+                        <td><span class="badge primary">${user.totalReferrals || 0}</span></td> 
+                        <td>$${user.referralEarnings || 0}</td> 
+                        <td><span class="badge ${membershipClass}">${(user.membershipType || 'basic').toUpperCase()}</span></td> 
+                        <td><span class="badge ${verified ? 'success' : 'warning'}">${verified ? 'Verified' : 'Unverified'}</span></td> 
+                        <td><span class="badge ${frozen ? 'danger' : 'success'}">${frozen ? 'Frozen' : 'Active'}</span></td> 
+                        <td>${user.role}</td> 
+                        <td><span class="badge ${active ? 'success' : 'danger'}">${active ? 'Active' : 'Inactive'}</span></td> 
+                        <td class="action-buttons"> 
+                            <button class="btn btn-primary toggle-status-btn" data-user-id="${doc.id}" data-new-status="${!active}">${active ? 'Deactivate' : 'Activate'}</button> 
+                            <button class="btn btn-success adjust-wallet-btn" data-user-id="${doc.id}" data-user-name="${user.displayName}" data-wallet="${user.wallet || 0}">Adjust Wallet</button> 
+                            ${user.role !== 'admin' ? `<button class="btn btn-warning make-admin-btn" data-user-id="${doc.id}">Make Admin</button>` : ''} 
+                            <button class="btn btn-info toggle-verified-btn" data-user-id="${doc.id}" data-new-status="${!verified}">${verified ? 'Unverify' : 'Verify'}</button> 
+                            <button class="btn btn-secondary toggle-frozen-btn" data-user-id="${doc.id}" data-new-status="${!frozen}">${frozen ? 'Unfreeze' : 'Freeze'}</button> 
+                            <button class="btn btn-danger delete-user-btn" data-user-id="${doc.id}" data-user-email="${user.email}">Delete</button> 
+                        </td> 
+                    </tr> 
+                `; 
+            }); 
+             
+            html += '</table>'; 
+            document.getElementById('content').innerHTML = html; 
+        }
           
         // Toggle User Status  
         async function toggleUserStatus(userId, newStatus) {  
@@ -1307,48 +1342,58 @@
             }  
         }  
           
-        // Load Tasks  
-        async function loadTasks() {  
-            const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();  
-              
-            let html = `  
-                <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">  
-                    <h3>Task Management</h3>  
-                    <button class="btn btn-primary" id="createTaskBtn">+ New Task</button>  
-                </div>  
-                <table class="data-table">  
-                <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Difficulty</th><th>Status</th><th>Actions</th></tr>  
-            `;  
-              
-            snapshot.forEach(doc => {  
-                const task = doc.data();  
-                const deadlineStatus = task.deadline ? getDeadlineStatus(task.deadline) : null;  
-                const deadlineDisplay = task.deadline ? formatDate(task.deadline) : 'No deadline';  
-                  
-                html += `  
-                    <tr>  
-                        <td>${task.title}</td>  
-                        <td><span class="client-badge">${task.clientName || 'NextGen'}</span></td>  
-                        <td>$${task.reward}</td>  
-                        <td>  
-                            <span class="deadline-badge">${deadlineDisplay}</span>  
-                            ${deadlineStatus ? `<br><small class="badge ${deadlineStatus.class}">${deadlineStatus.text}</small>` : ''}  
-                        </td>  
-                        <td>${task.category}</td>  
-                        <td>${task.difficulty}</td>  
-                        <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td>  
-                        <td class="action-buttons">  
-                            <button class="btn btn-primary edit-task-btn" data-task-id="${doc.id}">Edit</button>  
-                            <button class="btn btn-info view-requirements-btn" data-task-id="${doc.id}">View Details</button>  
-                            <button class="btn btn-warning toggle-task-btn" data-task-id="${doc.id}" data-new-status="${!task.active}">${task.active ? 'Deactivate' : 'Activate'}</button>  
-                        </td>  
-                    </tr>  
-                `;  
-            });  
-              
-            html += '</table>';  
-            document.getElementById('content').innerHTML = html;  
-        }  
+        // Load Tasks – with submissions count
+        async function loadTasks() { 
+            const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get(); 
+            
+            // Get submission counts for each task
+            const tasks = [];
+            snapshot.forEach(doc => tasks.push({ id: doc.id, ...doc.data() }));
+            
+            // Fetch counts in parallel
+            const counts = await Promise.all(tasks.map(task => 
+                db.collection('submissions').where('taskId', '==', task.id).get().then(snap => snap.size)
+            ));
+            
+            let html = ` 
+                <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;"> 
+                    <h3>Task Management</h3> 
+                    <button class="btn btn-primary" id="createTaskBtn">+ New Task</button> 
+                </div> 
+                <table class="data-table"> 
+                <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Difficulty</th><th>Submissions</th><th>Status</th><th>Actions</th></tr> 
+            `; 
+            
+            tasks.forEach((task, index) => { 
+                const deadlineStatus = task.deadline ? getDeadlineStatus(task.deadline) : null; 
+                const deadlineDisplay = task.deadline ? formatDate(task.deadline) : 'No deadline'; 
+                const subCount = counts[index];
+                
+                html += ` 
+                    <tr> 
+                        <td>${task.title}</td> 
+                        <td><span class="client-badge">${task.clientName || 'NextGen'}</span></td> 
+                        <td>$${task.reward}</td> 
+                        <td> 
+                            <span class="deadline-badge">${deadlineDisplay}</span> 
+                            ${deadlineStatus ? `<br><small class="badge ${deadlineStatus.class}">${deadlineStatus.text}</small>` : ''} 
+                        </td> 
+                        <td>${task.category}</td> 
+                        <td>${task.difficulty}</td> 
+                        <td><span class="badge primary">${subCount}</span></td> 
+                        <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td> 
+                        <td class="action-buttons"> 
+                            <button class="btn btn-primary edit-task-btn" data-task-id="${task.id}">Edit</button> 
+                            <button class="btn btn-info view-requirements-btn" data-task-id="${task.id}">View Details</button> 
+                            <button class="btn btn-warning toggle-task-btn" data-task-id="${task.id}" data-new-status="${!task.active}">${task.active ? 'Deactivate' : 'Activate'}</button> 
+                        </td> 
+                    </tr> 
+                `; 
+            }); 
+             
+            html += '</table>'; 
+            document.getElementById('content').innerHTML = html; 
+        }
           
         // Show Create Task Modal  
         function showCreateTask() {  
@@ -1736,33 +1781,41 @@
             loadSubmissions();  
         }  
           
-        // Load Withdrawals  
-        async function loadWithdrawals() {  
-            const snapshot = await db.collection('withdrawals')  
-                .where('status', '==', 'pending')  
-                .get();  
-              
-            let html = '<h3 style="margin-bottom:1.5rem;">Pending Withdrawals</h3>';  
-              
-            if (snapshot.empty) {  
-                html += '<p>No pending withdrawals.</p>';  
-            } else {  
-                snapshot.forEach(doc => {  
-                    const w = doc.data();  
-                    html += `  
-                        <div class="submission-card">  
-                            <p><strong>User:</strong> ${w.userEmail}</p>  
-                            <p><strong>Amount:</strong> $${w.amount} (KES ${w.amountKES})</p>  
-                            <p><strong>Method:</strong> ${w.method} - ${w.phone}</p>  
-                            <p><strong>Requested:</strong> ${w.requestedAt?.toDate().toLocaleString()}</p>  
-                            <button class="btn btn-success process-withdrawal" data-withdrawal-id="${doc.id}">Mark as Paid</button>  
-                        </div>  
-                    `;  
-                });  
-            }  
-              
-            document.getElementById('content').innerHTML = html;  
-        }  
+        // Load Withdrawals – show warning if user is frozen
+        async function loadWithdrawals() { 
+            const snapshot = await db.collection('withdrawals') 
+                .where('status', '==', 'pending') 
+                .get(); 
+             
+            let html = '<h3 style="margin-bottom:1.5rem;">Pending Withdrawals</h3>'; 
+             
+            if (snapshot.empty) { 
+                html += '<p>No pending withdrawals.</p>'; 
+            } else { 
+                // Fetch user statuses
+                const withdrawals = [];
+                snapshot.forEach(doc => withdrawals.push({ id: doc.id, ...doc.data() }));
+                
+                const userStatuses = await Promise.all(withdrawals.map(w => 
+                    db.collection('users').doc(w.userId).get().then(doc => doc.exists ? doc.data().frozen : false)
+                ));
+                
+                withdrawals.forEach((w, index) => {
+                    const isFrozen = userStatuses[index];
+                    html += ` 
+                        <div class="submission-card"> 
+                            <p><strong>User:</strong> ${w.userEmail} ${isFrozen ? '<span class="badge danger">FROZEN</span>' : ''}</p> 
+                            <p><strong>Amount:</strong> $${w.amount} (KES ${w.amountKES})</p> 
+                            <p><strong>Method:</strong> ${w.method} - ${w.phone}</p> 
+                            <p><strong>Requested:</strong> ${w.requestedAt?.toDate().toLocaleString()}</p> 
+                            <button class="btn btn-success process-withdrawal" data-withdrawal-id="${w.id}">Mark as Paid</button> 
+                        </div> 
+                    `; 
+                });
+            } 
+             
+            document.getElementById('content').innerHTML = html; 
+        }
           
         // Process Withdrawal  
         async function processWithdrawal(withdrawalId) {  
@@ -3754,7 +3807,7 @@
 
         // ========== END FIXED NOTIFICATION FUNCTIONS ==========
           
-        // Load Messages (updated with notification sending options)
+        // Load Messages (updated with notification sending options and petitions)
         async function loadMessages() {  
             const users = await db.collection('users').get();  
               
@@ -3787,6 +3840,27 @@
                     </div>  
                 `;  
             });  
+              
+            // Fetch petitions (if collection exists)
+            let petitionsHtml = '';
+            try {
+                const petitionsSnap = await db.collection('petitions').orderBy('createdAt', 'desc').limit(10).get();
+                petitionsSnap.forEach(doc => {
+                    const pet = doc.data();
+                    petitionsHtml += `
+                        <div class="submission-card" style="border-left: 4px solid #f59e0b">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong style="color: #f59e0b">📢 Petition from ${pet.userEmail || pet.userId}</strong>
+                                <small>${pet.createdAt?.toDate().toLocaleString()}</small>
+                            </div>
+                            <p style="margin: 0.5rem 0;">${pet.message}</p>
+                            ${pet.response ? `<p><strong>Response:</strong> ${pet.response}</p>` : ''}
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.log('No petitions collection yet');
+            }
               
             let html = `  
                 <h3 style="margin-bottom:1.5rem;">Message Center</h3>  
@@ -3877,6 +3951,11 @@
                     <span class="badge primary">${messages.size} messages</span>  
                 </h4>  
                 ${messagesHtml || '<p style="text-align: center; padding: 2rem; background: #f8fafc; border-radius: 1rem;">No messages yet</p>'}  
+                
+                ${petitionsHtml ? `
+                    <h4 style="margin: 2rem 0 1rem 0; color: #f59e0b;">Petitions from Frozen Users</h4>
+                    ${petitionsHtml}
+                ` : ''}
             `;  
               
             document.getElementById('content').innerHTML = html;  
@@ -4092,6 +4171,32 @@
                     await makeAdmin(userId);  
                     return;  
                 }  
+                  
+                // ========== NEW BUTTONS ==========
+                // Toggle Verified
+                if (target.classList.contains('toggle-verified-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    const newStatus = target.getAttribute('data-new-status') === 'true';
+                    await toggleVerified(userId, newStatus);
+                    return;
+                }
+
+                // Toggle Frozen
+                if (target.classList.contains('toggle-frozen-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    const newStatus = target.getAttribute('data-new-status') === 'true';
+                    await toggleFrozen(userId, newStatus);
+                    return;
+                }
+
+                // Delete User
+                if (target.classList.contains('delete-user-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    const userEmail = target.getAttribute('data-user-email');
+                    await deleteUser(userId, userEmail);
+                    return;
+                }
+                // ========== END NEW BUTTONS ==========
                   
                 // Create Task button  
                 if (target.id === 'createTaskBtn') {  
@@ -4326,6 +4431,9 @@
         window.makeAdmin = makeAdmin;  
         window.showAdjustWallet = showAdjustWallet;  
         window.adjustWallet = adjustWallet;  
+        window.toggleVerified = toggleVerified;
+        window.toggleFrozen = toggleFrozen;
+        window.deleteUser = deleteUser;
         window.showCreateTask = showCreateTask;  
         window.createTask = createTask;  
         window.toggleTask = toggleTask;  
