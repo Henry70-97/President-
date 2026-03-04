@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* (All your existing styles remain exactly the same – no changes) */
+        /* All your existing styles remain exactly the same – no changes */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; }
         .app-container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
@@ -306,10 +306,31 @@
         .petition-section { background: #fef3c7; border-radius: 2rem; padding: 2rem; border-left: 4px solid #f59e0b; margin-top: 2rem; }
         .petition-section h4 { color: #92400e; }
         .petition-section .btn { background: #f59e0b; color: white; }
+
+        /* Training Center styles */
+        .training-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.8rem; margin-top: 1.5rem; }
+        .training-card { background: white; border-radius: 1.5rem; padding: 1.8rem; border: 2px solid #e2e8f0; transition: all 0.2s; }
+        .training-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .training-card.free { border-top: 4px solid #10b981; }
+        .training-card.prepaid { border-top: 4px solid #f59e0b; }
+        .training-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .training-title { font-size: 1.3rem; font-weight: 700; color: #0f172a; }
+        .training-price { font-size: 1.2rem; font-weight: 800; color: #f59e0b; }
+        .training-duration { color: #64748b; font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .training-description { color: #475569; margin-bottom: 1rem; line-height: 1.5; }
+        .training-requirements { background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; font-size: 0.9rem; margin-bottom: 1rem; }
+        .training-status { margin: 1rem 0; padding: 0.5rem; border-radius: 0.5rem; text-align: center; font-weight: 600; }
+        .training-status.pending { background: #f59e0b20; color: #f59e0b; }
+        .training-status.approved { background: #10b98120; color: #10b981; }
+        .training-status.rejected { background: #ef444420; color: #ef4444; }
+        .resources-list { background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; }
+        .resource-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .resource-item a { color: #6366f1; text-decoration: none; }
+        .resource-item a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <!-- Mobile Navigation -->
+    <!-- Mobile Navigation (updated with Trainings) -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileMenu()"></div>
     <div class="mobile-nav" id="mobileNav">
         <div class="mobile-nav-header">
@@ -320,6 +341,7 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('transcription')"><i class="fas fa-microphone"></i><span>Transcription Tasks</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('design')"><i class="fas fa-pencil-ruler"></i><span>Design Tasks</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('projects')"><i class="fas fa-project-diagram"></i><span>Projects</span></div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('submissions')"><i class="fas fa-file-alt"></i><span>My Submissions</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('withdrawals')"><i class="fas fa-money-bill-wave"></i><span>Withdrawals</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('messages')">
@@ -340,7 +362,7 @@
     </div>
 
     <div class="app-container">
-        <!-- Mirror TV -->
+        <!-- Mirror TV (unchanged) -->
         <div class="news-tv-container">
             <div class="news-header">
                 <span class="live-badge">🔴 LIVE</span>
@@ -386,12 +408,13 @@
         <!-- Stats Grid -->
         <div class="stats-grid" id="statsGrid"></div>
 
-        <!-- Desktop Tabs -->
+        <!-- Desktop Tabs (updated with Training) -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('transcription')">🎤 Transcription</button>
             <button class="tab" onclick="switchTab('design')">✏️ Design Tasks</button>
             <button class="tab" onclick="switchTab('projects')">📊 Projects</button>
+            <button class="tab" onclick="switchTab('training')">🎓 Training Center</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
             <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
             <button class="tab" onclick="switchTab('messages')">
@@ -491,7 +514,7 @@
             }
         }
 
-        // -------------------- MIRROR FUNCTIONS --------------------
+        // -------------------- MIRROR FUNCTIONS (unchanged) --------------------
         function updateMirrorWithTask(task) {
             if (!task) return;
             const mirror = document.getElementById('mirrorContent');
@@ -670,7 +693,7 @@
             window.location.href = 'index.html';
         }
 
-        // -------------------- TAB SWITCHING --------------------
+        // -------------------- TAB SWITCHING (updated with training) --------------------
         function switchTab(tab) {
             currentTab = tab;
             currentTaskViewed = null;
@@ -686,6 +709,7 @@
             switch (tab) {
                 case 'tasks': loadTasks(); break;
                 case 'transcription': case 'design': case 'projects': showNotQualifiedDialog(tab); break;
+                case 'training': loadTrainings(); break;
                 case 'submissions': loadSubmissions(); break;
                 case 'withdrawals': loadWithdrawals(); break;
                 case 'messages': loadMessages(); break;
@@ -767,7 +791,7 @@
                         wallet: 0,
                         active: true,
                         verified: user.emailVerified || isGoogle,
-                        frozen: false,  // NEW: frozen field
+                        frozen: false,
                         membershipType: MEMBERSHIP_TYPES.BASIC,
                         membershipPaid: false,
                         membershipStatus: 'active',
@@ -792,7 +816,6 @@
                     userData = { id: user.uid, ...newDoc.data() };
                 } else {
                     userData = { id: user.uid, ...doc.data() };
-                    // If frozen field missing, set default false
                     if (userData.frozen === undefined) {
                         await db.collection('users').doc(user.uid).update({ frozen: false });
                         userData.frozen = false;
@@ -812,7 +835,7 @@
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
                 await loadFeeSettings(); 
                 await loadMembershipPackages();
-                await loadWithdrawalSettings(); // load min withdrawal amount
+                await loadWithdrawalSettings();
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
                 loadDashboard();
                 refreshMirror();
@@ -877,7 +900,6 @@
                 const approvedSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','approved').get();
                 const rejectedSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','rejected').get();
                 
-                // Calculate activity rate: percentage of approved submissions out of total submissions
                 const totalSubmissions = pendingSnap.size + approvedSnap.size + rejectedSnap.size;
                 let activityRate = '0%';
                 if (totalSubmissions > 0) {
@@ -895,7 +917,7 @@
             } catch (e) { console.error('Dashboard error:', e); switchTab('tasks'); }
         }
 
-        // -------------------- TASKS (with acceptance limit) --------------------
+        // -------------------- TASKS (unchanged) --------------------
         let allTasks = [], filteredTasks = [], currentFilters = { category:'all', deadline:'all', amount:'all', difficulty:'all', sortBy:'newest' };
         async function loadTasks() {
             currentTaskViewed = null; refreshMirror();
@@ -905,10 +927,8 @@
                 if (snap.empty) { document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-tasks"></i><h4>No Tasks</h4></div>'; return; }
                 allTasks = [];
                 snap.forEach(doc => { if (doc.data().active) allTasks.push({ id: doc.id, ...doc.data() }); });
-                // For each task, get acceptedCount (if missing, assume 0)
                 await Promise.all(allTasks.map(async t => {
                     if (t.acceptedCount === undefined) t.acceptedCount = 0;
-                    // Also check if user already accepted (by querying taskAccepts)
                     const acceptSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').where('userId', '==', currentUser.uid).get();
                     t.userAccepted = !acceptSnap.empty;
                 }));
@@ -1042,18 +1062,14 @@
             return !snap.empty;
         }
 
-        // -------------------- ACCEPT TASK (with limit check) --------------------
         async function acceptTask(taskId) {
             try {
-                // Check if already accepted
                 const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
                 const acceptDoc = await acceptRef.get();
                 if (acceptDoc.exists) {
                     showAlert('You have already accepted this task.', 'error');
                     return;
                 }
-
-                // Run transaction to check and increment acceptedCount
                 await db.runTransaction(async (transaction) => {
                     const taskRef = db.collection('tasks').doc(taskId);
                     const taskDoc = await transaction.get(taskRef);
@@ -1063,23 +1079,18 @@
                     if (currentAccepted >= 2) {
                         throw new Error('This task is already full (2 people accepted).');
                     }
-                    // Check if user already has an accept record (should not happen but safe)
                     const userAcceptRef = taskRef.collection('taskAccepts').doc(currentUser.uid);
                     const userAcceptDoc = await transaction.get(userAcceptRef);
                     if (userAcceptDoc.exists) {
                         throw new Error('You have already accepted this task.');
                     }
-                    // Increment acceptedCount
                     transaction.update(taskRef, { acceptedCount: firebase.firestore.FieldValue.increment(1) });
-                    // Add user to taskAccepts subcollection
                     transaction.set(userAcceptRef, {
                         userId: currentUser.uid,
                         userEmail: currentUser.email,
                         acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 });
-
-                // Now proceed to submission form
                 showSubmitForm(taskId);
             } catch (error) {
                 console.error('Accept error:', error);
@@ -1087,7 +1098,6 @@
             }
         }
 
-        // -------------------- TASK DETAILS --------------------
         async function viewTaskDetails(taskId) {
             try {
                 const doc = await db.collection('tasks').doc(taskId).get();
@@ -1116,7 +1126,6 @@
             } catch (e) { showAlert('Error loading task details','error'); }
         }
 
-        // -------------------- SUBMIT FORM --------------------
         async function showSubmitForm(taskId, existingWork = '') {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -1236,7 +1245,6 @@
                     wordCount: wc,
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                // Do NOT update task submissionsCount due to permissions; rely on Cloud Function
                 sessionStorage.removeItem('pendingSubmission');
                 showModal(`
                     <div class="modal-content" style="text-align:center;">
@@ -1288,7 +1296,7 @@
             } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadSubmissions()">Retry</button></div>`; }
         }
 
-        // -------------------- WITHDRAWALS (with petition if frozen) --------------------
+        // -------------------- WITHDRAWALS (unchanged) --------------------
         async function loadWithdrawals() {
             currentTaskViewed = null; refreshMirror();
             try {
@@ -1300,7 +1308,6 @@
                 const canWithdraw = (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE) && !userData.frozen;
                 let ws = '';
                 if (userData.frozen) {
-                    // Show petition form
                     ws = `
                         <div class="petition-section">
                             <h4><i class="fas fa-exclamation-triangle"></i> Account Frozen</h4>
@@ -1362,7 +1369,6 @@
             } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadWithdrawals()">Retry</button></div>`; }
         }
 
-        // NEW: Send petition when frozen
         async function sendPetition() {
             const message = document.getElementById('petitionMessage')?.value;
             if (!message || message.trim() === '') {
@@ -1381,7 +1387,7 @@
                 document.getElementById('petitionMessage').value = '';
             } catch (e) {
                 console.error('Error sending petition:', e);
-                showAlert('Error sending petition. Please try again. If problem persist send message instead. ', 'error');
+                showAlert('Error sending petition. Please try again. If problem persists send message instead.', 'error');
             }
         }
 
@@ -1477,7 +1483,172 @@
             }
         }
 
-        // -------------------- MESSAGES --------------------
+        // -------------------- TRAINING CENTER (NEW) --------------------
+        async function loadTrainings() {
+            currentTaskViewed = null; refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>';
+            try {
+                const [trainingsSnap, applicationsSnap] = await Promise.all([
+                    db.collection('trainings').where('active', '==', true).get(),
+                    db.collection('trainingApplications').where('userId', '==', currentUser.uid).get()
+                ]);
+                if (trainingsSnap.empty) {
+                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-graduation-cap"></i><h4>No trainings available</h4></div>';
+                    return;
+                }
+                // Map user's applications by trainingId
+                const userApps = {};
+                applicationsSnap.forEach(doc => {
+                    const app = doc.data();
+                    userApps[app.trainingId] = { id: doc.id, ...app };
+                });
+
+                let html = '<h3>Training Center</h3><div class="training-grid">';
+                trainingsSnap.forEach(doc => {
+                    const t = doc.data();
+                    const app = userApps[doc.id];
+                    const status = app ? app.status : null;
+                    const typeClass = t.type === 'free' ? 'free' : 'prepaid';
+                    const priceDisplay = t.type === 'prepaid' ? `$${t.price}` : 'Free';
+
+                    // Build action button or status display
+                    let actionHtml = '';
+                    if (status === 'approved') {
+                        // Show resources
+                        let resourcesHtml = '';
+                        if (t.resources && t.resources.length > 0) {
+                            resourcesHtml = '<div class="resources-list"><strong>Resources:</strong>';
+                            t.resources.forEach(r => {
+                                if (r.type === 'text') {
+                                    resourcesHtml += `<div class="resource-item"><i class="fas fa-file-alt"></i> ${escapeHtml(r.content)}</div>`;
+                                } else if (r.type === 'link') {
+                                    resourcesHtml += `<div class="resource-item"><i class="fas fa-link"></i> <a href="${r.content}" target="_blank">${r.content}</a></div>`;
+                                }
+                            });
+                            resourcesHtml += '</div>';
+                        } else {
+                            resourcesHtml = '<p>No resources available.</p>';
+                        }
+                        actionHtml = `<div class="training-status approved"><i class="fas fa-check-circle"></i> Approved</div>${resourcesHtml}`;
+                    } else if (status === 'pending') {
+                        actionHtml = `<div class="training-status pending"><i class="fas fa-hourglass-half"></i> Pending Approval</div>`;
+                    } else if (status === 'rejected') {
+                        actionHtml = `<div class="training-status rejected"><i class="fas fa-times-circle"></i> Rejected</div>`;
+                    } else {
+                        // Not applied
+                        if (t.type === 'free') {
+                            actionHtml = `<button class="btn btn-success" onclick="applyForTraining('${doc.id}', 'free')">Apply Now</button>`;
+                        } else {
+                            actionHtml = `<button class="btn btn-warning" onclick="showPrepaidPayment('${doc.id}', ${t.price})">Apply (Prepaid)</button>`;
+                        }
+                    }
+
+                    html += `
+                        <div class="training-card ${typeClass}">
+                            <div class="training-header">
+                                <span class="training-title">${escapeHtml(t.title)}</span>
+                                <span class="training-price">${priceDisplay}</span>
+                            </div>
+                            <div class="training-duration"><i class="fas fa-clock"></i> ${escapeHtml(t.duration || 'N/A')}</div>
+                            <div class="training-description">${escapeHtml(t.description)}</div>
+                            ${t.requirements ? `<div class="training-requirements"><strong>Requirements:</strong> ${escapeHtml(t.requirements)}</div>` : ''}
+                            ${actionHtml}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('content').innerHTML = html;
+            } catch (e) {
+                console.error('Error loading trainings:', e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadTrainings()">Retry</button></div>`;
+            }
+        }
+
+        async function applyForTraining(trainingId, type) {
+            try {
+                // Check if already applied
+                const existing = await db.collection('trainingApplications')
+                    .where('userId', '==', currentUser.uid)
+                    .where('trainingId', '==', trainingId)
+                    .get();
+                if (!existing.empty) {
+                    showAlert('You have already applied for this training.', 'error');
+                    return;
+                }
+                const trainingDoc = await db.collection('trainings').doc(trainingId).get();
+                if (!trainingDoc.exists) { showAlert('Training not found', 'error'); return; }
+                const training = trainingDoc.data();
+                await db.collection('trainingApplications').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    trainingId: trainingId,
+                    trainingTitle: training.title,
+                    type: type,
+                    status: 'pending',
+                    appliedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showAlert('Application submitted! You will be notified once approved.', 'success');
+                loadTrainings();
+            } catch (e) {
+                console.error('Error applying for training:', e);
+                showAlert('Error applying. Please try again.', 'error');
+            }
+        }
+
+        async function showPrepaidPayment(trainingId, price) {
+            showModal(`
+                <div class="modal-content" style="text-align:center;">
+                    <i class="fas fa-credit-card" style="font-size:3rem; color:#f59e0b;"></i>
+                    <h3>Prepaid Training</h3>
+                    <p>Amount to pay: <strong>$${price}</strong></p>
+                    <p>Please pay via <strong>lipwa.com</strong> and enter the transaction code below.</p>
+                    <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction code">
+                    <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
+                    <div style="display:flex; gap:1rem; margin-top:1rem;">
+                        <button class="btn btn-success" onclick="submitPrepaidApplication('${trainingId}', ${price})">Submit Application</button>
+                        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        async function submitPrepaidApplication(trainingId, price) {
+            const txCode = document.getElementById('transactionCode')?.value;
+            if (!txCode) { showAlert('Please enter the transaction code', 'error'); return; }
+            try {
+                const existing = await db.collection('trainingApplications')
+                    .where('userId', '==', currentUser.uid)
+                    .where('trainingId', '==', trainingId)
+                    .get();
+                if (!existing.empty) {
+                    showAlert('You have already applied for this training.', 'error');
+                    return;
+                }
+                const trainingDoc = await db.collection('trainings').doc(trainingId).get();
+                if (!trainingDoc.exists) { showAlert('Training not found', 'error'); return; }
+                const training = trainingDoc.data();
+                await db.collection('trainingApplications').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    trainingId: trainingId,
+                    trainingTitle: training.title,
+                    type: 'prepaid',
+                    price: price,
+                    transactionCode: txCode,
+                    paymentNotes: document.getElementById('paymentNotes')?.value || '',
+                    status: 'pending',
+                    appliedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert('Application submitted! Your payment is being verified.', 'success');
+                loadTrainings();
+            } catch (e) {
+                console.error('Error submitting prepaid application:', e);
+                showAlert('Error submitting application. Please try again.', 'error');
+            }
+        }
+
+        // -------------------- MESSAGES (unchanged) --------------------
         async function loadMessages() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
@@ -1559,7 +1730,6 @@
             const admin = await getAdminId();
             if (!admin) { showAlert('Cannot send message: admin not found','error'); return; }
             try {
-                // Generate a custom ID to use as parentMessageId
                 const threadId = db.collection('messages').doc().id;
                 await db.collection('messages').doc(threadId).set({
                     senderId: currentUser.uid,
@@ -1590,7 +1760,6 @@
                 const messages = [];
                 snap.forEach(d => messages.push({ id: d.id, ...d.data() }));
 
-                // Cannot mark as read due to rules, so just display.
                 let threadHtml = `
                     <div class="modal-content thread-modal">
                         <h3>${escapeHtml(messages[0].subject || 'Conversation')}</h3>
@@ -1647,7 +1816,7 @@
             }
         }
 
-        // -------------------- NOTIFICATIONS --------------------
+        // -------------------- NOTIFICATIONS (unchanged) --------------------
         function toggleNotificationsPanel() {
             const panel = document.getElementById('notificationsPanel');
             notificationsPanelVisible = !notificationsPanelVisible;
@@ -1679,6 +1848,7 @@
                 else if (n.type === 'referral') { icon = 'fa-users'; color = 'primary'; }
                 else if (n.type === 'announcement') { icon = 'fa-bullhorn'; color = 'warning'; }
                 else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; }
+                else if (n.type === 'training') { icon = 'fa-graduation-cap'; color = 'info'; }
                 html += `
                     <div class="notification-item ${uc}" onclick="handleNotificationClick('${doc.id}','${n.link||''}')">
                         <div class="notification-icon ${color}"><i class="fas ${icon}"></i></div>
@@ -1708,6 +1878,7 @@
                 else if (link.startsWith('message:')) { const mid = link.replace('message:',''); switchTab('messages'); setTimeout(() => viewMessageThread(mid),300); }
                 else if (link.startsWith('submission:')) switchTab('submissions');
                 else if (link.startsWith('withdrawal:')) switchTab('withdrawals');
+                else if (link.startsWith('training:')) switchTab('training');
             }
             document.getElementById('notificationsPanel').classList.remove('active');
             notificationsPanelVisible = false;
@@ -1756,6 +1927,7 @@
                             else if (n.type === 'referral') { icon = 'fa-users'; color = 'primary'; }
                             else if (n.type === 'announcement') { icon = 'fa-bullhorn'; color = 'warning'; }
                             else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; }
+                            else if (n.type === 'training') { icon = 'fa-graduation-cap'; color = 'info'; }
                             g += `<div class="message-thread-card ${uc}" onclick="handleNotificationClick('${n.id}','${n.link||''}')"><div style="display:flex; gap:1rem;"><div class="notification-icon ${color}"><i class="fas ${icon}"></i></div><div><div style="display:flex; justify-content:space-between;"><span style="font-weight:700;">${escapeHtml(n.title||'Notification')}</span><span class="message-badge">${n.type||'info'}</span></div><p>${escapeHtml(n.message||'')}</p><div style="display:flex; gap:1rem; font-size:0.8rem; color:#94a3b8;"><span><i class="far fa-clock"></i> ${time}</span>${!n.read ? '<span style="color:#6366f1;">● Unread</span>' : ''}</div></div></div></div>`;
                         });
                         return g;

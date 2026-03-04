@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* (All previous styles remain exactly the same) */
+        /* All existing styles remain exactly the same – included for completeness */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
         .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
@@ -810,6 +810,45 @@
             flex: 1;
             margin-bottom: 0;
         }
+
+        /* Training Center sub-tabs */
+        .training-subtabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+        .training-subtab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 40px;
+        }
+        .training-subtab.active {
+            background: #6366f1;
+            color: white;
+        }
+        .resource-item {
+            background: #f1f5f9;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .resource-item input, .resource-item select {
+            margin-bottom: 0;
+            flex: 1;
+        }
+        .resource-controls {
+            display: flex;
+            gap: 0.3rem;
+        }
         
         @media (max-width: 768px) { 
             .header { flex-direction: column; gap: 1rem; text-align: center; }
@@ -977,6 +1016,7 @@
         let currentUser = null;  
         let currentTab = 'users';  
         let currentMessageType = 'individual';
+        let currentTrainingSubTab = 'manage'; // for training center
         let membershipPackages = null;
         let feeSettings = null;
         
@@ -985,13 +1025,12 @@
         const REFERRAL_BONUS_REFERRED = 0.5; // $0.5 for referred  
         const ELITE_BONUS = 10; // $10 welcome bonus for Elite
 
-        // ========== FIXED NOTIFICATION SYSTEM ==========
+        // ========== NOTIFICATION SYSTEM ==========
         let notificationItems = [];
         let notificationCount = 0;
 
         async function updateNotificationBadge() {
             try {
-                // Safely get counts with individual error handling
                 let newUsers = 0, pendingSubs = 0, pendingWithdrawals = 0, pendingMemberships = 0, unreadMessages = 0;
                 
                 try {
@@ -1020,7 +1059,6 @@
                 badge.textContent = notificationCount;
                 badge.style.display = notificationCount > 0 ? 'inline-block' : 'none';
                 
-                // Fetch recent items for dropdown
                 const recentItems = [];
                 try {
                     const [recentUsers, recentSubs, recentWithdrawals, recentMemberships, recentMessages] = await Promise.all([
@@ -1088,7 +1126,6 @@
                     });
                 } catch (e) { console.warn('Error fetching recent notifications:', e); }
                 
-                // Sort by time descending
                 recentItems.sort((a, b) => (b.time?.seconds || 0) - (a.time?.seconds || 0));
                 notificationItems = recentItems.slice(0, 10);
                 renderNotificationDropdown();
@@ -1127,7 +1164,6 @@
             setInterval(updateNotificationBadge, 30000);
         }
 
-        // Close notification dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('notificationDropdown');
             const bell = document.getElementById('notificationBell');
@@ -1160,7 +1196,6 @@
             currentUser = user;  
             document.getElementById('adminName').textContent = doc.data().displayName;  
             
-            // Load settings
             try {
                 await loadMembershipPackages();
                 await loadFeeSettings();
@@ -1169,7 +1204,6 @@
                 showAlert('Error loading settings. Some features may not work.', 'error');
             }
 
-            // Start notifications
             startNotificationListener();
               
             loadDashboard();  
@@ -1184,10 +1218,7 @@
                     membershipPackages = doc.data();
                     console.log('Loaded membership packages from Firestore:', membershipPackages);
                 } else {
-                    // Initialize with defaults if not exists
                     membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
-                    
-                    // Create default packages in Firestore
                     await db.collection('settings').doc('membershipPackages').set(DEFAULT_MEMBERSHIP_PACKAGES);
                     console.log('Created default membership packages in Firestore');
                 }
@@ -1199,7 +1230,6 @@
             return membershipPackages;
         }
         
-        // Save membership packages to Firestore
         async function saveMembershipPackages(packages) {
             try {
                 await db.collection('settings').doc('membershipPackages').set(packages);
@@ -1213,7 +1243,6 @@
             }
         }
         
-        // Load fee settings from Firestore
         async function loadFeeSettings() {
             try {
                 const doc = await db.collection('settings').doc('feeSettings').get();
@@ -1222,10 +1251,7 @@
                     feeSettings = doc.data();
                     console.log('Loaded fee settings from Firestore:', feeSettings);
                 } else {
-                    // Initialize with defaults if not exists
                     feeSettings = DEFAULT_FEE_SETTINGS;
-                    
-                    // Create default settings in Firestore
                     await db.collection('settings').doc('feeSettings').set(DEFAULT_FEE_SETTINGS);
                     console.log('Created default fee settings in Firestore');
                 }
@@ -1237,7 +1263,6 @@
             return feeSettings;
         }
         
-        // Save fee settings to Firestore
         async function saveFeeSettings(settings) {
             try {
                 await db.collection('settings').doc('feeSettings').set(settings);
@@ -1251,20 +1276,17 @@
             }
         }
         
-        // Get package by type
         function getPackageByType(type) {
             if (!membershipPackages) return DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
             return membershipPackages[type] || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
         }
         
-        // Get welcome bonus amount
         function getWelcomeBonus(type) {
             if (type !== MEMBERSHIP_TYPES.ELITE) return 0;
             const pkg = getPackageByType(type);
             return pkg.welcomeBonus || ELITE_BONUS;
         }
           
-        // Alert Modal Function  
         function showAlert(message, type = 'success', title = '') {  
             const alertModal = document.getElementById('alertModal');  
             const alertBackdrop = document.getElementById('alertBackdrop');  
@@ -1273,7 +1295,6 @@
             const alertMessage = document.getElementById('alertMessage');  
             const alertButton = document.getElementById('alertButton');  
             
-            // Set icon based on type
             let iconHtml = '';
             let buttonClass = 'success';
             let defaultTitle = '';
@@ -1305,7 +1326,6 @@
                     buttonClass = 'success';
             }
             
-            // Update modal content
             alertIcon.className = `alert-icon ${type}`;
             alertIcon.innerHTML = iconHtml;
             alertTitle.textContent = title || defaultTitle;
@@ -1313,24 +1333,20 @@
             alertButton.className = `alert-button ${buttonClass}`;
             alertButton.textContent = 'OK';
             
-            // Show modal
             alertModal.classList.add('active');
             alertBackdrop.classList.add('active');
             
-            // Handle button click
             alertButton.onclick = () => {
                 alertModal.classList.remove('active');
                 alertBackdrop.classList.remove('active');
             };
             
-            // Close on backdrop click
             alertBackdrop.onclick = () => {
                 alertModal.classList.remove('active');
                 alertBackdrop.classList.remove('active');
             };
         }
         
-        // Modal functions  
         function showModal(html) {  
             document.getElementById('modalContent').innerHTML = html;  
             document.getElementById('modal').classList.add('active');  
@@ -1342,7 +1358,6 @@
             document.getElementById('modalBackdrop').classList.remove('active');  
         }  
           
-        // Format date for display  
         function formatDate(date) {  
             if (!date) return 'N/A';  
             if (date.toDate) date = date.toDate();  
@@ -1355,7 +1370,6 @@
             });  
         }  
           
-        // Format currency  
         function formatCurrency(amount) {  
             return new Intl.NumberFormat('en-US', {  
                 style: 'currency',  
@@ -1364,7 +1378,6 @@
             }).format(amount || 0);  
         }  
           
-        // Check if deadline is approaching  
         function getDeadlineStatus(deadline) {  
             if (!deadline) return null;  
             const deadlineDate = deadline.toDate ? deadline.toDate() : new Date(deadline);  
@@ -1376,13 +1389,11 @@
             return { class: 'success', text: `${daysLeft} days left` };  
         }  
           
-        // Logout function  
         function logout() {  
             auth.signOut();  
             window.location.href = 'index.html';  
         }  
           
-        // Tab switching function  
         function switchTab(tab) {  
             currentTab = tab;  
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));  
@@ -1402,7 +1413,6 @@
             }  
         }  
           
-        // Load Dashboard Stats  
         async function loadDashboard() {  
             const usersSnapshot = await db.collection('users').get();  
             const tasksSnapshot = await db.collection('tasks').get();  
@@ -1455,7 +1465,7 @@
             loadUsers();  
         }  
           
-        // ==================== Verified / Frozen / Delete Functions ====================
+        // ==================== User Functions ====================
         async function toggleVerified(userId, newStatus) {
             await db.collection('users').doc(userId).update({ verified: newStatus });
             showAlert(`User verified status set to ${newStatus}`, 'success');
@@ -1479,16 +1489,13 @@
                 showAlert('Error deleting user: ' + error.message, 'error');
             }
         }
-        // ===============================================================================
 
-        // Load Users – with search
         async function loadUsers() { 
             const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get(); 
             const users = [];
             snapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
             
             let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>'; 
-            // Search box
             html += `
                 <div class="search-box">
                     <input type="text" id="userSearchInput" placeholder="Search by email or name..." onkeyup="filterUsersTable()">
@@ -1531,7 +1538,6 @@
             document.getElementById('content').innerHTML = html; 
         }
 
-        // Search filter function
         window.filterUsersTable = function() {
             const input = document.getElementById('userSearchInput');
             if (!input) return;
@@ -1548,21 +1554,18 @@
             });
         };
           
-        // Toggle User Status  
         async function toggleUserStatus(userId, newStatus) {  
             await db.collection('users').doc(userId).update({ active: newStatus });  
             showAlert(`User status updated to ${newStatus ? 'Active' : 'Inactive'}`, 'success');  
             loadUsers();  
         }  
           
-        // Make Admin  
         async function makeAdmin(userId) {  
             await db.collection('users').doc(userId).update({ role: 'admin' });  
             showAlert('User is now an admin', 'success');  
             loadUsers();  
         }  
           
-        // Show Adjust Wallet Modal  
         function showAdjustWallet(userId, userName, currentWallet) {  
             showModal(`  
                 <h3 style="margin-bottom:1rem;">Adjust Wallet - ${userName}</h3>  
@@ -1577,7 +1580,6 @@
             `);  
         }  
           
-        // Adjust Wallet – now writes to transactions
         async function adjustWallet(userId) {  
             const amount = parseFloat(document.getElementById('adjustAmount')?.value);  
             const type = document.getElementById('adjustType')?.value;  
@@ -1601,7 +1603,6 @@
             const adjustment = type === 'add' ? amount : -amount;  
               
             try {  
-                // Get user email for transaction record
                 const userDoc = await db.collection('users').doc(userId).get();
                 const userEmail = userDoc.exists ? userDoc.data().email : 'unknown';
                 
@@ -1617,7 +1618,6 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()  
                 });  
 
-                // Record transaction
                 await db.collection('transactions').add({
                     userId,
                     userEmail,
@@ -1637,8 +1637,7 @@
             }  
         }  
           
-        // ========== NEW: Task Assignment ==========
-        // Load Tasks – with assigned user column
+        // ========== Tasks with Assignment ==========
         async function loadTasks() { 
             const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get(); 
             
@@ -1664,10 +1663,8 @@
                 const deadlineDisplay = task.deadline ? formatDate(task.deadline) : 'No deadline'; 
                 const subCount = counts[i];
                 
-                // Determine assigned user display
                 let assignedDisplay = 'All Users';
                 if (task.assignedTo && task.assignedTo !== 'all') {
-                    // Try to fetch user email
                     try {
                         const userDoc = await db.collection('users').doc(task.assignedTo).get();
                         assignedDisplay = userDoc.exists ? userDoc.data().email : task.assignedTo;
@@ -1703,9 +1700,7 @@
             document.getElementById('content').innerHTML = html; 
         }
           
-        // Show Create Task Modal – includes user selection
         async function showCreateTask() {  
-            // Fetch users for assignment dropdown
             const usersSnapshot = await db.collection('users').orderBy('email').get();
             let userOptions = '<option value="all">All Users</option>';
             usersSnapshot.forEach(doc => {
@@ -1754,7 +1749,6 @@
             `);  
         }  
           
-        // Create Task – includes assignedTo field
         async function createTask() {  
             const title = document.getElementById('taskTitle').value;  
             const description = document.getElementById('taskDescription').value;  
@@ -1795,7 +1789,6 @@
 
                 const taskId = taskRef.id;  
 
-                // Send notification based on assignment
                 if (assignedTo === 'all') {
                     await sendNotificationToAll(  
                         'New Task Available',  
@@ -1804,7 +1797,6 @@
                         `task:${taskId}`  
                     );  
                 } else {
-                    // Get user email for notification
                     const userDoc = await db.collection('users').doc(assignedTo).get();
                     if (userDoc.exists) {
                         await sendNotification(
@@ -1826,14 +1818,12 @@
             }  
         }  
           
-        // Toggle Task  
         async function toggleTask(taskId, newStatus) {  
             await db.collection('tasks').doc(taskId).update({ active: newStatus });  
             showAlert(`Task ${newStatus ? 'activated' : 'deactivated'}`, 'success');  
             loadTasks();  
         }  
           
-        // Edit Task – includes assigned user
         async function editTask(taskId) {  
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
@@ -1847,7 +1837,6 @@
                 deadlineValue = `${year}-${month}-${day}`;  
             }  
             
-            // Fetch users for assignment dropdown
             const usersSnapshot = await db.collection('users').orderBy('email').get();
             let userOptions = '<option value="all">All Users</option>';
             usersSnapshot.forEach(doc => {
@@ -1897,7 +1886,6 @@
             `);  
         }  
           
-        // Update Task – includes assignedTo
         async function updateTask(taskId) {  
             const title = document.getElementById('editTitle').value;  
             const description = document.getElementById('editDescription').value;  
@@ -1937,7 +1925,6 @@
             loadTasks();  
         }  
           
-        // View Details (unchanged)
         async function viewRequirements(taskId) {  
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
@@ -1975,9 +1962,7 @@
             `);  
         }  
           
-        // ========== END Task Assignment ==========
-
-        // Load Submissions (unchanged except threshold updated)
+        // ========== Submissions with new threshold ==========
         async function loadSubmissions() {  
             const snapshot = await db.collection('submissions')  
                 .where('status', '==', 'pending')  
@@ -2059,7 +2044,6 @@
             document.getElementById('content').innerHTML = html;  
         }  
           
-        // ========== UPDATED Review Submission – threshold 30% ==========
         async function reviewSubmission(subId, approved) {  
             const submissionCard = document.querySelector(`[data-sub-id="${subId}"]`);  
             const score = parseInt(submissionCard.querySelector('.submission-score')?.value || 0);  
@@ -2084,7 +2068,6 @@
             let earned = 0;  
             let status = approved ? 'approved' : 'rejected';  
             
-            // NEW THRESHOLD: 30% instead of 50%
             const THRESHOLD = 30;
               
             if (approved && score >= THRESHOLD) {  
@@ -2096,7 +2079,6 @@
                     tasksCompleted: firebase.firestore.FieldValue.increment(1)  
                 });  
 
-                // Record transaction
                 await db.collection('transactions').add({
                     userId: sub.userId,
                     userEmail: sub.userEmail,
@@ -2148,7 +2130,7 @@
             loadSubmissions();  
         }  
           
-        // Load Withdrawals – show warning if user is frozen
+        // ========== Withdrawals ==========
         async function loadWithdrawals() { 
             const snapshot = await db.collection('withdrawals') 
                 .where('status', '==', 'pending') 
@@ -2183,7 +2165,6 @@
             document.getElementById('content').innerHTML = html; 
         }
           
-        // Process Withdrawal – now writes to transactions
         async function processWithdrawal(withdrawalId) {  
             const withdrawalDoc = await db.collection('withdrawals').doc(withdrawalId).get();
             const withdrawal = withdrawalDoc.data();
@@ -2193,7 +2174,6 @@
                 paidAt: firebase.firestore.FieldValue.serverTimestamp()  
             });  
 
-            // Record transaction
             await db.collection('transactions').add({
                 userId: withdrawal.userId,
                 userEmail: withdrawal.userEmail,
@@ -2208,7 +2188,7 @@
             loadWithdrawals();  
         }  
         
-        // Show Edit Fee Settings Modal (unchanged)
+        // ========== Fee Settings ==========
         function showEditFeeSettings() {
             if (!feeSettings) {
                 showAlert('Fee settings not loaded', 'error');
@@ -2492,6 +2472,7 @@
             }
         }
         
+        // ========== Membership Packages ==========
         function showEditPackages() {
             if (!membershipPackages) {
                 showAlert('Membership packages not loaded', 'error');
@@ -2842,7 +2823,6 @@
                     approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Record membership payment transaction
                 await db.collection('transactions').add({
                     userId,
                     userEmail: payment.userEmail,
@@ -2853,7 +2833,6 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Record welcome bonus if applicable
                 if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus) {
                     await db.collection('transactions').add({
                         userId,
@@ -3109,6 +3088,7 @@
             document.getElementById('content').innerHTML = html;
         }
 
+        // ========== Referrals ==========
         async function initializeReferralCollections() {
             try {
                 const testQuery = await db.collection('referrals').limit(1).get();
@@ -3721,7 +3701,6 @@
                     });  
                 });  
 
-                // Record transactions for the bonuses
                 const referrerUser = await db.collection('users').doc(referrerId).get();
                 const referredUser = await db.collection('users').doc(referredId).get();
                 await db.collection('transactions').add({
@@ -3771,8 +3750,7 @@
             }  
         }  
           
-        // ========== FIXED NOTIFICATION FUNCTIONS ==========
-
+        // ========== NOTIFICATION FUNCTIONS ==========
         async function debugNotifications() {
             console.log('🔍 Starting notification debug...');
             
@@ -4112,9 +4090,9 @@
             }
         }
 
-        // ========== END FIXED NOTIFICATION FUNCTIONS ==========
+        // ========== END NOTIFICATION FUNCTIONS ==========
           
-        // Load Messages – includes petitions
+        // ========== Messages ==========
         async function loadMessages() {  
             const users = await db.collection('users').get();  
               
@@ -4406,7 +4384,365 @@
             `);  
         }  
 
-        // ========== NEW: Load Transactions (single query) ==========
+        // ========== TRAINING CENTER ==========
+        function loadTrainingCenter() {
+            let html = `
+                <h3 style="margin-bottom:1.5rem;">🎓 Training Center</h3>
+                <div class="training-subtabs">
+                    <button class="training-subtab ${currentTrainingSubTab === 'manage' ? 'active' : ''}" onclick="setTrainingSubTab('manage')">Manage Trainings</button>
+                    <button class="training-subtab ${currentTrainingSubTab === 'applications' ? 'active' : ''}" onclick="setTrainingSubTab('applications')">View Applications</button>
+                </div>
+                <div id="trainingContent"></div>
+            `;
+            document.getElementById('content').innerHTML = html;
+            
+            if (currentTrainingSubTab === 'manage') {
+                loadTrainings();
+            } else {
+                loadTrainingApplications();
+            }
+        }
+
+        window.setTrainingSubTab = function(tab) {
+            currentTrainingSubTab = tab;
+            loadTrainingCenter();
+        };
+
+        async function loadTrainings() {
+            const trainingContent = document.getElementById('trainingContent');
+            if (!trainingContent) return;
+            trainingContent.innerHTML = '<p style="text-align:center;">Loading trainings...</p>';
+            
+            try {
+                const snapshot = await db.collection('trainings').orderBy('createdAt', 'desc').get();
+                let html = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">
+                        <h4>All Trainings</h4>
+                        <button class="btn btn-success" onclick="showCreateTraining()">+ New Training</button>
+                    </div>
+                `;
+                if (snapshot.empty) {
+                    html += '<p>No trainings created yet. Click the button above to create one.</p>';
+                } else {
+                    html += '<div class="packages-grid">';
+                    snapshot.forEach(doc => {
+                        const t = doc.data();
+                        const typeBadge = t.type === 'free' ? 
+                            '<span class="badge success">Free</span>' : 
+                            `<span class="badge warning">Prepaid $${t.price}</span>`;
+                        html += `
+                            <div class="package-card" style="border-color: #6366f1;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                                    <h4 style="margin:0;">${t.title}</h4>
+                                    ${typeBadge}
+                                </div>
+                                <p><strong>Duration:</strong> ${t.duration || 'N/A'}</p>
+                                <p><strong>Requirements:</strong> ${t.requirements || 'None'}</p>
+                                <p><strong>Resources:</strong> ${t.resources ? t.resources.length : 0} items</p>
+                                <div style="margin-top:1rem;">
+                                    <button class="btn btn-sm btn-primary" onclick="editTraining('${doc.id}')">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteTraining('${doc.id}')">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+                trainingContent.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading trainings:', error);
+                trainingContent.innerHTML = `<p style="color:red;">Error loading trainings: ${error.message}</p>`;
+            }
+        }
+
+        window.showCreateTraining = function() {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Create New Training</h3>
+                <input type="text" id="trainingTitle" placeholder="Training Title" required>
+                <textarea id="trainingDescription" placeholder="Description" required></textarea>
+                <input type="text" id="trainingRequirements" placeholder="Requirements (comma separated)">
+                <input type="text" id="trainingDuration" placeholder="Duration (e.g., 2 hours, 3 days)">
+                <div style="margin-bottom:1rem;">
+                    <label>Type:</label>
+                    <select id="trainingType">
+                        <option value="free">Free</option>
+                        <option value="prepaid">Prepaid</option>
+                    </select>
+                </div>
+                <div id="priceField" style="display:none;">
+                    <input type="number" id="trainingPrice" placeholder="Price (USD)" step="0.01" min="0">
+                </div>
+                <h4 style="margin:1rem 0 0.5rem;">Resources</h4>
+                <div id="resourcesList"></div>
+                <button class="btn btn-sm btn-info" onclick="addResourceField()">+ Add Resource</button>
+                <button class="btn btn-success" id="createTrainingBtn" style="width:100%; margin-top:1rem;">Create Training</button>
+            `);
+            document.getElementById('trainingType').addEventListener('change', function() {
+                document.getElementById('priceField').style.display = this.value === 'prepaid' ? 'block' : 'none';
+            });
+            addResourceField();
+        };
+
+        window.addResourceField = function() {
+            const list = document.getElementById('resourcesList');
+            const div = document.createElement('div');
+            div.className = 'resource-item';
+            div.innerHTML = `
+                <select class="resource-type" style="width:100px;">
+                    <option value="text">Text</option>
+                    <option value="link">Link</option>
+                </select>
+                <input type="text" class="resource-content" placeholder="Content or URL">
+                <div class="resource-controls">
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            list.appendChild(div);
+        };
+
+        window.createTraining = async function() {
+            const title = document.getElementById('trainingTitle').value;
+            const description = document.getElementById('trainingDescription').value;
+            const requirements = document.getElementById('trainingRequirements').value;
+            const duration = document.getElementById('trainingDuration').value;
+            const type = document.getElementById('trainingType').value;
+            const price = type === 'prepaid' ? parseFloat(document.getElementById('trainingPrice').value) : 0;
+
+            if (!title || !description) {
+                showAlert('Please fill title and description', 'error');
+                return;
+            }
+
+            const resources = [];
+            document.querySelectorAll('.resource-item').forEach(item => {
+                const rtype = item.querySelector('.resource-type').value;
+                const content = item.querySelector('.resource-content').value;
+                if (content.trim()) {
+                    resources.push({ type: rtype, content: content.trim() });
+                }
+            });
+
+            try {
+                await db.collection('trainings').add({
+                    title,
+                    description,
+                    requirements: requirements || '',
+                    duration,
+                    type,
+                    price,
+                    resources,
+                    active: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert('Training created successfully', 'success');
+                loadTrainingCenter();
+            } catch (error) {
+                console.error('Error creating training:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.editTraining = async function(trainingId) {
+            const doc = await db.collection('trainings').doc(trainingId).get();
+            const t = doc.data();
+            let resourcesHtml = '';
+            if (t.resources) {
+                t.resources.forEach((res, index) => {
+                    resourcesHtml += `
+                        <div class="resource-item">
+                            <select class="resource-type" style="width:100px;">
+                                <option value="text" ${res.type === 'text' ? 'selected' : ''}>Text</option>
+                                <option value="link" ${res.type === 'link' ? 'selected' : ''}>Link</option>
+                            </select>
+                            <input type="text" class="resource-content" value="${res.content}">
+                            <div class="resource-controls">
+                                <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                resourcesHtml = '<div class="resource-item">...</div>';
+            }
+
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Edit Training</h3>
+                <input type="text" id="editTrainingTitle" value="${t.title}" required>
+                <textarea id="editTrainingDescription" required>${t.description}</textarea>
+                <input type="text" id="editTrainingRequirements" value="${t.requirements || ''}">
+                <input type="text" id="editTrainingDuration" value="${t.duration || ''}">
+                <div style="margin-bottom:1rem;">
+                    <label>Type:</label>
+                    <select id="editTrainingType">
+                        <option value="free" ${t.type === 'free' ? 'selected' : ''}>Free</option>
+                        <option value="prepaid" ${t.type === 'prepaid' ? 'selected' : ''}>Prepaid</option>
+                    </select>
+                </div>
+                <div id="editPriceField" style="display:${t.type === 'prepaid' ? 'block' : 'none'};">
+                    <input type="number" id="editTrainingPrice" value="${t.price || 0}" step="0.01" min="0">
+                </div>
+                <h4 style="margin:1rem 0 0.5rem;">Resources</h4>
+                <div id="editResourcesList">${resourcesHtml}</div>
+                <button class="btn btn-sm btn-info" onclick="addEditResourceField()">+ Add Resource</button>
+                <button class="btn btn-success" id="updateTrainingBtn" data-id="${trainingId}" style="width:100%; margin-top:1rem;">Update Training</button>
+            `);
+
+            document.getElementById('editTrainingType').addEventListener('change', function() {
+                document.getElementById('editPriceField').style.display = this.value === 'prepaid' ? 'block' : 'none';
+            });
+        };
+
+        window.addEditResourceField = function() {
+            const list = document.getElementById('editResourcesList');
+            const div = document.createElement('div');
+            div.className = 'resource-item';
+            div.innerHTML = `
+                <select class="resource-type" style="width:100px;">
+                    <option value="text">Text</option>
+                    <option value="link">Link</option>
+                </select>
+                <input type="text" class="resource-content" placeholder="Content or URL">
+                <div class="resource-controls">
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            list.appendChild(div);
+        };
+
+        window.updateTraining = async function(trainingId) {
+            const title = document.getElementById('editTrainingTitle').value;
+            const description = document.getElementById('editTrainingDescription').value;
+            const requirements = document.getElementById('editTrainingRequirements').value;
+            const duration = document.getElementById('editTrainingDuration').value;
+            const type = document.getElementById('editTrainingType').value;
+            const price = type === 'prepaid' ? parseFloat(document.getElementById('editTrainingPrice').value) : 0;
+
+            if (!title || !description) {
+                showAlert('Please fill title and description', 'error');
+                return;
+            }
+
+            const resources = [];
+            document.querySelectorAll('#editResourcesList .resource-item').forEach(item => {
+                const rtype = item.querySelector('.resource-type').value;
+                const content = item.querySelector('.resource-content').value;
+                if (content.trim()) {
+                    resources.push({ type: rtype, content: content.trim() });
+                }
+            });
+
+            try {
+                await db.collection('trainings').doc(trainingId).update({
+                    title,
+                    description,
+                    requirements: requirements || '',
+                    duration,
+                    type,
+                    price,
+                    resources
+                });
+                closeModal();
+                showAlert('Training updated successfully', 'success');
+                loadTrainingCenter();
+            } catch (error) {
+                console.error('Error updating training:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.deleteTraining = async function(trainingId) {
+            if (!confirm('Are you sure you want to delete this training?')) return;
+            try {
+                await db.collection('trainings').doc(trainingId).delete();
+                showAlert('Training deleted', 'success');
+                loadTrainingCenter();
+            } catch (error) {
+                console.error('Error deleting training:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        async function loadTrainingApplications() {
+            const trainingContent = document.getElementById('trainingContent');
+            if (!trainingContent) return;
+            trainingContent.innerHTML = '<p style="text-align:center;">Loading applications...</p>';
+            
+            try {
+                const snapshot = await db.collection('trainingApplications')
+                    .orderBy('appliedAt', 'desc')
+                    .get();
+                let html = '<h4>Training Applications</h4>';
+                if (snapshot.empty) {
+                    html += '<p>No applications yet.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>User</th><th>Training</th><th>Type</th><th>Status</th><th>Applied</th><th>Actions</th></tr>';
+                    for (const doc of snapshot.docs) {
+                        const app = doc.data();
+                        const trainingDoc = await db.collection('trainings').doc(app.trainingId).get();
+                        const trainingTitle = trainingDoc.exists ? trainingDoc.data().title : 'Unknown';
+                        const typeBadge = app.type === 'free' ? 
+                            '<span class="badge success">Free</span>' : 
+                            '<span class="badge warning">Prepaid</span>';
+                        const statusClass = app.status === 'pending' ? 'warning' : (app.status === 'approved' ? 'success' : 'danger');
+                        html += `
+                            <tr>
+                                <td>${app.userEmail}</td>
+                                <td>${trainingTitle}</td>
+                                <td>${typeBadge}</td>
+                                <td><span class="badge ${statusClass}">${app.status}</span></td>
+                                <td>${app.appliedAt ? formatDate(app.appliedAt) : 'N/A'}</td>
+                                <td>
+                                    ${app.status === 'pending' ? `
+                                        <button class="btn btn-sm btn-success" onclick="approveTrainingApplication('${doc.id}', '${app.userId}')">Approve</button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectTrainingApplication('${doc.id}')">Reject</button>
+                                    ` : ''}
+                                    ${app.paymentDetails ? `<small>${app.paymentDetails}</small>` : ''}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    html += '</table>';
+                }
+                trainingContent.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                trainingContent.innerHTML = `<p style="color:red;">Error loading applications: ${error.message}</p>`;
+            }
+        }
+
+        window.approveTrainingApplication = async function(appId, userId) {
+            try {
+                await db.collection('trainingApplications').doc(appId).update({
+                    status: 'approved',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await sendNotification(userId, 'Training Approved', 'Your training application has been approved. You can now access the resources.', 'success');
+                showAlert('Application approved', 'success');
+                loadTrainingApplications();
+            } catch (error) {
+                console.error('Error approving application:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.rejectTrainingApplication = async function(appId) {
+            try {
+                await db.collection('trainingApplications').doc(appId).update({
+                    status: 'rejected',
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showAlert('Application rejected', 'info');
+                loadTrainingApplications();
+            } catch (error) {
+                console.error('Error rejecting application:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // ========== END TRAINING CENTER ==========
+
+        // ========== Transactions ==========
         async function loadTransactions() {
             let html = '<h3 style="margin-bottom:1.5rem;">All Transactions</h3>';
             try {
@@ -4441,30 +4777,8 @@
             }
             document.getElementById('content').innerHTML = html;
         }
-        // ========== END NEW TRANSACTIONS ==========
 
-        // ========== NEW: Training Center Placeholder ==========
-        function loadTrainingCenter() {
-            const html = `
-                <h3 style="margin-bottom:1.5rem;">🎓 Training Center</h3>
-                <div style="background: linear-gradient(135deg, #f8fafc, #e2e8f0); padding: 3rem; border-radius: 2rem; text-align: center;">
-                    <i class="fas fa-chalkboard-teacher" style="font-size: 5rem; color: #6366f1; margin-bottom: 1.5rem;"></i>
-                    <h4 style="color: #1e293b; margin-bottom: 1rem;">Training Center – Coming Soon</h4>
-                    <p style="color: #475569; max-width: 600px; margin: 0 auto 1.5rem;">
-                        The Training Center is under development. Here you will be able to manage training materials, courses, and certifications for users. 
-                        The full role and features will be implemented in a future update.
-                    </p>
-                    <div style="display: flex; gap: 1rem; justify-content: center;">
-                        <span class="badge info">Role: Trainer (planned)</span>
-                        <span class="badge warning">ETA: Next Release</span>
-                    </div>
-                </div>
-            `;
-            document.getElementById('content').innerHTML = html;
-        }
-        // ========== END Training Center ==========
-
-        // Event Delegation for all buttons
+        // ========== EVENT DELEGATION ==========
         document.addEventListener('click', async (e) => {  
             try {  
                 const target = e.target;  
@@ -4473,7 +4787,6 @@
                     return;
                 }
 
-                // Notification bell toggle
                 if (target.closest('#notificationBell')) {
                     const dropdown = document.getElementById('notificationDropdown');
                     dropdown.classList.toggle('active');
@@ -4734,6 +5047,19 @@
                     await executeBroadcastNotification();  
                     return;  
                 }  
+
+                // Training Center buttons
+                if (target.id === 'createTrainingBtn') {
+                    e.preventDefault();
+                    await createTraining();
+                    return;
+                }
+                if (target.id === 'updateTrainingBtn') {
+                    e.preventDefault();
+                    const trainingId = target.getAttribute('data-id');
+                    await updateTraining(trainingId);
+                    return;
+                }
             } catch (error) {
                 console.error('Error in click handler:', error);
                 showAlert('An error occurred: ' + error.message, 'error');
