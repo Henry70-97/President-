@@ -13,94 +13,29 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* -------------------- RESET & BASE -------------------- */
+        /* (All your existing styles remain exactly the same – no changes) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; }
         .app-container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
 
-        /* -------------------- MIRROR TV -------------------- */
-        .news-tv-container {
-            background: #0b0f18;
-            border-radius: 1.8rem;
-            padding: 0.8rem 1rem 1rem 1rem;
-            margin-bottom: 1.8rem;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 1px 4px rgba(255,255,255,0.1);
-            border: 1px solid #2d3748;
-        }
-        .news-header {
-            display: flex;
-            align-items: center;
-            gap: 0.7rem;
-            margin-bottom: 0.6rem;
-            padding-left: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .live-badge {
-            background: #dc2626;
-            color: white;
-            font-weight: 700;
-            font-size: 0.7rem;
-            padding: 0.2rem 0.6rem;
-            border-radius: 30px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            animation: pulseLive 1.5s infinite;
-        }
+        .news-tv-container { background: #0b0f18; border-radius: 1.8rem; padding: 0.8rem 1rem 1rem 1rem; margin-bottom: 1.8rem; box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 1px 4px rgba(255,255,255,0.1); border: 1px solid #2d3748; }
+        .news-header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.6rem; padding-left: 0.5rem; flex-wrap: wrap; }
+        .live-badge { background: #dc2626; color: white; font-weight: 700; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 30px; text-transform: uppercase; letter-spacing: 0.5px; animation: pulseLive 1.5s infinite; }
         .news-header span { color: #b0c4de; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.3px; }
-        .tv-screen {
-            background: #000000;
-            border-radius: 1rem;
-            overflow: hidden;
-            aspect-ratio: 16 / 9;
-            width: 100%;
-            border: 2px solid #4b5563;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
-            color: white;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-        }
-        .mirror-content {
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            color: #fff;
-            font-family: 'Inter', monospace;
-            scrollbar-width: thin;
-            scrollbar-color: #6366f1 #1e293b;
-        }
+        .tv-screen { background: #000000; border-radius: 1rem; overflow: hidden; aspect-ratio: 16 / 9; width: 100%; border: 2px solid #4b5563; box-shadow: inset 0 0 10px rgba(0,0,0,0.7); color: white; padding: 1rem; display: flex; flex-direction: column; }
+        .mirror-content { width: 100%; height: 100%; overflow-y: auto; color: #fff; font-family: 'Inter', monospace; scrollbar-width: thin; scrollbar-color: #6366f1 #1e293b; }
         .mirror-content::-webkit-scrollbar { width: 6px; }
         .mirror-content::-webkit-scrollbar-track { background: #1e293b; }
         .mirror-content::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
-        .mirror-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.8rem;
-            height: 100%;
-            align-content: center;
-        }
-        .mirror-stat-item {
-            background: rgba(255,255,255,0.1);
-            border-radius: 0.8rem;
-            padding: 0.8rem;
-            text-align: center;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
+        .mirror-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; height: 100%; align-content: center; }
+        .mirror-stat-item { background: rgba(255,255,255,0.1); border-radius: 0.8rem; padding: 0.8rem; text-align: center; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); }
         .mirror-stat-label { font-size: 0.8rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
         .mirror-stat-value { font-size: 1.8rem; font-weight: 800; color: #10b981; line-height: 1.2; }
         .mirror-welcome { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff; }
         .mirror-task-title { font-size: 1.6rem; font-weight: 800; color: #10b981; margin-bottom: 0.5rem; line-height: 1.3; }
         .mirror-task-detail { font-size: 1rem; color: #cbd5e1; margin-bottom: 0.3rem; }
         .mirror-task-detail i { color: #6366f1; width: 20px; margin-right: 0.3rem; }
-        .mirror-deadline {
-            display: inline-block;
-            padding: 0.2rem 0.8rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-top: 0.5rem;
-        }
+        .mirror-deadline { display: inline-block; padding: 0.2rem 0.8rem; border-radius: 40px; font-size: 0.9rem; font-weight: 600; margin-top: 0.5rem; }
         .mirror-deadline.upcoming { background: #f59e0b20; color: #f59e0b; }
         .mirror-deadline.urgent { background: #ef444420; color: #ef4444; }
         .mirror-deadline.expired { background: #64748b20; color: #94a3b8; }
@@ -111,306 +46,84 @@
         .mirror-tab-stat-value { font-weight: 700; color: #10b981; }
         @keyframes pulseLive { 0% { opacity: 1; background-color: #b91c1c; } 50% { opacity: 0.85; background-color: #dc2626; } 100% { opacity: 1; background-color: #b91c1c; } }
 
-        /* -------------------- HEADER & NAVIGATION -------------------- */
-        .header {
-            background: white;
-            border-radius: 2rem;
-            padding: 1rem 2rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-        .logo h2 {
-            background: linear-gradient(135deg, #6366f1, #10b981);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
+        .header { background: white; border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .logo h2 { background: linear-gradient(135deg, #6366f1, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
         .user-menu { display: flex; align-items: center; gap: 1rem; }
-        .wallet-badge {
-            background: #6366f120;
-            padding: 0.6rem 1.2rem;
-            border-radius: 40px;
-            color: #6366f1;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
+        .wallet-badge { background: #6366f120; padding: 0.6rem 1.2rem; border-radius: 40px; color: #6366f1; font-weight: 700; font-size: 1.1rem; }
         #userName { font-weight: 600; font-size: 1.1rem; color: #1e293b; }
         .logout-btn { background: none; border: none; color: #ef4444; font-size: 1.3rem; cursor: pointer; padding: 0.5rem; }
         .hamburger-menu { display: none; font-size: 1.8rem; cursor: pointer; color: #6366f1; padding: 0.5rem; }
         .header-actions { display: flex; align-items: center; gap: 1rem; }
-        .whatsapp-group-btn {
-            background: #25D366;
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border-radius: 40px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            border: none;
-            font-size: 0.95rem;
-            transition: all 0.3s;
-        }
+        .whatsapp-group-btn { background: #25D366; color: white; padding: 0.8rem 1.5rem; border-radius: 40px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; border: none; font-size: 0.95rem; transition: all 0.3s; }
         .whatsapp-group-btn:hover { background: #128C7E; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3); }
         .whatsapp-group-btn i { font-size: 1.2rem; }
         .desktop-only { display: inline; }
 
-        /* -------------------- MOBILE NAV -------------------- */
-        .mobile-nav {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: -100%;
-            width: 85%;
-            max-width: 350px;
-            height: 100vh;
-            background: white;
-            z-index: 2000;
-            padding: 2rem;
-            box-shadow: 0 0 30px rgba(0,0,0,0.2);
-            transition: left 0.3s ease;
-            overflow-y: auto;
-        }
+        .mobile-nav { display: none; position: fixed; top: 0; left: -100%; width: 85%; max-width: 350px; height: 100vh; background: white; z-index: 2000; padding: 2rem; box-shadow: 0 0 30px rgba(0,0,0,0.2); transition: left 0.3s ease; overflow-y: auto; }
         .mobile-nav.active { left: 0; display: block; }
         .mobile-nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9; }
         .mobile-nav-header h3 { font-size: 1.5rem; font-weight: 700; color: #6366f1; }
         .close-menu { font-size: 1.8rem; cursor: pointer; color: #64748b; }
-        .mobile-nav-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: 1rem;
-            font-size: 1.2rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #1e293b;
-        }
+        .mobile-nav-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; margin-bottom: 0.5rem; border-radius: 1rem; font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #1e293b; }
         .mobile-nav-item:hover { background: #f1f5f9; }
         .mobile-nav-item.active { background: #6366f1; color: white; }
         .mobile-nav-item i { width: 24px; font-size: 1.3rem; }
-        .mobile-nav-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1999;
-        }
+        .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1999; }
         .mobile-nav-overlay.active { display: block; }
 
-        /* -------------------- STATS GRID -------------------- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1.2rem;
-            margin-bottom: 2rem;
-        }
-        .stat-card {
-            background: white;
-            border-radius: 1.5rem;
-            padding: 1.8rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+        .stat-card { background: white; border-radius: 1.5rem; padding: 1.8rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-3px); }
         .stat-card i { font-size: 2.2rem; color: #6366f1; margin-bottom: 0.8rem; }
         .stat-value { font-size: 2.2rem; font-weight: 800; color: #0f172a; line-height: 1.2; letter-spacing: -0.5px; }
         .stat-label { color: #64748b; font-size: 1rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* -------------------- TABS -------------------- */
-        .tabs {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-        }
-        .tab {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 40px;
-            background: white;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: white; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; }
         .tab.active { background: #6366f1; color: white; }
 
-        /* -------------------- CONTENT AREA -------------------- */
-        .content {
-            background: white;
-            border-radius: 2rem;
-            padding: 2.5rem;
-            min-height: 500px;
-        }
+        .content { background: white; border-radius: 2rem; padding: 2.5rem; min-height: 500px; }
 
-        /* -------------------- FILTER BAR -------------------- */
-        .filter-bar {
-            background: #f8fafc;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid #e2e8f0;
-        }
-        .filter-title {
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .filter-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            align-items: flex-end;
-        }
-        .filter-group {
-            flex: 1;
-            min-width: 150px;
-        }
-        .filter-group label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #64748b;
-            margin-bottom: 0.3rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .filter-select, .filter-input {
-            width: 100%;
-            padding: 0.6rem 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            background: white;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+        .filter-bar { background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; }
+        .filter-title { font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; align-items: flex-end; }
+        .filter-group { flex: 1; min-width: 150px; }
+        .filter-group label { display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-select, .filter-input { width: 100%; padding: 0.6rem 1rem; border: 2px solid #e2e8f0; border-radius: 40px; font-size: 0.9rem; background: white; cursor: pointer; transition: all 0.2s; }
         .filter-select:hover, .filter-input:hover { border-color: #6366f1; }
         .filter-select:focus, .filter-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
         .filter-actions { display: flex; gap: 0.5rem; align-items: center; }
-        .filter-btn {
-            padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
+        .filter-btn { padding: 0.6rem 1.2rem; border: none; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem; }
         .filter-btn.apply { background: #6366f1; color: white; }
         .filter-btn.apply:hover { background: #4f52e0; transform: translateY(-2px); }
         .filter-btn.reset { background: #e2e8f0; color: #475569; }
         .filter-btn.reset:hover { background: #cbd5e1; }
         .active-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-        .filter-tag {
-            background: #e2e8f0;
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
+        .filter-tag { background: #e2e8f0; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.3rem; }
         .filter-tag i { cursor: pointer; color: #ef4444; margin-left: 0.3rem; }
 
-        /* -------------------- TASK CARDS -------------------- */
-        .task-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.8rem;
-        }
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.8rem; }
         .task-card:nth-child(odd) { background: #f8fafc; border-left: 4px solid #6366f1; }
         .task-card:nth-child(even) { background: #eef2ff; border-left: 4px solid #10b981; }
-        .task-card {
-            border-radius: 1.5rem;
-            padding: 1.8rem;
-            border: 1px solid #e2e8f0;
-            transition: transform 0.2s;
-        }
+        .task-card { border-radius: 1.5rem; padding: 1.8rem; border: 1px solid #e2e8f0; transition: transform 0.2s; }
         .task-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
         .task-title { color: #10b981; font-weight: 800; font-size: 1.4rem; margin-bottom: 0.5rem; line-height: 1.3; }
-        .client-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.8rem;
-            color: #4b5563;
-            font-size: 0.95rem;
-            background: rgba(255,255,255,0.5);
-            padding: 0.4rem 0.8rem;
-            border-radius: 40px;
-            width: fit-content;
-        }
+        .client-info { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; color: #4b5563; font-size: 0.95rem; background: rgba(255,255,255,0.5); padding: 0.4rem 0.8rem; border-radius: 40px; width: fit-content; }
         .client-info i { color: #6366f1; font-size: 0.9rem; }
-        .deadline-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            padding: 0.5rem 1rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            width: fit-content;
-        }
+        .deadline-badge { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding: 0.5rem 1rem; border-radius: 40px; font-size: 0.9rem; font-weight: 600; width: fit-content; }
         .deadline-badge.upcoming { background: #f59e0b20; color: #f59e0b; }
         .deadline-badge.urgent { background: #ef444420; color: #ef4444; animation: pulse 2s infinite; }
         .deadline-badge.expired { background: #64748b20; color: #64748b; }
         .deadline-badge i { font-size: 1rem; }
         .task-amount { color: #10b981; font-weight: 800; font-size: 1.6rem; letter-spacing: -0.5px; }
-        .expired-message {
-            background: #fee2e2;
-            color: #ef4444;
-            padding: 0.5rem 1rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-align: center;
-            margin-top: 0.5rem;
-        }
-        .badge {
-            padding: 0.4rem 1.2rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            display: inline-block;
-            letter-spacing: 0.3px;
-        }
+        .expired-message { background: #fee2e2; color: #ef4444; padding: 0.5rem 1rem; border-radius: 40px; font-size: 0.9rem; font-weight: 600; text-align: center; margin-top: 0.5rem; }
+        .badge { padding: 0.4rem 1.2rem; border-radius: 40px; font-size: 0.9rem; font-weight: 700; display: inline-block; letter-spacing: 0.3px; }
         .badge.primary { background: #6366f120; color: #6366f1; }
         .badge.success { background: #10b98120; color: #10b981; }
         .badge.warning { background: #f59e0b20; color: #f59e0b; }
         .badge.danger { background: #ef444420; color: #ef4444; }
 
-        /* -------------------- BUTTONS -------------------- */
-        .btn {
-            padding: 0.9rem 1.8rem;
-            border: none;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 1rem;
-            letter-spacing: 0.3px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        .btn { padding: 0.9rem 1.8rem; border: none; border-radius: 40px; font-weight: 700; font-size: 1rem; letter-spacing: 0.3px; cursor: pointer; transition: all 0.3s; }
         .btn-primary { background: #6366f1; color: white; }
         .btn-primary:hover { background: #4f52e0; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
         .btn-success { background: #10b981; color: white; }
@@ -422,586 +135,127 @@
         .btn-disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.6; }
         .btn-disabled:hover { background: #94a3b8; transform: none; box-shadow: none; }
 
-        /* -------------------- SUBMISSION FORM -------------------- */
-        .smart-submission {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 2rem;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-        .submission-header {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            padding: 2rem;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        .submission-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
-        }
+        .smart-submission { max-width: 800px; margin: 0 auto; background: white; border-radius: 2rem; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .submission-header { background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 2rem; color: white; position: relative; overflow: hidden; }
+        .submission-header::before { content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: rotate 20s linear infinite; }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .submission-header h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; position: relative; letter-spacing: -0.5px; }
         .submission-header p { font-size: 1rem; opacity: 0.9; position: relative; }
-        .submission-meta {
-            display: flex;
-            gap: 1.5rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-            position: relative;
-        }
-        .meta-item {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            padding: 0.5rem 1rem;
-            border-radius: 40px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
+        .submission-meta { display: flex; gap: 1.5rem; margin-top: 1rem; flex-wrap: wrap; position: relative; }
+        .meta-item { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 0.5rem 1rem; border-radius: 40px; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 500; border: 1px solid rgba(255,255,255,0.3); }
         .meta-item i { font-size: 1rem; }
         .submission-body { padding: 2rem; }
-        .instructions-card {
-            background: #f8fafc;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid #e2e8f0;
-            border-left: 4px solid #6366f1;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-        }
-        .instructions-card h3 {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #0f172a;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-        }
+        .instructions-card { background: #f8fafc; border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .instructions-card h3 { display: flex; align-items: center; gap: 0.5rem; color: #0f172a; font-size: 1.1rem; margin-bottom: 1rem; }
         .instructions-card h3 i { color: #6366f1; }
-        .instructions-content {
-            background: white;
-            padding: 1.2rem;
-            border-radius: 1rem;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #334155;
-            border: 1px solid #e2e8f0;
-            max-height: 200px;
-            overflow-y: auto;
-        }
+        .instructions-content { background: white; padding: 1.2rem; border-radius: 1rem; font-size: 0.95rem; line-height: 1.6; color: #334155; border: 1px solid #e2e8f0; max-height: 200px; overflow-y: auto; }
         .work-editor { margin-bottom: 1.5rem; }
-        .editor-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.8rem;
-        }
-        .editor-label {
-            font-weight: 600;
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .word-counter {
-            background: #f1f5f9;
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
-            font-size: 0.85rem;
-            color: #475569;
-            font-weight: 500;
-        }
+        .editor-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+        .editor-label { font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 0.5rem; }
+        .word-counter { background: #f1f5f9; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.85rem; color: #475569; font-weight: 500; }
         .word-counter span { font-weight: 700; color: #6366f1; }
         .word-counter.warning span { color: #f59e0b; }
         .word-counter.danger span { color: #ef4444; }
-        .smart-textarea {
-            width: 100%;
-            padding: 1.5rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 1.5rem;
-            font-size: 1rem;
-            line-height: 1.8;
-            min-height: 250px;
-            max-height: 400px;
-            resize: vertical;
-            background: white;
-            transition: all 0.3s ease;
-            font-family: 'Inter', monospace;
-        }
+        .smart-textarea { width: 100%; padding: 1.5rem; border: 2px solid #e2e8f0; border-radius: 1.5rem; font-size: 1rem; line-height: 1.8; min-height: 250px; max-height: 400px; resize: vertical; background: white; transition: all 0.3s ease; font-family: 'Inter', monospace; }
         .smart-textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
         .smart-textarea.valid { border-color: #10b981; background: #f0fdf4; }
         .smart-textarea.invalid { border-color: #ef4444; background: #fef2f2; }
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-        .action-buttons .btn {
-            flex: 1;
-            padding: 1rem;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: all 0.3s;
-        }
-        .btn-preview {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: white;
-        }
-        .btn-preview:hover {
-            background: linear-gradient(135deg, #4f52e0, #7c3aed);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-        }
-        .btn-cancel {
-            background: white;
-            color: #64748b;
-            border: 2px solid #e2e8f0;
-        }
+        .action-buttons { display: flex; gap: 1rem; margin-top: 2rem; }
+        .action-buttons .btn { flex: 1; padding: 1rem; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s; }
+        .btn-preview { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+        .btn-preview:hover { background: linear-gradient(135deg, #4f52e0, #7c3aed); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+        .btn-cancel { background: white; color: #64748b; border: 2px solid #e2e8f0; }
         .btn-cancel:hover { background: #f1f5f9; transform: translateY(-2px); }
 
-        /* -------------------- PDF TASK DETAILS STYLES -------------------- */
-        .pdf-document {
-            background: white;
-            font-family: 'Inter', sans-serif;
-            border-radius: 1rem;
-            overflow: hidden;
-        }
-        .pdf-header {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            color: white;
-            padding: 1.5rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 3px solid #10b981;
-        }
+        .pdf-document { background: white; font-family: 'Inter', sans-serif; border-radius: 1rem; overflow: hidden; }
+        .pdf-header { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #10b981; }
         .pdf-header h2 { margin: 0; font-size: 1.5rem; }
-        .pdf-badge {
-            background: #10b981;
-            color: white;
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .pdf-content {
-            padding: 2rem;
-        }
-        .pdf-title {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 1rem;
-        }
-        .pdf-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            background: #f8fafc;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-        }
-        .pdf-grid-item {
-            display: flex;
-            flex-direction: column;
-        }
-        .pdf-grid-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: #64748b;
-            letter-spacing: 0.3px;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
-        }
-        .pdf-grid-value {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+        .pdf-badge { background: #10b981; color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+        .pdf-content { padding: 2rem; }
+        .pdf-title { font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem; }
+        .pdf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 2rem; background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; }
+        .pdf-grid-item { display: flex; flex-direction: column; }
+        .pdf-grid-label { font-size: 0.75rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.3px; font-weight: 600; margin-bottom: 0.3rem; }
+        .pdf-grid-value { font-size: 1.1rem; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 0.5rem; }
         .pdf-grid-value i { color: #10b981; width: 20px; }
-        .pdf-section {
-            margin-bottom: 2rem;
-        }
-        .pdf-section-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+        .pdf-section { margin-bottom: 2rem; }
+        .pdf-section-title { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
         .pdf-section-title i { color: #10b981; }
-        .pdf-section-content {
-            background: #f8fafc;
-            padding: 1.2rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #10b981;
-            font-size: 1rem;
-            line-height: 1.6;
-            color: #334155;
-        }
-        .pdf-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e5e7eb;
-        }
-        .pdf-btn {
-            flex: 1;
-            padding: 1rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        .pdf-btn-primary {
-            background: #10b981;
-            color: white;
-        }
+        .pdf-section-content { background: #f8fafc; padding: 1.2rem; border-radius: 0.5rem; border-left: 4px solid #10b981; font-size: 1rem; line-height: 1.6; color: #334155; }
+        .pdf-actions { display: flex; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+        .pdf-btn { flex: 1; padding: 1rem; border: none; border-radius: 0.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+        .pdf-btn-primary { background: #10b981; color: white; }
         .pdf-btn-primary:hover { background: #059669; }
-        .pdf-btn-secondary {
-            background: #f1f5f9;
-            color: #334155;
-        }
+        .pdf-btn-secondary { background: #f1f5f9; color: #334155; }
         .pdf-btn-secondary:hover { background: #e2e8f0; }
 
-        /* -------------------- LOADING / EMPTY STATES -------------------- */
-        .loading-spinner {
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border: 3px solid #f1f5f9;
-            border-radius: 50%;
-            border-top-color: #6366f1;
-            animation: spin 1s ease-in-out infinite;
-        }
+        .loading-spinner { display: inline-block; width: 50px; height: 50px; border: 3px solid #f1f5f9; border-radius: 50%; border-top-color: #6366f1; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .success-check {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: #10b981;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: scaleIn 0.5s ease-out;
-        }
+        .success-check { width: 80px; height: 80px; margin: 0 auto 1.5rem; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: scaleIn 0.5s ease-out; }
         .success-check i { font-size: 3rem; color: white; animation: checkmark 0.5s ease-out 0.2s both; }
-        .error-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: #ef4444;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: shake 0.5s ease-out;
-        }
+        .error-icon { width: 80px; height: 80px; margin: 0 auto 1.5rem; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: shake 0.5s ease-out; }
         .error-icon i { font-size: 3rem; color: white; }
         @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
         @keyframes checkmark { from { transform: scale(0) rotate(-45deg); } to { transform: scale(1) rotate(0); } }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
         .empty-state { text-align: center; padding: 3rem; color: #64748b; }
         .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 1rem; }
         .loading { text-align: center; padding: 3rem; color: #64748b; }
         .loading i { font-size: 3rem; margin-bottom: 1rem; color: #6366f1; }
 
-        /* -------------------- NOTIFICATIONS -------------------- */
         .notification-wrapper { position: relative; margin-right: 1rem; }
-        .notification-bell {
-            font-size: 1.5rem;
-            color: #64748b;
-            cursor: pointer;
-            position: relative;
-            padding: 0.5rem;
-        }
+        .notification-bell { font-size: 1.5rem; color: #64748b; cursor: pointer; position: relative; padding: 0.5rem; }
         .notification-bell i { transition: color 0.2s; }
         .notification-bell:hover i { color: #6366f1; }
-        .notification-badge {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: #ef4444;
-            color: white;
-            border-radius: 40px;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.7rem;
-            font-weight: 600;
-            line-height: 1;
-            min-width: 18px;
-            text-align: center;
-            border: 2px solid white;
-            animation: pulse 2s infinite;
-        }
-        .notifications-panel {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            width: 380px;
-            max-width: 90vw;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            z-index: 1000;
-            display: none;
-            overflow: hidden;
-            margin-top: 0.5rem;
-            border: 1px solid #e2e8f0;
-        }
+        .notification-badge { position: absolute; top: 0; right: 0; background: #ef4444; color: white; border-radius: 40px; padding: 0.2rem 0.5rem; font-size: 0.7rem; font-weight: 600; line-height: 1; min-width: 18px; text-align: center; border: 2px solid white; animation: pulse 2s infinite; }
+        .notifications-panel { position: absolute; top: 100%; right: 0; width: 380px; max-width: 90vw; background: white; border-radius: 1rem; box-shadow: 0 20px 40px rgba(0,0,0,0.15); z-index: 1000; display: none; overflow: hidden; margin-top: 0.5rem; border: 1px solid #e2e8f0; }
         .notifications-panel.active { display: block; }
-        .notifications-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
-            background: #f8fafc;
-        }
+        .notifications-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
         .notifications-header h4 { font-weight: 700; color: #0f172a; margin: 0; font-size: 1.1rem; }
-        .mark-all-read {
-            background: none;
-            border: none;
-            color: #6366f1;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 0.3rem 0.8rem;
-            border-radius: 40px;
-            transition: all 0.2s;
-        }
+        .mark-all-read { background: none; border: none; color: #6366f1; font-size: 0.9rem; font-weight: 600; cursor: pointer; padding: 0.3rem 0.8rem; border-radius: 40px; transition: all 0.2s; }
         .mark-all-read:hover { background: #6366f120; }
         .notifications-list { max-height: 400px; overflow-y: auto; padding: 0.5rem 0; }
-        .notification-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #f1f5f9;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
+        .notification-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; transition: all 0.2s; cursor: pointer; }
         .notification-item:hover { background: #f8fafc; transform: translateX(3px); }
         .notification-item.unread { background: #6366f110; border-left: 3px solid #6366f1; }
-        .notification-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 40px;
-            background: #6366f120;
-            color: #6366f1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
+        .notification-icon { width: 40px; height: 40px; border-radius: 40px; background: #6366f120; color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
         .notification-icon.success { background: #10b98120; color: #10b981; }
         .notification-icon.warning { background: #f59e0b20; color: #f59e0b; }
         .notification-icon.error { background: #ef444420; color: #ef4444; }
         .notification-content { flex: 1; }
-        .notification-title {
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 0.3rem;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .notification-badge-type {
-            font-size: 0.6rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 40px;
-            background: #e2e8f0;
-            color: #475569;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        .notification-title { font-weight: 700; color: #0f172a; margin-bottom: 0.3rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; }
+        .notification-badge-type { font-size: 0.6rem; padding: 0.2rem 0.5rem; border-radius: 40px; background: #e2e8f0; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
         .notification-message { color: #475569; font-size: 0.85rem; line-height: 1.4; margin-bottom: 0.3rem; }
         .notification-time { font-size: 0.7rem; color: #94a3b8; display: flex; align-items: center; gap: 0.3rem; }
-        .notifications-footer {
-            padding: 0.8rem 1.5rem;
-            text-align: center;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
-        }
+        .notifications-footer { padding: 0.8rem 1.5rem; text-align: center; border-top: 1px solid #e2e8f0; background: #f8fafc; }
         .notifications-footer a { color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
 
-        /* -------------------- MESSAGES -------------------- */
         .messages-container { max-width: 800px; margin: 0 auto; }
-        .messages-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        .message-thread-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid #e2e8f0;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
+        .messages-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+        .message-thread-card { background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; position: relative; }
         .message-thread-card:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: #6366f1; }
         .message-thread-card.unread { background: #6366f108; border-left: 4px solid #6366f1; }
-        .message-thread-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.8rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        .message-subject {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .unread-count-badge {
-            background: #ef4444;
-            color: white;
-            border-radius: 40px;
-            padding: 0.2rem 0.6rem;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
+        .message-thread-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; flex-wrap: wrap; gap: 0.5rem; }
+        .message-subject { font-size: 1.1rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 0.5rem; }
+        .unread-count-badge { background: #ef4444; color: white; border-radius: 40px; padding: 0.2rem 0.6rem; font-size: 0.7rem; font-weight: 600; }
         .message-date { color: #64748b; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; }
         .message-preview { color: #475569; font-size: 0.95rem; margin-bottom: 0.8rem; line-height: 1.4; }
         .message-meta { display: flex; gap: 1rem; font-size: 0.8rem; color: #64748b; align-items: center; }
-        .message-badge {
-            background: #e2e8f0;
-            padding: 0.2rem 0.8rem;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #475569;
-        }
+        .message-badge { background: #e2e8f0; padding: 0.2rem 0.8rem; border-radius: 40px; font-size: 0.7rem; font-weight: 600; color: #475569; }
 
-        /* Smart message compose modal */
         .message-compose-modal .modal-content { padding: 2rem; }
-        .message-compose-modal .smart-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 1rem;
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        .message-compose-modal .smart-input:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
-        }
-        .message-compose-modal .smart-textarea {
-            width: 100%;
-            padding: 1.5rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 1.5rem;
-            font-size: 1rem;
-            line-height: 1.8;
-            min-height: 200px;
-            resize: vertical;
-            background: white;
-            transition: all 0.3s ease;
-            font-family: 'Inter', monospace;
-            margin-bottom: 1.5rem;
-        }
-        .message-compose-modal .smart-textarea:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
-        }
+        .message-compose-modal .smart-input { width: 100%; padding: 1rem; border: 2px solid #e2e8f0; border-radius: 1rem; font-size: 1rem; margin-bottom: 1.5rem; transition: all 0.3s ease; }
+        .message-compose-modal .smart-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+        .message-compose-modal .smart-textarea { width: 100%; padding: 1.5rem; border: 2px solid #e2e8f0; border-radius: 1.5rem; font-size: 1rem; line-height: 1.8; min-height: 200px; resize: vertical; background: white; transition: all 0.3s ease; font-family: 'Inter', monospace; margin-bottom: 1.5rem; }
+        .message-compose-modal .smart-textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
 
-        /* -------------------- MODAL & ALERT -------------------- */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border-radius: 1rem;
-            padding: 0;
-            max-width: 600px;
-            width: 95%;
-            z-index: 1000;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 1rem; padding: 0; max-width: 600px; width: 95%; z-index: 1000; max-height: 90vh; overflow-y: auto; border: 1px solid #e5e7eb; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
         .modal.active { display: block; }
-        .modal-backdrop {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(5px);
-            z-index: 999;
-        }
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
         .modal-backdrop.active { display: block; }
         .modal-content { padding: 2rem; }
 
-        .alert-dialog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            z-index: 2000;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            display: none;
-            border: 1px solid #e5e7eb;
-        }
+        .alert-dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 2rem; border-radius: 0.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); z-index: 2000; max-width: 400px; width: 90%; text-align: center; display: none; border: 1px solid #e5e7eb; }
         .alert-dialog.show { display: block; }
         .alert-dialog.error { border-top: 4px solid #dc2626; }
         .alert-dialog.success { border-top: 4px solid #10b981; }
@@ -1010,29 +264,10 @@
         .alert-dialog.success i { color: #10b981; }
         .alert-dialog h3 { margin-bottom: 0.5rem; }
         .alert-dialog p { color: #64748b; margin-bottom: 1.5rem; }
-        .alert-dialog button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 0.75rem 2rem;
-            border-radius: 0.3rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1999;
-            display: none;
-        }
+        .alert-dialog button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 0.75rem 2rem; border-radius: 0.3rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; }
         .overlay.show { display: block; }
 
-        /* -------------------- RESPONSIVE -------------------- */
         @media (max-width: 768px) {
             .tabs { display: none; }
             .hamburger-menu { display: block; }
@@ -1054,91 +289,23 @@
             .btn { width: 100%; }
         }
 
-        /* -------------------- WITHDRAWAL STYLISH CSS -------------------- */
-        .withdrawal-section {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border-radius: 2rem;
-            padding: 2.5rem;
-            margin-top: 2rem;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-        }
-        .withdrawal-section h4 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .withdrawal-section h4 i {
-            color: #6366f1;
-            font-size: 2rem;
-        }
-        .balance-highlight {
-            font-size: 2.4rem;
-            font-weight: 800;
-            color: #10b981;
-            background: #10b98110;
-            padding: 0.5rem 1.5rem;
-            border-radius: 60px;
-            display: inline-block;
-        }
-        .withdrawal-section .input-group {
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-        .withdrawal-section label {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .withdrawal-section .input-icon {
-            position: absolute;
-            left: 1.2rem;
-            top: 2.7rem;
-            color: #94a3b8;
-            font-size: 1.2rem;
-        }
-        .withdrawal-section input, .withdrawal-section select {
-            width: 100%;
-            padding: 1rem 1rem 1rem 3rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 60px;
-            font-size: 1rem;
-            transition: all 0.3s;
-            background: white;
-        }
-        .withdrawal-section input:focus, .withdrawal-section select:focus {
-            outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
-        }
-        .withdrawal-section .fee-breakdown {
-            background: #f1f5f9;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            border-left: 4px solid #6366f1;
-        }
-        .withdrawal-section .withdrawal-warning {
-            color: #ef4444;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-            display: none;
-        }
-        .withdrawal-section .btn {
-            width: 100%;
-            padding: 1.2rem;
-            font-size: 1.2rem;
-            border-radius: 60px;
-            margin-top: 1rem;
-        }
+        .withdrawal-section { background: linear-gradient(145deg, #ffffff, #f8fafc); border-radius: 2rem; padding: 2.5rem; margin-top: 2rem; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        .withdrawal-section h4 { font-size: 1.8rem; font-weight: 700; color: #0f172a; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem; }
+        .withdrawal-section h4 i { color: #6366f1; font-size: 2rem; }
+        .balance-highlight { font-size: 2.4rem; font-weight: 800; color: #10b981; background: #10b98110; padding: 0.5rem 1.5rem; border-radius: 60px; display: inline-block; }
+        .withdrawal-section .input-group { margin-bottom: 1.5rem; position: relative; }
+        .withdrawal-section label { display: block; font-size: 0.9rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .withdrawal-section .input-icon { position: absolute; left: 1.2rem; top: 2.7rem; color: #94a3b8; font-size: 1.2rem; }
+        .withdrawal-section input, .withdrawal-section select { width: 100%; padding: 1rem 1rem 1rem 3rem; border: 2px solid #e2e8f0; border-radius: 60px; font-size: 1rem; transition: all 0.3s; background: white; }
+        .withdrawal-section input:focus, .withdrawal-section select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+        .withdrawal-section .fee-breakdown { background: #f1f5f9; border-radius: 1.5rem; padding: 1.5rem; margin: 1.5rem 0; border-left: 4px solid #6366f1; }
+        .withdrawal-section .withdrawal-warning { color: #ef4444; font-size: 0.9rem; margin-top: 0.5rem; display: none; }
+        .withdrawal-section .btn { width: 100%; padding: 1.2rem; font-size: 1.2rem; border-radius: 60px; margin-top: 1rem; }
+
+        /* Petition form (when frozen) */
+        .petition-section { background: #fef3c7; border-radius: 2rem; padding: 2rem; border-left: 4px solid #f59e0b; margin-top: 2rem; }
+        .petition-section h4 { color: #92400e; }
+        .petition-section .btn { background: #f59e0b; color: white; }
     </style>
 </head>
 <body>
@@ -1600,6 +767,7 @@
                         wallet: 0,
                         active: true,
                         verified: user.emailVerified || isGoogle,
+                        frozen: false,  // NEW: frozen field
                         membershipType: MEMBERSHIP_TYPES.BASIC,
                         membershipPaid: false,
                         membershipStatus: 'active',
@@ -1624,6 +792,11 @@
                     userData = { id: user.uid, ...newDoc.data() };
                 } else {
                     userData = { id: user.uid, ...doc.data() };
+                    // If frozen field missing, set default false
+                    if (userData.frozen === undefined) {
+                        await db.collection('users').doc(user.uid).update({ frozen: false });
+                        userData.frozen = false;
+                    }
                     const welcomeBonus = getWelcomeBonus(MEMBERSHIP_TYPES.ELITE);
                     if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
                         await db.collection('users').doc(user.uid).update({
@@ -1722,7 +895,7 @@
             } catch (e) { console.error('Dashboard error:', e); switchTab('tasks'); }
         }
 
-        // -------------------- TASKS --------------------
+        // -------------------- TASKS (with acceptance limit) --------------------
         let allTasks = [], filteredTasks = [], currentFilters = { category:'all', deadline:'all', amount:'all', difficulty:'all', sortBy:'newest' };
         async function loadTasks() {
             currentTaskViewed = null; refreshMirror();
@@ -1732,6 +905,13 @@
                 if (snap.empty) { document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-tasks"></i><h4>No Tasks</h4></div>'; return; }
                 allTasks = [];
                 snap.forEach(doc => { if (doc.data().active) allTasks.push({ id: doc.id, ...doc.data() }); });
+                // For each task, get acceptedCount (if missing, assume 0)
+                await Promise.all(allTasks.map(async t => {
+                    if (t.acceptedCount === undefined) t.acceptedCount = 0;
+                    // Also check if user already accepted (by querying taskAccepts)
+                    const acceptSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').where('userId', '==', currentUser.uid).get();
+                    t.userAccepted = !acceptSnap.empty;
+                }));
                 filteredTasks = [...allTasks];
                 renderTasks();
             } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadTasks()">Retry</button></div>`; }
@@ -1745,6 +925,19 @@
                 for (let t of filteredTasks) {
                     const submitted = await hasUserSubmitted(t.id);
                     const expired = isDeadlinePassed(t.deadline);
+                    const acceptDisabled = t.userAccepted || t.acceptedCount >= 2 || expired;
+                    let acceptButton;
+                    if (submitted) {
+                        acceptButton = '<button class="btn btn-success" disabled>Completed</button>';
+                    } else if (expired) {
+                        acceptButton = '<button class="btn btn-disabled" disabled>Expired</button>';
+                    } else if (t.acceptedCount >= 2) {
+                        acceptButton = '<button class="btn btn-disabled" disabled>Full (2/2)</button>';
+                    } else if (t.userAccepted) {
+                        acceptButton = '<button class="btn btn-success" disabled>Accepted</button>';
+                    } else {
+                        acceptButton = `<button class="btn btn-accept" onclick="acceptTask('${t.id}')">Accept (${t.acceptedCount}/2)</button>`;
+                    }
                     html += `
                         <div class="task-card">
                             <h4 class="task-title">${escapeHtml(t.title || 'Untitled')}</h4>
@@ -1756,7 +949,7 @@
                             ${expired && !submitted ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
                             <div style="display:flex; gap:0.5rem;">
                                 <button class="btn btn-secondary" onclick="viewTaskDetails('${t.id}')" style="flex:1;">Details</button>
-                                ${!submitted ? (expired ? '<button class="btn btn-disabled" disabled>Expired</button>' : `<button class="btn btn-accept" onclick="acceptTask('${t.id}')">Accept</button>`) : '<button class="btn btn-success" disabled>Completed</button>'}
+                                ${acceptButton}
                             </div>
                         </div>
                     `;
@@ -1849,7 +1042,50 @@
             return !snap.empty;
         }
 
-        function acceptTask(taskId) { showSubmitForm(taskId); }
+        // -------------------- ACCEPT TASK (with limit check) --------------------
+        async function acceptTask(taskId) {
+            try {
+                // Check if already accepted
+                const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
+                const acceptDoc = await acceptRef.get();
+                if (acceptDoc.exists) {
+                    showAlert('You have already accepted this task.', 'error');
+                    return;
+                }
+
+                // Run transaction to check and increment acceptedCount
+                await db.runTransaction(async (transaction) => {
+                    const taskRef = db.collection('tasks').doc(taskId);
+                    const taskDoc = await transaction.get(taskRef);
+                    if (!taskDoc.exists) throw new Error('Task not found');
+                    const task = taskDoc.data();
+                    const currentAccepted = task.acceptedCount || 0;
+                    if (currentAccepted >= 2) {
+                        throw new Error('This task is already full (2 people accepted).');
+                    }
+                    // Check if user already has an accept record (should not happen but safe)
+                    const userAcceptRef = taskRef.collection('taskAccepts').doc(currentUser.uid);
+                    const userAcceptDoc = await transaction.get(userAcceptRef);
+                    if (userAcceptDoc.exists) {
+                        throw new Error('You have already accepted this task.');
+                    }
+                    // Increment acceptedCount
+                    transaction.update(taskRef, { acceptedCount: firebase.firestore.FieldValue.increment(1) });
+                    // Add user to taskAccepts subcollection
+                    transaction.set(userAcceptRef, {
+                        userId: currentUser.uid,
+                        userEmail: currentUser.email,
+                        acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+
+                // Now proceed to submission form
+                showSubmitForm(taskId);
+            } catch (error) {
+                console.error('Accept error:', error);
+                showAlert(error.message, 'error');
+            }
+        }
 
         // -------------------- TASK DETAILS --------------------
         async function viewTaskDetails(taskId) {
@@ -2052,7 +1288,7 @@
             } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadSubmissions()">Retry</button></div>`; }
         }
 
-        // -------------------- WITHDRAWALS (with bank option and stylish CSS) --------------------
+        // -------------------- WITHDRAWALS (with petition if frozen) --------------------
         async function loadWithdrawals() {
             currentTaskViewed = null; refreshMirror();
             try {
@@ -2061,38 +1297,53 @@
                 const bal = userDoc.data().wallet || 0;
                 userData.wallet = bal;
                 document.getElementById('walletDisplay').textContent = `$${bal.toFixed(2)}`;
-                const canWithdraw = userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE;
-                let ws = canWithdraw ? `
-                    <div class="withdrawal-section">
-                        <h4><i class="fas fa-money-bill-wave"></i> Withdraw Funds</h4>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
-                            <span style="font-size:1.2rem; font-weight:600;">Available Balance:</span>
-                            <span class="balance-highlight">$${bal.toFixed(2)}</span>
+                const canWithdraw = (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE) && !userData.frozen;
+                let ws = '';
+                if (userData.frozen) {
+                    // Show petition form
+                    ws = `
+                        <div class="petition-section">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Account Frozen</h4>
+                            <p>Your account is currently frozen. You cannot withdraw funds. If you believe this is a mistake, please send a petition to the admin.</p>
+                            <textarea id="petitionMessage" class="smart-textarea" placeholder="Explain your situation..."></textarea>
+                            <button class="btn" onclick="sendPetition()"><i class="fas fa-paper-plane"></i> Send Petition</button>
                         </div>
-                        <div class="input-group">
-                            <label for="withdrawAmount">Amount (USD) - Minimum $${MIN_WITHDRAWAL}</label>
-                            <i class="fas fa-dollar-sign input-icon"></i>
-                            <input type="number" id="withdrawAmount" placeholder="0.00" min="${MIN_WITHDRAWAL}" max="${bal}" step="0.01" oninput="updateFeeBreakdown(${bal})">
+                    `;
+                } else if (!canWithdraw) {
+                    ws = `<div class="withdrawal-section"><p>You need a premium membership to withdraw.</p><button class="btn btn-primary" onclick="simulateWithdrawalAttempt()">Initiate Withdrawal</button></div>`;
+                } else {
+                    ws = `
+                        <div class="withdrawal-section">
+                            <h4><i class="fas fa-money-bill-wave"></i> Withdraw Funds</h4>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                                <span style="font-size:1.2rem; font-weight:600;">Available Balance:</span>
+                                <span class="balance-highlight">$${bal.toFixed(2)}</span>
+                            </div>
+                            <div class="input-group">
+                                <label for="withdrawAmount">Amount (USD) - Minimum $${MIN_WITHDRAWAL}</label>
+                                <i class="fas fa-dollar-sign input-icon"></i>
+                                <input type="number" id="withdrawAmount" placeholder="0.00" min="${MIN_WITHDRAWAL}" max="${bal}" step="0.01" oninput="updateFeeBreakdown(${bal})">
+                            </div>
+                            <div id="feeBreakdown" class="fee-breakdown" style="display:none;"></div>
+                            <div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div>
+                            <div class="input-group">
+                                <label for="withdrawMethod">Withdrawal Method</label>
+                                <i class="fas fa-credit-card input-icon"></i>
+                                <select id="withdrawMethod">
+                                    <option value="M-Pesa">M-Pesa</option>
+                                    <option value="Airtel Money">Airtel Money</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="withdrawPhone">Account / Phone Number</label>
+                                <i class="fas fa-phone-alt input-icon"></i>
+                                <input type="tel" id="withdrawPhone" placeholder="Enter your account number or phone">
+                            </div>
+                            <button class="btn btn-primary" onclick="requestWithdrawal()">Request Withdrawal</button>
                         </div>
-                        <div id="feeBreakdown" class="fee-breakdown" style="display:none;"></div>
-                        <div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div>
-                        <div class="input-group">
-                            <label for="withdrawMethod">Withdrawal Method</label>
-                            <i class="fas fa-credit-card input-icon"></i>
-                            <select id="withdrawMethod">
-                                <option value="M-Pesa">M-Pesa</option>
-                                <option value="Airtel Money">Airtel Money</option>
-                                <option value="Bank Transfer">Bank Transfer</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label for="withdrawPhone">Account / Phone Number</label>
-                            <i class="fas fa-phone-alt input-icon"></i>
-                            <input type="tel" id="withdrawPhone" placeholder="Enter your account number or phone">
-                        </div>
-                        <button class="btn btn-primary" onclick="requestWithdrawal()">Request Withdrawal</button>
-                    </div>
-                ` : `<div class="withdrawal-section"><p>You need a premium membership to withdraw.</p><button class="btn btn-primary" onclick="simulateWithdrawalAttempt()">Initiate Withdrawal</button></div>`;
+                    `;
+                }
                 const histSnap = await db.collection('withdrawals').where('userId','==',currentUser.uid).get();
                 let hist = '<h4 style="margin-top:2rem;">Withdrawal History</h4>';
                 if (histSnap.empty) hist += '<div class="empty-state"><i class="fas fa-history"></i><p>No withdrawals yet.</p></div>';
@@ -2109,6 +1360,29 @@
                 }
                 document.getElementById('content').innerHTML = ws + hist;
             } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadWithdrawals()">Retry</button></div>`; }
+        }
+
+        // NEW: Send petition when frozen
+        async function sendPetition() {
+            const message = document.getElementById('petitionMessage')?.value;
+            if (!message || message.trim() === '') {
+                showAlert('Please enter your petition message.', 'error');
+                return;
+            }
+            try {
+                await db.collection('petitions').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    message: message.trim(),
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showAlert('Petition sent to admin. You will be notified when responded.', 'success');
+                document.getElementById('petitionMessage').value = '';
+            } catch (e) {
+                console.error('Error sending petition:', e);
+                showAlert('Error sending petition. Please try again. If problem persist send message instead. ', 'error');
+            }
         }
 
         function simulateWithdrawalAttempt() {
@@ -2149,7 +1423,7 @@
             } catch (e) { showAlert('Error requesting withdrawal','error'); }
         }
 
-        // -------------------- MEMBERSHIP OPTIONS (only premium, price from Firestore) --------------------
+        // -------------------- MEMBERSHIP OPTIONS --------------------
         function showMembershipOptions() {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
             showModal(`
@@ -2203,7 +1477,7 @@
             }
         }
 
-        // -------------------- MESSAGES (fixed with custom ID for parentMessageId) --------------------
+        // -------------------- MESSAGES --------------------
         async function loadMessages() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
@@ -2404,6 +1678,7 @@
                 else if (n.type === 'withdrawal') { icon = 'fa-money-bill-wave'; color = 'success'; }
                 else if (n.type === 'referral') { icon = 'fa-users'; color = 'primary'; }
                 else if (n.type === 'announcement') { icon = 'fa-bullhorn'; color = 'warning'; }
+                else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; }
                 html += `
                     <div class="notification-item ${uc}" onclick="handleNotificationClick('${doc.id}','${n.link||''}')">
                         <div class="notification-icon ${color}"><i class="fas ${icon}"></i></div>
@@ -2480,6 +1755,7 @@
                             else if (n.type === 'withdrawal') { icon = 'fa-money-bill-wave'; color = 'success'; }
                             else if (n.type === 'referral') { icon = 'fa-users'; color = 'primary'; }
                             else if (n.type === 'announcement') { icon = 'fa-bullhorn'; color = 'warning'; }
+                            else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; }
                             g += `<div class="message-thread-card ${uc}" onclick="handleNotificationClick('${n.id}','${n.link||''}')"><div style="display:flex; gap:1rem;"><div class="notification-icon ${color}"><i class="fas ${icon}"></i></div><div><div style="display:flex; justify-content:space-between;"><span style="font-weight:700;">${escapeHtml(n.title||'Notification')}</span><span class="message-badge">${n.type||'info'}</span></div><p>${escapeHtml(n.message||'')}</p><div style="display:flex; gap:1rem; font-size:0.8rem; color:#94a3b8;"><span><i class="far fa-clock"></i> ${time}</span>${!n.read ? '<span style="color:#6366f1;">● Unread</span>' : ''}</div></div></div></div>`;
                         });
                         return g;
