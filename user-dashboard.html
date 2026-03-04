@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* All your existing styles remain exactly the same – only TV screen size changed */
+        /* All existing styles with updated padding and mobile grid */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; }
         .app-container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
@@ -82,7 +82,13 @@
         .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: white; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.3s; }
         .tab.active { background: #6366f1; color: white; }
 
-        .content { background: white; border-radius: 2rem; padding: 2.5rem; min-height: 500px; }
+        /* MODIFIED: reduced horizontal padding to make cards wider */
+        .content {
+            background: white;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            min-height: 500px;
+        }
 
         .filter-bar { background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0; }
         .filter-title { font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
@@ -270,6 +276,7 @@
         .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; }
         .overlay.show { display: block; }
 
+        /* MODIFIED: mobile adjustments */
         @media (max-width: 768px) {
             .tabs { display: none; }
             .hamburger-menu { display: block; }
@@ -280,7 +287,10 @@
             .message-preview { font-size: 0.9rem; }
             .filter-row { flex-direction: column; }
             .filter-group { width: 100%; }
+            .content { padding: 1rem; }               /* reduced horizontal padding on mobile */
+            .training-grid { gap: 1rem; }               /* optional: reduce gap between cards */
         }
+
         @media (max-width: 480px) {
             .user-menu { gap: 0.5rem; }
             #userName { display: none; }
@@ -332,7 +342,7 @@
     </style>
 </head>
 <body>
-    <!-- Mobile Navigation (updated with Trainings) -->
+    <!-- Mobile Navigation -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileMenu()"></div>
     <div class="mobile-nav" id="mobileNav">
         <div class="mobile-nav-header">
@@ -364,7 +374,7 @@
     </div>
 
     <div class="app-container">
-        <!-- Mirror TV (size reduced) -->
+        <!-- Mirror TV -->
         <div class="news-tv-container">
             <div class="news-header">
                 <span class="live-badge">🔴 LIVE</span>
@@ -410,7 +420,7 @@
         <!-- Stats Grid -->
         <div class="stats-grid" id="statsGrid"></div>
 
-        <!-- Desktop Tabs (updated with Training) -->
+        <!-- Desktop Tabs -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('transcription')">🎤 Transcription</button>
@@ -472,6 +482,9 @@
         let membershipPackages = null;
         const REFERRAL_BONUS_REFERRER = 2, REFERRAL_BONUS_REFERRED = 0.5;
 
+        // NEW: configurable payment URL
+        let paymentUrl = "https://lipwa.com"; // default
+
         // -------------------- GLOBAL STATE --------------------
         let currentUser = null;
         let userData = null;
@@ -513,6 +526,22 @@
                 }
             } catch (e) {
                 console.error('Error loading withdrawal settings:', e);
+            }
+        }
+
+        // NEW: load payment URL from Firestore
+        async function loadPaymentSettings() {
+            try {
+                const doc = await db.collection('settings').doc('payment').get();
+                if (doc.exists && doc.data().url) {
+                    paymentUrl = doc.data().url;
+                } else {
+                    // fallback to default
+                    paymentUrl = "https://lipwa.com";
+                }
+            } catch (e) {
+                console.error('Error loading payment settings, using default', e);
+                paymentUrl = "https://lipwa.com";
             }
         }
 
@@ -695,7 +724,7 @@
             window.location.href = 'index.html';
         }
 
-        // -------------------- TAB SWITCHING (updated with training) --------------------
+        // -------------------- TAB SWITCHING --------------------
         function switchTab(tab) {
             currentTab = tab;
             currentTaskViewed = null;
@@ -838,6 +867,7 @@
                 await loadFeeSettings(); 
                 await loadMembershipPackages();
                 await loadWithdrawalSettings();
+                await loadPaymentSettings();   // NEW: load payment URL
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
                 loadDashboard();
                 refreshMirror();
@@ -1485,7 +1515,7 @@
             }
         }
 
-        // -------------------- TRAINING CENTER (UPDATED) --------------------
+        // -------------------- TRAINING CENTER (UPDATED with configurable payment link) --------------------
         async function loadTrainings() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>';
@@ -1604,8 +1634,8 @@
                     <i class="fas fa-credit-card" style="font-size:3rem; color:#f59e0b;"></i>
                     <h3>Prepaid Training</h3>
                     <p>Amount to pay: <strong>$${price}</strong></p>
-                    <p>Click the button below to pay via <strong>lipwa.com</strong> (opens in new tab). After payment, enter the transaction code.</p>
-                    <a href="https://lipwa.com" target="_blank" class="btn btn-warning" style="display:inline-block; margin-bottom:1rem;">Pay $${price} now</a>
+                    <p>Click the button below to pay (opens in new tab). After payment, enter the transaction code.</p>
+                    <a href="${paymentUrl}" target="_blank" class="btn btn-warning" style="display:inline-block; margin-bottom:1rem;">Pay $${price} now</a>
                     <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction code">
                     <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
                     <div style="display:flex; gap:1rem; margin-top:1rem;">
