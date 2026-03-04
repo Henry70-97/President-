@@ -13,10 +13,11 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* (All previous styles remain exactly the same) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
         .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
-        .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; }
+        .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; position: relative; }
         .logo h2 { background: linear-gradient(135deg, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .admin-badge { background: #ef4444; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.9rem; }
         .logout-btn { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
@@ -728,12 +729,91 @@
         .client-badge { background: #e0e7ff; color: #3730a3; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
         .task-requirements { background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; font-size: 0.9rem; margin: 0.5rem 0; }  
         .instructions-badge { background: #dbeafe; color: #1e40af; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
+
+        /* NEW: Notification Bell */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        .notification-bell i {
+            font-size: 1.5rem;
+            color: white;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            min-width: 18px;
+            text-align: center;
+        }
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 320px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .notification-dropdown.active {
+            display: block;
+        }
+        .notification-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .notification-item:hover {
+            background: #f8fafc;
+        }
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        .notification-item .title {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .notification-item .time {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        /* NEW: Search Input */
+        .search-box {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .search-box input {
+            flex: 1;
+            margin-bottom: 0;
+        }
         
         @media (max-width: 768px) { 
             .header { flex-direction: column; gap: 1rem; text-align: center; }
             .user-info-grid { grid-template-columns: 1fr; }
             .referral-actions { flex-direction: column; }
             .action-btn { width: 100%; }
+            .notification-dropdown { right: 10px; width: 280px; }
         }  
     </style>  
 </head>  
@@ -743,7 +823,20 @@
             <div class="logo">  
                 <h2>🔷 NextGen Admin</h2>  
             </div>  
-            <div style="display: flex; align-items: center; gap: 1rem;">  
+            <div style="display: flex; align-items: center; gap: 1rem; position: relative;">  
+                <!-- Notification Bell -->
+                <div class="notification-bell" id="notificationBell">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge">0</span>
+                </div>
+                <!-- Notification Dropdown -->
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="notification-header">
+                        <span>Notifications</span>
+                        <span class="badge primary" id="notificationCount"></span>
+                    </div>
+                    <div id="notificationList"></div>
+                </div>
                 <span id="adminName">Loading...</span>  
                 <span class="admin-badge">Admin</span>  
                 <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>  
@@ -760,6 +853,7 @@
             <button class="tab" data-tab="memberships">👑 Memberships</button>  
             <button class="tab" data-tab="referrals">🤝 Referrals</button>  
             <button class="tab" data-tab="messages">💬 Messages</button>  
+            <button class="tab" data-tab="transactions">💸 Transactions</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
         </div>  
       
@@ -886,7 +980,126 @@
         const REFERRAL_BONUS_REFERRER = 2; // $2 for referrer  
         const REFERRAL_BONUS_REFERRED = 0.5; // $0.5 for referred  
         const ELITE_BONUS = 10; // $10 welcome bonus for Elite
-        
+
+        // ========== NEW: Notification System ==========
+        let notificationListeners = [];
+        let notificationCount = 0;
+        let notificationItems = [];
+
+        async function updateNotificationBadge() {
+            try {
+                const [newUsers, pendingSubs, pendingWithdrawals, pendingMemberships, unreadMessages] = await Promise.all([
+                    db.collection('users').where('createdAt', '>=', new Date(Date.now() - 24*60*60*1000)).get().then(snap => snap.size),
+                    db.collection('submissions').where('status', '==', 'pending').get().then(snap => snap.size),
+                    db.collection('withdrawals').where('status', '==', 'pending').get().then(snap => snap.size),
+                    db.collection('membershipPayments').where('status', '==', 'pending').get().then(snap => snap.size),
+                    db.collection('messages').where('read', '==', false).get().then(snap => snap.size) // assuming messages have 'read' field
+                ]);
+                notificationCount = newUsers + pendingSubs + pendingWithdrawals + pendingMemberships + unreadMessages;
+                document.getElementById('notificationBadge').textContent = notificationCount;
+                if (notificationCount > 0) {
+                    document.getElementById('notificationBadge').style.display = 'inline-block';
+                } else {
+                    document.getElementById('notificationBadge').style.display = 'none';
+                }
+                // Also populate dropdown with recent items
+                const recentItems = [];
+                // Get last 5 of each type
+                const [recentUsers, recentSubs, recentWithdrawals, recentMemberships, recentMessages] = await Promise.all([
+                    db.collection('users').orderBy('createdAt', 'desc').limit(5).get(),
+                    db.collection('submissions').where('status', '==', 'pending').orderBy('submittedAt', 'desc').limit(5).get(),
+                    db.collection('withdrawals').where('status', '==', 'pending').orderBy('requestedAt', 'desc').limit(5).get(),
+                    db.collection('membershipPayments').where('status', '==', 'pending').orderBy('submittedAt', 'desc').limit(5).get(),
+                    db.collection('messages').orderBy('createdAt', 'desc').limit(5).get()
+                ]);
+                recentUsers.forEach(doc => {
+                    const u = doc.data();
+                    recentItems.push({
+                        type: 'user',
+                        title: `New user: ${u.email}`,
+                        time: u.createdAt,
+                        link: '#',
+                        onClick: () => switchTab('users')
+                    });
+                });
+                recentSubs.forEach(doc => {
+                    const s = doc.data();
+                    recentItems.push({
+                        type: 'submission',
+                        title: `Pending submission: ${s.taskTitle}`,
+                        time: s.submittedAt,
+                        link: '#',
+                        onClick: () => switchTab('submissions')
+                    });
+                });
+                recentWithdrawals.forEach(doc => {
+                    const w = doc.data();
+                    recentItems.push({
+                        type: 'withdrawal',
+                        title: `Withdrawal request: $${w.amount}`,
+                        time: w.requestedAt,
+                        link: '#',
+                        onClick: () => switchTab('withdrawals')
+                    });
+                });
+                recentMemberships.forEach(doc => {
+                    const m = doc.data();
+                    recentItems.push({
+                        type: 'membership',
+                        title: `Membership payment: ${m.membershipType}`,
+                        time: m.submittedAt,
+                        link: '#',
+                        onClick: () => switchTab('memberships')
+                    });
+                });
+                recentMessages.forEach(doc => {
+                    const m = doc.data();
+                    recentItems.push({
+                        type: 'message',
+                        title: `Message from ${m.userEmail || 'user'}`,
+                        time: m.createdAt,
+                        link: '#',
+                        onClick: () => switchTab('messages')
+                    });
+                });
+                // Sort by time descending
+                recentItems.sort((a, b) => (b.time?.seconds || 0) - (a.time?.seconds || 0));
+                notificationItems = recentItems.slice(0, 10); // keep 10
+                renderNotificationDropdown();
+            } catch (e) {
+                console.warn('Error updating notifications:', e);
+            }
+        }
+
+        function renderNotificationDropdown() {
+            const list = document.getElementById('notificationList');
+            const countSpan = document.getElementById('notificationCount');
+            if (notificationItems.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#64748b;">No new notifications</p>';
+                countSpan.textContent = '0';
+                return;
+            }
+            countSpan.textContent = notificationItems.length;
+            let html = '';
+            notificationItems.forEach(item => {
+                const time = item.time ? formatDate(item.time) : 'N/A';
+                html += `
+                    <div class="notification-item" onclick="(${item.onClick.toString()})(); document.getElementById('notificationDropdown').classList.remove('active');">
+                        <div class="title">${item.title}</div>
+                        <div class="time">${time}</div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function startNotificationListener() {
+            // Update every 30 seconds
+            updateNotificationBadge();
+            setInterval(updateNotificationBadge, 30000);
+        }
+        // =============================================
+
         // Check auth state  
         auth.onAuthStateChanged(async (user) => {  
             if (!user) {  
@@ -918,6 +1131,9 @@
                 console.error('Error loading settings:', e);
                 showAlert('Error loading settings. Some features may not work.', 'error');
             }
+
+            // Start notifications
+            startNotificationListener();
               
             loadDashboard();  
         });  
@@ -1143,6 +1359,7 @@
                 case 'memberships': loadMemberships(); break;  
                 case 'referrals': loadReferrals(); break;  
                 case 'messages': loadMessages(); break;  
+                case 'transactions': loadTransactions(); break;  
                 case 'settings': loadSettings(); break;  
             }  
         }  
@@ -1200,7 +1417,7 @@
             loadUsers();  
         }  
           
-        // ==================== NEW: Verified / Frozen / Delete Functions ====================
+        // ==================== Verified / Frozen / Delete Functions ====================
         async function toggleVerified(userId, newStatus) {
             await db.collection('users').doc(userId).update({ verified: newStatus });
             showAlert(`User verified status set to ${newStatus}`, 'success');
@@ -1226,22 +1443,30 @@
         }
         // ===============================================================================
 
-        // Load Users – with new columns for Verified, Frozen and action buttons
+        // Load Users – with search
         async function loadUsers() { 
             const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get(); 
-             
+            const users = [];
+            snapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
+            
             let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>'; 
-            html += '<table class="data-table">'; 
+            // Search box
+            html += `
+                <div class="search-box">
+                    <input type="text" id="userSearchInput" placeholder="Search by email or name..." onkeyup="filterUsersTable()">
+                    <button class="btn btn-primary" onclick="filterUsersTable()"><i class="fas fa-search"></i> Search</button>
+                </div>
+            `;
+            html += '<table class="data-table" id="usersTable">'; 
             html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Status</th><th>Actions</th></tr>'; 
-             
-            snapshot.forEach(doc => { 
-                const user = doc.data(); 
+            
+            users.forEach(user => { 
                 const membershipClass = user.membershipType === 'elite' ? 'warning' : user.membershipType === 'premium' ? 'primary' : 'info'; 
                 const verified = user.verified === true; 
                 const frozen = user.frozen === true; 
-                const active = user.active !== false; // default true
+                const active = user.active !== false;
                 html += ` 
-                    <tr> 
+                    <tr class="user-row" data-email="${user.email.toLowerCase()}" data-name="${(user.displayName || '').toLowerCase()}"> 
                         <td>${user.email}</td> 
                         <td>${user.displayName}</td> 
                         <td>$${user.wallet || 0}</td> 
@@ -1253,12 +1478,12 @@
                         <td>${user.role}</td> 
                         <td><span class="badge ${active ? 'success' : 'danger'}">${active ? 'Active' : 'Inactive'}</span></td> 
                         <td class="action-buttons"> 
-                            <button class="btn btn-primary toggle-status-btn" data-user-id="${doc.id}" data-new-status="${!active}">${active ? 'Deactivate' : 'Activate'}</button> 
-                            <button class="btn btn-success adjust-wallet-btn" data-user-id="${doc.id}" data-user-name="${user.displayName}" data-wallet="${user.wallet || 0}">Adjust Wallet</button> 
-                            ${user.role !== 'admin' ? `<button class="btn btn-warning make-admin-btn" data-user-id="${doc.id}">Make Admin</button>` : ''} 
-                            <button class="btn btn-info toggle-verified-btn" data-user-id="${doc.id}" data-new-status="${!verified}">${verified ? 'Unverify' : 'Verify'}</button> 
-                            <button class="btn btn-secondary toggle-frozen-btn" data-user-id="${doc.id}" data-new-status="${!frozen}">${frozen ? 'Unfreeze' : 'Freeze'}</button> 
-                            <button class="btn btn-danger delete-user-btn" data-user-id="${doc.id}" data-user-email="${user.email}">Delete</button> 
+                            <button class="btn btn-primary toggle-status-btn" data-user-id="${user.id}" data-new-status="${!active}">${active ? 'Deactivate' : 'Activate'}</button> 
+                            <button class="btn btn-success adjust-wallet-btn" data-user-id="${user.id}" data-user-name="${user.displayName}" data-wallet="${user.wallet || 0}">Adjust Wallet</button> 
+                            ${user.role !== 'admin' ? `<button class="btn btn-warning make-admin-btn" data-user-id="${user.id}">Make Admin</button>` : ''} 
+                            <button class="btn btn-info toggle-verified-btn" data-user-id="${user.id}" data-new-status="${!verified}">${verified ? 'Unverify' : 'Verify'}</button> 
+                            <button class="btn btn-secondary toggle-frozen-btn" data-user-id="${user.id}" data-new-status="${!frozen}">${frozen ? 'Unfreeze' : 'Freeze'}</button> 
+                            <button class="btn btn-danger delete-user-btn" data-user-id="${user.id}" data-user-email="${user.email}">Delete</button> 
                         </td> 
                     </tr> 
                 `; 
@@ -1267,6 +1492,23 @@
             html += '</table>'; 
             document.getElementById('content').innerHTML = html; 
         }
+
+        // Search filter function
+        window.filterUsersTable = function() {
+            const input = document.getElementById('userSearchInput');
+            if (!input) return;
+            const filter = input.value.toLowerCase();
+            const rows = document.querySelectorAll('.user-row');
+            rows.forEach(row => {
+                const email = row.getAttribute('data-email') || '';
+                const name = row.getAttribute('data-name') || '';
+                if (email.includes(filter) || name.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        };
           
         // Toggle User Status  
         async function toggleUserStatus(userId, newStatus) {  
@@ -1346,11 +1588,9 @@
         async function loadTasks() { 
             const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get(); 
             
-            // Get submission counts for each task
             const tasks = [];
             snapshot.forEach(doc => tasks.push({ id: doc.id, ...doc.data() }));
             
-            // Fetch counts in parallel
             const counts = await Promise.all(tasks.map(task => 
                 db.collection('submissions').where('taskId', '==', task.id).get().then(snap => snap.size)
             ));
@@ -1432,7 +1672,7 @@
             `);  
         }  
           
-        // Create Task (FIXED: properly assign taskRef and use taskId)  
+        // Create Task  
         async function createTask() {  
             const title = document.getElementById('taskTitle').value;  
             const description = document.getElementById('taskDescription').value;  
@@ -1449,9 +1689,8 @@
                 return;  
             }  
               
-            // Convert deadline string to Firestore timestamp  
             const deadlineDate = new Date(deadline);  
-            deadlineDate.setHours(23, 59, 59, 999); // End of the selected day  
+            deadlineDate.setHours(23, 59, 59, 999);  
               
             try {  
                 const taskRef = await db.collection('tasks').add({  
@@ -1472,7 +1711,6 @@
 
                 const taskId = taskRef.id;  
 
-                // Send notification to all users about new task  
                 await sendNotificationToAll(  
                     'New Task Available',  
                     `A new task "${title}" paying $${reward} has been posted.`,  
@@ -1501,7 +1739,6 @@
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
               
-            // Format deadline for date input  
             let deadlineValue = '';  
             if (data.deadline) {  
                 const deadline = data.deadline.toDate();  
@@ -1563,7 +1800,6 @@
                 return;  
             }  
               
-            // Convert deadline string to Firestore timestamp  
             const deadlineDate = new Date(deadline);  
             deadlineDate.setHours(23, 59, 59, 999);  
               
@@ -1637,7 +1873,6 @@
                 for (const doc of snapshot.docs) {  
                     const sub = doc.data();  
                       
-                    // Get task details to show requirements and instructions  
                     let taskRequirements = '';  
                     let taskInstructions = '';  
                     let taskDeadline = '';  
@@ -1741,7 +1976,6 @@
                 });  
                 showAlert(`Submission approved! User earned $${earned.toFixed(2)}`, 'success');  
 
-                // Send notification to user  
                 await sendNotification(  
                     sub.userId,  
                     'Submission Approved',  
@@ -1792,7 +2026,6 @@
             if (snapshot.empty) { 
                 html += '<p>No pending withdrawals.</p>'; 
             } else { 
-                // Fetch user statuses
                 const withdrawals = [];
                 snapshot.forEach(doc => withdrawals.push({ id: doc.id, ...doc.data() }));
                 
@@ -1951,7 +2184,6 @@
                 </div>
             `);
             
-            // Add event listeners after modal is shown
             setTimeout(() => {
                 document.getElementById('transactionFeePercent').addEventListener('input', updateFeePreview);
                 document.getElementById('platformFeePercent').addEventListener('input', updateFeePreview);
@@ -1985,12 +2217,11 @@
             }, 100);
         }
         
-        // Update fee preview
         function updateFeePreview() {
             const transactionFee = parseFloat(document.getElementById('transactionFeePercent')?.value) || 0;
             const platformFee = parseFloat(document.getElementById('platformFeePercent')?.value) || 0;
             const exchangeRate = parseFloat(document.getElementById('exchangeRate')?.value) || 130;
-            const amount = 100; // Example amount
+            const amount = 100;
             
             const totalFees = transactionFee + platformFee;
             const netAmount = amount - totalFees;
@@ -2002,7 +2233,6 @@
             document.getElementById('previewKES').textContent = 'KES ' + (netAmount * exchangeRate).toFixed(2);
         }
         
-        // Add withdrawal method
         function addWithdrawalMethod(index) {
             const methodsList = document.getElementById('methods-list');
             const newMethod = document.createElement('div');
@@ -2024,7 +2254,6 @@
             
             reindexMethods();
             
-            // Add event listeners to new buttons
             newMethod.querySelector('.add-method').addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -2040,7 +2269,6 @@
             });
         }
         
-        // Remove withdrawal method
         function removeWithdrawalMethod(index) {
             const methodsList = document.getElementById('methods-list');
             if (methodsList.children.length <= 1) {
@@ -2052,7 +2280,6 @@
             reindexMethods();
         }
         
-        // Reindex methods
         function reindexMethods() {
             const methodsList = document.getElementById('methods-list');
             Array.from(methodsList.children).forEach((child, newIndex) => {
@@ -2062,7 +2289,6 @@
             });
         }
         
-        // Save Fee Settings
         async function saveFeeSettings() {
             try {
                 const transactionFeePercent = parseFloat(document.getElementById('transactionFeePercent').value) || 3;
@@ -2072,7 +2298,6 @@
                 const maxWithdrawalPerMonth = parseFloat(document.getElementById('maxWithdrawalPerMonth').value) || 5000;
                 const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 130;
                 
-                // Collect methods
                 const methods = [];
                 document.querySelectorAll('.method-input').forEach(input => {
                     const value = input.value.trim();
@@ -2099,7 +2324,7 @@
                 const success = await saveFeeSettingsToFirestore(settings);
                 if (success) {
                     closeModal();
-                    loadSettings(); // Refresh the settings tab
+                    loadSettings();
                 }
             } catch (error) {
                 console.error('Error saving fee settings:', error);
@@ -2107,7 +2332,6 @@
             }
         }
         
-        // Save fee settings to Firestore (renamed to avoid conflict)
         async function saveFeeSettingsToFirestore(settings) {
             try {
                 await db.collection('settings').doc('feeSettings').set(settings);
@@ -2121,7 +2345,6 @@
             }
         }
         
-        // Show Edit Membership Packages Modal
         function showEditPackages() {
             if (!membershipPackages) {
                 showAlert('Membership packages not loaded', 'error');
@@ -2208,7 +2431,6 @@
             
             showModal(packagesHtml);
             
-            // Add event listeners for dynamic feature buttons
             setTimeout(() => {
                 document.querySelectorAll('.add-feature, .add-feature-bottom').forEach(btn => {
                     btn.addEventListener('click', function(e) {
@@ -2235,7 +2457,6 @@
             }, 100);
         }
         
-        // Helper function to add a feature
         function addFeature(type, index) {
             const featuresList = document.getElementById(`features-${type}`);
             const newFeature = document.createElement('div');
@@ -2261,7 +2482,6 @@
                 </div>
             `;
             
-            // Insert at the correct position
             const features = featuresList.children;
             if (index >= features.length) {
                 featuresList.appendChild(newFeature);
@@ -2269,10 +2489,8 @@
                 featuresList.insertBefore(newFeature, features[index]);
             }
             
-            // Reindex all features
             reindexFeatures(type);
             
-            // Add event listeners to new buttons
             newFeature.querySelector('.add-feature').addEventListener('click', function(e) {
                 e.preventDefault();
                 const t = this.getAttribute('data-type');
@@ -2288,7 +2506,6 @@
             });
         }
         
-        // Helper function to remove a feature
         function removeFeature(type, index) {
             const featuresList = document.getElementById(`features-${type}`);
             if (featuresList.children.length <= 1) {
@@ -2300,7 +2517,6 @@
             reindexFeatures(type);
         }
         
-        // Helper function to reindex features
         function reindexFeatures(type) {
             const featuresList = document.getElementById(`features-${type}`);
             Array.from(featuresList.children).forEach((child, newIndex) => {
@@ -2310,7 +2526,6 @@
             });
         }
         
-        // Save Membership Packages
         async function savePackages() {
             try {
                 const updatedPackages = {};
@@ -2330,7 +2545,6 @@
                         pkg.welcomeBonus = parseFloat(document.querySelector(`.welcome-bonus-input[data-type="${type}"]`).value) || 10;
                     }
                     
-                    // Collect features
                     const featureItems = document.querySelectorAll(`#features-${type} .feature-item`);
                     featureItems.forEach(item => {
                         const included = item.querySelector('.feature-included').checked;
@@ -2359,9 +2573,7 @@
             }
         }
         
-        // Load Memberships with package management
         async function loadMemberships() {  
-            // Get pending payments
             const snapshot = await db.collection('membershipPayments')  
                 .where('status', '==', 'pending')  
                 .get();  
@@ -2372,29 +2584,24 @@
                     <button class="btn btn-primary" onclick="showEditPackages()">✏️ Edit Packages</button>  
                 </div>  
                 
-                <!-- Current Package Preview -->
                 <h4 style="margin: 2rem 0 1rem 0;">Current Package Configuration</h4>  
                 <div class="packages-grid">  
             `;  
             
-            // Show current packages
             for (const [type, pkg] of Object.entries(membershipPackages)) {  
                 const packageClass = type === 'basic' ? 'basic' : type === 'premium' ? 'premium' : 'elite';  
                 
                 let featuresHtml = '';  
                 pkg.features.forEach(feature => {  
-                    const iconClass = feature.included ?   
-                        (feature.icon || 'fa-check-circle') : 'fa-times-circle';  
-                    const iconColor = feature.included ?   
-                        (feature.highlight ? 'feature-highlight' : '') : '';  
+                    const iconClass = feature.included ? (feature.icon || 'fa-check-circle') : 'fa-times-circle';  
+                    const iconColor = feature.included ? (feature.highlight ? 'feature-highlight' : '') : '';  
                     
                     featuresHtml += `  
                         <li>  
                             <i class="fas ${iconClass} ${iconColor}"></i>  
                             <span ${feature.highlight ? 'class="feature-highlight"' : ''}>  
                                 ${feature.text}  
-                                ${feature.bonus && pkg.welcomeBonus ?   
-                                    ` <strong>$${pkg.welcomeBonus}</strong>` : ''}  
+                                ${feature.bonus && pkg.welcomeBonus ? ` <strong>$${pkg.welcomeBonus}</strong>` : ''}  
                             </span>  
                         </li>  
                     `;  
@@ -2419,7 +2626,6 @@
             
             html += '</div>';  
             
-            // Pending payments section  
             html += '<h4 style="margin: 2rem 0 1rem 0;">Pending Membership Payments</h4>';  
               
             if (snapshot.empty) {  
@@ -2452,10 +2658,8 @@
             document.getElementById('content').innerHTML = html;  
         }  
         
-        // Approve Membership with dynamic package benefits
         async function approveMembership(userId, paymentId) {
             try {
-                // Get payment details to know which membership was purchased
                 const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
                 if (!paymentDoc.exists) {
                     showAlert('Payment record not found', 'error');
@@ -2464,10 +2668,8 @@
                 const payment = paymentDoc.data();
                 const membershipType = payment.membershipType || 'premium';
                 
-                // Get package details
                 const pkg = getPackageByType(membershipType);
 
-                // Prepare user update data
                 const userUpdate = {
                     membershipType: membershipType,
                     membershipPaid: true,
@@ -2475,13 +2677,10 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // Apply membership-specific benefits
                 if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus) {
-                    // Add welcome bonus
                     userUpdate.wallet = firebase.firestore.FieldValue.increment(pkg.welcomeBonus);
                     userUpdate.eliteBonusApplied = true;
 
-                    // Send notification about welcome bonus
                     await sendNotification(
                         userId,
                         'Welcome to Elite!',
@@ -2492,29 +2691,24 @@
                 }
 
                 if (membershipType === MEMBERSHIP_TYPES.PREMIUM && pkg.duration === 'annual') {
-                    // Set expiry 1 year from now
                     const expiryDate = new Date();
                     expiryDate.setFullYear(expiryDate.getFullYear() + 1);
                     userUpdate.membershipExpiry = expiryDate;
                 }
 
-                // Update user document
                 await db.collection('users').doc(userId).update(userUpdate);
 
-                // Mark payment as approved
                 await db.collection('membershipPayments').doc(paymentId).update({
                     status: 'approved',
                     approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Process referral bonuses if the user was referred and upgraded to premium
                 const userDoc = await db.collection('users').doc(userId).get();
                 const userData = userDoc.data();
                 
                 if (userData.referredBy && membershipType === MEMBERSHIP_TYPES.PREMIUM) {
                     const referrerId = userData.referredBy;
                     
-                    // Check if bonuses already given to prevent duplicates
                     const existingBonus = await db.collection('referralBonuses')
                         .where('referredId', '==', userId)
                         .where('type', '==', 'referrer')
@@ -2522,7 +2716,6 @@
                     
                     if (existingBonus.empty) {
                         await db.runTransaction(async (transaction) => {
-                            // Credit referrer
                             const referrerRef = db.collection('users').doc(referrerId);
                             const referrerSnap = await transaction.get(referrerRef);
                             
@@ -2532,14 +2725,12 @@
                                 totalReferrals: firebase.firestore.FieldValue.increment(1)
                             });
 
-                            // Credit referred user
                             const referredRef = db.collection('users').doc(userId);
                             transaction.update(referredRef, {
                                 wallet: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED),
                                 referralEarnings: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED)
                             });
 
-                            // Record bonuses
                             const bonus1Ref = db.collection('referralBonuses').doc();
                             transaction.set(bonus1Ref, {
                                 referrerId: referrerId,
@@ -2562,7 +2753,6 @@
                                 creditedBy: currentUser.email
                             });
 
-                            // Update referral status
                             const referralQuery = await db.collection('referrals')
                                 .where('referrerId', '==', referrerId)
                                 .where('referredId', '==', userId)
@@ -2577,7 +2767,6 @@
                             }
                         });
 
-                        // Send notifications to both users
                         await sendNotification(
                             referrerId,
                             'Referral Bonus!',
@@ -2596,7 +2785,7 @@
                 }
 
                 showAlert(`Membership upgraded to ${pkg.name}!`, 'success');
-                loadMemberships(); // Refresh the pending list
+                loadMemberships();
 
             } catch (error) {
                 console.error('Error approving membership:', error);
@@ -2604,10 +2793,8 @@
             }
         }
           
-        // Reject Membership  
         async function rejectMembership(userId, paymentId) {
             try {
-                // Get payment details to know what was rejected
                 const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
                 const payment = paymentDoc.data();
                 
@@ -2622,7 +2809,6 @@
                     rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });  
 
-                // Send notification
                 await sendNotification(
                     userId,
                     'Membership Payment Rejected',
@@ -2639,7 +2825,6 @@
             }
         }  
 
-        // Load Settings Tab
         async function loadSettings() {
             if (!feeSettings) {
                 await loadFeeSettings();
@@ -2651,7 +2836,6 @@
             
             const totalFees = (feeSettings.transactionFeePercent || 0) + (feeSettings.platformFeePercent || 0);
             
-            // Calculate withdrawal statistics
             const withdrawalsSnapshot = await db.collection('withdrawals').get();
             let totalWithdrawn = 0;
             let totalFeesCollected = 0;
@@ -2690,7 +2874,6 @@
                 </div>
                 
                 <div class="settings-grid">
-                    <!-- Fee Settings Card -->
                     <div class="settings-card">
                         <h4><i class="fas fa-percent"></i> Fee Configuration</h4>
                         <div class="settings-row">
@@ -2707,7 +2890,6 @@
                         </div>
                     </div>
                     
-                    <!-- Withdrawal Limits Card -->
                     <div class="settings-card">
                         <h4><i class="fas fa-chart-line"></i> Withdrawal Limits</h4>
                         <div class="settings-row">
@@ -2724,7 +2906,6 @@
                         </div>
                     </div>
                     
-                    <!-- Exchange Rate Card -->
                     <div class="settings-card">
                         <h4><i class="fas fa-exchange-alt"></i> Exchange Rate</h4>
                         <div class="settings-row">
@@ -2733,7 +2914,6 @@
                         </div>
                     </div>
                     
-                    <!-- Withdrawal Methods Card -->
                     <div class="settings-card">
                         <h4><i class="fas fa-credit-card"></i> Payment Methods</h4>
                         ${feeSettings.withdrawalMethods.map(method => `
@@ -2758,7 +2938,6 @@
             document.getElementById('content').innerHTML = html;
         }
 
-        // Initialize referral collections if they don't exist
         async function initializeReferralCollections() {
             try {
                 const testQuery = await db.collection('referrals').limit(1).get();
@@ -2775,7 +2954,6 @@
             }
         }
 
-        // Create sample referral data for testing
         async function createSampleReferral() {
             try {
                 showAlert('Creating sample referral data...', 'info', 'Please Wait');
@@ -2807,7 +2985,6 @@
             }
         }
 
-        // Show Referral Details Modal
         async function showReferralDetails(referralId, referrerData, referredData, referral) {
             const createdDate = referral.createdAt?.seconds ? formatDate(referral.createdAt) : 'N/A';
             
@@ -2849,7 +3026,6 @@
                 <h3 style="margin-bottom:1.5rem;">Referral Details</h3>
                 
                 <div class="user-info-grid">
-                    <!-- Referrer Info -->
                     <div class="user-info-card referrer">
                         <div class="user-info-header referrer">
                             <i class="fas fa-user"></i>
@@ -2889,7 +3065,6 @@
                         </div>
                     </div>
                     
-                    <!-- Referred User Info -->
                     <div class="user-info-card referred">
                         <div class="user-info-header referred">
                             <i class="fas fa-user-plus"></i>
@@ -2934,7 +3109,6 @@
                     </div>
                 </div>
                 
-                <!-- Bonus Breakdown -->
                 <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0;">
                     <h4 style="margin-bottom: 1rem;">Bonus Breakdown</h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -2965,13 +3139,11 @@
                     </div>
                 </div>
                 
-                <!-- Timeline -->
                 <div class="referral-timeline">
                     <h4 style="margin-bottom: 1rem;">Timeline</h4>
                     ${timelineHtml}
                 </div>
                 
-                <!-- Actions -->
                 <div class="referral-actions">
                     ${referral.status === 'pending' && (referredData.membershipType === 'premium' || referredData.membershipType === 'elite') ? `
                         <button class="action-btn approve" onclick="creditReferralBonus('${referralId}', '${referral.referrerId}', '${referral.referredId}', '${referral.referredEmail}')">
@@ -2990,7 +3162,6 @@
             `);
         }
 
-        // Load Referrals with enhanced details
         async function loadReferrals() {  
             try {  
                 document.getElementById('content').innerHTML = `  
@@ -3013,7 +3184,6 @@
                     snapshot = { empty: true, docs: [] };  
                 }  
                 
-                // Calculate stats
                 let totalPending = 0;
                 let totalCompleted = 0;
                 let totalRejected = 0;
@@ -3035,7 +3205,6 @@
                 let html = `  
                     <h3 style="margin-bottom:1.5rem;">Referral Management</h3>  
                     
-                    <!-- Stats Overview -->
                     <div class="referral-stats-grid">
                         <div class="referral-stat-card">
                             <div class="referral-stat-value">${totalPending}</div>
@@ -3077,7 +3246,6 @@
                         </div>  
                     `;  
                 } else {  
-                    // Group by status
                     const pending = [];  
                     const completed = [];  
                     const rejected = [];  
@@ -3097,13 +3265,11 @@
                         }
                     });  
                     
-                    // Pending referrals section  
                     if (pending.length > 0) {  
                         html += '<h4 style="margin: 2rem 0 1rem 0; color: #f59e0b;">Pending Referrals ⏳</h4>';  
                         
                         for (const referral of pending) {  
                             try {  
-                                // Get referrer info  
                                 let referrerData = { email: 'Unknown', displayName: 'Unknown', wallet: 0, membershipType: 'basic' };
                                 try {  
                                     const referrerDoc = await db.collection('users').doc(referral.referrerId).get();  
@@ -3114,7 +3280,6 @@
                                     console.warn('Could not fetch referrer:', e);  
                                 }  
                                 
-                                // Get referred user info  
                                 let referredData = { email: 'Unknown', displayName: 'Unknown', wallet: 0, membershipType: 'basic' };
                                 try {  
                                     const referredDoc = await db.collection('users').doc(referral.referredId).get();  
@@ -3125,8 +3290,7 @@
                                     console.warn('Could not fetch referred user:', e);  
                                 }  
                                 
-                                const createdDate = referral.createdAt?.seconds ?   
-                                    formatDate(referral.createdAt) : 'N/A';  
+                                const createdDate = referral.createdAt?.seconds ? formatDate(referral.createdAt) : 'N/A';  
                                 
                                 const hasUpgraded = referredData.membershipType === 'premium' || referredData.membershipType === 'elite';
                                 
@@ -3173,7 +3337,6 @@
                         }  
                     }  
                     
-                    // Completed referrals section  
                     if (completed.length > 0) {  
                         html += '<h4 style="margin: 2rem 0 1rem 0; color: #10b981;">Completed Referrals ✓</h4>';  
                         
@@ -3213,7 +3376,6 @@
                         }  
                     }  
                     
-                    // Rejected referrals section  
                     if (rejected.length > 0) {  
                         html += '<h4 style="margin: 2rem 0 1rem 0; color: #ef4444;">Rejected Referrals ✗</h4>';  
                         
@@ -3298,7 +3460,6 @@
             }  
         }  
           
-        // Credit Referral Bonus  
         async function creditReferralBonus(referralId, referrerId, referredId, referredEmail) {  
             try {  
                 showModal(`  
@@ -3329,11 +3490,9 @@
             }  
         }  
           
-        // Execute Credit Bonus  
         async function executeCreditBonus(referralId, referrerId, referredId, referredEmail) {  
             try {  
                 await db.runTransaction(async (transaction) => {  
-                    // Credit referrer  
                     const referrerRef = db.collection('users').doc(referrerId);  
                     const referrerSnap = await transaction.get(referrerRef);  
                     
@@ -3347,7 +3506,6 @@
                         totalReferrals: firebase.firestore.FieldValue.increment(1)  
                     });  
                     
-                    // Credit referred user  
                     const referredRef = db.collection('users').doc(referredId);  
                     const referredSnap = await transaction.get(referredRef);  
                     
@@ -3360,9 +3518,8 @@
                         referralEarnings: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED)  
                     });  
                     
-                    // Record bonus for referrer  
-                    const bonusRef1 = db.collection('referralBonuses').doc();  
-                    transaction.set(bonusRef1, {  
+                    const bonus1Ref = db.collection('referralBonuses').doc();  
+                    transaction.set(bonus1Ref, {  
                         referrerId: referrerId,  
                         referredId: referredId,  
                         referredEmail: referredEmail,  
@@ -3373,9 +3530,8 @@
                         creditedAt: firebase.firestore.FieldValue.serverTimestamp()  
                     });  
                     
-                    // Record bonus for referred  
-                    const bonusRef2 = db.collection('referralBonuses').doc();  
-                    transaction.set(bonusRef2, {  
+                    const bonus2Ref = db.collection('referralBonuses').doc();  
+                    transaction.set(bonus2Ref, {  
                         referrerId: referrerId,  
                         referredId: referredId,  
                         referredEmail: referredEmail,  
@@ -3386,7 +3542,6 @@
                         creditedAt: firebase.firestore.FieldValue.serverTimestamp()  
                     });  
                     
-                    // Update referral status  
                     const referralRef = db.collection('referrals').doc(referralId);  
                     transaction.update(referralRef, {  
                         status: 'completed',  
@@ -3406,7 +3561,6 @@
             }  
         }  
           
-        // Reject Referral  
         async function rejectReferral(referralId) {  
             try {  
                 await db.collection('referrals').doc(referralId).update({  
@@ -3426,19 +3580,15 @@
           
         // ========== FIXED NOTIFICATION FUNCTIONS ==========
 
-        // Debug function to test notifications
         async function debugNotifications() {
             console.log('🔍 Starting notification debug...');
             
             try {
-                // Check current user
                 console.log('Current user:', currentUser?.uid);
                 
-                // Check if notifications collection is accessible
                 const testQuery = await db.collection('notifications').limit(1).get();
                 console.log('Notifications collection accessible, size:', testQuery.size);
                 
-                // Try to send a test notification
                 const testNotif = {
                     userId: currentUser?.uid || 'test',
                     title: 'Debug Test',
@@ -3453,7 +3603,6 @@
                 const docRef = await db.collection('notifications').add(testNotif);
                 console.log('✅ Test notification written with ID:', docRef.id);
                 
-                // Read it back
                 const readDoc = await docRef.get();
                 console.log('Test notification data:', readDoc.data());
                 
@@ -3469,11 +3618,9 @@
             }
         }
 
-        // Send a notification to a specific user
         async function sendNotification(userId, title, message, type = 'info', link = null) {
             console.log(`📨 sendNotification called:`, { userId, title, message, type, link });
             
-            // Validate inputs
             if (!userId) {
                 console.error('❌ No userId provided');
                 showAlert('Cannot send notification: No user selected', 'error');
@@ -3493,7 +3640,6 @@
             }
             
             try {
-                // Verify user exists
                 console.log(`Checking if user ${userId} exists...`);
                 const userDoc = await db.collection('users').doc(userId).get();
                 
@@ -3506,7 +3652,6 @@
                 const userData = userDoc.data();
                 console.log(`✅ User found: ${userData.email || userId}`);
                 
-                // Prepare notification data
                 const notificationData = {
                     userId: userId,
                     title: title.trim(),
@@ -3516,23 +3661,19 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
                 
-                // Add optional fields
                 if (link && link.trim()) {
                     notificationData.link = link.trim();
                 }
                 
-                // Add user email for reference
                 if (userData.email) {
                     notificationData.userEmail = userData.email;
                 }
                 
                 console.log('📝 Writing notification to Firestore:', notificationData);
                 
-                // Write to Firestore
                 const docRef = await db.collection('notifications').add(notificationData);
                 console.log(`✅ Notification written successfully! ID: ${docRef.id}`);
                 
-                // Verify it was written
                 const verifyDoc = await docRef.get();
                 if (verifyDoc.exists) {
                     console.log('✅ Verification: Notification exists in database');
@@ -3548,7 +3689,6 @@
                 console.error('Error code:', error.code);
                 console.error('Error message:', error.message);
                 
-                // Handle specific Firebase errors
                 if (error.code === 'permission-denied') {
                     showAlert('Permission denied. Check Firestore security rules for "notifications" collection.', 'error');
                 } else if (error.code === 'not-found') {
@@ -3563,11 +3703,9 @@
             }
         }
 
-        // Send notification to all users (broadcast)
         async function sendNotificationToAll(title, message, type = 'info', link = null) {
             console.log(`📢 sendNotificationToAll called:`, { title, message, type, link });
             
-            // Validate inputs
             if (!title || !title.trim()) {
                 showAlert('Please enter a notification title', 'error');
                 return false;
@@ -3579,7 +3717,6 @@
             }
             
             try {
-                // Get all users
                 console.log('Fetching all users...');
                 const usersSnapshot = await db.collection('users').get();
                 
@@ -3592,10 +3729,8 @@
                 const userCount = usersSnapshot.size;
                 console.log(`✅ Found ${userCount} users`);
                 
-                // Show progress
                 showAlert(`Preparing to send to ${userCount} users...`, 'info', 'Please Wait');
                 
-                // Batch write in chunks (Firestore batch limit is 500)
                 const BATCH_SIZE = 400;
                 let batch = db.batch();
                 let operationCount = 0;
@@ -3606,7 +3741,6 @@
                     try {
                         const userData = userDoc.data();
                         
-                        // Prepare notification data
                         const notificationData = {
                             userId: userDoc.id,
                             title: title.trim(),
@@ -3617,7 +3751,6 @@
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         };
                         
-                        // Add optional fields
                         if (link && link.trim()) {
                             notificationData.link = link.trim();
                         }
@@ -3626,13 +3759,11 @@
                             notificationData.userEmail = userData.email;
                         }
                         
-                        // Add to batch
                         const notifRef = db.collection('notifications').doc();
                         batch.set(notifRef, notificationData);
                         operationCount++;
                         successCount++;
                         
-                        // Commit batch when reaching limit
                         if (operationCount >= BATCH_SIZE) {
                             console.log(`Committing batch of ${operationCount} notifications...`);
                             await batch.commit();
@@ -3647,14 +3778,12 @@
                     }
                 }
                 
-                // Commit any remaining notifications
                 if (operationCount > 0) {
                     console.log(`Committing final batch of ${operationCount} notifications...`);
                     await batch.commit();
                     console.log('✅ Final batch committed');
                 }
                 
-                // Log the broadcast in messages collection for history
                 try {
                     await db.collection('messages').add({
                         userId: 'BROADCAST',
@@ -3691,11 +3820,9 @@
             }
         }
 
-        // Function to send individual notification from form
         async function sendIndividualNotification() {
             console.log('sendIndividualNotification called');
             
-            // Get form values
             const userId = document.getElementById('notifUser')?.value;
             const title = document.getElementById('notifTitle')?.value;
             const message = document.getElementById('notifMessage')?.value;
@@ -3704,7 +3831,6 @@
             
             console.log('Form values:', { userId, title, message, type, link });
             
-            // Validate
             if (!userId) {
                 showAlert('Please select a user', 'error');
                 return;
@@ -3720,25 +3846,20 @@
                 return;
             }
             
-            // Send notification
             const success = await sendNotification(userId, title, message, type, link);
             
             if (success) {
-                // Clear form
                 document.getElementById('notifTitle').value = '';
                 document.getElementById('notifMessage').value = '';
                 document.getElementById('notifLink').value = '';
                 
-                // Hide form
                 document.getElementById('individualNotificationForm').style.display = 'none';
             }
         }
 
-        // Function to send broadcast notification from form
         async function sendBroadcastNotification() {
             console.log('sendBroadcastNotification called');
             
-            // Get form values
             const title = document.getElementById('broadcastNotifTitle')?.value;
             const message = document.getElementById('broadcastNotifMessage')?.value;
             const type = document.getElementById('broadcastNotifType')?.value;
@@ -3746,7 +3867,6 @@
             
             console.log('Broadcast form values:', { title, message, type, link });
             
-            // Validate
             if (!title || !title.trim()) {
                 showAlert('Please enter a notification title', 'error');
                 return;
@@ -3757,7 +3877,6 @@
                 return;
             }
             
-            // Show confirmation modal
             showModal(`
                 <h3 style="margin-bottom:1rem; color: #f59e0b;">Confirm Broadcast Notification</h3>
                 <div style="background: #f59e0b20; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
@@ -3777,37 +3896,32 @@
             `);
         }
 
-        // Execute broadcast notification after confirmation
         async function executeBroadcastNotification() {
             console.log('executeBroadcastNotification called');
             
-            // Get form values again (they're still in the form)
             const title = document.getElementById('broadcastNotifTitle')?.value;
             const message = document.getElementById('broadcastNotifMessage')?.value;
             const type = document.getElementById('broadcastNotifType')?.value;
             const link = document.getElementById('broadcastNotifLink')?.value;
             
-            closeModal(); // Close confirmation modal
+            closeModal();
             
-            // Send broadcast
             showAlert('Sending broadcast...', 'info', 'Please Wait');
             
             const success = await sendNotificationToAll(title, message, type, link);
             
             if (success) {
-                // Clear form
                 document.getElementById('broadcastNotifTitle').value = '';
                 document.getElementById('broadcastNotifMessage').value = '';
                 document.getElementById('broadcastNotifLink').value = '';
                 
-                // Hide form
                 document.getElementById('broadcastNotificationForm').style.display = 'none';
             }
         }
 
         // ========== END FIXED NOTIFICATION FUNCTIONS ==========
           
-        // Load Messages (updated with notification sending options and petitions)
+        // Load Messages – includes petitions
         async function loadMessages() {  
             const users = await db.collection('users').get();  
               
@@ -3841,7 +3955,6 @@
                 `;  
             });  
               
-            // Fetch petitions (if collection exists)
             let petitionsHtml = '';
             try {
                 const petitionsSnap = await db.collection('petitions').orderBy('createdAt', 'desc').limit(10).get();
@@ -3897,13 +4010,11 @@
                     </div>  
                 </div>  
 
-                <!-- Send Notification Forms -->
                 <div style="display: flex; gap: 1rem; margin: 2rem 0 1rem 0;">  
                     <button class="btn btn-success" id="individualNotificationBtn">🔔 Send Individual Notification</button>  
                     <button class="btn btn-warning" id="broadcastNotificationBtn">🔔 Broadcast Notification</button>  
                 </div>  
 
-                <!-- Individual Notification Form -->
                 <div id="individualNotificationForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: none;">  
                     <h4 style="margin-bottom:1rem;">Send Individual Notification</h4>  
                     <select id="notifUser">  
@@ -3926,7 +4037,6 @@
                     <button class="btn btn-success" id="sendIndividualNotifBtn">Send Notification</button>  
                 </div>  
 
-                <!-- Broadcast Notification Form -->
                 <div id="broadcastNotificationForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: none;">  
                     <h4 style="margin-bottom:1rem; color: #f59e0b;">Broadcast Notification to All Users</h4>  
                     <div style="background: #f59e0b20; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
@@ -3961,7 +4071,6 @@
             document.getElementById('content').innerHTML = html;  
         }  
           
-        // Send Individual Message  
         async function sendMessage() {  
             const userId = document.getElementById('messageUser').value;  
             const message = document.getElementById('messageText').value;  
@@ -3986,7 +4095,6 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()  
             });  
 
-            // Also send a notification  
             await sendNotification(userId, 'New Message from Admin', message, 'message', null);  
               
             showAlert('Message sent successfully', 'success');  
@@ -3994,7 +4102,6 @@
             loadMessages();  
         }  
           
-        // Send Broadcast Message  
         async function sendBroadcast() {  
             const title = document.getElementById('broadcastTitle')?.value || '';  
             const message = document.getElementById('broadcastMessage')?.value;  
@@ -4028,7 +4135,6 @@
             `);  
         }  
           
-        // Execute Broadcast  
         async function executeBroadcast() {  
             const title = document.getElementById('broadcastTitle')?.value || '';  
             const message = document.getElementById('broadcastMessage')?.value;  
@@ -4080,7 +4186,6 @@
             }  
         }  
           
-        // Preview Broadcast  
         function previewBroadcast() {  
             const title = document.getElementById('broadcastTitle')?.value || '';  
             const message = document.getElementById('broadcastMessage')?.value;  
@@ -4107,25 +4212,177 @@
                 <button class="btn btn-primary" onclick="closeModal()" style="width: 100%;">Close Preview</button>  
             `);  
         }  
-          
-        // Event Delegation for all buttons (wrapped in try/catch to log errors)  
+
+        // ========== NEW: Load Transactions ==========
+        async function loadTransactions() {
+            let html = '<h3 style="margin-bottom:1.5rem;">All Transactions</h3>';
+            try {
+                const [withdrawals, adjustments, submissions, bonuses, memberships] = await Promise.all([
+                    db.collection('withdrawals').where('status', '==', 'paid').orderBy('paidAt', 'desc').limit(100).get(),
+                    db.collection('walletAdjustments').orderBy('createdAt', 'desc').limit(100).get(),
+                    db.collection('submissions').where('status', '==', 'approved').orderBy('reviewedAt', 'desc').limit(100).get(),
+                    db.collection('referralBonuses').orderBy('creditedAt', 'desc').limit(100).get(),
+                    db.collection('membershipPayments').where('status', '==', 'approved').orderBy('approvedAt', 'desc').limit(100).get()
+                ]);
+
+                const userIds = new Set();
+                const transactions = [];
+
+                withdrawals.forEach(doc => {
+                    const w = doc.data();
+                    userIds.add(w.userId);
+                    transactions.push({
+                        id: doc.id,
+                        userId: w.userId,
+                        userEmail: w.userEmail || null,
+                        amount: -w.amount,
+                        type: 'withdrawal',
+                        description: `Withdrawal via ${w.method} (${w.phone})`,
+                        createdAt: w.paidAt,
+                        relatedId: doc.id
+                    });
+                });
+
+                adjustments.forEach(doc => {
+                    const a = doc.data();
+                    userIds.add(a.userId);
+                    transactions.push({
+                        id: doc.id,
+                        userId: a.userId,
+                        userEmail: null,
+                        amount: a.amount,
+                        type: 'adjustment',
+                        description: `Admin adjustment: ${a.reason || 'No reason'}`,
+                        createdAt: a.createdAt,
+                        relatedId: doc.id
+                    });
+                });
+
+                submissions.forEach(doc => {
+                    const s = doc.data();
+                    userIds.add(s.userId);
+                    transactions.push({
+                        id: doc.id,
+                        userId: s.userId,
+                        userEmail: s.userEmail || null,
+                        amount: s.earned || 0,
+                        type: 'task_earnings',
+                        description: `Task: ${s.taskTitle} (Score: ${s.score})`,
+                        createdAt: s.reviewedAt,
+                        relatedId: doc.id
+                    });
+                });
+
+                bonuses.forEach(doc => {
+                    const b = doc.data();
+                    userIds.add(b.referrerId);
+                    if (b.referredId) userIds.add(b.referredId);
+                    transactions.push({
+                        id: doc.id,
+                        userId: b.type === 'referrer' ? b.referrerId : b.referredId,
+                        userEmail: b.referredEmail || null,
+                        amount: b.amount,
+                        type: `referral_${b.type}`,
+                        description: `Referral bonus (${b.type}) for referring ${b.referredEmail || 'user'}`,
+                        createdAt: b.creditedAt,
+                        relatedId: doc.id
+                    });
+                });
+
+                memberships.forEach(doc => {
+                    const m = doc.data();
+                    userIds.add(m.userId);
+                    transactions.push({
+                        id: doc.id,
+                        userId: m.userId,
+                        userEmail: m.userEmail || null,
+                        amount: -m.amount,
+                        type: 'membership_payment',
+                        description: `Membership purchase: ${m.membershipType}`,
+                        createdAt: m.approvedAt,
+                        relatedId: doc.id
+                    });
+                });
+
+                const userIdsArray = Array.from(userIds);
+                const userMap = {};
+                if (userIdsArray.length > 0) {
+                    const userSnapshots = await Promise.all(userIdsArray.map(uid => db.collection('users').doc(uid).get()));
+                    userSnapshots.forEach(doc => {
+                        if (doc.exists) {
+                            userMap[doc.id] = doc.data().email;
+                        }
+                    });
+                }
+
+                transactions.forEach(t => {
+                    if (!t.userEmail && userMap[t.userId]) {
+                        t.userEmail = userMap[t.userId];
+                    } else if (!t.userEmail) {
+                        t.userEmail = 'Unknown';
+                    }
+                });
+
+                transactions.sort((a, b) => {
+                    const aTime = a.createdAt?.seconds || 0;
+                    const bTime = b.createdAt?.seconds || 0;
+                    return bTime - aTime;
+                });
+
+                if (transactions.length === 0) {
+                    html += '<p>No transactions found.</p>';
+                } else {
+                    html += '<table class="data-table">';
+                    html += '<tr><th>Date</th><th>User</th><th>Type</th><th>Description</th><th>Amount</th></tr>';
+                    transactions.forEach(t => {
+                        const date = t.createdAt ? formatDate(t.createdAt) : 'N/A';
+                        const amountClass = t.amount >= 0 ? 'success' : 'danger';
+                        const amountStr = t.amount >= 0 ? `+$${t.amount.toFixed(2)}` : `-$${Math.abs(t.amount).toFixed(2)}`;
+                        html += `<tr>
+                            <td>${date}</td>
+                            <td>${t.userEmail}</td>
+                            <td><span class="badge primary">${t.type.replace('_', ' ')}</span></td>
+                            <td>${t.description}</td>
+                            <td><span class="badge ${amountClass}">${amountStr}</span></td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                }
+
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                html += `<p style="color:red;">Error loading transactions: ${error.message}</p>`;
+            }
+            document.getElementById('content').innerHTML = html;
+        }
+        // ========== END NEW TRANSACTIONS ==========
+
+        // Event Delegation for all buttons
         document.addEventListener('click', async (e) => {  
             try {  
                 const target = e.target;  
             
-                // Handle referral card clicks (but not when clicking on buttons inside)
                 if (target.classList.contains('referral-card') && !target.closest('button')) {
-                    // The click is handled by the onclick attribute
                     return;
                 }
+
+                // Notification bell toggle
+                if (target.closest('#notificationBell')) {
+                    const dropdown = document.getElementById('notificationDropdown');
+                    dropdown.classList.toggle('active');
+                    return;
+                }
+
+                // Close notification dropdown when clicking outside
+                if (!target.closest('.notification-dropdown') && !target.closest('#notificationBell')) {
+                    document.getElementById('notificationDropdown').classList.remove('active');
+                }
                   
-                // Logout button  
                 if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {  
                     logout();  
                     return;  
                 }  
                   
-                // Tab buttons  
                 if (target.classList.contains('tab') || target.closest('.tab')) {  
                     const tab = target.closest('.tab') || target;  
                     const tabName = tab.getAttribute('data-tab');  
@@ -4135,13 +4392,11 @@
                     return;  
                 }  
                   
-                // Close modal button  
                 if (target.id === 'closeModalBtn' || target.closest('#closeModalBtn') || target.classList.contains('modal-backdrop')) {  
                     closeModal();  
                     return;  
                 }  
                   
-                // Adjust Wallet button  
                 if (target.classList.contains('adjust-wallet-btn')) {  
                     const userId = target.getAttribute('data-user-id');  
                     const userName = target.getAttribute('data-user-name');  
@@ -4150,14 +4405,12 @@
                     return;  
                 }  
                   
-                // Apply Adjustment button (inside modal)  
                 if (target.classList.contains('apply-adjustment-btn')) {  
                     const userId = target.getAttribute('data-user-id');  
                     await adjustWallet(userId);  
                     return;  
                 }  
                   
-                // Toggle User Status  
                 if (target.classList.contains('toggle-status-btn')) {  
                     const userId = target.getAttribute('data-user-id');  
                     const newStatus = target.getAttribute('data-new-status') === 'true';  
@@ -4165,15 +4418,12 @@
                     return;  
                 }  
                   
-                // Make Admin  
                 if (target.classList.contains('make-admin-btn')) {  
                     const userId = target.getAttribute('data-user-id');  
                     await makeAdmin(userId);  
                     return;  
                 }  
                   
-                // ========== NEW BUTTONS ==========
-                // Toggle Verified
                 if (target.classList.contains('toggle-verified-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const newStatus = target.getAttribute('data-new-status') === 'true';
@@ -4181,7 +4431,6 @@
                     return;
                 }
 
-                // Toggle Frozen
                 if (target.classList.contains('toggle-frozen-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const newStatus = target.getAttribute('data-new-status') === 'true';
@@ -4189,42 +4438,35 @@
                     return;
                 }
 
-                // Delete User
                 if (target.classList.contains('delete-user-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const userEmail = target.getAttribute('data-user-email');
                     await deleteUser(userId, userEmail);
                     return;
                 }
-                // ========== END NEW BUTTONS ==========
                   
-                // Create Task button  
                 if (target.id === 'createTaskBtn') {  
                     showCreateTask();  
                     return;  
                 }  
                   
-                // Create Task Confirm button  
                 if (target.id === 'createTaskConfirmBtn') {  
                     await createTask();  
                     return;  
                 }  
                   
-                // Edit Task button  
                 if (target.classList.contains('edit-task-btn')) {  
                     const taskId = target.getAttribute('data-task-id');  
                     await editTask(taskId);  
                     return;  
                 }  
                   
-                // Update Task button  
                 if (target.id === 'updateTaskBtn') {  
                     const taskId = target.getAttribute('data-task-id');  
                     await updateTask(taskId);  
                     return;  
                 }  
                   
-                // Toggle Task button  
                 if (target.classList.contains('toggle-task-btn')) {  
                     const taskId = target.getAttribute('data-task-id');  
                     const newStatus = target.getAttribute('data-new-status') === 'true';  
@@ -4232,35 +4474,30 @@
                     return;  
                 }  
                   
-                // View Requirements button  
                 if (target.classList.contains('view-requirements-btn')) {  
                     const taskId = target.getAttribute('data-task-id');  
                     await viewRequirements(taskId);  
                     return;  
                 }  
                   
-                // Approve Submission  
                 if (target.classList.contains('approve-submission')) {  
                     const subId = target.getAttribute('data-sub-id');  
                     await reviewSubmission(subId, true);  
                     return;  
                 }  
                   
-                // Reject Submission  
                 if (target.classList.contains('reject-submission')) {  
                     const subId = target.getAttribute('data-sub-id');  
                     await reviewSubmission(subId, false);  
                     return;  
                 }  
                   
-                // Process Withdrawal  
                 if (target.classList.contains('process-withdrawal')) {  
                     const withdrawalId = target.getAttribute('data-withdrawal-id');  
                     await processWithdrawal(withdrawalId);  
                     return;  
                 }  
                   
-                // Approve Membership  
                 if (target.classList.contains('approve-membership')) {  
                     const userId = target.getAttribute('data-user-id');  
                     const paymentId = target.getAttribute('data-payment-id');  
@@ -4268,7 +4505,6 @@
                     return;  
                 }  
                   
-                // Reject Membership  
                 if (target.classList.contains('reject-membership')) {  
                     const userId = target.getAttribute('data-user-id');  
                     const paymentId = target.getAttribute('data-payment-id');  
@@ -4276,34 +4512,29 @@
                     return;  
                 }  
                 
-                // Edit Packages button
                 if (target.classList.contains('edit-packages-btn') || target.id === 'editPackagesBtn' || 
                     (target.closest('button') && target.closest('button').textContent.includes('Edit Packages'))) {
                     showEditPackages();
                     return;
                 }
                 
-                // Save Packages button
                 if (target.id === 'savePackagesBtn' || (target.closest('button') && target.closest('button').id === 'savePackagesBtn')) {
                     e.preventDefault();
                     await savePackages();
                     return;
                 }
                 
-                // Edit Fee Settings button
                 if (target.id === 'editFeeSettingsBtn' || (target.closest('button') && target.closest('button').textContent.includes('Edit Fee Settings'))) {
                     showEditFeeSettings();
                     return;
                 }
                 
-                // Save Fee Settings button
                 if (target.id === 'saveFeeSettingsBtn' || (target.closest('button') && target.closest('button').id === 'saveFeeSettingsBtn')) {
                     e.preventDefault();
                     await saveFeeSettings();
                     return;
                 }
                   
-                // Credit Referral button  
                 if (target.classList.contains('credit-referral-btn')) {  
                     const referralId = target.getAttribute('data-referral-id');  
                     const referrerId = target.getAttribute('data-referrer-id');  
@@ -4313,7 +4544,6 @@
                     return;  
                 }  
                   
-                // Confirm Credit button (in modal)  
                 if (target.id === 'confirmCreditBtn') {  
                     const referralId = target.getAttribute('data-referral-id');  
                     const referrerId = target.getAttribute('data-referrer-id');  
@@ -4323,7 +4553,6 @@
                     return;  
                 }  
                   
-                // Reject Referral button  
                 if (target.classList.contains('reject-referral-btn')) {  
                     const referralId = target.getAttribute('data-referral-id');  
                     if (confirm('Are you sure you want to reject this referral?')) {  
@@ -4332,13 +4561,11 @@
                     return;  
                 }  
                   
-                // Send Individual Message  
                 if (target.id === 'sendMessageBtn') {  
                     await sendMessage();  
                     return;  
                 }  
                   
-                // Individual Message button  
                 if (target.id === 'individualMessageBtn') {  
                     currentMessageType = 'individual';  
                     document.getElementById('individualMessageForm').style.display = 'block';  
@@ -4348,7 +4575,6 @@
                     return;  
                 }  
                   
-                // Broadcast Message button  
                 if (target.id === 'broadcastMessageBtn') {  
                     currentMessageType = 'broadcast';  
                     document.getElementById('broadcastMessageForm').style.display = 'block';  
@@ -4358,31 +4584,26 @@
                     return;  
                 }  
                   
-                // Send Broadcast button  
                 if (target.id === 'sendBroadcastBtn' || target.closest('#sendBroadcastBtn')) {  
                     await sendBroadcast();  
                     return;  
                 }  
                   
-                // Preview Broadcast button  
                 if (target.id === 'previewBroadcastBtn') {  
                     previewBroadcast();  
                     return;  
                 }  
                   
-                // Confirm Broadcast button (in modal)  
                 if (target.id === 'confirmBroadcastBtn') {  
                     await executeBroadcast();  
                     return;  
                 }  
                   
-                // Cancel Broadcast button (in modal)  
                 if (target.id === 'cancelBroadcastBtn') {  
                     closeModal();  
                     return;  
                 }  
 
-                // Toggle Individual Notification Form  
                 if (target.id === 'individualNotificationBtn') {  
                     const form = document.getElementById('individualNotificationForm');  
                     form.style.display = form.style.display === 'none' ? 'block' : 'none';  
@@ -4390,7 +4611,6 @@
                     return;  
                 }  
 
-                // Toggle Broadcast Notification Form  
                 if (target.id === 'broadcastNotificationBtn') {  
                     const form = document.getElementById('broadcastNotificationForm');  
                     form.style.display = form.style.display === 'none' ? 'block' : 'none';  
@@ -4398,19 +4618,16 @@
                     return;  
                 }  
 
-                // Send Individual Notification  
                 if (target.id === 'sendIndividualNotifBtn') {  
                     await sendIndividualNotification();  
                     return;  
                 }  
 
-                // Send Broadcast Notification (opens confirmation modal)  
                 if (target.id === 'sendBroadcastNotifBtn') {  
                     await sendBroadcastNotification();  
                     return;  
                 }  
 
-                // Confirm Broadcast Notification  
                 if (target.id === 'confirmBroadcastNotifBtn') {  
                     await executeBroadcastNotification();  
                     return;  
@@ -4421,7 +4638,6 @@
             }
         });  
           
-        // Make functions globally available  
         window.showAlert = showAlert;  
         window.showModal = showModal;  
         window.closeModal = closeModal;  
@@ -4467,6 +4683,7 @@
         window.sendBroadcastNotification = sendBroadcastNotification;  
         window.executeBroadcastNotification = executeBroadcastNotification;  
         window.debugNotifications = debugNotifications;
+        window.filterUsersTable = filterUsersTable;
     </script>  
 </body>  
 </html>
