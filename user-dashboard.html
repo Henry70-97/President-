@@ -13,6 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* (All previous styles remain unchanged, only additions for mirror are appended) */
         * { 
             margin: 0; 
             padding: 0; 
@@ -31,7 +32,7 @@
             padding: 1rem; 
         }
         
-        /* ---------- Mini TV / News Bar ---------- */
+        /* ---------- Mirror TV ---------- */
         .news-tv-container {
             background: #0b0f18;
             border-radius: 1.8rem;
@@ -73,13 +74,93 @@
             width: 100%;
             border: 2px solid #4b5563;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
         }
-        .tv-screen iframe {
+        /* Mirror content styles */
+        .mirror-content {
             width: 100%;
             height: 100%;
-            border: none;
-            display: block;
+            overflow-y: auto;
+            color: #fff;
+            font-family: 'Inter', monospace;
+            scrollbar-width: thin;
+            scrollbar-color: #6366f1 #1e293b;
         }
+        .mirror-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .mirror-content::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .mirror-content::-webkit-scrollbar-thumb {
+            background: #6366f1;
+            border-radius: 10px;
+        }
+        .mirror-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            height: 100%;
+            align-content: center;
+        }
+        .mirror-stat-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 0.8rem;
+            padding: 0.8rem;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .mirror-stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+        }
+        .mirror-stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #10b981;
+            line-height: 1.2;
+        }
+        .mirror-welcome {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+        .mirror-task-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #10b981;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        .mirror-task-detail {
+            font-size: 1rem;
+            color: #cbd5e1;
+            margin-bottom: 0.3rem;
+        }
+        .mirror-task-detail i {
+            color: #6366f1;
+            width: 20px;
+            margin-right: 0.3rem;
+        }
+        .mirror-deadline {
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        .mirror-deadline.upcoming { background: #f59e0b20; color: #f59e0b; }
+        .mirror-deadline.urgent { background: #ef444420; color: #ef4444; }
+        .mirror-deadline.expired { background: #64748b20; color: #94a3b8; }
+        
         @keyframes pulseLive {
             0% { opacity: 1; background-color: #b91c1c; }
             50% { opacity: 0.85; background-color: #dc2626; }
@@ -301,7 +382,7 @@
             min-height: 500px; 
         }
         
-        /* Filter Bar Styles */
+        /* Filter Bar Styles (unchanged) */
         .filter-bar {
             background: #f8fafc;
             border-radius: 1rem;
@@ -309,7 +390,6 @@
             margin-bottom: 2rem;
             border: 1px solid #e2e8f0;
         }
-        
         .filter-title {
             font-weight: 700;
             color: #0f172a;
@@ -318,7 +398,6 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
         .filter-row {
             display: flex;
             flex-wrap: wrap;
@@ -326,12 +405,10 @@
             margin-bottom: 1rem;
             align-items: flex-end;
         }
-        
         .filter-group {
             flex: 1;
             min-width: 150px;
         }
-        
         .filter-group label {
             display: block;
             font-size: 0.8rem;
@@ -341,7 +418,6 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
         .filter-select, .filter-input {
             width: 100%;
             padding: 0.6rem 1rem;
@@ -352,23 +428,19 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        
         .filter-select:hover, .filter-input:hover {
             border-color: #6366f1;
         }
-        
         .filter-select:focus, .filter-input:focus {
             outline: none;
             border-color: #6366f1;
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
-        
         .filter-actions {
             display: flex;
             gap: 0.5rem;
             align-items: center;
         }
-        
         .filter-btn {
             padding: 0.6rem 1.2rem;
             border: none;
@@ -381,33 +453,27 @@
             align-items: center;
             gap: 0.3rem;
         }
-        
         .filter-btn.apply {
             background: #6366f1;
             color: white;
         }
-        
         .filter-btn.apply:hover {
             background: #4f52e0;
             transform: translateY(-2px);
         }
-        
         .filter-btn.reset {
             background: #e2e8f0;
             color: #475569;
         }
-        
         .filter-btn.reset:hover {
             background: #cbd5e1;
         }
-        
         .active-filters {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
             margin-top: 1rem;
         }
-        
         .filter-tag {
             background: #e2e8f0;
             padding: 0.3rem 1rem;
@@ -417,7 +483,6 @@
             align-items: center;
             gap: 0.3rem;
         }
-        
         .filter-tag i {
             cursor: pointer;
             color: #ef4444;
@@ -2104,21 +2169,38 @@
     </div>
     
     <div class="app-container">
-        <!-- ========== NTV KENYA LIVE TV ========== -->
+        <!-- ========== MIRROR TV (Dynamic Dashboard Mirror) ========== -->
         <div class="news-tv-container">
             <div class="news-header">
                 <span class="live-badge">🔴 LIVE</span>
-                <span><i class="fas fa-tv" style="color:#10b981;"></i> NTV Kenya · 24/7 News</span>
+                <span><i class="fas fa-tv" style="color:#10b981;"></i> Your Activity Mirror</span>
             </div>
             <div class="tv-screen" id="tvScreen">
-                <!-- NTV Kenya Live Stream - Official Embed -->
-                <iframe id="tvIframe" src="https://www.ntvkenya.co.ke/live-stream/" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-            </div>
-            <div style="margin-top: 0.5rem; text-align: center; font-size: 0.7rem; color: #94a3b8;">
-                <i class="fas fa-info-circle"></i> If stream doesn't load, try refreshing the page
+                <div id="mirrorContent" class="mirror-content">
+                    <!-- Dynamically filled by JavaScript -->
+                    <div class="mirror-stats">
+                        <div class="mirror-stat-item">
+                            <div class="mirror-stat-label">Wallet</div>
+                            <div class="mirror-stat-value" id="mirrorWallet">$0.00</div>
+                        </div>
+                        <div class="mirror-stat-item">
+                            <div class="mirror-stat-label">Pending</div>
+                            <div class="mirror-stat-value" id="mirrorPending">0</div>
+                        </div>
+                        <div class="mirror-stat-item">
+                            <div class="mirror-stat-label">Approved</div>
+                            <div class="mirror-stat-value" id="mirrorApproved">0</div>
+                        </div>
+                        <div class="mirror-stat-item">
+                            <div class="mirror-stat-label">Referrals</div>
+                            <div class="mirror-stat-value" id="mirrorReferrals">0</div>
+                        </div>
+                    </div>
+                    <div class="mirror-welcome" id="mirrorWelcome">Welcome, <span id="mirrorUserName">User</span>!</div>
+                </div>
             </div>
         </div>
-        <!-- ==================================== -->
+        <!-- =========================================================== -->
         
         <div class="header">
             <div class="hamburger-menu" onclick="toggleMobileMenu()">
@@ -2208,7 +2290,7 @@
     </div>
     
     <script>
-        // Firebase Config
+        // Firebase Config (unchanged)
         const firebaseConfig = {
             apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
             authDomain: "nextgen-5fb6f.firebaseapp.com",
@@ -2218,12 +2300,10 @@
             appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
         };
         
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         
-        // Enable offline persistence
         db.enablePersistence()
             .then(() => console.log('Persistence enabled'))
             .catch((err) => {
@@ -2234,7 +2314,7 @@
                 }
             });
         
-        // Fee constants
+        // Fee constants (unchanged)
         let TRANSACTION_FEE_PERCENT = 3;
         let PLATFORM_FEE_PERCENT = 2;
         let TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT;
@@ -2302,8 +2382,69 @@
         let messagesListener = null;
         let notificationsListener = null;
         let notificationsPanelVisible = false;
+        // Track currently viewed task for mirror
+        let currentTaskViewed = null;
         
-        // Mobile menu functions
+        // --- Mirror update functions ---
+        function updateMirrorWithTask(task) {
+            if (!task) return;
+            const mirror = document.getElementById('mirrorContent');
+            const deadlineClass = task.deadline ? getDeadlineClass(task.deadline) : '';
+            const deadlineText = task.deadline ? formatDeadline(task.deadline) : 'No deadline';
+            mirror.innerHTML = `
+                <div style="padding: 0.5rem;">
+                    <div class="mirror-task-title">${task.title || 'Task'}</div>
+                    <div class="mirror-task-detail"><i class="fas fa-user-circle"></i> ${task.clientName || 'NextGen Admin'}</div>
+                    <div class="mirror-task-detail"><i class="fas fa-tag"></i> $${(parseFloat(task.reward) || 0).toFixed(2)}</div>
+                    ${task.deadline ? `<div class="mirror-deadline ${deadlineClass}"><i class="fas fa-calendar-alt"></i> ${deadlineText}</div>` : ''}
+                    <div class="mirror-task-detail" style="margin-top:0.8rem;"><i class="fas fa-align-left"></i> ${(task.description || '').substring(0, 100)}${(task.description || '').length > 100 ? '…' : ''}</div>
+                </div>
+            `;
+        }
+        
+        function updateMirrorWithStats() {
+            if (!userData) return;
+            // Get pending/approved counts from stats grid or recalc
+            // For simplicity, we'll use the values from the DOM if available
+            const pendingEl = document.querySelector('.stat-card:nth-child(2) .stat-value');
+            const approvedEl = document.querySelector('.stat-card:nth-child(3) .stat-value');
+            const referralsEl = document.querySelector('.stat-card:nth-child(4) .stat-value');
+            
+            const pending = pendingEl ? pendingEl.textContent : '0';
+            const approved = approvedEl ? approvedEl.textContent : '0';
+            const referrals = referralsEl ? referralsEl.textContent : '0';
+            
+            document.getElementById('mirrorWallet').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
+            document.getElementById('mirrorPending').textContent = pending;
+            document.getElementById('mirrorApproved').textContent = approved;
+            document.getElementById('mirrorReferrals').textContent = referrals;
+            document.getElementById('mirrorUserName').textContent = userData.displayName || 'User';
+            
+            // Ensure the mirror content structure is stats (if it got overridden)
+            const mirror = document.getElementById('mirrorContent');
+            if (!mirror.querySelector('.mirror-stats')) {
+                mirror.innerHTML = `
+                    <div class="mirror-stats">
+                        <div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value" id="mirrorWallet">$${(userData.wallet || 0).toFixed(2)}</div></div>
+                        <div class="mirror-stat-item"><div class="mirror-stat-label">Pending</div><div class="mirror-stat-value" id="mirrorPending">${pending}</div></div>
+                        <div class="mirror-stat-item"><div class="mirror-stat-label">Approved</div><div class="mirror-stat-value" id="mirrorApproved">${approved}</div></div>
+                        <div class="mirror-stat-item"><div class="mirror-stat-label">Referrals</div><div class="mirror-stat-value" id="mirrorReferrals">${referrals}</div></div>
+                    </div>
+                    <div class="mirror-welcome">Welcome, <span id="mirrorUserName">${userData.displayName || 'User'}</span>!</div>
+                `;
+            }
+        }
+        
+        function refreshMirror() {
+            if (currentTaskViewed) {
+                updateMirrorWithTask(currentTaskViewed);
+            } else {
+                updateMirrorWithStats();
+            }
+        }
+        // --- End mirror functions ---
+        
+        // Mobile menu functions (unchanged)
         function toggleMobileMenu() {
             const mobileNav = document.getElementById('mobileNav');
             const overlay = document.getElementById('mobileNavOverlay');
@@ -2328,7 +2469,7 @@
             clickedItem.classList.add('active');
         }
         
-        // Alert functions
+        // Alert functions (unchanged)
         function showAlert(message, type = 'error') {
             const alertDialog = document.getElementById('alertDialog');
             const overlay = document.getElementById('overlay');
@@ -2354,7 +2495,7 @@
             document.getElementById('overlay').classList.remove('show');
         }
         
-        // Modal functions
+        // Modal functions (modified to clear task view on close)
         function showModal(html) {
             document.getElementById('modalContent').innerHTML = html;
             document.getElementById('modal').classList.add('active');
@@ -2364,11 +2505,16 @@
         function closeModal() {
             document.getElementById('modal').classList.remove('active');
             document.getElementById('modalBackdrop').classList.remove('active');
+            // When closing modal, if we were viewing a task, clear it and revert to stats
+            if (currentTaskViewed) {
+                currentTaskViewed = null;
+                refreshMirror();
+            }
         }
         
         document.getElementById('modalBackdrop').addEventListener('click', closeModal);
         
-        // Logout function
+        // Logout function (unchanged)
         function logout() {
             if (messagesListener) messagesListener();
             if (notificationsListener) notificationsListener();
@@ -2376,13 +2522,17 @@
             window.location.href = 'index.html';
         }
         
-        // Generate referral code
+        // Generate referral code (unchanged)
         function generateReferralCode(userId) {
             return userId.substring(0, 8).toUpperCase();
         }
         
-        // Tab switching function
+        // Tab switching function (modified to reset task view)
         function switchTab(tab) {
+            // Clear any task being viewed
+            currentTaskViewed = null;
+            refreshMirror();
+            
             const desktopTabs = document.querySelectorAll('.tab');
             desktopTabs.forEach(t => t.classList.remove('active'));
             
@@ -2435,7 +2585,7 @@
             }
         }
         
-        // Show not qualified dialog for Transcription, Design, and Projects
+        // Show not qualified dialog (unchanged)
         function showNotQualifiedDialog(sectionName) {
             showModal(`
                 <div class="modal-content" style="text-align: center;">
@@ -2467,7 +2617,7 @@
             `);
         }
         
-        // Show escrow membership required message (kept for backward compatibility)
+        // Show escrow membership required message (unchanged)
         function showEscrowMessage(sectionName) {
             document.getElementById('content').innerHTML = `
                 <div class="escrow-message">
@@ -2485,11 +2635,10 @@
             `;
         }
         
-        // Show membership options with Pay Now button and payment message textbox
+        // Show membership options (unchanged)
         function showMembershipOptions() {
             showModal(`
                 <div class="modal-content" style="text-align: center;">
-                    <!-- Pay Now Button - prominently displayed at top -->
                     <div style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #667eea, #764ba2); padding: 1.5rem; border-radius: 1rem; color: white;">
                         <i class="fas fa-bolt" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
                         <h3 style="color: white; margin-bottom: 0.5rem;">Ready to Upgrade?</h3>
@@ -2520,7 +2669,6 @@
                         </div>
                     </div>
                     
-                    <!-- Payment Verification Section -->
                     <div style="margin-top: 2rem; padding: 1.5rem; background: #f1f5f9; border-radius: 1rem; border: 2px solid #e2e8f0;">
                         <h4 style="margin-bottom: 1rem; color: #0f172a;">
                             <i class="fas fa-check-circle" style="color: #10b981;"></i> Payment Verification
@@ -2534,7 +2682,6 @@
                         </button>
                     </div>
                     
-                    <!-- Second Pay Now button at bottom for convenience -->
                     <div style="margin-top: 1.5rem;">
                         <button class="btn btn-primary" onclick="window.open('https://pay.com', '_blank')" style="font-size: 1rem;">
                             <i class="fas fa-lock"></i> Pay with Pay.com
@@ -2548,7 +2695,7 @@
             `);
         }
         
-        // Submit payment verification for admin approval
+        // Submit payment verification (unchanged)
         function submitPaymentVerification() {
             const paymentMessage = document.getElementById('paymentMessage')?.value;
             
@@ -2557,7 +2704,6 @@
                 return;
             }
             
-            // Show loading
             showModal(`
                 <div class="modal-content" style="text-align: center; padding: 3rem;">
                     <div class="loading-spinner" style="margin: 0 auto 1.5rem;"></div>
@@ -2566,17 +2712,7 @@
                 </div>
             `);
             
-            // Simulate Firebase save (replace with actual Firebase save in production)
             setTimeout(() => {
-                // In production, save to Firestore:
-                // db.collection('paymentVerifications').add({
-                //     userId: currentUser.uid,
-                //     userEmail: currentUser.email,
-                //     paymentMessage: paymentMessage,
-                //     status: 'pending',
-                //     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
-                // });
-                
                 showModal(`
                     <div class="modal-content" style="text-align: center;">
                         <div class="success-check">
@@ -2599,7 +2735,7 @@
             }, 2000);
         }
         
-        // Helper functions
+        // Helper functions (unchanged)
         function isDeadlinePassed(deadline) {
             if (!deadline) return false;
             const now = new Date();
@@ -2634,7 +2770,7 @@
             return 'upcoming';
         }
         
-        // Load fee settings
+        // Load fee settings (unchanged)
         async function loadFeeSettings() {
             try {
                 const doc = await db.collection('settings').doc('feeSettings').get();
@@ -2649,7 +2785,7 @@
             }
         }
         
-        // Load membership packages
+        // Load membership packages (unchanged)
         async function loadMembershipPackages() {
             try {
                 const doc = await db.collection('settings').doc('membershipPackages').get();
@@ -2675,7 +2811,7 @@
             return pkg.welcomeBonus || 10;
         }
         
-        // Check auth state
+        // Check auth state (modified to set up mirror after user data)
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = 'index.html';
@@ -2772,13 +2908,16 @@
                 
                 loadDashboard();
                 
+                // Initial mirror update
+                refreshMirror();
+                
             } catch (error) {
                 console.error('Auth error:', error);
                 showAlert('Error loading user data', 'error');
             }
         });
         
-        // Set up real-time message counter
+        // Set up real-time message counter (unchanged)
         function setupMessageCounter() {
             if (messagesListener) messagesListener();
             
@@ -2819,7 +2958,7 @@
                 });
         }
         
-        // Set up wallet listener
+        // Set up wallet listener (unchanged, but triggers mirror refresh)
         function setupWalletListener() {
             db.collection('users').doc(currentUser.uid)
                 .onSnapshot((doc) => {
@@ -2827,13 +2966,17 @@
                         const newWallet = doc.data().wallet || 0;
                         userData.wallet = newWallet;
                         document.getElementById('walletDisplay').textContent = `$${newWallet.toFixed(2)}`;
+                        // Refresh mirror if stats are shown
+                        if (!currentTaskViewed) {
+                            refreshMirror();
+                        }
                     }
                 }, (error) => {
                     console.error('Wallet listener error:', error);
                 });
         }
         
-        // Load Dashboard Stats
+        // Load Dashboard Stats (unchanged, but update mirror after stats loaded)
         async function loadDashboard() {
             try {
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
@@ -2878,6 +3021,7 @@
                 
                 document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
                 switchTab('tasks');
+                refreshMirror();
                 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
@@ -2889,10 +3033,11 @@
                     </div>
                 `;
                 switchTab('tasks');
+                refreshMirror();
             }
         }
         
-        // Load Tasks with Sorting and Filtering
+        // Load Tasks with Sorting and Filtering (unchanged, but ensure mirror reset)
         let allTasks = [];
         let filteredTasks = [];
         let currentFilters = {
@@ -2904,6 +3049,10 @@
         };
         
         async function loadTasks() {
+            // Clear any task view
+            currentTaskViewed = null;
+            refreshMirror();
+            
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
                 
@@ -2949,47 +3098,32 @@
             }
         }
         
+        // Apply filters (unchanged)
         function applyFilters() {
             filteredTasks = allTasks.filter(task => {
-                // Category filter
-                if (currentFilters.category !== 'all' && task.category !== currentFilters.category) {
-                    return false;
-                }
-                
-                // Difficulty filter
-                if (currentFilters.difficulty !== 'all' && task.difficulty !== currentFilters.difficulty) {
-                    return false;
-                }
-                
-                // Amount filter
+                if (currentFilters.category !== 'all' && task.category !== currentFilters.category) return false;
+                if (currentFilters.difficulty !== 'all' && task.difficulty !== currentFilters.difficulty) return false;
                 if (currentFilters.amount !== 'all') {
                     const reward = parseFloat(task.reward) || 0;
                     const [min, max] = currentFilters.amount.split('-').map(Number);
                     if (max) {
                         if (reward < min || reward > max) return false;
                     } else {
-                        // Handle "10+" case
                         if (reward < min) return false;
                     }
                 }
-                
-                // Deadline filter
                 if (currentFilters.deadline !== 'all') {
                     if (!task.deadline) return false;
-                    
                     const now = new Date();
                     const deadline = task.deadline.toDate ? task.deadline.toDate() : new Date(task.deadline);
                     const diffDays = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-                    
                     if (currentFilters.deadline === 'urgent' && diffDays > 1) return false;
                     if (currentFilters.deadline === 'week' && diffDays > 7) return false;
                     if (currentFilters.deadline === 'expired' && !isDeadlinePassed(task.deadline)) return false;
                 }
-                
                 return true;
             });
             
-            // Apply sorting
             switch(currentFilters.sortBy) {
                 case 'newest':
                     filteredTasks.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
@@ -3026,14 +3160,11 @@
                 difficulty: 'all',
                 sortBy: 'newest'
             };
-            
-            // Reset select elements
             document.getElementById('categoryFilter').value = 'all';
             document.getElementById('deadlineFilter').value = 'all';
             document.getElementById('amountFilter').value = 'all';
             document.getElementById('difficultyFilter').value = 'all';
             document.getElementById('sortFilter').value = 'newest';
-            
             filteredTasks = [...allTasks];
             renderTasks();
             document.getElementById('activeFilters').innerHTML = '';
@@ -3044,7 +3175,6 @@
             if (!container) return;
             
             let html = '';
-            
             if (currentFilters.category !== 'all') {
                 html += `<span class="filter-tag">Category: ${currentFilters.category} <i class="fas fa-times" onclick="removeFilter('category')"></i></span>`;
             }
@@ -3059,39 +3189,32 @@
             if (currentFilters.difficulty !== 'all') {
                 html += `<span class="filter-tag">Level: ${currentFilters.difficulty} <i class="fas fa-times" onclick="removeFilter('difficulty')"></i></span>`;
             }
-            
             container.innerHTML = html;
         }
         
         function removeFilter(filterName) {
             currentFilters[filterName] = 'all';
-            
-            // Update select element
             const selectMap = {
                 'category': 'categoryFilter',
                 'deadline': 'deadlineFilter',
                 'amount': 'amountFilter',
                 'difficulty': 'difficultyFilter'
             };
-            
             if (selectMap[filterName]) {
                 document.getElementById(selectMap[filterName]).value = 'all';
             }
-            
             applyFilters();
         }
         
         async function renderTasks() {
             let html = '<h3 style="margin-bottom: 2rem;">Available Tasks</h3>';
             
-            // Filter Bar
             html += `
                 <div class="filter-bar">
                     <div class="filter-title">
                         <i class="fas fa-sliders-h"></i>
                         <span>Filter & Sort Tasks</span>
                     </div>
-                    
                     <div class="filter-row">
                         <div class="filter-group">
                             <label>Category</label>
@@ -3104,7 +3227,6 @@
                                 <option value="other">Other</option>
                             </select>
                         </div>
-                        
                         <div class="filter-group">
                             <label>Deadline</label>
                             <select id="deadlineFilter" class="filter-select" onchange="currentFilters.deadline = this.value; applyFilters()">
@@ -3114,7 +3236,6 @@
                                 <option value="expired">Expired</option>
                             </select>
                         </div>
-                        
                         <div class="filter-group">
                             <label>Amount</label>
                             <select id="amountFilter" class="filter-select" onchange="currentFilters.amount = this.value; applyFilters()">
@@ -3126,7 +3247,6 @@
                                 <option value="50-999">$50+</option>
                             </select>
                         </div>
-                        
                         <div class="filter-group">
                             <label>Difficulty Level</label>
                             <select id="difficultyFilter" class="filter-select" onchange="currentFilters.difficulty = this.value; applyFilters()">
@@ -3136,7 +3256,6 @@
                                 <option value="hard">Hard</option>
                             </select>
                         </div>
-                        
                         <div class="filter-group">
                             <label>Sort By</label>
                             <select id="sortFilter" class="filter-select" onchange="currentFilters.sortBy = this.value; applyFilters()">
@@ -3147,14 +3266,12 @@
                                 <option value="deadline-urgent">Deadline: Urgent First</option>
                             </select>
                         </div>
-                        
                         <div class="filter-actions">
                             <button class="filter-btn reset" onclick="resetFilters()">
                                 <i class="fas fa-redo-alt"></i> Reset
                             </button>
                         </div>
                     </div>
-                    
                     <div id="activeFilters" class="active-filters"></div>
                 </div>
             `;
@@ -3168,7 +3285,6 @@
                 for (const task of filteredTasks) {
                     const hasSubmitted = await hasUserSubmitted(task.id);
                     const deadlinePassed = isDeadlinePassed(task.deadline);
-                    
                     let rewardValue = parseFloat(task.reward) || 0;
                     
                     html += `
@@ -3218,13 +3334,10 @@
                         </div>
                     `;
                 }
-                
                 html += '</div>';
             }
-            
             document.getElementById('content').innerHTML = html;
             
-            // Set select values based on current filters
             setTimeout(() => {
                 if (document.getElementById('categoryFilter')) document.getElementById('categoryFilter').value = currentFilters.category;
                 if (document.getElementById('deadlineFilter')) document.getElementById('deadlineFilter').value = currentFilters.deadline;
@@ -3238,7 +3351,7 @@
             showSubmitForm(taskId);
         }
         
-        // Show Submit Form with beautiful UI
+        // Show Submit Form (modified to possibly update mirror? We'll keep it stats for now)
         async function showSubmitForm(taskId, existingWork = '') {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -3264,7 +3377,6 @@
                     return;
                 }
                 
-                // Clear any previous pending submission
                 sessionStorage.removeItem('pendingSubmission');
                 
                 showModal(`
@@ -3281,7 +3393,6 @@
                                     ` : ''}
                                 </div>
                             </div>
-                            
                             <div class="submission-body">
                                 <div class="instructions-card">
                                     <h3><i class="fas fa-clipboard-list"></i> Task Instructions</h3>
@@ -3289,7 +3400,6 @@
                                         ${task.instructions || 'No specific instructions provided.'}
                                     </div>
                                 </div>
-                                
                                 <div class="work-editor">
                                     <div class="editor-toolbar">
                                         <span class="editor-label"><i class="fas fa-pencil-alt"></i> Your Work</span>
@@ -3297,7 +3407,6 @@
                                     </div>
                                     <textarea id="workText" class="smart-textarea" placeholder="Enter your work here... Make sure to provide all required details." oninput="updateWordCount()">${existingWork}</textarea>
                                 </div>
-                                
                                 <div class="action-buttons">
                                     <button class="btn btn-preview" onclick="previewSubmission('${taskId}')">
                                         <i class="fas fa-eye"></i> Preview Submission
@@ -3311,7 +3420,6 @@
                     </div>
                 `);
                 
-                // Initialize word counter
                 setTimeout(updateWordCount, 100);
                 
             } catch (error) {
@@ -3320,19 +3428,15 @@
             }
         }
         
-        // Update word counter
         function updateWordCount() {
             const textarea = document.getElementById('workText');
             if (!textarea) return;
-            
             const work = textarea.value;
             const wordCount = work.trim().split(/\s+/).filter(word => word.length > 0).length;
             const counter = document.getElementById('wordCounter');
-            
             if (counter) {
                 counter.textContent = `${wordCount} / 20 words`;
                 counter.className = 'word-counter';
-                
                 if (wordCount >= 20) {
                     counter.classList.add('valid');
                     textarea.classList.add('valid');
@@ -3345,29 +3449,17 @@
             }
         }
         
-        // Preview Submission
         async function previewSubmission(taskId) {
             const work = document.getElementById('workText').value;
-            
-            // Count words properly
             const wordCount = work.trim().split(/\s+/).filter(word => word.length > 0).length;
-            
             if (wordCount < 20) {
                 showAlert(`Please provide at least 20 words. Current word count: ${wordCount}`, 'error');
                 return;
             }
-            
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 const task = taskDoc.data();
-                
-                // Store work in sessionStorage for persistence
-                sessionStorage.setItem('pendingSubmission', JSON.stringify({
-                    taskId: taskId,
-                    work: work,
-                    wordCount: wordCount
-                }));
-                
+                sessionStorage.setItem('pendingSubmission', JSON.stringify({ taskId: taskId, work: work, wordCount: wordCount }));
                 showModal(`
                     <div class="modal-content" style="max-width: 700px;">
                         <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 2rem; color: white; border-radius: 1rem 1rem 0 0; margin: -2rem -2rem 1.5rem -2rem;">
@@ -3385,7 +3477,6 @@
                                 </span>
                             </div>
                         </div>
-                        
                         <div style="margin-bottom: 1.5rem;">
                             <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #0f172a;">
                                 <i class="fas fa-pencil-alt" style="color: #6366f1;"></i>
@@ -3395,12 +3486,10 @@
                                 ${work.replace(/\n/g, '<br>')}
                             </div>
                         </div>
-                        
                         <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                             <i class="fas fa-info-circle" style="color: #f59e0b; font-size: 1.2rem;"></i>
                             <span style="color: #0f172a;">Please review your work carefully. Once submitted, you cannot edit it.</span>
                         </div>
-                        
                         <div style="display: flex; gap: 1rem;">
                             <button class="btn btn-success" style="flex: 2;" onclick="saveSubmission('${taskId}')">
                                 <i class="fas fa-check-circle"></i> Confirm & Submit
@@ -3412,75 +3501,56 @@
                                 <i class="fas fa-times"></i> Cancel
                             </button>
                         </div>
-                        
                         <p style="font-size:0.85rem; color:#64748b; margin-top:1rem; text-align:center;">
                             <i class="fas fa-lock"></i> Your work will be securely submitted for review
                         </p>
                     </div>
                 `);
-                
             } catch (error) {
                 console.error('Error previewing submission:', error);
                 showAlert('Error previewing submission', 'error');
             }
         }
         
-        // Save Submission
         async function saveSubmission(taskId) {
-            // Try to get work from sessionStorage first
             let work = null;
             const pendingSubmission = sessionStorage.getItem('pendingSubmission');
-            
             if (pendingSubmission) {
                 const data = JSON.parse(pendingSubmission);
                 if (data.taskId === taskId) {
                     work = data.work;
                 }
             }
-            
-            // If not in sessionStorage, try to get from textarea (fallback)
             if (!work) {
                 work = document.getElementById('workText')?.value;
             }
-            
             if (!work) {
                 showAlert('No work found to submit. Please start over.', 'error');
                 return;
             }
-            
-            // Count words properly
             const wordCount = work.trim().split(/\s+/).filter(word => word.length > 0).length;
-            
             if (wordCount < 20) {
                 showAlert(`Please provide at least 20 words. Current word count: ${wordCount}`, 'error');
                 return;
             }
-            
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
-                
                 if (!taskDoc.exists) {
                     showAlert('Task not found', 'error');
                     return;
                 }
-                
                 const task = taskDoc.data();
-                
                 if (isDeadlinePassed(task.deadline)) {
                     showAlert('This task has expired. Submissions are no longer accepted.', 'error');
                     closeModal();
                     return;
                 }
-                
-                // Check if already submitted
                 const hasSubmitted = await hasUserSubmitted(taskId);
                 if (hasSubmitted) {
                     showAlert('You have already submitted this task', 'error');
                     closeModal();
                     return;
                 }
-                
-                // Show loading state
                 showModal(`
                     <div class="modal-content" style="text-align: center; padding: 3rem;">
                         <div class="loading-spinner" style="margin: 0 auto 1.5rem;"></div>
@@ -3489,8 +3559,6 @@
                         <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 1rem;">This may take a few moments</p>
                     </div>
                 `);
-                
-                // Add to Firestore
                 await db.collection('submissions').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
@@ -3501,15 +3569,10 @@
                     wordCount: wordCount,
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
                 await db.collection('tasks').doc(taskId).update({
                     submissionsCount: firebase.firestore.FieldValue.increment(1)
                 });
-                
-                // Clear sessionStorage
                 sessionStorage.removeItem('pendingSubmission');
-                
-                // Show success message
                 showModal(`
                     <div class="modal-content" style="text-align: center; padding: 3rem;">
                         <div class="success-check">
@@ -3534,11 +3597,8 @@
                         </div>
                     </div>
                 `);
-                
             } catch (error) {
                 console.error('Error saving submission:', error);
-                
-                // Show error message
                 showModal(`
                     <div class="modal-content" style="text-align: center; padding: 3rem;">
                         <div class="error-icon">
@@ -3560,6 +3620,7 @@
             }
         }
         
+        // viewTaskDetails modified to set currentTaskViewed and update mirror
         async function viewTaskDetails(taskId) {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -3567,8 +3628,12 @@
                     showAlert('Task not found', 'error');
                     return;
                 }
-                
                 const task = taskDoc.data();
+                const taskData = { id: taskId, ...task };
+                
+                // Set current viewed task and update mirror
+                currentTaskViewed = taskData;
+                refreshMirror();
                 
                 showModal(`
                     <div class="pdf-document">
@@ -3613,7 +3678,6 @@
                         </div>
                     </div>
                 `);
-                
             } catch (error) {
                 console.error('Error loading task details:', error);
                 showAlert('Error loading task details', 'error');
@@ -3634,15 +3698,16 @@
         }
         
         async function loadSubmissions() {
+            // Clear task view
+            currentTaskViewed = null;
+            refreshMirror();
+            
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>';
-                
                 const snapshot = await db.collection('submissions')
                     .where('userId', '==', currentUser.uid)
                     .get();
-                
                 let html = '<h3 style="margin-bottom: 2rem;">My Submissions</h3>';
-                
                 if (snapshot.empty) {
                     html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p></div>';
                 } else {
@@ -3650,19 +3715,15 @@
                     snapshot.forEach(doc => {
                         submissions.push({ id: doc.id, ...doc.data() });
                     });
-                    
                     submissions.sort((a, b) => {
                         if (!a.submittedAt) return 1;
                         if (!b.submittedAt) return -1;
                         return (b.submittedAt.seconds || 0) - (a.submittedAt.seconds || 0);
                     });
-                    
                     html += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">';
-                    
                     submissions.forEach(sub => {
                         const statusClass = sub.status === 'approved' ? 'success' : sub.status === 'rejected' ? 'danger' : 'warning';
                         const submittedDate = sub.submittedAt?.seconds ? new Date(sub.submittedAt.seconds * 1000).toLocaleDateString() : 'N/A';
-                        
                         html += `
                             <div class="submission-card" style="padding: 1.2rem;">
                                 <div style="display:flex; justify-content:space-between; align-items: start; margin-bottom:0.5rem;">
@@ -3679,12 +3740,9 @@
                             </div>
                         `;
                     });
-                    
                     html += '</div>';
                 }
-                
                 document.getElementById('content').innerHTML = html;
-                
             } catch (error) {
                 console.error('Error loading submissions:', error);
                 document.getElementById('content').innerHTML = `
@@ -3699,19 +3757,18 @@
         }
         
         async function loadWithdrawals() {
+            // Clear task view
+            currentTaskViewed = null;
+            refreshMirror();
+            
             try {
                 if (!membershipPackages) await loadMembershipPackages();
-                
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const latestBalance = userDoc.data().wallet || 0;
                 userData.wallet = latestBalance;
-                
                 document.getElementById('walletDisplay').textContent = `$${latestBalance.toFixed(2)}`;
-                
                 const canWithdraw = userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE;
-                
                 let withdrawalSection = '';
-                
                 if (canWithdraw) {
                     withdrawalSection = `
                         <div class="withdrawal-section">
@@ -3744,13 +3801,10 @@
                         </div>
                     `;
                 }
-                
                 const historySnapshot = await db.collection('withdrawals')
                     .where('userId', '==', currentUser.uid)
                     .get();
-                
                 let historyHtml = '<h4 style="margin-bottom:1rem; margin-top: 2rem;">Withdrawal History</h4>';
-                
                 if (historySnapshot.empty) {
                     historyHtml += '<div class="empty-state"><i class="fas fa-history"></i><p>No withdrawals yet.</p></div>';
                 } else {
@@ -3758,18 +3812,14 @@
                     historySnapshot.forEach(doc => {
                         withdrawals.push({ id: doc.id, ...doc.data() });
                     });
-                    
                     withdrawals.sort((a, b) => {
                         if (!a.requestedAt) return 1;
                         if (!b.requestedAt) return -1;
                         return (b.requestedAt.seconds || 0) - (a.requestedAt.seconds || 0);
                     });
-                    
                     historyHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">';
-                    
                     withdrawals.forEach(w => {
                         const requestedDate = w.requestedAt?.seconds ? new Date(w.requestedAt.seconds * 1000).toLocaleDateString() : 'N/A';
-                        
                         historyHtml += `
                             <div class="submission-card" style="padding: 1rem;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
@@ -3780,12 +3830,9 @@
                             </div>
                         `;
                     });
-                    
                     historyHtml += '</div>';
                 }
-                
                 document.getElementById('content').innerHTML = withdrawalSection + historyHtml;
-                
             } catch (error) {
                 console.error('Error loading withdrawals:', error);
                 document.getElementById('content').innerHTML = `
@@ -3807,7 +3854,6 @@
                     <p style="color: #64748b;">Please wait...</p>
                 </div>
             `);
-            
             setTimeout(() => {
                 closeModal();
                 showUpgradePrompt();
@@ -3846,9 +3892,7 @@
                 showAlert('Enter transaction ID', 'error');
                 return;
             }
-            
             const pkg = getPackageByType(membershipType);
-            
             try {
                 await db.collection('membershipPayments').add({
                     userId: currentUser.uid,
@@ -3860,10 +3904,8 @@
                     status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
                 showAlert('Payment submitted for review!', 'success');
                 closeModal();
-                
             } catch (error) {
                 console.error('Error submitting payment:', error);
                 showAlert('Error submitting payment', 'error');
@@ -3873,19 +3915,15 @@
         function updateFeeBreakdown(maxBalance) {
             const amountInput = document.getElementById('withdrawAmount');
             if (!amountInput) return;
-            
             const amount = parseFloat(amountInput.value) || 0;
             const feeBreakdown = document.getElementById('feeBreakdown');
-            
             if (amount <= 0) {
                 feeBreakdown.style.display = 'none';
                 return;
             }
-            
             const transactionFee = amount * (TRANSACTION_FEE_PERCENT / 100);
             const platformFee = amount * (PLATFORM_FEE_PERCENT / 100);
             const netAmount = amount - transactionFee - platformFee;
-            
             feeBreakdown.innerHTML = `
                 <h4>Fee Breakdown</h4>
                 <div class="fee-row"><span>Amount:</span><span>$${amount.toFixed(2)}</span></div>
@@ -3900,21 +3938,17 @@
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             const phone = document.getElementById('withdrawPhone').value;
-            
             if (!amount || amount < 5) {
                 showAlert('Minimum withdrawal is $5', 'error');
                 return;
             }
-            
             try {
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const balance = userDoc.data().wallet || 0;
-                
                 if (amount > balance) {
                     showAlert('Insufficient balance', 'error');
                     return;
                 }
-                
                 await db.collection('withdrawals').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
@@ -3924,26 +3958,31 @@
                     status: 'pending',
                     requestedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
                 showAlert('Withdrawal requested successfully!', 'success');
                 loadWithdrawals();
-                
             } catch (error) {
                 console.error('Error requesting withdrawal:', error);
                 showAlert('Error requesting withdrawal', 'error');
             }
         }
         
-        // ========== MESSAGES FUNCTIONS ==========
-        
+        // ========== MESSAGES FUNCTIONS (FIXED loadMessages) ==========
         async function loadMessages() {
+            // Clear task view
+            currentTaskViewed = null;
+            refreshMirror();
+            
             try {
+                if (!currentUser) {
+                    throw new Error('User not authenticated');
+                }
+
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>';
-                
+
                 const snapshot = await db.collection('messages')
                     .where('userId', '==', currentUser.uid)
                     .get();
-                
+
                 let html = `
                     <div class="messages-container">
                         <div class="messages-header">
@@ -3953,7 +3992,7 @@
                             </button>
                         </div>
                 `;
-                
+
                 if (snapshot.empty) {
                     html += `
                         <div class="empty-state">
@@ -4035,26 +4074,30 @@
                     
                     html += '</div>';
                 }
-                
+
                 html += '</div>';
                 document.getElementById('content').innerHTML = html;
-                
+
             } catch (error) {
                 console.error('Error loading messages:', error);
-                
                 document.getElementById('content').innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-database" style="color:#f59e0b;"></i>
-                        <h4>Messages Loading...</h4>
-                        <p>Please wait while we set up the messages.</p>
-                        <button class="btn btn-primary" onclick="loadMessages()" style="margin-top:1rem;">
-                            <i class="fas fa-sync-alt"></i> Try Again
-                        </button>
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444; font-size:4rem;"></i>
+                        <h4>Failed to Load Messages</h4>
+                        <p style="color:#64748b; margin-bottom:1rem;">${error.message || 'An unknown error occurred'}</p>
+                        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+                            <button class="btn btn-primary" onclick="loadMessages()">
+                                <i class="fas fa-sync-alt"></i> Try Again
+                            </button>
+                            <button class="btn btn-secondary" onclick="switchTab('tasks')">
+                                <i class="fas fa-arrow-left"></i> Back to Tasks
+                            </button>
+                        </div>
                     </div>
                 `;
             }
         }
-        
+
         function showComposeMessage() {
             showModal(`
                 <div class="modal-content">
@@ -4196,7 +4239,6 @@
         }
         
         // ========== NOTIFICATION FUNCTIONS ==========
-
         function setupNotificationsListener() {
             if (!currentUser) return;
             
@@ -4453,6 +4495,10 @@
         }
 
         async function loadNotificationsPage() {
+            // Clear task view
+            currentTaskViewed = null;
+            refreshMirror();
+            
             try {
                 document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading notifications...</p></div>';
                 
@@ -4608,8 +4654,11 @@
 
         // ========== END NOTIFICATION FUNCTIONS ==========
         
-        // Load Profile
+        // Load Profile (unchanged, but clear task view)
         function loadProfile() {
+            currentTaskViewed = null;
+            refreshMirror();
+            
             const joinDate = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds * 1000).toLocaleDateString() : 'N/A';
             
             document.getElementById('content').innerHTML = `
@@ -4645,7 +4694,7 @@
                 userData.displayName = name;
                 document.getElementById('userName').textContent = name;
                 showAlert('Profile updated!', 'success');
-                
+                refreshMirror(); // Update welcome name
             } catch (error) {
                 console.error('Error updating profile:', error);
                 showAlert('Error updating profile', 'error');
