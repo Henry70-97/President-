@@ -730,7 +730,7 @@
         .task-requirements { background: #f1f5f9; padding: 0.5rem; border-radius: 0.5rem; font-size: 0.9rem; margin: 0.5rem 0; }  
         .instructions-badge { background: #dbeafe; color: #1e40af; padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }  
 
-        /* NEW: Notification Bell */
+        /* Notification Bell */
         .notification-bell {
             position: relative;
             cursor: pointer;
@@ -775,6 +775,9 @@
             border-bottom: 1px solid #e2e8f0;
             cursor: pointer;
             transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         .notification-item:hover {
             background: #f8fafc;
@@ -797,7 +800,7 @@
             margin-bottom: 0.5rem;
         }
 
-        /* NEW: Search Input */
+        /* Search Input */
         .search-box {
             margin-bottom: 1rem;
             display: flex;
@@ -854,6 +857,7 @@
             <button class="tab" data-tab="referrals">🤝 Referrals</button>  
             <button class="tab" data-tab="messages">💬 Messages</button>  
             <button class="tab" data-tab="transactions">💸 Transactions</button>  
+            <button class="tab" data-tab="training">🎓 Training Center</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
         </div>  
       
@@ -981,93 +985,115 @@
         const REFERRAL_BONUS_REFERRED = 0.5; // $0.5 for referred  
         const ELITE_BONUS = 10; // $10 welcome bonus for Elite
 
-        // ========== NEW: Notification System ==========
-        let notificationListeners = [];
-        let notificationCount = 0;
+        // ========== FIXED NOTIFICATION SYSTEM ==========
         let notificationItems = [];
+        let notificationCount = 0;
 
         async function updateNotificationBadge() {
             try {
-                const [newUsers, pendingSubs, pendingWithdrawals, pendingMemberships, unreadMessages] = await Promise.all([
-                    db.collection('users').where('createdAt', '>=', new Date(Date.now() - 24*60*60*1000)).get().then(snap => snap.size),
-                    db.collection('submissions').where('status', '==', 'pending').get().then(snap => snap.size),
-                    db.collection('withdrawals').where('status', '==', 'pending').get().then(snap => snap.size),
-                    db.collection('membershipPayments').where('status', '==', 'pending').get().then(snap => snap.size),
-                    db.collection('messages').where('read', '==', false).get().then(snap => snap.size) // assuming messages have 'read' field
-                ]);
+                // Safely get counts with individual error handling
+                let newUsers = 0, pendingSubs = 0, pendingWithdrawals = 0, pendingMemberships = 0, unreadMessages = 0;
+                
+                try {
+                    const yesterday = new Date(Date.now() - 24*60*60*1000);
+                    newUsers = (await db.collection('users').where('createdAt', '>=', yesterday).get()).size;
+                } catch (e) { console.warn('Error counting new users:', e); }
+                
+                try {
+                    pendingSubs = (await db.collection('submissions').where('status', '==', 'pending').get()).size;
+                } catch (e) { console.warn('Error counting pending submissions:', e); }
+                
+                try {
+                    pendingWithdrawals = (await db.collection('withdrawals').where('status', '==', 'pending').get()).size;
+                } catch (e) { console.warn('Error counting pending withdrawals:', e); }
+                
+                try {
+                    pendingMemberships = (await db.collection('membershipPayments').where('status', '==', 'pending').get()).size;
+                } catch (e) { console.warn('Error counting pending memberships:', e); }
+                
+                try {
+                    unreadMessages = (await db.collection('messages').where('read', '==', false).get()).size;
+                } catch (e) { console.warn('Error counting unread messages:', e); }
+                
                 notificationCount = newUsers + pendingSubs + pendingWithdrawals + pendingMemberships + unreadMessages;
-                document.getElementById('notificationBadge').textContent = notificationCount;
-                if (notificationCount > 0) {
-                    document.getElementById('notificationBadge').style.display = 'inline-block';
-                } else {
-                    document.getElementById('notificationBadge').style.display = 'none';
-                }
-                // Also populate dropdown with recent items
+                const badge = document.getElementById('notificationBadge');
+                badge.textContent = notificationCount;
+                badge.style.display = notificationCount > 0 ? 'inline-block' : 'none';
+                
+                // Fetch recent items for dropdown
                 const recentItems = [];
-                // Get last 5 of each type
-                const [recentUsers, recentSubs, recentWithdrawals, recentMemberships, recentMessages] = await Promise.all([
-                    db.collection('users').orderBy('createdAt', 'desc').limit(5).get(),
-                    db.collection('submissions').where('status', '==', 'pending').orderBy('submittedAt', 'desc').limit(5).get(),
-                    db.collection('withdrawals').where('status', '==', 'pending').orderBy('requestedAt', 'desc').limit(5).get(),
-                    db.collection('membershipPayments').where('status', '==', 'pending').orderBy('submittedAt', 'desc').limit(5).get(),
-                    db.collection('messages').orderBy('createdAt', 'desc').limit(5).get()
-                ]);
-                recentUsers.forEach(doc => {
-                    const u = doc.data();
-                    recentItems.push({
-                        type: 'user',
-                        title: `New user: ${u.email}`,
-                        time: u.createdAt,
-                        link: '#',
-                        onClick: () => switchTab('users')
+                try {
+                    const [recentUsers, recentSubs, recentWithdrawals, recentMemberships, recentMessages] = await Promise.all([
+                        db.collection('users').orderBy('createdAt', 'desc').limit(5).get(),
+                        db.collection('submissions').where('status', '==', 'pending').orderBy('submittedAt', 'desc').limit(5).get(),
+                        db.collection('withdrawals').where('status', '==', 'pending').orderBy('requestedAt', 'desc').limit(5).get(),
+                        db.collection('membershipPayments').where('status', '==', 'pending').orderBy('submittedAt', 'desc').limit(5).get(),
+                        db.collection('messages').orderBy('createdAt', 'desc').limit(5).get()
+                    ]);
+                    
+                    recentUsers.forEach(doc => {
+                        const u = doc.data();
+                        recentItems.push({
+                            type: 'user',
+                            icon: '👤',
+                            title: `New user: ${u.email}`,
+                            time: u.createdAt,
+                            link: '#',
+                            onClick: () => switchTab('users')
+                        });
                     });
-                });
-                recentSubs.forEach(doc => {
-                    const s = doc.data();
-                    recentItems.push({
-                        type: 'submission',
-                        title: `Pending submission: ${s.taskTitle}`,
-                        time: s.submittedAt,
-                        link: '#',
-                        onClick: () => switchTab('submissions')
+                    recentSubs.forEach(doc => {
+                        const s = doc.data();
+                        recentItems.push({
+                            type: 'submission',
+                            icon: '📝',
+                            title: `Pending submission: ${s.taskTitle}`,
+                            time: s.submittedAt,
+                            link: '#',
+                            onClick: () => switchTab('submissions')
+                        });
                     });
-                });
-                recentWithdrawals.forEach(doc => {
-                    const w = doc.data();
-                    recentItems.push({
-                        type: 'withdrawal',
-                        title: `Withdrawal request: $${w.amount}`,
-                        time: w.requestedAt,
-                        link: '#',
-                        onClick: () => switchTab('withdrawals')
+                    recentWithdrawals.forEach(doc => {
+                        const w = doc.data();
+                        recentItems.push({
+                            type: 'withdrawal',
+                            icon: '💰',
+                            title: `Withdrawal request: $${w.amount}`,
+                            time: w.requestedAt,
+                            link: '#',
+                            onClick: () => switchTab('withdrawals')
+                        });
                     });
-                });
-                recentMemberships.forEach(doc => {
-                    const m = doc.data();
-                    recentItems.push({
-                        type: 'membership',
-                        title: `Membership payment: ${m.membershipType}`,
-                        time: m.submittedAt,
-                        link: '#',
-                        onClick: () => switchTab('memberships')
+                    recentMemberships.forEach(doc => {
+                        const m = doc.data();
+                        recentItems.push({
+                            type: 'membership',
+                            icon: '👑',
+                            title: `Membership payment: ${m.membershipType}`,
+                            time: m.submittedAt,
+                            link: '#',
+                            onClick: () => switchTab('memberships')
+                        });
                     });
-                });
-                recentMessages.forEach(doc => {
-                    const m = doc.data();
-                    recentItems.push({
-                        type: 'message',
-                        title: `Message from ${m.userEmail || 'user'}`,
-                        time: m.createdAt,
-                        link: '#',
-                        onClick: () => switchTab('messages')
+                    recentMessages.forEach(doc => {
+                        const m = doc.data();
+                        recentItems.push({
+                            type: 'message',
+                            icon: '💬',
+                            title: `Message from ${m.userEmail || 'user'}`,
+                            time: m.createdAt,
+                            link: '#',
+                            onClick: () => switchTab('messages')
+                        });
                     });
-                });
+                } catch (e) { console.warn('Error fetching recent notifications:', e); }
+                
                 // Sort by time descending
                 recentItems.sort((a, b) => (b.time?.seconds || 0) - (a.time?.seconds || 0));
-                notificationItems = recentItems.slice(0, 10); // keep 10
+                notificationItems = recentItems.slice(0, 10);
                 renderNotificationDropdown();
             } catch (e) {
-                console.warn('Error updating notifications:', e);
+                console.error('updateNotificationBadge error:', e);
             }
         }
 
@@ -1085,8 +1111,11 @@
                 const time = item.time ? formatDate(item.time) : 'N/A';
                 html += `
                     <div class="notification-item" onclick="(${item.onClick.toString()})(); document.getElementById('notificationDropdown').classList.remove('active');">
-                        <div class="title">${item.title}</div>
-                        <div class="time">${time}</div>
+                        <span>${item.icon || '🔔'}</span>
+                        <div style="flex:1;">
+                            <div class="title">${item.title}</div>
+                            <div class="time">${time}</div>
+                        </div>
                     </div>
                 `;
             });
@@ -1094,10 +1123,18 @@
         }
 
         function startNotificationListener() {
-            // Update every 30 seconds
             updateNotificationBadge();
             setInterval(updateNotificationBadge, 30000);
         }
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bell = document.getElementById('notificationBell');
+            if (dropdown && bell && !bell.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
         // =============================================
 
         // Check auth state  
@@ -1360,6 +1397,7 @@
                 case 'referrals': loadReferrals(); break;  
                 case 'messages': loadMessages(); break;  
                 case 'transactions': loadTransactions(); break;  
+                case 'training': loadTrainingCenter(); break;  
                 case 'settings': loadSettings(); break;  
             }  
         }  
@@ -1539,7 +1577,7 @@
             `);  
         }  
           
-        // Adjust Wallet  
+        // Adjust Wallet – now writes to transactions
         async function adjustWallet(userId) {  
             const amount = parseFloat(document.getElementById('adjustAmount')?.value);  
             const type = document.getElementById('adjustType')?.value;  
@@ -1563,6 +1601,10 @@
             const adjustment = type === 'add' ? amount : -amount;  
               
             try {  
+                // Get user email for transaction record
+                const userDoc = await db.collection('users').doc(userId).get();
+                const userEmail = userDoc.exists ? userDoc.data().email : 'unknown';
+                
                 await db.collection('users').doc(userId).update({  
                     wallet: firebase.firestore.FieldValue.increment(adjustment)  
                 });  
@@ -1574,6 +1616,17 @@
                     reason: reason.trim(),  
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()  
                 });  
+
+                // Record transaction
+                await db.collection('transactions').add({
+                    userId,
+                    userEmail,
+                    amount: adjustment,
+                    type: 'admin_adjustment',
+                    description: reason.trim(),
+                    relatedId: null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
                   
                 closeModal();  
                 showAlert(`Wallet adjusted by $${amount.toFixed(2)}`, 'success');  
@@ -1584,7 +1637,8 @@
             }  
         }  
           
-        // Load Tasks – with submissions count
+        // ========== NEW: Task Assignment ==========
+        // Load Tasks – with assigned user column
         async function loadTasks() { 
             const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get(); 
             
@@ -1601,13 +1655,26 @@
                     <button class="btn btn-primary" id="createTaskBtn">+ New Task</button> 
                 </div> 
                 <table class="data-table"> 
-                <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Difficulty</th><th>Submissions</th><th>Status</th><th>Actions</th></tr> 
+                <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Difficulty</th><th>Assigned To</th><th>Submissions</th><th>Status</th><th>Actions</th></tr> 
             `; 
             
-            tasks.forEach((task, index) => { 
+            for (let i = 0; i < tasks.length; i++) { 
+                const task = tasks[i];
                 const deadlineStatus = task.deadline ? getDeadlineStatus(task.deadline) : null; 
                 const deadlineDisplay = task.deadline ? formatDate(task.deadline) : 'No deadline'; 
-                const subCount = counts[index];
+                const subCount = counts[i];
+                
+                // Determine assigned user display
+                let assignedDisplay = 'All Users';
+                if (task.assignedTo && task.assignedTo !== 'all') {
+                    // Try to fetch user email
+                    try {
+                        const userDoc = await db.collection('users').doc(task.assignedTo).get();
+                        assignedDisplay = userDoc.exists ? userDoc.data().email : task.assignedTo;
+                    } catch {
+                        assignedDisplay = task.assignedTo;
+                    }
+                }
                 
                 html += ` 
                     <tr> 
@@ -1620,6 +1687,7 @@
                         </td> 
                         <td>${task.category}</td> 
                         <td>${task.difficulty}</td> 
+                        <td><span class="badge info">${assignedDisplay}</span></td> 
                         <td><span class="badge primary">${subCount}</span></td> 
                         <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td> 
                         <td class="action-buttons"> 
@@ -1629,14 +1697,22 @@
                         </td> 
                     </tr> 
                 `; 
-            }); 
+            } 
              
             html += '</table>'; 
             document.getElementById('content').innerHTML = html; 
         }
           
-        // Show Create Task Modal  
-        function showCreateTask() {  
+        // Show Create Task Modal – includes user selection
+        async function showCreateTask() {  
+            // Fetch users for assignment dropdown
+            const usersSnapshot = await db.collection('users').orderBy('email').get();
+            let userOptions = '<option value="all">All Users</option>';
+            usersSnapshot.forEach(doc => {
+                const user = doc.data();
+                userOptions += `<option value="${doc.id}">${user.email} (${user.displayName})</option>`;
+            });
+            
             showModal(`  
                 <h3 style="margin-bottom:1rem;">Create New Task</h3>  
                 <input type="text" id="taskTitle" placeholder="Task Title" required>  
@@ -1668,11 +1744,17 @@
                     <option value="medium">Medium</option>  
                     <option value="hard">Hard</option>  
                 </select>  
+
+                <h4 style="margin: 1rem 0 0.5rem;">Assign To</h4>  
+                <select id="taskAssignedTo">  
+                    ${userOptions}  
+                </select>  
+
                 <button class="btn btn-primary" id="createTaskConfirmBtn" style="width:100%;">Create Task</button>  
             `);  
         }  
           
-        // Create Task  
+        // Create Task – includes assignedTo field
         async function createTask() {  
             const title = document.getElementById('taskTitle').value;  
             const description = document.getElementById('taskDescription').value;  
@@ -1683,6 +1765,7 @@
             const reward = parseFloat(document.getElementById('taskReward').value);  
             const category = document.getElementById('taskCategory').value;  
             const difficulty = document.getElementById('taskDifficulty').value;  
+            const assignedTo = document.getElementById('taskAssignedTo').value;  
               
             if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
                 showAlert('Please fill all required fields', 'error');  
@@ -1704,6 +1787,7 @@
                     rewardKES: reward * (feeSettings?.exchangeRate || 130),  
                     category,  
                     difficulty,  
+                    assignedTo: assignedTo || 'all',  
                     active: true,  
                     submissionsCount: 0,  
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()  
@@ -1711,12 +1795,27 @@
 
                 const taskId = taskRef.id;  
 
-                await sendNotificationToAll(  
-                    'New Task Available',  
-                    `A new task "${title}" paying $${reward} has been posted.`,  
-                    'task',  
-                    `task:${taskId}`  
-                );  
+                // Send notification based on assignment
+                if (assignedTo === 'all') {
+                    await sendNotificationToAll(  
+                        'New Task Available',  
+                        `A new task "${title}" paying $${reward} has been posted.`,  
+                        'task',  
+                        `task:${taskId}`  
+                    );  
+                } else {
+                    // Get user email for notification
+                    const userDoc = await db.collection('users').doc(assignedTo).get();
+                    if (userDoc.exists) {
+                        await sendNotification(
+                            assignedTo,
+                            'New Task Assigned to You',
+                            `A new task "${title}" paying $${reward} has been assigned to you.`,
+                            'task',
+                            `task:${taskId}`
+                        );
+                    }
+                }
 
                 closeModal();  
                 showAlert('Task created successfully', 'success');  
@@ -1734,7 +1833,7 @@
             loadTasks();  
         }  
           
-        // Edit Task  
+        // Edit Task – includes assigned user
         async function editTask(taskId) {  
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
@@ -1747,6 +1846,15 @@
                 const day = String(deadline.getDate()).padStart(2, '0');  
                 deadlineValue = `${year}-${month}-${day}`;  
             }  
+            
+            // Fetch users for assignment dropdown
+            const usersSnapshot = await db.collection('users').orderBy('email').get();
+            let userOptions = '<option value="all">All Users</option>';
+            usersSnapshot.forEach(doc => {
+                const user = doc.data();
+                const selected = (data.assignedTo === doc.id) ? 'selected' : '';
+                userOptions += `<option value="${doc.id}" ${selected}>${user.email} (${user.displayName})</option>`;
+            });
               
             showModal(`  
                 <h3 style="margin-bottom:1rem;">Edit Task</h3>  
@@ -1779,11 +1887,17 @@
                     <option value="medium" ${data.difficulty === 'medium' ? 'selected' : ''}>Medium</option>  
                     <option value="hard" ${data.difficulty === 'hard' ? 'selected' : ''}>Hard</option>  
                 </select>  
+
+                <h4 style="margin: 1rem 0 0.5rem;">Assign To</h4>  
+                <select id="editAssignedTo">  
+                    ${userOptions}  
+                </select>  
+
                 <button class="btn btn-primary" id="updateTaskBtn" data-task-id="${taskId}" style="width:100%;">Update Task</button>  
             `);  
         }  
           
-        // Update Task  
+        // Update Task – includes assignedTo
         async function updateTask(taskId) {  
             const title = document.getElementById('editTitle').value;  
             const description = document.getElementById('editDescription').value;  
@@ -1794,6 +1908,7 @@
             const reward = parseFloat(document.getElementById('editReward').value);  
             const category = document.getElementById('editCategory').value;  
             const difficulty = document.getElementById('editDifficulty').value;  
+            const assignedTo = document.getElementById('editAssignedTo').value;  
               
             if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
                 showAlert('Please fill all required fields', 'error');  
@@ -1813,7 +1928,8 @@
                 reward,  
                 rewardKES: reward * (feeSettings?.exchangeRate || 130),  
                 category,  
-                difficulty  
+                difficulty,  
+                assignedTo: assignedTo || 'all'  
             });  
               
             closeModal();  
@@ -1821,7 +1937,7 @@
             loadTasks();  
         }  
           
-        // View Details  
+        // View Details (unchanged)
         async function viewRequirements(taskId) {  
             const task = await db.collection('tasks').doc(taskId).get();  
             const data = task.data();  
@@ -1859,7 +1975,9 @@
             `);  
         }  
           
-        // Load Submissions  
+        // ========== END Task Assignment ==========
+
+        // Load Submissions (unchanged except threshold updated)
         async function loadSubmissions() {  
             const snapshot = await db.collection('submissions')  
                 .where('status', '==', 'pending')  
@@ -1941,7 +2059,7 @@
             document.getElementById('content').innerHTML = html;  
         }  
           
-        // Review Submission  
+        // ========== UPDATED Review Submission – threshold 30% ==========
         async function reviewSubmission(subId, approved) {  
             const submissionCard = document.querySelector(`[data-sub-id="${subId}"]`);  
             const score = parseInt(submissionCard.querySelector('.submission-score')?.value || 0);  
@@ -1965,8 +2083,11 @@
               
             let earned = 0;  
             let status = approved ? 'approved' : 'rejected';  
+            
+            // NEW THRESHOLD: 30% instead of 50%
+            const THRESHOLD = 30;
               
-            if (approved && score >= 50) {  
+            if (approved && score >= THRESHOLD) {  
                 earned = (task.reward * score) / 100;  
                   
                 await db.collection('users').doc(sub.userId).update({  
@@ -1974,6 +2095,18 @@
                     totalEarned: firebase.firestore.FieldValue.increment(earned),  
                     tasksCompleted: firebase.firestore.FieldValue.increment(1)  
                 });  
+
+                // Record transaction
+                await db.collection('transactions').add({
+                    userId: sub.userId,
+                    userEmail: sub.userEmail,
+                    amount: earned,
+                    type: 'task_earnings',
+                    description: `Task: ${sub.taskTitle} (Score: ${score})`,
+                    relatedId: subId,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
                 showAlert(`Submission approved! User earned $${earned.toFixed(2)}`, 'success');  
 
                 await sendNotification(  
@@ -1983,13 +2116,13 @@
                     'submission',  
                     `submission:${subId}`  
                 );  
-            } else if (approved && score < 50) {  
+            } else if (approved && score < THRESHOLD) {  
                 status = 'rejected';  
-                showAlert('Submission rejected (score below 50%)', 'warning');  
+                showAlert(`Submission rejected (score below ${THRESHOLD}%)`, 'warning');  
                 await sendNotification(  
                     sub.userId,  
                     'Submission Rejected',  
-                    `Your submission for task "${sub.taskTitle}" was rejected because the score (${score}) was below 50%. Feedback: ${review}`,  
+                    `Your submission for task "${sub.taskTitle}" was rejected because the score (${score}) was below ${THRESHOLD}%. Feedback: ${review}`,  
                     'submission',  
                     `submission:${subId}`  
                 );  
@@ -2050,18 +2183,32 @@
             document.getElementById('content').innerHTML = html; 
         }
           
-        // Process Withdrawal  
+        // Process Withdrawal – now writes to transactions
         async function processWithdrawal(withdrawalId) {  
+            const withdrawalDoc = await db.collection('withdrawals').doc(withdrawalId).get();
+            const withdrawal = withdrawalDoc.data();
+            
             await db.collection('withdrawals').doc(withdrawalId).update({  
                 status: 'paid',  
                 paidAt: firebase.firestore.FieldValue.serverTimestamp()  
             });  
+
+            // Record transaction
+            await db.collection('transactions').add({
+                userId: withdrawal.userId,
+                userEmail: withdrawal.userEmail,
+                amount: -withdrawal.amount,
+                type: 'withdrawal',
+                description: `Withdrawal via ${withdrawal.method} (${withdrawal.phone})`,
+                relatedId: withdrawalId,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
               
             showAlert('Withdrawal marked as paid', 'success');  
             loadWithdrawals();  
         }  
         
-        // Show Edit Fee Settings Modal
+        // Show Edit Fee Settings Modal (unchanged)
         function showEditFeeSettings() {
             if (!feeSettings) {
                 showAlert('Fee settings not loaded', 'error');
@@ -2680,14 +2827,6 @@
                 if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus) {
                     userUpdate.wallet = firebase.firestore.FieldValue.increment(pkg.welcomeBonus);
                     userUpdate.eliteBonusApplied = true;
-
-                    await sendNotification(
-                        userId,
-                        'Welcome to Elite!',
-                        `Your Elite membership is active! You've received a $${pkg.welcomeBonus} welcome bonus.`,
-                        'membership',
-                        null
-                    );
                 }
 
                 if (membershipType === MEMBERSHIP_TYPES.PREMIUM && pkg.duration === 'annual') {
@@ -2702,6 +2841,38 @@
                     status: 'approved',
                     approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+
+                // Record membership payment transaction
+                await db.collection('transactions').add({
+                    userId,
+                    userEmail: payment.userEmail,
+                    amount: -payment.amount,
+                    type: 'membership_payment',
+                    description: `Membership purchase: ${membershipType}`,
+                    relatedId: paymentId,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Record welcome bonus if applicable
+                if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus) {
+                    await db.collection('transactions').add({
+                        userId,
+                        userEmail: payment.userEmail,
+                        amount: pkg.welcomeBonus,
+                        type: 'welcome_bonus',
+                        description: 'Welcome bonus for Elite membership',
+                        relatedId: paymentId,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    await sendNotification(
+                        userId,
+                        'Welcome to Elite!',
+                        `Your Elite membership is active! You've received a $${pkg.welcomeBonus} welcome bonus.`,
+                        'membership',
+                        null
+                    );
+                }
 
                 const userDoc = await db.collection('users').doc(userId).get();
                 const userData = userDoc.data();
@@ -3549,6 +3720,28 @@
                         completedBy: currentUser.email  
                     });  
                 });  
+
+                // Record transactions for the bonuses
+                const referrerUser = await db.collection('users').doc(referrerId).get();
+                const referredUser = await db.collection('users').doc(referredId).get();
+                await db.collection('transactions').add({
+                    userId: referrerId,
+                    userEmail: referrerUser.exists ? referrerUser.data().email : 'unknown',
+                    amount: REFERRAL_BONUS_REFERRER,
+                    type: 'referral_bonus',
+                    description: `Referral bonus for referring ${referredEmail}`,
+                    relatedId: referralId,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await db.collection('transactions').add({
+                    userId: referredId,
+                    userEmail: referredEmail,
+                    amount: REFERRAL_BONUS_REFERRED,
+                    type: 'referral_bonus',
+                    description: `Referral bonus for being referred`,
+                    relatedId: referralId,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
                 
                 closeModal();  
                 showAlert('Referral bonuses credited successfully!', 'success');  
@@ -4213,134 +4406,28 @@
             `);  
         }  
 
-        // ========== NEW: Load Transactions ==========
+        // ========== NEW: Load Transactions (single query) ==========
         async function loadTransactions() {
             let html = '<h3 style="margin-bottom:1.5rem;">All Transactions</h3>';
             try {
-                const [withdrawals, adjustments, submissions, bonuses, memberships] = await Promise.all([
-                    db.collection('withdrawals').where('status', '==', 'paid').orderBy('paidAt', 'desc').limit(100).get(),
-                    db.collection('walletAdjustments').orderBy('createdAt', 'desc').limit(100).get(),
-                    db.collection('submissions').where('status', '==', 'approved').orderBy('reviewedAt', 'desc').limit(100).get(),
-                    db.collection('referralBonuses').orderBy('creditedAt', 'desc').limit(100).get(),
-                    db.collection('membershipPayments').where('status', '==', 'approved').orderBy('approvedAt', 'desc').limit(100).get()
-                ]);
-
-                const userIds = new Set();
-                const transactions = [];
-
-                withdrawals.forEach(doc => {
-                    const w = doc.data();
-                    userIds.add(w.userId);
-                    transactions.push({
-                        id: doc.id,
-                        userId: w.userId,
-                        userEmail: w.userEmail || null,
-                        amount: -w.amount,
-                        type: 'withdrawal',
-                        description: `Withdrawal via ${w.method} (${w.phone})`,
-                        createdAt: w.paidAt,
-                        relatedId: doc.id
-                    });
-                });
-
-                adjustments.forEach(doc => {
-                    const a = doc.data();
-                    userIds.add(a.userId);
-                    transactions.push({
-                        id: doc.id,
-                        userId: a.userId,
-                        userEmail: null,
-                        amount: a.amount,
-                        type: 'adjustment',
-                        description: `Admin adjustment: ${a.reason || 'No reason'}`,
-                        createdAt: a.createdAt,
-                        relatedId: doc.id
-                    });
-                });
-
-                submissions.forEach(doc => {
-                    const s = doc.data();
-                    userIds.add(s.userId);
-                    transactions.push({
-                        id: doc.id,
-                        userId: s.userId,
-                        userEmail: s.userEmail || null,
-                        amount: s.earned || 0,
-                        type: 'task_earnings',
-                        description: `Task: ${s.taskTitle} (Score: ${s.score})`,
-                        createdAt: s.reviewedAt,
-                        relatedId: doc.id
-                    });
-                });
-
-                bonuses.forEach(doc => {
-                    const b = doc.data();
-                    userIds.add(b.referrerId);
-                    if (b.referredId) userIds.add(b.referredId);
-                    transactions.push({
-                        id: doc.id,
-                        userId: b.type === 'referrer' ? b.referrerId : b.referredId,
-                        userEmail: b.referredEmail || null,
-                        amount: b.amount,
-                        type: `referral_${b.type}`,
-                        description: `Referral bonus (${b.type}) for referring ${b.referredEmail || 'user'}`,
-                        createdAt: b.creditedAt,
-                        relatedId: doc.id
-                    });
-                });
-
-                memberships.forEach(doc => {
-                    const m = doc.data();
-                    userIds.add(m.userId);
-                    transactions.push({
-                        id: doc.id,
-                        userId: m.userId,
-                        userEmail: m.userEmail || null,
-                        amount: -m.amount,
-                        type: 'membership_payment',
-                        description: `Membership purchase: ${m.membershipType}`,
-                        createdAt: m.approvedAt,
-                        relatedId: doc.id
-                    });
-                });
-
-                const userIdsArray = Array.from(userIds);
-                const userMap = {};
-                if (userIdsArray.length > 0) {
-                    const userSnapshots = await Promise.all(userIdsArray.map(uid => db.collection('users').doc(uid).get()));
-                    userSnapshots.forEach(doc => {
-                        if (doc.exists) {
-                            userMap[doc.id] = doc.data().email;
-                        }
-                    });
-                }
-
-                transactions.forEach(t => {
-                    if (!t.userEmail && userMap[t.userId]) {
-                        t.userEmail = userMap[t.userId];
-                    } else if (!t.userEmail) {
-                        t.userEmail = 'Unknown';
-                    }
-                });
-
-                transactions.sort((a, b) => {
-                    const aTime = a.createdAt?.seconds || 0;
-                    const bTime = b.createdAt?.seconds || 0;
-                    return bTime - aTime;
-                });
-
-                if (transactions.length === 0) {
+                const snapshot = await db.collection('transactions')
+                    .orderBy('createdAt', 'desc')
+                    .limit(200)
+                    .get();
+                
+                if (snapshot.empty) {
                     html += '<p>No transactions found.</p>';
                 } else {
                     html += '<table class="data-table">';
                     html += '<tr><th>Date</th><th>User</th><th>Type</th><th>Description</th><th>Amount</th></tr>';
-                    transactions.forEach(t => {
+                    snapshot.forEach(doc => {
+                        const t = doc.data();
                         const date = t.createdAt ? formatDate(t.createdAt) : 'N/A';
                         const amountClass = t.amount >= 0 ? 'success' : 'danger';
                         const amountStr = t.amount >= 0 ? `+$${t.amount.toFixed(2)}` : `-$${Math.abs(t.amount).toFixed(2)}`;
                         html += `<tr>
                             <td>${date}</td>
-                            <td>${t.userEmail}</td>
+                            <td>${t.userEmail || 'Unknown'}</td>
                             <td><span class="badge primary">${t.type.replace('_', ' ')}</span></td>
                             <td>${t.description}</td>
                             <td><span class="badge ${amountClass}">${amountStr}</span></td>
@@ -4348,7 +4435,6 @@
                     });
                     html += '</table>';
                 }
-
             } catch (error) {
                 console.error('Error loading transactions:', error);
                 html += `<p style="color:red;">Error loading transactions: ${error.message}</p>`;
@@ -4356,6 +4442,27 @@
             document.getElementById('content').innerHTML = html;
         }
         // ========== END NEW TRANSACTIONS ==========
+
+        // ========== NEW: Training Center Placeholder ==========
+        function loadTrainingCenter() {
+            const html = `
+                <h3 style="margin-bottom:1.5rem;">🎓 Training Center</h3>
+                <div style="background: linear-gradient(135deg, #f8fafc, #e2e8f0); padding: 3rem; border-radius: 2rem; text-align: center;">
+                    <i class="fas fa-chalkboard-teacher" style="font-size: 5rem; color: #6366f1; margin-bottom: 1.5rem;"></i>
+                    <h4 style="color: #1e293b; margin-bottom: 1rem;">Training Center – Coming Soon</h4>
+                    <p style="color: #475569; max-width: 600px; margin: 0 auto 1.5rem;">
+                        The Training Center is under development. Here you will be able to manage training materials, courses, and certifications for users. 
+                        The full role and features will be implemented in a future update.
+                    </p>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <span class="badge info">Role: Trainer (planned)</span>
+                        <span class="badge warning">ETA: Next Release</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('content').innerHTML = html;
+        }
+        // ========== END Training Center ==========
 
         // Event Delegation for all buttons
         document.addEventListener('click', async (e) => {  
@@ -4371,11 +4478,6 @@
                     const dropdown = document.getElementById('notificationDropdown');
                     dropdown.classList.toggle('active');
                     return;
-                }
-
-                // Close notification dropdown when clicking outside
-                if (!target.closest('.notification-dropdown') && !target.closest('#notificationBell')) {
-                    document.getElementById('notificationDropdown').classList.remove('active');
                 }
                   
                 if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {  
@@ -4446,7 +4548,7 @@
                 }
                   
                 if (target.id === 'createTaskBtn') {  
-                    showCreateTask();  
+                    await showCreateTask();  
                     return;  
                 }  
                   
