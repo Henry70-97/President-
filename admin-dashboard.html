@@ -4311,14 +4311,15 @@
                 const snapshot = await db.collection('faqs').orderBy('order', 'asc').get();
                 let html = `
                     <h3 style="margin-bottom:1.5rem;">❓ FAQ Management</h3>
-                    <div style="margin-bottom:1rem;">
+                    <div style="margin-bottom:1rem; display: flex; gap: 1rem;">
                         <button class="btn btn-success" onclick="showAddFaq()">+ Add FAQ</button>
+                        <button class="btn btn-primary" onclick="loadDefaultFaqs()">📥 Load Default FAQs</button>
                     </div>
                     <table class="data-table">
                         <tr><th>Order</th><th>Question</th><th>Answer</th><th>Actions</th></tr>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="4" style="text-align:center;">No FAQs. Add one.</td></tr>';
+                    html += '<tr><td colspan="4" style="text-align:center;">No FAQs. Add one or load defaults.</td></tr>';
                 } else {
                     snapshot.forEach(doc => {
                         const faq = doc.data();
@@ -4408,20 +4409,43 @@
             }
         };
 
+        // Load default FAQs
+        window.loadDefaultFaqs = async function() {
+            if (!confirm('This will add a set of default FAQs. Existing FAQs will not be deleted. Continue?')) return;
+            const defaultFaqs = [
+                { order: 1, question: 'How do I withdraw my earnings?', answer: 'Go to the Withdrawals section, enter the amount (minimum $5), choose your method, and submit. Your request will be processed within 24-48 hours.' },
+                { order: 2, question: 'What are the membership benefits?', answer: 'Premium members can withdraw earnings, get priority support, and access exclusive tasks. Elite members also receive a $10 welcome bonus and lifetime benefits.' },
+                { order: 3, question: 'How are tasks scored?', answer: 'Tasks are scored from 0-100 based on quality. Your earnings are calculated as (task reward * score / 100).' },
+                { order: 4, question: 'Can I work on tasks collaboratively?', answer: 'Yes, some tasks are marked as "collaborable" and allow multiple users to work together. You can see the team members on the task card.' },
+                { order: 5, question: 'How do referrals work?', answer: 'Share your referral link. When your referred user upgrades to Premium, you earn $2 and they earn $0.50.' }
+            ];
+            try {
+                for (const faq of defaultFaqs) {
+                    await db.collection('faqs').add(faq);
+                }
+                showAlert('Default FAQs added successfully!', 'success');
+                loadFaqManager();
+            } catch (error) {
+                console.error('Error loading default FAQs:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
         // ========== NEW: Client Feedback Management ==========
         async function loadFeedbackManager() {
             try {
                 const snapshot = await db.collection('clientFeedback').orderBy('createdAt', 'desc').get();
                 let html = `
                     <h3 style="margin-bottom:1.5rem;">⭐ Client Feedback Management</h3>
-                    <div style="margin-bottom:1rem;">
+                    <div style="margin-bottom:1rem; display: flex; gap: 1rem;">
                         <button class="btn btn-success" onclick="showAddFeedback()">+ Add Feedback</button>
+                        <button class="btn btn-primary" onclick="loadSampleFeedback()">📥 Add Sample Feedback</button>
                     </div>
                     <table class="data-table">
                         <tr><th>Client</th><th>Message</th><th>Date</th><th>Actions</th></tr>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="4" style="text-align:center;">No feedback. Add one.</td></tr>';
+                    html += '<tr><td colspan="4" style="text-align:center;">No feedback. Add one or load samples.</td></tr>';
                 } else {
                     snapshot.forEach(doc => {
                         const fb = doc.data();
@@ -4483,6 +4507,31 @@
                 loadFeedbackManager();
             } catch (e) {
                 showAlert('Error: ' + e.message, 'error');
+            }
+        };
+
+        // Load sample feedback
+        window.loadSampleFeedback = async function() {
+            if (!confirm('This will add a few sample feedback entries. Existing feedback will not be deleted. Continue?')) return;
+            const samples = [
+                { clientName: 'Sarah Johnson', message: 'The team delivered exceptional work on our logo design. Quick turnaround and great communication!' },
+                { clientName: 'TechStart Inc.', message: 'We hired multiple freelancers for content writing. All submissions were high quality and on time. Highly recommend!' },
+                { clientName: 'Michael Chen', message: 'Very professional and skilled. Will definitely work with them again.' },
+                { clientName: 'GreenLeaf Organics', message: 'Completed our website redesign beautifully. Exceeded expectations.' },
+                { clientName: 'Emma Watson', message: 'Great experience overall. The platform is easy to use and the support team is very helpful.' }
+            ];
+            try {
+                for (const sample of samples) {
+                    await db.collection('clientFeedback').add({
+                        ...sample,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                showAlert('Sample feedback added successfully!', 'success');
+                loadFeedbackManager();
+            } catch (error) {
+                console.error('Error loading sample feedback:', error);
+                showAlert('Error: ' + error.message, 'error');
             }
         };
 
@@ -4838,6 +4887,8 @@
         window.sendBroadcastNotification = sendBroadcastNotification;  
         window.executeBroadcastNotification = executeBroadcastNotification;  
         window.filterUsersTable = filterUsersTable;
+        window.loadDefaultFaqs = loadDefaultFaqs;
+        window.loadSampleFeedback = loadSampleFeedback;
     </script>  
 </body>  
 </html>
