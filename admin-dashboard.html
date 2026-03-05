@@ -4096,22 +4096,27 @@
                 const snapshot = await db.collection('leaderboard').orderBy('rank', 'asc').get();
                 let html = `
                     <h3 style="margin-bottom:1.5rem;">🏆 Leaderboard Management</h3>
-                    <div style="margin-bottom:1rem;">
-                        <button class="btn btn-success" onclick="showAddLeaderboardEntry()">+ Add Entry</button>
+                    <div style="display: flex; gap: 1rem; margin-bottom:1rem;">
+                        <button class="btn btn-success" onclick="showAddLeaderboardEntry()">+ Add Manual Entry</button>
+                        <button class="btn btn-primary" onclick="generateLeaderboardFromUsers()">⚙️ Generate from Users</button>
                     </div>
                     <table class="data-table">
-                        <tr><th>Rank</th><th>User Name</th><th>Points</th><th>Actions</th></tr>
+                        <tr><th>Rank</th><th>User Name</th><th>Points</th><th>Type</th><th>Actions</th></tr>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="4" style="text-align:center;">No leaderboard entries. Add one.</td></tr>';
+                    html += '<tr><td colspan="5" style="text-align:center;">No leaderboard entries. Add one or generate.</td></tr>';
                 } else {
                     snapshot.forEach(doc => {
                         const entry = doc.data();
+                        const typeBadge = entry.type === 'manual' 
+                            ? '<span class="badge warning">Manual</span>' 
+                            : '<span class="badge info">Auto</span>';
                         html += `
                             <tr>
                                 <td>#${entry.rank}</td>
                                 <td>${entry.userName}</td>
                                 <td>${entry.points}</td>
+                                <td>${typeBadge}</td>
                                 <td>
                                     <button class="btn btn-sm btn-primary" onclick="editLeaderboardEntry('${doc.id}', ${entry.rank}, '${entry.userName}', ${entry.points})">Edit</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteLeaderboardEntry('${doc.id}')">Delete</button>
@@ -4124,13 +4129,14 @@
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading leaderboard:', error);
-                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading leaderboard: ${error.message}</p><button class="btn btn-primary" onclick="loadLeaderboardManager()">Retry</button></div>`;
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p><button class="btn btn-primary" onclick="loadLeaderboardManager()">Retry</button></div>`;
             }
         }
 
+        // Show add manual entry form
         window.showAddLeaderboardEntry = function() {
             showModal(`
-                <h3 style="margin-bottom:1rem;">Add Leaderboard Entry</h3>
+                <h3 style="margin-bottom:1rem;">Add Manual Leaderboard Entry</h3>
                 <input type="number" id="lbRank" placeholder="Rank (e.g., 1,2,3)" min="1" required>
                 <input type="text" id="lbUserName" placeholder="User Name" required>
                 <input type="number" id="lbPoints" placeholder="Points" min="0" step="1" required>
@@ -4145,7 +4151,13 @@
                     return;
                 }
                 try {
-                    await db.collection('leaderboard').add({ rank, userName, points });
+                    await db.collection('leaderboard').add({ 
+                        rank, 
+                        userName, 
+                        points,
+                        type: 'manual',          // mark as manual
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
                     closeModal();
                     showAlert('Leaderboard entry added', 'success');
                     loadLeaderboardManager();
@@ -4155,6 +4167,7 @@
             });
         };
 
+        // Edit manual entry
         window.editLeaderboardEntry = function(id, rank, userName, points) {
             showModal(`
                 <h3 style="margin-bottom:1rem;">Edit Leaderboard Entry</h3>
@@ -4172,7 +4185,12 @@
                     return;
                 }
                 try {
-                    await db.collection('leaderboard').doc(id).update({ rank: newRank, userName: newUserName, points: newPoints });
+                    await db.collection('leaderboard').doc(id).update({ 
+                        rank: newRank, 
+                        userName: newUserName, 
+                        points: newPoints,
+                        type: 'manual'           // keep as manual
+                    });
                     closeModal();
                     showAlert('Leaderboard entry updated', 'success');
                     loadLeaderboardManager();
@@ -4182,6 +4200,7 @@
             });
         };
 
+        // Delete any entry
         window.deleteLeaderboardEntry = async function(id) {
             if (!confirm('Delete this leaderboard entry?')) return;
             try {
@@ -4190,6 +4209,99 @@
                 loadLeaderboardManager();
             } catch (e) {
                 showAlert('Error: ' + e.message, 'error');
+            }
+        };
+
+        // Generate leaderboard from user data (UPDATED to handle missing fields)
+        window.generateLeaderboardFromUsers = async function() {
+            if (!confirm('This will replace all auto-generated entries. Manual entries will be preserved and re-ranked. Continue?')) return;
+
+            showAlert('Processing users...', 'info', 'Please wait');
+            try {
+                // 1. Fetch all users
+                const usersSnap = await db.collection('users').get();
+                const users = [];
+                usersSnap.forEach(doc => {
+                    const data = doc.data();
+                    users.push({
+                        id: doc.id,
+                        name: data.displayName || data.email || 'Unknown User',
+                        wallet: data.wallet || 0,
+                        tasksCompleted: data.tasksCompleted || 0
+                    });
+                });
+
+                // 2. Compute scores for each user
+                const userScores = users.map(u => ({
+                    userId: u.id,
+                    userName: u.name,
+                    points: (u.wallet * 10) + (u.tasksCompleted * 5),
+                    type: 'auto'
+                }));
+
+                // 3. Fetch existing leaderboard entries
+                const existingSnap = await db.collection('leaderboard').get();
+                const manualEntries = [];
+                existingSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.type === 'manual') {
+                        // Ensure manual entry has required fields
+                        manualEntries.push({ 
+                            id: doc.id, 
+                            userId: data.userId || null,
+                            userName: data.userName || 'Anonymous',
+                            points: data.points || 0,
+                            type: 'manual'
+                        });
+                    }
+                });
+
+                // 4. Build combined list: start with all user auto entries, then overlay manual ones
+                const combinedMap = new Map();
+                // Add auto entries
+                userScores.forEach(u => {
+                    combinedMap.set(u.userId, { ...u });
+                });
+                // Override with manual entries (if they have the same userId)
+                manualEntries.forEach(m => {
+                    const key = m.userId || m.id; // if no userId, use doc id as key
+                    combinedMap.set(key, { ...m, type: 'manual' });
+                });
+
+                // Convert map to array
+                let combined = Array.from(combinedMap.values());
+
+                // 5. Sort by points descending
+                combined.sort((a, b) => b.points - a.points);
+
+                // 6. Assign ranks and sanitize each entry
+                combined = combined.map((entry, index) => ({
+                    userId: entry.userId || null,
+                    userName: entry.userName || 'Anonymous',
+                    points: entry.points || 0,
+                    rank: index + 1,
+                    type: entry.type || 'auto',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }));
+
+                // 7. Replace the leaderboard collection in batches
+                const batch = db.batch();
+                // Delete all existing entries first
+                existingSnap.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                // Add new combined entries
+                combined.forEach(entry => {
+                    const newRef = db.collection('leaderboard').doc(); // new auto-id
+                    batch.set(newRef, entry);
+                });
+                await batch.commit();
+
+                showAlert(`Leaderboard updated with ${combined.length} entries!`, 'success');
+                loadLeaderboardManager();
+            } catch (error) {
+                console.error('Error generating leaderboard:', error);
+                showAlert('Error: ' + error.message, 'error');
             }
         };
 
