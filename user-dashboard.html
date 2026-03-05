@@ -483,7 +483,7 @@
         const REFERRAL_BONUS_REFERRER = 2, REFERRAL_BONUS_REFERRED = 0.5;
 
         // NEW: configurable payment URL
-        let paymentUrl = "https://lipwa.com"; // default
+        let paymentUrl = " https://lipana.dev/pay/nextgen-membership"; // default
 
         // -------------------- GLOBAL STATE --------------------
         let currentUser = null;
@@ -537,11 +537,11 @@
                     paymentUrl = doc.data().url;
                 } else {
                     // fallback to default
-                    paymentUrl = "https://lipwa.com";
+                    paymentUrl = " https://lipana.dev/pay/nextgen-membership";
                 }
             } catch (e) {
                 console.error('Error loading payment settings, using default', e);
-                paymentUrl = "https://lipwa.com";
+                paymentUrl = " https://lipana.dev/pay/nextgen-membership";
             }
         }
 
@@ -1469,7 +1469,7 @@
                     <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;">
                         <i class="fas fa-bolt" style="font-size:2rem;"></i>
                         <h3 style="color:white;">Ready to Upgrade?</h3>
-                        <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('https://pay.com','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
+                        <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open(' https://lipana.dev/pay/nextgen-membership','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
                     </div>
                     <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i>
                     <h3>Upgrade Your Membership</h3>
