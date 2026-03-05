@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* All existing styles remain exactly the same – no changes */
+        /* All existing styles remain exactly the same – no changes needed */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
         .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
@@ -3234,7 +3234,180 @@
         }
 
         async function showReferralDetails(referralId, referrerData, referredData, referral) {
-            // ... (function unchanged, but ensure it's present)
+            const createdDate = referral.createdAt?.seconds ? formatDate(referral.createdAt) : 'N/A';
+            
+            let timelineHtml = `
+                <div class="timeline-item">
+                    <div class="timeline-dot completed"></div>
+                    <div class="timeline-content">
+                        <span>Referral created</span>
+                        <span>${createdDate}</span>
+                    </div>
+                </div>
+            `;
+            
+            if (referral.status === 'completed') {
+                const completedDate = referral.completedAt?.seconds ? formatDate(referral.completedAt) : 'N/A';
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-dot completed"></div>
+                        <div class="timeline-content">
+                            <span>Bonuses paid</span>
+                            <span>${completedDate}</span>
+                        </div>
+                    </div>
+                `;
+            } else if (referral.status === 'rejected') {
+                const rejectedDate = referral.rejectedAt?.seconds ? formatDate(referral.rejectedAt) : 'N/A';
+                timelineHtml += `
+                    <div class="timeline-item">
+                        <div class="timeline-dot danger"></div>
+                        <div class="timeline-content">
+                            <span>Referral rejected</span>
+                            <span>${rejectedDate}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            showModal(`
+                <h3 style="margin-bottom:1.5rem;">Referral Details</h3>
+                
+                <div class="user-info-grid">
+                    <div class="user-info-card referrer">
+                        <div class="user-info-header referrer">
+                            <i class="fas fa-user"></i>
+                            <h4>Referrer</h4>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Email</span>
+                            <span class="user-detail-value">${referrerData.email}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Name</span>
+                            <span class="user-detail-value">${referrerData.displayName || 'N/A'}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">User ID</span>
+                            <span class="user-detail-value"><small>${referral.referrerId}</small></span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Wallet Balance</span>
+                            <span class="user-detail-value highlight">${formatCurrency(referrerData.wallet || 0)}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Membership</span>
+                            <span class="user-detail-value">
+                                <span class="membership-status ${referrerData.membershipType || 'basic'}">
+                                    ${(referrerData.membershipType || 'basic').toUpperCase()}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Total Referrals</span>
+                            <span class="user-detail-value">${referrerData.totalReferrals || 0}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Referral Earnings</span>
+                            <span class="user-detail-value highlight">${formatCurrency(referrerData.referralEarnings || 0)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="user-info-card referred">
+                        <div class="user-info-header referred">
+                            <i class="fas fa-user-plus"></i>
+                            <h4>Referred User</h4>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Email</span>
+                            <span class="user-detail-value">${referredData.email}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Name</span>
+                            <span class="user-detail-value">${referredData.displayName || 'N/A'}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">User ID</span>
+                            <span class="user-detail-value"><small>${referral.referredId}</small></span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Wallet Balance</span>
+                            <span class="user-detail-value highlight">${formatCurrency(referredData.wallet || 0)}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Membership</span>
+                            <span class="user-detail-value">
+                                <span class="membership-status ${referredData.membershipType || 'basic'}">
+                                    ${(referredData.membershipType || 'basic').toUpperCase()}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Joined</span>
+                            <span class="user-detail-value">${referredData.createdAt ? formatDate(referredData.createdAt) : 'N/A'}</span>
+                        </div>
+                        <div class="user-detail-row">
+                            <span class="user-detail-label">Upgraded to Premium?</span>
+                            <span class="user-detail-value">
+                                ${referredData.membershipType === 'premium' || referredData.membershipType === 'elite' 
+                                    ? '<span class="badge success">Yes</span>' 
+                                    : '<span class="badge warning">No</span>'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #f1f5f9; padding: 1.5rem; border-radius: 0.75rem; margin: 1.5rem 0;">
+                    <h4 style="margin-bottom: 1rem;">Bonus Breakdown</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: white; padding: 1rem; border-radius: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-user" style="color: #6366f1;"></i>
+                                <span style="font-weight: 600;">Referrer Bonus</span>
+                            </div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #6366f1;">
+                                ${formatCurrency(REFERRAL_BONUS_REFERRER)}
+                            </div>
+                        </div>
+                        <div style="background: white; padding: 1rem; border-radius: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-user-plus" style="color: #10b981;"></i>
+                                <span style="font-weight: 600;">Referred Bonus</span>
+                            </div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">
+                                ${formatCurrency(REFERRAL_BONUS_REFERRED)}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px dashed #cbd5e1;">
+                        <div style="display: flex; justify-content: space-between; font-weight: 700;">
+                            <span>Total Bonus</span>
+                            <span style="color: #10b981;">${formatCurrency(REFERRAL_BONUS_REFERRER + REFERRAL_BONUS_REFERRED)}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="referral-timeline">
+                    <h4 style="margin-bottom: 1rem;">Timeline</h4>
+                    ${timelineHtml}
+                </div>
+                
+                <div class="referral-actions">
+                    ${referral.status === 'pending' && (referredData.membershipType === 'premium' || referredData.membershipType === 'elite') ? `
+                        <button class="action-btn approve" onclick="creditReferralBonus('${referralId}', '${referral.referrerId}', '${referral.referredId}', '${referral.referredEmail}')">
+                            <i class="fas fa-check-circle"></i> Approve & Credit Bonuses
+                        </button>
+                    ` : ''}
+                    ${referral.status === 'pending' ? `
+                        <button class="action-btn reject" onclick="rejectReferral('${referralId}')">
+                            <i class="fas fa-times-circle"></i> Reject
+                        </button>
+                    ` : ''}
+                    <button class="action-btn view" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            `);
         }
 
         async function loadReferrals() {  
@@ -3674,16 +3847,136 @@
             }  
         }  
           
-        // ========== NOTIFICATION FUNCTIONS (simplified) ==========
+        // ========== NOTIFICATION FUNCTIONS ==========
         async function sendNotification(userId, title, message, type = 'info', link = null) {
-            // Implementation (same as before) – omitted for brevity, but should be present
+            try {
+                if (!userId) throw new Error('No user ID');
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (!userDoc.exists) throw new Error('User not found');
+                const userData = userDoc.data();
+                
+                const notificationData = {
+                    userId: userId,
+                    title: title.trim(),
+                    message: message.trim(),
+                    type: type,
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                if (link) notificationData.link = link;
+                if (userData.email) notificationData.userEmail = userData.email;
+                
+                await db.collection('notifications').add(notificationData);
+                showAlert('Notification sent!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error sending notification:', error);
+                showAlert('Failed to send notification: ' + error.message, 'error');
+                return false;
+            }
         }
+
         async function sendNotificationToAll(title, message, type = 'info', link = null) {
-            // Implementation
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                if (usersSnapshot.empty) throw new Error('No users');
+                
+                showAlert(`Sending to ${usersSnapshot.size} users...`, 'info');
+                const BATCH_SIZE = 400;
+                let batch = db.batch();
+                let count = 0;
+                
+                for (const userDoc of usersSnapshot.docs) {
+                    const notifRef = db.collection('notifications').doc();
+                    batch.set(notifRef, {
+                        userId: userDoc.id,
+                        title: title.trim(),
+                        message: message.trim(),
+                        type: type,
+                        read: false,
+                        isBroadcast: true,
+                        userEmail: userDoc.data().email,
+                        link: link,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    count++;
+                    if (count % BATCH_SIZE === 0) {
+                        await batch.commit();
+                        batch = db.batch();
+                    }
+                }
+                if (count % BATCH_SIZE !== 0) await batch.commit();
+                
+                await db.collection('messages').add({
+                    userId: 'BROADCAST',
+                    isBroadcast: true,
+                    title: title,
+                    message: message,
+                    type: type,
+                    sentCount: usersSnapshot.size,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    sentBy: currentUser.email
+                });
+                showAlert(`Broadcast sent to ${usersSnapshot.size} users!`, 'success');
+                return true;
+            } catch (error) {
+                console.error('Error in broadcast:', error);
+                showAlert('Broadcast failed: ' + error.message, 'error');
+                return false;
+            }
         }
-        async function sendIndividualNotification() { /* ... */ }
-        async function sendBroadcastNotification() { /* ... */ }
-        async function executeBroadcastNotification() { /* ... */ }
+
+        async function sendIndividualNotification() {
+            const userId = document.getElementById('notifUser')?.value;
+            const title = document.getElementById('notifTitle')?.value;
+            const message = document.getElementById('notifMessage')?.value;
+            const type = document.getElementById('notifType')?.value;
+            const link = document.getElementById('notifLink')?.value;
+            
+            if (!userId || !title || !message) {
+                showAlert('Please fill all fields', 'error');
+                return;
+            }
+            await sendNotification(userId, title, message, type, link);
+        }
+
+        async function sendBroadcastNotification() {
+            const title = document.getElementById('broadcastNotifTitle')?.value;
+            const message = document.getElementById('broadcastNotifMessage')?.value;
+            const type = document.getElementById('broadcastNotifType')?.value;
+            const link = document.getElementById('broadcastNotifLink')?.value;
+            
+            if (!title || !message) {
+                showAlert('Please fill title and message', 'error');
+                return;
+            }
+            
+            showModal(`
+                <h3 style="margin-bottom:1rem; color: #f59e0b;">Confirm Broadcast Notification</h3>
+                <div style="background: #f59e0b20; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <p><strong>⚠️ You are about to send a notification to ALL users</strong></p>
+                    <p>Please review your notification:</p>
+                </div>
+                <p><strong>Title:</strong> ${title}</p>
+                <p><strong>Message:</strong> ${message}</p>
+                <p><strong>Type:</strong> ${type}</p>
+                ${link ? `<p><strong>Link:</strong> ${link}</p>` : ''}
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button class="btn btn-success" id="confirmBroadcastNotifBtn">Yes, Send to All</button>
+                    <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                </div>
+            `);
+        }
+
+        async function executeBroadcastNotification() {
+            const title = document.getElementById('broadcastNotifTitle')?.value;
+            const message = document.getElementById('broadcastNotifMessage')?.value;
+            const type = document.getElementById('broadcastNotifType')?.value;
+            const link = document.getElementById('broadcastNotifLink')?.value;
+            
+            closeModal();
+            await sendNotificationToAll(title, message, type, link);
+        }
           
         // ========== Messages ==========
         async function loadMessages() {  
@@ -3841,19 +4134,150 @@
         }  
           
         async function sendMessage() {  
-            // ... existing function
+            const userId = document.getElementById('messageUser').value;  
+            const message = document.getElementById('messageText').value;  
+              
+            if (!userId) {  
+                showAlert('Please select a user', 'error');  
+                return;  
+            }  
+              
+            if (!message) {  
+                showAlert('Please enter a message', 'error');  
+                return;  
+            }  
+              
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();  
+                const userEmail = userDoc.data().email;  
+                
+                await db.collection('messages').add({  
+                    userId,  
+                    userEmail,  
+                    message,  
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()  
+                });  
+
+                await sendNotification(userId, 'New Message from Admin', message, 'message', null);  
+                  
+                showAlert('Message sent successfully', 'success');  
+                document.getElementById('messageText').value = '';  
+                loadMessages();  
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showAlert('Error sending message: ' + error.message, 'error');
+            }
         }  
           
         async function sendBroadcast() {  
-            // ... existing
+            const title = document.getElementById('broadcastTitle')?.value || '';  
+            const message = document.getElementById('broadcastMessage')?.value;  
+              
+            if (!message || message.trim() === '') {  
+                showAlert('Please enter a message', 'error');  
+                return;  
+            }  
+              
+            showModal(`  
+                <h3 style="margin-bottom:1rem; color: #6366f1;">Confirm Broadcast</h3>  
+                <div style="background: #6366f120; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">  
+                    <p><strong>⚠️ You are about to send a message to ALL users</strong></p>  
+                    <p>This action cannot be undone. Please review your message:</p>  
+                </div>  
+                  
+                ${title ? `<p><strong>Title:</strong> ${title}</p>` : ''}  
+                <p><strong>Message:</strong></p>  
+                <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">  
+                    ${message}  
+                </div>  
+                  
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">  
+                    <button class="btn btn-success" id="confirmBroadcastBtn" style="flex: 1;">  
+                        <i class="fas fa-check"></i> Yes, Send to All Users  
+                    </button>  
+                    <button class="btn btn-danger" id="cancelBroadcastBtn" style="flex: 1;">  
+                        <i class="fas fa-times"></i> Cancel  
+                    </button>  
+                </div>  
+            `);  
         }  
           
         async function executeBroadcast() {  
-            // ... existing
+            const title = document.getElementById('broadcastTitle')?.value || '';  
+            const message = document.getElementById('broadcastMessage')?.value;  
+              
+            closeModal();  
+            showAlert('Preparing broadcast...', 'info', 'Please Wait');  
+              
+            try {  
+                const usersSnapshot = await db.collection('users').get();  
+                const sentCount = usersSnapshot.size;  
+                  
+                await db.collection('messages').add({  
+                    userId: 'ALL_USERS',  
+                    isBroadcast: true,  
+                    title: title,  
+                    message: message,  
+                    sentCount: sentCount,  
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),  
+                    sentBy: currentUser.uid  
+                });  
+                  
+                const batch = db.batch();  
+                usersSnapshot.docs.forEach((userDoc) => {  
+                    const notifRef = db.collection('notifications').doc();  
+                    batch.set(notifRef, {  
+                        userId: userDoc.id,  
+                        type: 'broadcast',  
+                        title: title || 'New Announcement',  
+                        message: message,  
+                        read: false,  
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()  
+                    });  
+                });  
+                  
+                await batch.commit();  
+                  
+                showAlert(`✅ Broadcast sent to ${sentCount} users!`, 'success');  
+                  
+                document.getElementById('broadcastMessage').value = '';  
+                if (document.getElementById('broadcastTitle')) {  
+                    document.getElementById('broadcastTitle').value = '';  
+                }  
+                  
+                loadMessages();  
+                  
+            } catch (error) {  
+                console.error('Broadcast error:', error);  
+                showAlert('Error sending broadcast: ' + error.message, 'error');  
+            }  
         }  
           
         function previewBroadcast() {  
-            // ... existing
+            const title = document.getElementById('broadcastTitle')?.value || '';  
+            const message = document.getElementById('broadcastMessage')?.value;  
+              
+            if (!message) {  
+                showAlert('Please enter a message to preview', 'error');  
+                return;  
+            }  
+              
+            showModal(`  
+                <h3 style="margin-bottom:1rem;">Broadcast Preview</h3>  
+                <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 2rem; border-radius: 1rem;">  
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">  
+                        <i class="fas fa-bullhorn" style="font-size: 1.5rem;"></i>  
+                        <span style="font-weight: 600;">Admin Announcement</span>  
+                    </div>  
+                    ${title ? `<h4 style="margin-bottom: 0.5rem;">${title}</h4>` : ''}  
+                    <p style="margin: 0; opacity: 0.95;">${message}</p>  
+                    <div style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">  
+                        — NextGen Admin  
+                    </div>  
+                </div>  
+                <p style="margin-top: 1rem; color: #6b7280;">This is how users will see your broadcast message.</p>  
+                <button class="btn btn-primary" onclick="closeModal()" style="width: 100%;">Close Preview</button>  
+            `);  
         }  
 
         // ========== TRAINING CENTER ==========
@@ -3928,14 +4352,212 @@
         }
 
         window.showCreateTraining = function() {
-            // ... existing
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Create New Training</h3>
+                <input type="text" id="trainingTitle" placeholder="Training Title" required>
+                <textarea id="trainingDescription" placeholder="Description" required></textarea>
+                <input type="text" id="trainingRequirements" placeholder="Requirements (comma separated)">
+                <input type="text" id="trainingDuration" placeholder="Duration (e.g., 2 hours, 3 days)">
+                <div style="margin-bottom:1rem;">
+                    <label>Type:</label>
+                    <select id="trainingType">
+                        <option value="free">Free</option>
+                        <option value="prepaid">Prepaid</option>
+                    </select>
+                </div>
+                <div id="priceField" style="display:none;">
+                    <input type="number" id="trainingPrice" placeholder="Price (USD)" step="0.01" min="0">
+                </div>
+                <h4 style="margin:1rem 0 0.5rem;">Resources</h4>
+                <div id="resourcesList"></div>
+                <button class="btn btn-sm btn-info" onclick="addResourceField()">+ Add Resource</button>
+                <button class="btn btn-success" id="createTrainingBtn" style="width:100%; margin-top:1rem;">Create Training</button>
+            `);
+            document.getElementById('trainingType').addEventListener('change', function() {
+                document.getElementById('priceField').style.display = this.value === 'prepaid' ? 'block' : 'none';
+            });
+            addResourceField();
         };
-        window.addResourceField = function() { /* ... */ };
-        window.createTraining = async function() { /* ... */ };
-        window.editTraining = async function(trainingId) { /* ... */ };
-        window.addEditResourceField = function() { /* ... */ };
-        window.updateTraining = async function(trainingId) { /* ... */ };
-        window.deleteTraining = async function(trainingId) { /* ... */ };
+
+        window.addResourceField = function() {
+            const list = document.getElementById('resourcesList');
+            const div = document.createElement('div');
+            div.className = 'resource-item';
+            div.innerHTML = `
+                <select class="resource-type" style="width:100px;">
+                    <option value="text">Text</option>
+                    <option value="link">Link</option>
+                </select>
+                <input type="text" class="resource-content" placeholder="Content or URL">
+                <div class="resource-controls">
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            list.appendChild(div);
+        };
+
+        window.createTraining = async function() {
+            const title = document.getElementById('trainingTitle').value;
+            const description = document.getElementById('trainingDescription').value;
+            const requirements = document.getElementById('trainingRequirements').value;
+            const duration = document.getElementById('trainingDuration').value;
+            const type = document.getElementById('trainingType').value;
+            const price = type === 'prepaid' ? parseFloat(document.getElementById('trainingPrice').value) : 0;
+
+            if (!title || !description) {
+                showAlert('Please fill title and description', 'error');
+                return;
+            }
+
+            const resources = [];
+            document.querySelectorAll('.resource-item').forEach(item => {
+                const rtype = item.querySelector('.resource-type').value;
+                const content = item.querySelector('.resource-content').value;
+                if (content.trim()) {
+                    resources.push({ type: rtype, content: content.trim() });
+                }
+            });
+
+            try {
+                await db.collection('trainings').add({
+                    title,
+                    description,
+                    requirements: requirements || '',
+                    duration,
+                    type,
+                    price,
+                    resources,
+                    active: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert('Training created successfully', 'success');
+                loadTrainingCenter();
+            } catch (error) {
+                console.error('Error creating training:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.editTraining = async function(trainingId) {
+            const doc = await db.collection('trainings').doc(trainingId).get();
+            const t = doc.data();
+            let resourcesHtml = '';
+            if (t.resources) {
+                t.resources.forEach((res, index) => {
+                    resourcesHtml += `
+                        <div class="resource-item">
+                            <select class="resource-type" style="width:100px;">
+                                <option value="text" ${res.type === 'text' ? 'selected' : ''}>Text</option>
+                                <option value="link" ${res.type === 'link' ? 'selected' : ''}>Link</option>
+                            </select>
+                            <input type="text" class="resource-content" value="${res.content}">
+                            <div class="resource-controls">
+                                <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                resourcesHtml = '<div class="resource-item">...</div>';
+            }
+
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Edit Training</h3>
+                <input type="text" id="editTrainingTitle" value="${t.title}" required>
+                <textarea id="editTrainingDescription" required>${t.description}</textarea>
+                <input type="text" id="editTrainingRequirements" value="${t.requirements || ''}">
+                <input type="text" id="editTrainingDuration" value="${t.duration || ''}">
+                <div style="margin-bottom:1rem;">
+                    <label>Type:</label>
+                    <select id="editTrainingType">
+                        <option value="free" ${t.type === 'free' ? 'selected' : ''}>Free</option>
+                        <option value="prepaid" ${t.type === 'prepaid' ? 'selected' : ''}>Prepaid</option>
+                    </select>
+                </div>
+                <div id="editPriceField" style="display:${t.type === 'prepaid' ? 'block' : 'none'};">
+                    <input type="number" id="editTrainingPrice" value="${t.price || 0}" step="0.01" min="0">
+                </div>
+                <h4 style="margin:1rem 0 0.5rem;">Resources</h4>
+                <div id="editResourcesList">${resourcesHtml}</div>
+                <button class="btn btn-sm btn-info" onclick="addEditResourceField()">+ Add Resource</button>
+                <button class="btn btn-success" id="updateTrainingBtn" data-id="${trainingId}" style="width:100%; margin-top:1rem;">Update Training</button>
+            `);
+
+            document.getElementById('editTrainingType').addEventListener('change', function() {
+                document.getElementById('editPriceField').style.display = this.value === 'prepaid' ? 'block' : 'none';
+            });
+        };
+
+        window.addEditResourceField = function() {
+            const list = document.getElementById('editResourcesList');
+            const div = document.createElement('div');
+            div.className = 'resource-item';
+            div.innerHTML = `
+                <select class="resource-type" style="width:100px;">
+                    <option value="text">Text</option>
+                    <option value="link">Link</option>
+                </select>
+                <input type="text" class="resource-content" placeholder="Content or URL">
+                <div class="resource-controls">
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            list.appendChild(div);
+        };
+
+        window.updateTraining = async function(trainingId) {
+            const title = document.getElementById('editTrainingTitle').value;
+            const description = document.getElementById('editTrainingDescription').value;
+            const requirements = document.getElementById('editTrainingRequirements').value;
+            const duration = document.getElementById('editTrainingDuration').value;
+            const type = document.getElementById('editTrainingType').value;
+            const price = type === 'prepaid' ? parseFloat(document.getElementById('editTrainingPrice').value) : 0;
+
+            if (!title || !description) {
+                showAlert('Please fill title and description', 'error');
+                return;
+            }
+
+            const resources = [];
+            document.querySelectorAll('#editResourcesList .resource-item').forEach(item => {
+                const rtype = item.querySelector('.resource-type').value;
+                const content = item.querySelector('.resource-content').value;
+                if (content.trim()) {
+                    resources.push({ type: rtype, content: content.trim() });
+                }
+            });
+
+            try {
+                await db.collection('trainings').doc(trainingId).update({
+                    title,
+                    description,
+                    requirements: requirements || '',
+                    duration,
+                    type,
+                    price,
+                    resources
+                });
+                closeModal();
+                showAlert('Training updated successfully', 'success');
+                loadTrainingCenter();
+            } catch (error) {
+                console.error('Error updating training:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.deleteTraining = async function(trainingId) {
+            if (!confirm('Are you sure you want to delete this training?')) return;
+            try {
+                await db.collection('trainings').doc(trainingId).delete();
+                showAlert('Training deleted', 'success');
+                loadTrainingCenter();
+            } catch (error) {
+                console.error('Error deleting training:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
 
         async function loadTrainingApplications() {
             const trainingContent = document.getElementById('trainingContent');
@@ -4018,7 +4640,6 @@
         async function loadLoginLogs() {
             try {
                 let html = '<h3 style="margin-bottom:1.5rem;">User Login Activity</h3>';
-                // Get logins from the last 7 days
                 const sevenDaysAgo = new Date();
                 sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
                 const snapshot = await db.collection('userLogins')
@@ -4087,7 +4708,7 @@
             }
         }
 
-        // ========== EVENT DELEGATION (unchanged) ==========
+        // ========== EVENT DELEGATION ==========
         document.addEventListener('click', async (e) => {  
             try {  
                 const target = e.target;  
