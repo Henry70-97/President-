@@ -861,7 +861,7 @@
             loadUsers();  
         }  
           
-        // ==================== User Functions (unchanged) ====================
+        // ==================== User Functions (updated with membership change) ====================
         async function toggleVerified(userId, newStatus) {
             await db.collection('users').doc(userId).update({ verified: newStatus });
             showAlert(`User verified status set to ${newStatus}`, 'success');
@@ -883,6 +883,39 @@
             } catch (error) {
                 console.error('Error deleting user:', error);
                 showAlert('Error deleting user: ' + error.message, 'error');
+            }
+        }
+
+        // NEW: Show change membership modal
+        function showChangeMembership(userId, currentType) {
+            const options = Object.values(MEMBERSHIP_TYPES).map(type => {
+                const selected = type === currentType ? 'selected' : '';
+                return `<option value="${type}" ${selected}>${type.toUpperCase()}</option>`;
+            }).join('');
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Change Membership for User</h3>
+                <select id="newMembershipType">
+                    ${options}
+                </select>
+                <p style="margin-bottom:1rem; color:#64748b;">Changing membership will update the user's type. No wallet adjustments will be made automatically.</p>
+                <button class="btn btn-primary" id="confirmMembershipChangeBtn" data-user-id="${userId}">Update Membership</button>
+            `);
+        }
+
+        async function changeMembership(userId) {
+            const newType = document.getElementById('newMembershipType').value;
+            try {
+                await db.collection('users').doc(userId).update({
+                    membershipType: newType,
+                    membershipPaid: newType !== MEMBERSHIP_TYPES.BASIC, // if premium/elite, mark as paid (you might want to adjust)
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert(`Membership updated to ${newType.toUpperCase()}`, 'success');
+                loadUsers();
+            } catch (error) {
+                console.error('Error changing membership:', error);
+                showAlert('Error: ' + error.message, 'error');
             }
         }
 
@@ -926,6 +959,8 @@
                                 <button class="btn btn-info toggle-verified-btn" data-user-id="${user.id}" data-new-status="${!verified}">${verified ? 'Unverify' : 'Verify'}</button> 
                                 <button class="btn btn-secondary toggle-frozen-btn" data-user-id="${user.id}" data-new-status="${!frozen}">${frozen ? 'Unfreeze' : 'Freeze'}</button> 
                                 <button class="btn btn-danger delete-user-btn" data-user-id="${user.id}" data-user-email="${user.email}">Delete</button> 
+                                <!-- NEW: Change Membership Button -->
+                                <button class="btn btn-primary change-membership-btn" data-user-id="${user.id}" data-current-type="${user.membershipType || 'basic'}">Change Membership</button>
                             </td> 
                         </tr> 
                     `; 
@@ -3486,7 +3521,132 @@
             await sendNotificationToAll(title, message, type, link);
         }
           
-        // ========== Messages (unchanged, but now shows sender name) ==========
+        // ========== Messages (updated with petition reply and conversation view) ==========
+        // New function to view conversation with a user
+        async function viewUserConversation(userId) {
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (!userDoc.exists) {
+                    showAlert('User not found', 'error');
+                    return;
+                }
+                const userEmail = userDoc.data().email;
+                
+                // Fetch messages where either senderId or recipientId equals userId, and admin is the other party
+                const messagesSnap = await db.collection('messages')
+                    .where('parentMessageId', '==', null) // top-level messages (you may need to adjust for your structure)
+                    .orderBy('createdAt', 'asc')
+                    .get();
+                
+                // Filter manually to get messages between this user and admin
+                const messages = [];
+                messagesSnap.forEach(doc => {
+                    const msg = doc.data();
+                    if ((msg.senderId === userId && msg.recipientId === currentUser.uid) || 
+                        (msg.senderId === currentUser.uid && msg.recipientId === userId)) {
+                        messages.push({ id: doc.id, ...msg });
+                    }
+                });
+
+                let conversationHtml = '<div style="max-height: 400px; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 1rem;">';
+                if (messages.length === 0) {
+                    conversationHtml += '<p style="text-align:center; color:#64748b;">No messages yet with this user.</p>';
+                } else {
+                    messages.forEach(msg => {
+                        const isAdmin = msg.senderId === currentUser.uid;
+                        const time = msg.createdAt ? formatDate(msg.createdAt) : '';
+                        conversationHtml += `
+                            <div style="display: flex; justify-content: ${isAdmin ? 'flex-end' : 'flex-start'}; margin-bottom: 1rem;">
+                                <div style="background: ${isAdmin ? '#6366f1' : '#e2e8f0'}; color: ${isAdmin ? 'white' : '#1e293b'}; padding: 0.5rem 1rem; border-radius: 1rem; max-width: 70%;">
+                                    <div style="font-size: 0.8rem; margin-bottom: 0.2rem;">${isAdmin ? 'Admin' : userEmail}</div>
+                                    <div>${msg.message}</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 0.2rem;">${time}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                conversationHtml += '</div>';
+                
+                // Reply box
+                conversationHtml += `
+                    <h4 style="margin-top:1rem;">Reply to User</h4>
+                    <textarea id="conversationReply" placeholder="Type your reply..." style="min-height: 80px;"></textarea>
+                    <button class="btn btn-primary" id="sendConversationReply" data-user-id="${userId}">Send Reply</button>
+                `;
+                
+                showModal(conversationHtml);
+                
+                document.getElementById('sendConversationReply').addEventListener('click', async function() {
+                    const reply = document.getElementById('conversationReply').value;
+                    if (!reply) {
+                        showAlert('Please enter a reply', 'error');
+                        return;
+                    }
+                    await sendMessageToUser(userId, reply);
+                    closeModal();
+                    showAlert('Reply sent', 'success');
+                });
+            } catch (error) {
+                console.error('Error loading conversation:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function sendMessageToUser(userId, message) {
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();
+                const userEmail = userDoc.data().email;
+                await db.collection('messages').add({
+                    senderId: currentUser.uid,
+                    recipientId: userId,
+                    message,
+                    userEmail,
+                    fromAdmin: true,
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await sendNotification(userId, 'New Message from Admin', message, 'message', null);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                throw error;
+            }
+        }
+
+        // NEW: Reply to petition
+        async function replyToPetition(petitionId, userId, originalMessage) {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Reply to Petition</h3>
+                <p><strong>Original Petition:</strong> ${originalMessage}</p>
+                <textarea id="petitionReply" placeholder="Type your response..." style="min-height: 100px;"></textarea>
+                <button class="btn btn-primary" id="sendPetitionReplyBtn" data-petition-id="${petitionId}" data-user-id="${userId}">Send Reply</button>
+            `);
+        }
+
+        async function sendPetitionReply(petitionId, userId) {
+            const reply = document.getElementById('petitionReply').value;
+            if (!reply) {
+                showAlert('Please enter a reply', 'error');
+                return;
+            }
+            try {
+                // Update petition document with response
+                await db.collection('petitions').doc(petitionId).update({
+                    response: reply,
+                    respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    respondedBy: currentUser.uid
+                });
+                // Send notification to user
+                await sendNotification(userId, 'Response to Your Petition', reply, 'petition_response', null);
+                closeModal();
+                showAlert('Reply sent and user notified', 'success');
+                loadMessages(); // refresh messages tab
+            } catch (error) {
+                console.error('Error replying to petition:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
         async function loadMessages() {  
             try {
                 const users = await db.collection('users').get();  
@@ -3518,6 +3678,9 @@
                             ${msg.title ? `<h4 style="margin: 0.5rem 0; color: #1f2937;">${msg.title}</h4>` : ''}  
                             <p style="margin: 0.5rem 0;">${msg.message}</p>  
                             ${msg.sentCount ? `<small style="color: #6b7280;">✓ Delivered to ${msg.sentCount} users</small>` : ''}  
+                            <!-- Add reply button for non-broadcast messages -->
+                            ${!isBroadcast && msg.senderId && msg.senderId !== currentUser.uid ? 
+                                `<button class="btn btn-sm btn-primary" onclick="viewUserConversation('${msg.senderId}')">View Conversation</button>` : ''}
                         </div>  
                     `;  
                 });  
@@ -3534,7 +3697,10 @@
                                     <small>${pet.createdAt?.toDate().toLocaleString()}</small>
                                 </div>
                                 <p style="margin: 0.5rem 0;">${pet.message}</p>
-                                ${pet.response ? `<p><strong>Response:</strong> ${pet.response}</p>` : ''}
+                                ${pet.response ? 
+                                    `<p><strong>Response:</strong> ${pet.response} (by admin)</p>` : 
+                                    `<button class="btn btn-sm btn-warning" onclick="replyToPetition('${doc.id}', '${pet.userId}', '${pet.message.replace(/'/g, "\\'")}')">Reply</button>`
+                                }
                             </div>
                         `;
                     });
@@ -3661,9 +3827,12 @@
                 const userEmail = userDoc.data().email;  
                 
                 await db.collection('messages').add({  
-                    userId,  
+                    senderId: currentUser.uid,
+                    recipientId: userId,
                     userEmail,  
                     message,  
+                    fromAdmin: true,
+                    read: false,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()  
                 });  
 
@@ -4743,6 +4912,20 @@
                     await deleteUser(userId, userEmail);
                     return;
                 }
+
+                // NEW: Change membership button
+                if (target.classList.contains('change-membership-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    const currentType = target.getAttribute('data-current-type');
+                    showChangeMembership(userId, currentType);
+                    return;
+                }
+
+                if (target.id === 'confirmMembershipChangeBtn') {
+                    const userId = target.getAttribute('data-user-id');
+                    await changeMembership(userId);
+                    return;
+                }
                   
                 if (target.id === 'createTaskBtn') {  
                     await showCreateTask();  
@@ -4940,6 +5123,29 @@
                     return;  
                 }  
 
+                // NEW: View conversation button
+                if (target.classList.contains('view-conversation-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    await viewUserConversation(userId);
+                    return;
+                }
+
+                // NEW: Reply to petition button
+                if (target.classList.contains('reply-to-petition-btn')) {
+                    const petitionId = target.getAttribute('data-petition-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const message = target.getAttribute('data-message');
+                    await replyToPetition(petitionId, userId, message);
+                    return;
+                }
+
+                if (target.id === 'sendPetitionReplyBtn') {
+                    const petitionId = target.getAttribute('data-petition-id');
+                    const userId = target.getAttribute('data-user-id');
+                    await sendPetitionReply(petitionId, userId);
+                    return;
+                }
+
                 // Training Center buttons
                 if (target.id === 'createTrainingBtn') {
                     e.preventDefault();
@@ -4989,6 +5195,8 @@
         window.toggleVerified = toggleVerified;
         window.toggleFrozen = toggleFrozen;
         window.deleteUser = deleteUser;
+        window.showChangeMembership = showChangeMembership;
+        window.changeMembership = changeMembership;
         window.showCreateTask = showCreateTask;  
         window.createTask = createTask;  
         window.toggleTask = toggleTask;  
@@ -5025,6 +5233,9 @@
         window.filterUsersTable = filterUsersTable;
         window.loadDefaultFaqs = loadDefaultFaqs;
         window.loadSampleFeedback = loadSampleFeedback;
+        window.viewUserConversation = viewUserConversation;
+        window.replyToPetition = replyToPetition;
+        window.sendPetitionReply = sendPetitionReply;
     </script>  
 </body>  
 </html>
