@@ -230,6 +230,7 @@
         <div class="tabs">  
             <button class="tab active" data-tab="users">👥 Users</button>  
             <button class="tab" data-tab="tasks">📋 Tasks</button>  
+            <button class="tab" data-tab="teams">👥 Team Approvals</button>  
             <button class="tab" data-tab="submissions">📝 Submissions</button>  
             <button class="tab" data-tab="withdrawals">💰 Withdrawals</button>  
             <button class="tab" data-tab="memberships">👑 Memberships</button>  
@@ -453,7 +454,7 @@
                         recentItems.push({
                             type: 'membership',
                             icon: '👑',
-                            title: `Membership payment: ${m.membershipType}`,
+                            title: `Membership payment: ${m.membershipType || m.packageType}`,
                             time: m.submittedAt,
                             link: '#',
                             onClick: () => switchTab('memberships')
@@ -464,7 +465,7 @@
                         recentItems.push({
                             type: 'message',
                             icon: '💬',
-                            title: `Message from ${m.userEmail || 'user'}`,
+                            title: `Message from ${m.senderName || m.userEmail || 'user'}`,
                             time: m.createdAt,
                             link: '#',
                             onClick: () => switchTab('messages')
@@ -791,6 +792,7 @@
             switch(tab) {  
                 case 'users': loadUsers(); break;  
                 case 'tasks': loadTasks(); break;  
+                case 'teams': loadTeamApprovals(); break;  
                 case 'submissions': loadSubmissions(); break;  
                 case 'withdrawals': loadWithdrawals(); break;  
                 case 'memberships': loadMemberships(); break;  
@@ -1399,7 +1401,107 @@
                 </div>  
             `);  
         }  
-          
+
+        // ========== NEW: Team Approvals for Collaborable Tasks ==========
+        async function loadTeamApprovals() {
+            try {
+                // Fetch all taskInvites with status 'accepted' (waiting for admin approval)
+                const invitesSnap = await db.collectionGroup('taskInvites').where('status', '==', 'accepted').get();
+                let html = '<h3 style="margin-bottom:1.5rem;">👥 Team Member Approvals</h3>';
+                if (invitesSnap.empty) {
+                    html += '<p>No pending team approvals.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>Task</th><th>User</th><th>Invited By</th><th>Actions</th></tr>';
+                    for (const doc of invitesSnap.docs) {
+                        const invite = doc.data();
+                        // Get task title
+                        const taskDoc = await db.collection('tasks').doc(invite.taskId).get();
+                        const taskTitle = taskDoc.exists ? taskDoc.data().title : 'Unknown Task';
+                        // Get user name
+                        const userDoc = await db.collection('users').doc(invite.userId).get();
+                        const userEmail = userDoc.exists ? userDoc.data().email : invite.userEmail;
+                        // Get inviter name
+                        const inviterDoc = await db.collection('users').doc(invite.invitedBy).get();
+                        const inviterName = inviterDoc.exists ? inviterDoc.data().displayName || inviterDoc.data().email : invite.invitedByName || 'Unknown';
+                        html += `
+                            <tr>
+                                <td>${taskTitle}</td>
+                                <td>${userEmail}</td>
+                                <td>${inviterName}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" onclick="approveTeamMember('${invite.taskId}', '${invite.userId}', '${doc.id}')">Approve</button>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectTeamMember('${invite.taskId}', '${invite.userId}', '${doc.id}')">Reject</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    html += '</table>';
+                }
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading team approvals:', error);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading team approvals: ${error.message}</p><button class="btn btn-primary" onclick="loadTeamApprovals()">Retry</button></div>`;
+            }
+        }
+
+        // Approve a team member (add to taskAccepts, increment acceptedCount, notify)
+        window.approveTeamMember = async function(taskId, userId, inviteDocId) {
+            try {
+                const taskRef = db.collection('tasks').doc(taskId);
+                const inviteRef = db.collection('tasks').doc(taskId).collection('taskInvites').doc(userId);
+                await db.runTransaction(async (transaction) => {
+                    const taskDoc = await transaction.get(taskRef);
+                    if (!taskDoc.exists) throw new Error('Task not found');
+                    const task = taskDoc.data();
+                    const currentAccepted = task.acceptedCount || 0;
+                    const maxCollab = task.maxCollaborators || 5;
+                    if (currentAccepted >= maxCollab) throw new Error('Task is already full');
+
+                    // Update invite status
+                    transaction.update(inviteRef, { status: 'approved', approvedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+                    // Add to taskAccepts
+                    const acceptRef = taskRef.collection('taskAccepts').doc(userId);
+                    const userDoc = await db.collection('users').doc(userId).get();
+                    const userEmail = userDoc.exists ? userDoc.data().email : 'unknown';
+                    const userName = userDoc.exists ? userDoc.data().displayName || userEmail : userEmail;
+                    transaction.set(acceptRef, {
+                        userId,
+                        userEmail,
+                        userName,
+                        status: 'approved',
+                        acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Increment acceptedCount
+                    transaction.update(taskRef, { acceptedCount: firebase.firestore.FieldValue.increment(1) });
+                });
+
+                // Send notification to user
+                await sendNotification(userId, 'Team Approval', `Your membership for task has been approved. You can now submit work.`, 'task', `task:${taskId}`);
+
+                showAlert('Team member approved', 'success');
+                loadTeamApprovals(); // Refresh
+            } catch (error) {
+                console.error('Error approving team member:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // Reject a team member
+        window.rejectTeamMember = async function(taskId, userId, inviteDocId) {
+            try {
+                const inviteRef = db.collection('tasks').doc(taskId).collection('taskInvites').doc(userId);
+                await inviteRef.update({ status: 'rejected', rejectedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                await sendNotification(userId, 'Team Rejection', `Your membership for task has been rejected.`, 'task', `task:${taskId}`);
+                showAlert('Team member rejected', 'info');
+                loadTeamApprovals();
+            } catch (error) {
+                console.error('Error rejecting team member:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
         // ========== Submissions (unchanged) ==========
         async function loadSubmissions() {  
             try {
@@ -1573,7 +1675,7 @@
             loadSubmissions();  
         }  
           
-        // ========== Withdrawals (unchanged) ==========
+        // ========== Withdrawals (with Reject) ==========
         async function loadWithdrawals() { 
             try {
                 const snapshot = await db.collection('withdrawals') 
@@ -1597,10 +1699,13 @@
                         html += ` 
                             <div class="submission-card"> 
                                 <p><strong>User:</strong> ${w.userEmail} ${isFrozen ? '<span class="badge danger">FROZEN</span>' : ''}</p> 
-                                <p><strong>Amount:</strong> $${w.amount} (KES ${w.amountKES})</p> 
+                                <p><strong>Amount:</strong> $${w.amount}</p> 
                                 <p><strong>Method:</strong> ${w.method} - ${w.phone}</p> 
                                 <p><strong>Requested:</strong> ${w.requestedAt?.toDate().toLocaleString()}</p> 
-                                <button class="btn btn-success process-withdrawal" data-withdrawal-id="${w.id}">Mark as Paid</button> 
+                                <div class="flex-row"> 
+                                    <button class="btn btn-success process-withdrawal" data-withdrawal-id="${w.id}">Mark as Paid</button> 
+                                    <button class="btn btn-danger reject-withdrawal" data-withdrawal-id="${w.id}">Reject</button> 
+                                </div> 
                             </div> 
                         `; 
                     });
@@ -1635,6 +1740,25 @@
             showAlert('Withdrawal marked as paid', 'success');  
             loadWithdrawals();  
         }  
+
+        async function rejectWithdrawal(withdrawalId) {
+            const withdrawalDoc = await db.collection('withdrawals').doc(withdrawalId).get();
+            const withdrawal = withdrawalDoc.data();
+            // Refund the amount (since it was deducted immediately)
+            await db.runTransaction(async (transaction) => {
+                const userRef = db.collection('users').doc(withdrawal.userId);
+                const userDoc = await transaction.get(userRef);
+                if (!userDoc.exists) throw new Error('User not found');
+                transaction.update(userRef, { wallet: firebase.firestore.FieldValue.increment(withdrawal.amount) });
+                transaction.update(db.collection('withdrawals').doc(withdrawalId), { 
+                    status: 'rejected', 
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+            });
+            await sendNotification(withdrawal.userId, 'Withdrawal Rejected', `Your withdrawal of $${withdrawal.amount} was rejected. The amount has been refunded to your wallet.`, 'withdrawal', null);
+            showAlert('Withdrawal rejected and amount refunded', 'success');
+            loadWithdrawals();
+        }
         
         // ========== Fee Settings (unchanged) ==========
         function showEditFeeSettings() {
@@ -2210,7 +2334,9 @@
                 } else {  
                     snapshot.forEach(doc => {  
                         const p = doc.data();  
-                        const pkg = getPackageByType(p.membershipType || 'premium');  
+                        // Handle both membershipType and packageType
+                        const membershipType = p.membershipType || p.packageType || 'premium';
+                        const pkg = getPackageByType(membershipType);  
                         
                         html += `  
                             <div class="submission-card">  
@@ -2220,7 +2346,7 @@
                                 </div>  
                                 <p><strong>User:</strong> ${p.userEmail}</p>  
                                 <p><strong>Membership:</strong> ${pkg.name}</p>  
-                                <p><strong>Transaction ID:</strong> ${p.transactionCode}</p>  
+                                <p><strong>Transaction ID:</strong> ${p.paymentMessage}</p>  
                                 <p><strong>Amount:</strong> $${p.amount}</p>  
                                 <p><strong>Submitted:</strong> ${p.submittedAt?.toDate().toLocaleString()}</p>  
                                 <div class="flex-row">  
@@ -2247,7 +2373,7 @@
                     return;
                 }
                 const payment = paymentDoc.data();
-                const membershipType = payment.membershipType || 'premium';
+                const membershipType = payment.membershipType || payment.packageType || 'premium';
                 
                 const pkg = getPackageByType(membershipType);
 
@@ -2415,12 +2541,12 @@
                 await sendNotification(
                     userId,
                     'Membership Payment Rejected',
-                    `Your ${payment.membershipType} payment could not be verified. Please contact support.`,
+                    `Your ${payment.membershipType || payment.packageType} payment could not be verified. Please contact support.`,
                     'membership',
                     null
                 );
                   
-                showAlert(`Membership ${payment.membershipType} rejected`, 'info');  
+                showAlert(`Membership rejected`, 'info');  
                 loadMemberships();  
             } catch (error) {
                 console.error('Error rejecting membership:', error);
@@ -3360,7 +3486,7 @@
             await sendNotificationToAll(title, message, type, link);
         }
           
-        // ========== Messages (unchanged) ==========
+        // ========== Messages (unchanged, but now shows sender name) ==========
         async function loadMessages() {  
             try {
                 const users = await db.collection('users').get();  
@@ -3380,11 +3506,12 @@
                 messages.forEach(doc => {  
                     const msg = doc.data();  
                     const isBroadcast = msg.userId === 'ALL_USERS' || msg.isBroadcast;  
+                    const fromUser = msg.senderName ? `From: ${msg.senderName}` : (msg.userEmail ? `To: ${msg.userEmail}` : '');
                     messagesHtml += `  
                         <div class="submission-card" style="border-left: 4px solid ${isBroadcast ? '#6366f1' : '#10b981'}">  
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">  
                                 <strong style="color: ${isBroadcast ? '#6366f1' : '#10b981'}">  
-                                    ${isBroadcast ? '📢 Broadcast to All Users' : `👤 To: ${msg.userEmail || msg.userId}`}  
+                                    ${isBroadcast ? '📢 Broadcast to All Users' : `👤 ${fromUser}`}  
                                 </strong>  
                                 <small>${msg.createdAt?.toDate().toLocaleString()}</small>  
                             </div>  
@@ -4669,6 +4796,14 @@
                     await processWithdrawal(withdrawalId);  
                     return;  
                 }  
+
+                if (target.classList.contains('reject-withdrawal')) {  
+                    const withdrawalId = target.getAttribute('data-withdrawal-id');  
+                    if (confirm('Reject this withdrawal? The amount will be refunded to the user.')) {
+                        await rejectWithdrawal(withdrawalId);  
+                    }
+                    return;  
+                }  
                   
                 if (target.classList.contains('approve-membership')) {  
                     const userId = target.getAttribute('data-user-id');  
@@ -4862,6 +4997,7 @@
         window.viewRequirements = viewRequirements;  
         window.reviewSubmission = reviewSubmission;  
         window.processWithdrawal = processWithdrawal;  
+        window.rejectWithdrawal = rejectWithdrawal;  
         window.loadMembershipPackages = loadMembershipPackages;  
         window.loadFeeSettings = loadFeeSettings;  
         window.showEditPackages = showEditPackages;  
