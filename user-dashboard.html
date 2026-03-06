@@ -1037,29 +1037,178 @@
             }
         }
 
-        // -------------------- MEMBERSHIP OPTIONS (unchanged) --------------------
-        function showMembershipOptions() { /* unchanged */ const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium; showModal(`<div class="modal-content" style="text-align:center;"><div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;"><i class="fas fa-bolt" style="font-size:2rem;"></i><h3 style="color:white;">Ready to Upgrade?</h3><button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('https://lipana.dev/pay/nextgen-membership','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button></div><i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i><h3>Upgrade Your Membership</h3><div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;"><div style="background:#f8fafc; padding:2rem; border:2px solid #6366f1; border-radius:1.5rem;"><h4 style="color:#6366f1; font-size:1.8rem;">${escapeHtml(premiumPkg.name)}</h4><p style="font-size:2rem; font-weight:800; color:#0f172a;">$${premiumPkg.price}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p><p style="color:#475569;">✓ Access to all tasks<br>✓ Withdrawals enabled<br>✓ Priority support</p></div></div><div style="margin-top:2rem; padding:1.5rem; background:#f1f5f9;"><h4>Payment Verification</h4><textarea id="paymentMessage" class="smart-textarea" placeholder="Paste transaction ID..."></textarea><button class="btn btn-success" onclick="submitPaymentVerification()">Submit for Approval</button></div><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>`); }
-        async function submitPaymentVerification() { /* unchanged */ const msg = document.getElementById('paymentMessage')?.value; if (!msg) { showAlert('Please enter payment confirmation','error'); return; } try { showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`); await db.collection('membershipPayments').add({ userId: currentUser.uid, userEmail: currentUser.email, paymentMessage: msg, status: 'pending', submittedAt: firebase.firestore.FieldValue.serverTimestamp() }); showModal(`<div class="modal-content" style="text-align:center;"><div class="success-check"><i class="fas fa-check"></i></div><h3 style="color:#10b981;">Thank You!</h3><p>Payment verification submitted.<br>You'll be notified once approved.</p><button class="btn btn-primary" onclick="closeModal()">OK</button></div>`); } catch (e) { console.error('Error submitting payment:', e); showAlert('Error submitting payment','error'); } }
+        // -------------------- MEMBERSHIP OPTIONS (UPDATED with separate fields) --------------------
+        function showMembershipOptions() {
+            const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
+            showModal(`<div class="modal-content" style="text-align:center;">
+                <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;">
+                    <i class="fas fa-bolt" style="font-size:2rem;"></i>
+                    <h3 style="color:white;">Ready to Upgrade?</h3>
+                    <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('${paymentUrl}','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
+                </div>
+                <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i>
+                <h3>Upgrade Your Membership</h3>
+                <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
+                    <div style="background:#f8fafc; padding:2rem; border:2px solid #6366f1; border-radius:1.5rem;">
+                        <h4 style="color:#6366f1; font-size:1.8rem;">${escapeHtml(premiumPkg.name)}</h4>
+                        <p style="font-size:2rem; font-weight:800; color:#0f172a;">$${premiumPkg.price}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
+                        <p style="color:#475569;">✓ Access to all tasks<br>✓ Withdrawals enabled<br>✓ Priority support</p>
+                    </div>
+                </div>
+                <div style="margin-top:2rem; padding:1.5rem; background:#f1f5f9;">
+                    <h4>Payment Verification</h4>
+                    <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code / ID" required>
+                    <input type="number" id="paymentAmount" class="smart-input" placeholder="Amount Paid (USD)" step="0.01" required>
+                    <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
+                    <button class="btn btn-success" onclick="submitPaymentVerification()">Submit for Approval</button>
+                </div>
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            </div>`);
+        }
 
-        // -------------------- TRAINING CENTER (unchanged) --------------------
+        // UPDATED submitPaymentVerification – read new fields and store with userName
+        async function submitPaymentVerification() {
+            const txCode = document.getElementById('transactionCode')?.value;
+            const amount = parseFloat(document.getElementById('paymentAmount')?.value);
+            const notes = document.getElementById('paymentNotes')?.value || '';
+
+            if (!txCode) {
+                showAlert('Please enter transaction code', 'error');
+                return;
+            }
+            if (!amount || amount <= 0) {
+                showAlert('Please enter a valid amount', 'error');
+                return;
+            }
+
+            try {
+                showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`);
+                await db.collection('membershipPayments').add({
+                    userId: currentUser.uid,
+                    userName: userData.displayName,
+                    userEmail: currentUser.email,
+                    transactionCode: txCode,
+                    amount: amount,
+                    notes: notes,
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showModal(`<div class="modal-content" style="text-align:center;">
+                    <div class="success-check"><i class="fas fa-check"></i></div>
+                    <h3 style="color:#10b981;">Thank You!</h3>
+                    <p>Payment verification submitted.<br>You'll be notified once approved.</p>
+                    <button class="btn btn-primary" onclick="closeModal()">OK</button>
+                </div>`);
+            } catch (e) {
+                console.error('Error submitting payment:', e);
+                showAlert('Error submitting payment', 'error');
+            }
+        }
+
+        // -------------------- TRAINING CENTER (unchanged except adding userName) --------------------
         async function loadTrainings() { /* unchanged */ currentTaskViewed = null; refreshMirror(); document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>'; try { const [trainingsSnap, applicationsSnap] = await Promise.all([ db.collection('trainings').where('active', '==', true).get(), db.collection('trainingApplications').where('userId', '==', currentUser.uid).get() ]); if (trainingsSnap.empty) { document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-graduation-cap"></i><h4>No trainings available</h4></div>'; return; } const userApps = {}; applicationsSnap.forEach(doc => { const app = doc.data(); userApps[app.trainingId] = { id: doc.id, ...app }; }); let html = '<h3>Training Center</h3><div class="training-grid">'; trainingsSnap.forEach(doc => { const t = doc.data(); const app = userApps[doc.id]; const status = app ? app.status : null; const typeClass = t.type === 'free' ? 'free' : 'prepaid'; const priceDisplay = t.type === 'prepaid' ? `$${t.price}` : 'Free'; let actionHtml = ''; if (status === 'approved') { let resourcesHtml = ''; if (t.resources && t.resources.length > 0) { resourcesHtml = '<div class="resources-list"><strong>Resources:</strong>'; t.resources.forEach(r => { if (r.type === 'text') { resourcesHtml += `<div class="resource-item"><i class="fas fa-file-alt"></i> ${escapeHtml(r.content)}</div>`; } else if (r.type === 'link') { resourcesHtml += `<div class="resource-item"><i class="fas fa-link"></i> <a href="${r.content}" target="_blank">${r.content}</a></div>`; } }); resourcesHtml += '</div>'; } else { resourcesHtml = '<p>No resources available.</p>'; } actionHtml = `<div class="training-status approved"><i class="fas fa-check-circle"></i> Approved</div>${resourcesHtml}`; } else if (status === 'pending') { actionHtml = `<div class="training-status pending"><i class="fas fa-hourglass-half"></i> Pending Approval</div>`; } else if (status === 'rejected') { actionHtml = `<div class="training-status rejected"><i class="fas fa-times-circle"></i> Rejected</div>`; } else { if (t.type === 'free') { actionHtml = `<button class="btn btn-success" onclick="applyForTraining('${doc.id}', 'free')">Apply Now</button>`; } else { actionHtml = `<button class="btn btn-warning" onclick="showPrepaidPayment('${doc.id}', ${t.price})">Apply (Prepaid)</button>`; } } html += `<div class="training-card ${typeClass}"><div class="training-header"><span class="training-title">${escapeHtml(t.title)}</span><span class="training-price">${priceDisplay}</span></div><div class="training-duration"><i class="fas fa-clock"></i> ${escapeHtml(t.duration || 'N/A')}</div><div class="training-description">${escapeHtml(t.description)}</div>${t.requirements ? `<div class="training-requirements"><strong>Requirements:</strong> ${escapeHtml(t.requirements)}</div>` : ''}${actionHtml}</div>`; }); html += '</div>'; document.getElementById('content').innerHTML = html; } catch (e) { console.error('Error loading trainings:', e); document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadTrainings()">Retry</button></div>`; } }
 
         async function applyForTraining(trainingId, type) { /* unchanged */ try { const existing = await db.collection('trainingApplications').where('userId','==',currentUser.uid).where('trainingId','==',trainingId).get(); if (!existing.empty) { showAlert('You have already applied for this training.', 'error'); return; } const trainingDoc = await db.collection('trainings').doc(trainingId).get(); if (!trainingDoc.exists) { showAlert('Training not found', 'error'); return; } const training = trainingDoc.data(); await db.collection('trainingApplications').add({ userId: currentUser.uid, userEmail: currentUser.email, trainingId: trainingId, trainingTitle: training.title, type: type, status: 'pending', appliedAt: firebase.firestore.FieldValue.serverTimestamp() }); showAlert('Application submitted! You will be notified once approved.', 'success'); loadTrainings(); } catch (e) { console.error('Error applying for training:', e); showAlert('Error applying. Please try again.', 'error'); } }
 
         async function showPrepaidPayment(trainingId, price) { /* unchanged */ showModal(`<div class="modal-content" style="text-align:center;"><i class="fas fa-credit-card" style="font-size:3rem; color:#f59e0b;"></i><h3>Prepaid Training</h3><p>Amount to pay: <strong>$${price}</strong></p><p>Click the button below to pay (opens in new tab). After payment, enter the transaction code.</p><a href="${paymentUrl}" target="_blank" class="btn btn-warning" style="display:inline-block; margin-bottom:1rem;">Pay $${price} now</a><input type="text" id="transactionCode" class="smart-input" placeholder="Transaction code"><textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea><div style="display:flex; gap:1rem; margin-top:1rem;"><button class="btn btn-success" onclick="submitPrepaidApplication('${trainingId}', ${price})">Submit Application</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); }
 
-        async function submitPrepaidApplication(trainingId, price) { /* unchanged */ const txCode = document.getElementById('transactionCode')?.value; if (!txCode) { showAlert('Please enter the transaction code', 'error'); return; } try { const existing = await db.collection('trainingApplications').where('userId','==',currentUser.uid).where('trainingId','==',trainingId).get(); if (!existing.empty) { showAlert('You have already applied for this training.', 'error'); return; } const trainingDoc = await db.collection('trainings').doc(trainingId).get(); if (!trainingDoc.exists) { showAlert('Training not found', 'error'); return; } const training = trainingDoc.data(); await db.collection('trainingApplications').add({ userId: currentUser.uid, userEmail: currentUser.email, trainingId: trainingId, trainingTitle: training.title, type: 'prepaid', price: price, transactionCode: txCode, paymentNotes: document.getElementById('paymentNotes')?.value || '', status: 'pending', appliedAt: firebase.firestore.FieldValue.serverTimestamp() }); closeModal(); showAlert('Application submitted! Your payment is being verified.', 'success'); loadTrainings(); } catch (e) { console.error('Error submitting prepaid application:', e); showAlert('Error submitting application. Please try again.', 'error'); } }
+        // UPDATED submitPrepaidApplication – added userName
+        async function submitPrepaidApplication(trainingId, price) {
+            const txCode = document.getElementById('transactionCode')?.value;
+            if (!txCode) { showAlert('Please enter the transaction code', 'error'); return; }
+            try {
+                const existing = await db.collection('trainingApplications').where('userId','==',currentUser.uid).where('trainingId','==',trainingId).get();
+                if (!existing.empty) { showAlert('You have already applied for this training.', 'error'); return; }
+                const trainingDoc = await db.collection('trainings').doc(trainingId).get();
+                if (!trainingDoc.exists) { showAlert('Training not found', 'error'); return; }
+                const training = trainingDoc.data();
+                await db.collection('trainingApplications').add({
+                    userId: currentUser.uid,
+                    userName: userData.displayName,
+                    userEmail: currentUser.email,
+                    trainingId: trainingId,
+                    trainingTitle: training.title,
+                    type: 'prepaid',
+                    price: price,
+                    transactionCode: txCode,
+                    paymentNotes: document.getElementById('paymentNotes')?.value || '',
+                    status: 'pending',
+                    appliedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert('Application submitted! Your payment is being verified.', 'success');
+                loadTrainings();
+            } catch (e) {
+                console.error('Error submitting prepaid application:', e);
+                showAlert('Error submitting application. Please try again.', 'error');
+            }
+        }
 
-        // -------------------- MESSAGES (unchanged) --------------------
+        // -------------------- MESSAGES (UPDATED with userName and userEmail) --------------------
         async function loadMessages() { /* unchanged */ currentTaskViewed = null; refreshMirror(); document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>'; try { if (!currentUser) throw new Error('Not authenticated'); const [sentSnap, receivedSnap] = await Promise.all([ db.collection('messages').where('senderId', '==', currentUser.uid).get(), db.collection('messages').where('recipientId', '==', currentUser.uid).get() ]); const messages = []; sentSnap.forEach(d => messages.push({ id: d.id, ...d.data() })); receivedSnap.forEach(d => messages.push({ id: d.id, ...d.data() })); let html = `<div class="messages-container"><div class="messages-header"><h3>Messages</h3><button class="btn btn-success" onclick="showComposeMessage()"><i class="fas fa-plus"></i> New Message</button></div>`; if (messages.length === 0) { html += `<div class="empty-state"><i class="fas fa-envelope-open-text"></i><h4>No Messages</h4><button class="btn btn-primary" onclick="showComposeMessage()">Send your first message</button></div>`; } else { const threads = new Map(); messages.forEach(msg => { const tid = msg.parentMessageId || msg.id; if (!threads.has(tid)) threads.set(tid, { id: tid, messages: [], subject: msg.subject || 'Conversation', lastMessage: msg, unreadCount: 0 }); const thr = threads.get(tid); thr.messages.push(msg); if (!thr.lastMessage.createdAt || (msg.createdAt?.seconds || 0) > (thr.lastMessage.createdAt?.seconds || 0)) thr.lastMessage = msg; if (msg.fromAdmin && msg.recipientId === currentUser.uid && !msg.read) thr.unreadCount++; }); const sorted = Array.from(threads.values()).sort((a,b) => (b.lastMessage.createdAt?.seconds||0) - (a.lastMessage.createdAt?.seconds||0)); html += '<div class="threads-list">'; sorted.forEach(th => { const last = th.lastMessage; const date = last.createdAt?.seconds ? new Date(last.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; html += `<div class="message-thread-card ${th.unreadCount ? 'unread' : ''}" onclick="viewMessageThread('${th.id}')"><div class="message-thread-header"><div class="message-subject">${escapeHtml(th.subject)} ${th.unreadCount ? `<span class="unread-count-badge">${th.unreadCount} new</span>` : ''}</div><div class="message-date">${date}</div></div><div class="message-preview">${escapeHtml((last.message||'').substring(0,80))}...</div><div class="message-meta"><span>${th.messages.length} message(s)</span></div></div>`; }); html += '</div>'; } html += '</div>'; document.getElementById('content').innerHTML = html; } catch (error) { console.error('Error loading messages:', error); document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:#ef4444; font-size:4rem;"></i><h4>Failed to Load Messages</h4><p>${error.message}</p><div style="display:flex; gap:1rem; justify-content:center;"><button class="btn btn-primary" onclick="loadMessages()">Try Again</button><button class="btn btn-secondary" onclick="switchTab('tasks')">Back to Tasks</button></div></div>`; } }
 
         function showComposeMessage() { /* unchanged */ showModal(`<div class="modal-content message-compose-modal"><h3 style="margin-bottom:1.5rem; text-align:center;">New Message</h3><input type="text" id="messageSubject" class="smart-input" placeholder="Subject" autocomplete="off"><textarea id="messageContent" class="smart-textarea" placeholder="Write your message here..."></textarea><div class="action-buttons"><button class="btn btn-success" onclick="sendMessage()"><i class="fas fa-paper-plane"></i> Send</button><button class="btn btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div></div>`); }
 
-        async function sendMessage() { /* unchanged */ if (!currentUser) { showAlert('You must be logged in','error'); return; } const subj = document.getElementById('messageSubject')?.value; const msg = document.getElementById('messageContent')?.value; if (!subj || !msg) { showAlert('Please fill all fields','error'); return; } const admin = await getAdminId(); if (!admin) { showAlert('Cannot send message: admin not found','error'); return; } try { const threadId = db.collection('messages').doc().id; await db.collection('messages').doc(threadId).set({ senderId: currentUser.uid, recipientId: admin, fromAdmin: false, subject: subj, message: msg, parentMessageId: threadId, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); closeModal(); showAlert('Message sent!','success'); loadMessages(); } catch (e) { console.error('Error sending message:', e); showAlert('Error sending message','error'); } }
+        // UPDATED sendMessage – added userName and userEmail
+        async function sendMessage() {
+            if (!currentUser) { showAlert('You must be logged in','error'); return; }
+            const subj = document.getElementById('messageSubject')?.value;
+            const msg = document.getElementById('messageContent')?.value;
+            if (!subj || !msg) { showAlert('Please fill all fields','error'); return; }
+            const admin = await getAdminId();
+            if (!admin) { showAlert('Cannot send message: admin not found','error'); return; }
+            try {
+                const threadId = db.collection('messages').doc().id;
+                await db.collection('messages').doc(threadId).set({
+                    senderId: currentUser.uid,
+                    recipientId: admin,
+                    fromAdmin: false,
+                    subject: subj,
+                    message: msg,
+                    parentMessageId: threadId,
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    userName: userData.displayName,
+                    userEmail: currentUser.email
+                });
+                closeModal();
+                showAlert('Message sent!','success');
+                loadMessages();
+            } catch (e) {
+                console.error('Error sending message:', e);
+                showAlert('Error sending message','error');
+            }
+        }
+
+        // UPDATED sendReply – added userName and userEmail
+        async function sendReply(threadId) {
+            if (!currentUser) { showAlert('You must be logged in','error'); return; }
+            const reply = document.getElementById('replyMessage')?.value;
+            if (!reply) { showAlert('Please enter a reply','error'); return; }
+            const admin = await getAdminId();
+            if (!admin) { showAlert('Cannot send reply: admin not found','error'); return; }
+            try {
+                await db.collection('messages').add({
+                    senderId: currentUser.uid,
+                    recipientId: admin,
+                    parentMessageId: threadId,
+                    fromAdmin: false,
+                    message: reply,
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    userName: userData.displayName,
+                    userEmail: currentUser.email
+                });
+                closeModal();
+                viewMessageThread(threadId);
+                showAlert('Reply sent!','success');
+            } catch (e) {
+                console.error('Error sending reply:', e);
+                showAlert('Error sending reply','error');
+            }
+        }
 
         async function viewMessageThread(threadId) { /* unchanged */ try { const snap = await db.collection('messages').where('parentMessageId', '==', threadId).orderBy('createdAt').get(); if (snap.empty) { showAlert('Thread not found','error'); return; } const messages = []; snap.forEach(d => messages.push({ id: d.id, ...d.data() })); let threadHtml = `<div class="modal-content thread-modal"><h3>${escapeHtml(messages[0].subject || 'Conversation')}</h3><div class="thread-messages" id="messageThread">`; messages.forEach(m => { const date = m.createdAt?.seconds ? new Date(m.createdAt.seconds*1000).toLocaleString() : 'N/A'; const isUser = m.senderId === currentUser.uid; threadHtml += `<div class="message-bubble ${isUser ? 'user' : 'admin'}"><div class="message-header"><span>${isUser ? 'You' : 'Admin'}</span><span>${date}</span></div><div class="message-content">${escapeHtml(m.message)}</div></div>`; }); threadHtml += `</div><div class="compose-area"><textarea id="replyMessage" class="message-input" placeholder="Type your reply..."></textarea><button class="btn btn-success" onclick="sendReply('${threadId}')">Send Reply</button></div></div>`; showModal(threadHtml); setTimeout(() => { const thread = document.getElementById('messageThread'); if (thread) thread.scrollTop = thread.scrollHeight; }, 100); } catch (e) { showAlert('Error loading thread','error'); } }
-
-        async function sendReply(threadId) { /* unchanged */ if (!currentUser) { showAlert('You must be logged in','error'); return; } const reply = document.getElementById('replyMessage')?.value; if (!reply) { showAlert('Please enter a reply','error'); return; } const admin = await getAdminId(); if (!admin) { showAlert('Cannot send reply: admin not found','error'); return; } try { await db.collection('messages').add({ senderId: currentUser.uid, recipientId: admin, parentMessageId: threadId, fromAdmin: false, message: reply, read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); closeModal(); viewMessageThread(threadId); showAlert('Reply sent!','success'); } catch (e) { console.error('Error sending reply:', e); showAlert('Error sending reply','error'); } }
 
         // -------------------- NOTIFICATIONS (unchanged) --------------------
         function toggleNotificationsPanel() { /* unchanged */ const panel = document.getElementById('notificationsPanel'); notificationsPanelVisible = !notificationsPanelVisible; panel.classList.toggle('active', notificationsPanelVisible); if (notificationsPanelVisible) { document.getElementById('notificationsList').innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>'; loadNotificationsForPanel(); } }
