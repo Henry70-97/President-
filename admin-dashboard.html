@@ -3438,7 +3438,7 @@
                         type: type,
                         read: false,
                         isBroadcast: true,
-                        userEmail: userDoc.data().email,
+                        userEmail: userDoc.data().email || null,
                         link: link,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
