@@ -344,6 +344,92 @@
         .resource-item { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
         .resource-item a { color: #6366f1; text-decoration: none; }
         .resource-item a:hover { text-decoration: underline; }
+
+        /* ========== BRIGHT ALTERNATING COLORS FOR CARDS ========== */
+        /* Define a set of bright, vibrant background colors for alternating cards */
+        .stats-grid .stat-card:nth-child(6n+1),
+        .training-grid .training-card:nth-child(6n+1),
+        .submission-card:nth-child(6n+1),
+        .message-thread-card:nth-child(6n+1),
+        .faq-item:nth-child(6n+1),
+        .feedback-card:nth-child(6n+1) {
+            background-color: #e6f0ff; /* light blue */
+        }
+        .stats-grid .stat-card:nth-child(6n+2),
+        .training-grid .training-card:nth-child(6n+2),
+        .submission-card:nth-child(6n+2),
+        .message-thread-card:nth-child(6n+2),
+        .faq-item:nth-child(6n+2),
+        .feedback-card:nth-child(6n+2) {
+            background-color: #e0ffe0; /* light green */
+        }
+        .stats-grid .stat-card:nth-child(6n+3),
+        .training-grid .training-card:nth-child(6n+3),
+        .submission-card:nth-child(6n+3),
+        .message-thread-card:nth-child(6n+3),
+        .faq-item:nth-child(6n+3),
+        .feedback-card:nth-child(6n+3) {
+            background-color: #fff9c4; /* light yellow */
+        }
+        .stats-grid .stat-card:nth-child(6n+4),
+        .training-grid .training-card:nth-child(6n+4),
+        .submission-card:nth-child(6n+4),
+        .message-thread-card:nth-child(6n+4),
+        .faq-item:nth-child(6n+4),
+        .feedback-card:nth-child(6n+4) {
+            background-color: #ffe0b2; /* light orange */
+        }
+        .stats-grid .stat-card:nth-child(6n+5),
+        .training-grid .training-card:nth-child(6n+5),
+        .submission-card:nth-child(6n+5),
+        .message-thread-card:nth-child(6n+5),
+        .faq-item:nth-child(6n+5),
+        .feedback-card:nth-child(6n+5) {
+            background-color: #e6ccff; /* light purple */
+        }
+        .stats-grid .stat-card:nth-child(6n+6),
+        .training-grid .training-card:nth-child(6n+6),
+        .submission-card:nth-child(6n+6),
+        .message-thread-card:nth-child(6n+6),
+        .faq-item:nth-child(6n+6),
+        .feedback-card:nth-child(6n+6) {
+            background-color: #ffe0f0; /* light pink */
+        }
+
+        /* Ensure hover effects work with alternating colors */
+        .stats-grid .stat-card:hover,
+        .training-grid .training-card:hover,
+        .submission-card:hover,
+        .message-thread-card:hover,
+        .faq-item:hover,
+        .feedback-card:hover {
+            filter: brightness(0.98);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Keep special cards unchanged */
+        .withdrawal-section,
+        .petition-section,
+        .referral-card {
+            background: inherit;
+        }
+
+        /* Ensure that the existing background of .submission-card is overridden */
+        .submission-card {
+            background: transparent; /* let the nth-child handle it */
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Keep unread message card distinct */
+        .message-thread-card.unread {
+            background: #6366f108 !important;
+            border-left: 4px solid #6366f1;
+        }
+
+        /* Adjust text color if needed for readability – current dark text works on light backgrounds */
     </style>
 </head>
 <body>
