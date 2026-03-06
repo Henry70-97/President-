@@ -288,6 +288,22 @@
             border-bottom: 1px dashed #d4b985;
         }
         
+        /* Forgot password link */
+        .forgot-password {
+            text-align: right;
+            margin-top: -0.5rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .forgot-password a {
+            color: #9d853e;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 1px dashed #d4b985;
+        }
+        
         .info-text {
             text-align: center;
             color: #796b51;
@@ -354,6 +370,41 @@
         
         /* verify message */
         #verifyMessage h3 { color: #3d3425; }
+        
+        /* Reset password modal */
+        .reset-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fffcf2;
+            padding: 2.5rem;
+            border-radius: 32px;
+            box-shadow: 0 40px 70px -20px #2f2a20;
+            z-index: 2500;
+            max-width: 400px;
+            width: 90%;
+            display: none;
+            border: 1px solid #ecdbbd;
+        }
+        .reset-modal.show { display: block; }
+        .reset-modal h2 {
+            color: #3d3425;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+        .reset-modal p {
+            color: #6b5e48;
+            margin-bottom: 1.8rem;
+        }
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #9d853e;
+        }
     </style>
 </head>
 <body>
@@ -384,6 +435,12 @@
             <div class="input-group">
                 <input type="password" id="loginPassword" placeholder="Password">
             </div>
+            
+            <!-- Forgot Password Link -->
+            <div class="forgot-password">
+                <a onclick="showResetPasswordModal()">Forgot password?</a>
+            </div>
+            
             <button class="btn btn-primary" onclick="handleLogin()">Sign in</button>
             
             <div class="divider">
@@ -426,6 +483,21 @@
                     <a onclick="resendVerification()">Resend email</a>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Reset Password Modal -->
+    <div class="overlay" id="resetOverlay" onclick="hideResetPasswordModal()"></div>
+    <div class="reset-modal" id="resetModal">
+        <span class="close-modal" onclick="hideResetPasswordModal()">&times;</span>
+        <h2>Reset Password</h2>
+        <p>Enter your email address and we'll send you a link to reset your password.</p>
+        <div class="input-group">
+            <input type="email" id="resetEmail" placeholder="Your email address">
+        </div>
+        <button class="btn btn-primary" onclick="handlePasswordReset()">Send Reset Link</button>
+        <div class="link" style="margin-top: 1.5rem;">
+            <a onclick="hideResetPasswordModal()">Back to login</a>
         </div>
     </div>
     
@@ -531,6 +603,7 @@
             document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
             document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
             document.getElementById('verifyMessage').classList.add('hidden');
+            hideResetPasswordModal(); // Hide reset modal when switching tabs
         }
         
         function showVerifyView(email) {
@@ -538,6 +611,63 @@
             document.getElementById('registerForm').classList.add('hidden');
             document.getElementById('verifyMessage').classList.remove('hidden');
             document.getElementById('verifyEmail').innerText = email;
+        }
+        
+        // Reset Password Functions
+        function showResetPasswordModal() {
+            document.getElementById('resetModal').classList.add('show');
+            document.getElementById('resetOverlay').classList.add('show');
+            document.getElementById('resetEmail').value = ''; // Clear previous input
+        }
+        
+        function hideResetPasswordModal() {
+            document.getElementById('resetModal').classList.remove('show');
+            document.getElementById('resetOverlay').classList.remove('show');
+        }
+        
+        async function handlePasswordReset() {
+            const email = document.getElementById('resetEmail').value;
+            
+            if (!email) {
+                showAlert('Please enter your email address', 'error');
+                return;
+            }
+            
+            // Simple email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showAlert('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            try {
+                // Firebase password reset
+                await auth.sendPasswordResetEmail(email);
+                
+                // Hide the reset modal
+                hideResetPasswordModal();
+                
+                // Show success message
+                showAlert(`Password reset email sent to ${email}. Please check your inbox.`, 'success');
+                
+            } catch (error) {
+                console.error('Password reset error:', error);
+                
+                // Handle specific Firebase errors
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        showAlert('No account found with this email address.', 'error');
+                        break;
+                    case 'auth/invalid-email':
+                        showAlert('Invalid email address format.', 'error');
+                        break;
+                    case 'auth/too-many-requests':
+                        showAlert('Too many requests. Please try again later.', 'error');
+                        break;
+                    default:
+                        showAlert('Failed to send reset email. Please try again.', 'error');
+                }
+            }
         }
         
         async function handleRegister() {
