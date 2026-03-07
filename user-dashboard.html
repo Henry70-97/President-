@@ -51,7 +51,7 @@
         .header { background: white; border-radius: 1.5rem; padding: 0.8rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .logo h2 { background: linear-gradient(135deg, #6366f1, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
         .user-menu { display: flex; align-items: center; gap: 0.5rem; }
-        .wallet-badge { background: #6366f120; padding: 0.4rem 0.8rem; border-radius: 40px; color: #6366f1; font-weight: 700; font-size: 0.9rem; }
+        .wallet-badge { background: #6366f120; padding: 0.4rem 0.8rem; border-radius: 40px; color: #6366f1; font-weight: 700; font-size: 0.9rem; white-space: nowrap; }
         #userName { font-weight: 600; font-size: 0.9rem; color: #1e293b; }
         .logout-btn { background: none; border: none; color: #ef4444; font-size: 1.1rem; cursor: pointer; padding: 0.3rem; }
         .hamburger-menu { display: none; font-size: 1.5rem; cursor: pointer; color: #6366f1; padding: 0.3rem; }
@@ -92,6 +92,7 @@
             flex: 1;
             text-align: center;
             border-radius: 0.5rem;
+            position: relative;
         }
         .bottom-nav-item i {
             font-size: 1.1rem;
@@ -107,13 +108,27 @@
         .bottom-nav-item:hover {
             background: #f1f5f9;
         }
+        .submit-badge {
+            position: absolute;
+            top: 0;
+            right: 5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 40px;
+            padding: 0.1rem 0.3rem;
+            font-size: 0.5rem;
+            font-weight: 600;
+            min-width: 16px;
+            text-align: center;
+            border: 2px solid white;
+        }
 
         .mobile-nav { display: none; position: fixed; top: 0; left: -100%; width: 85%; max-width: 350px; height: 100vh; background: white; z-index: 2000; padding: 2rem; box-shadow: 0 0 30px rgba(0,0,0,0.2); transition: left 0.3s ease; overflow-y: auto; }
         .mobile-nav.active { left: 0; display: block; }
         .mobile-nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9; }
         .mobile-nav-header h3 { font-size: 1.5rem; font-weight: 700; color: #6366f1; }
         .close-menu { font-size: 1.8rem; cursor: pointer; color: #64748b; }
-        .mobile-nav-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; margin-bottom: 0.5rem; border-radius: 1rem; font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #1e293b; }
+        .mobile-nav-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; margin-bottom: 0.5rem; border-radius: 1rem; font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #1e293b; position: relative; }
         .mobile-nav-item:hover { background: #f1f5f9; }
         .mobile-nav-item.active { background: #6366f1; color: white; }
         .mobile-nav-item i { width: 24px; font-size: 1.3rem; }
@@ -128,8 +143,19 @@
         .stat-label { color: #64748b; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 1rem; }
-        .tab { padding: 0.5rem 1rem; border: none; border-radius: 40px; background: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; }
+        .tab { padding: 0.5rem 1rem; border: none; border-radius: 40px; background: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; position: relative; }
         .tab.active { background: #6366f1; color: white; }
+        .submit-badge-tab {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 40px;
+            padding: 0.1rem 0.4rem;
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
 
         .content { background: white; border-radius: 1.5rem; padding: 1rem; min-height: 400px; }
 
@@ -178,6 +204,7 @@
         .deadline-badge.expired { background: #64748b20; color: #64748b; }
         .deadline-badge i { font-size: 0.7rem; }
         .task-amount { color: #10b981; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.5px; }
+        .task-amount small { font-size: 0.7rem; font-weight: 400; color: #64748b; margin-left: 0.3rem; }
         .expired-message { background: #fee2e2; color: #ef4444; padding: 0.3rem 0.6rem; border-radius: 40px; font-size: 0.7rem; font-weight: 600; text-align: center; margin-top: 0.3rem; }
         .badge { padding: 0.2rem 0.8rem; border-radius: 40px; font-size: 0.7rem; font-weight: 700; display: inline-block; letter-spacing: 0.3px; }
         .badge.primary { background: #6366f120; color: #6366f1; }
@@ -508,6 +535,11 @@
             <i class="fas fa-money-bill-wave"></i>
             <span>Withdraw</span>
         </div>
+        <div class="bottom-nav-item" onclick="switchTab('submit')">
+            <i class="fas fa-paper-plane"></i>
+            <span>Submit</span>
+            <span id="bottomSubmitBadge" class="submit-badge" style="display:none;">0</span>
+        </div>
         <div class="bottom-nav-item" onclick="switchTab('messages')">
             <i class="fas fa-envelope"></i>
             <span>Messages</span>
@@ -529,6 +561,10 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('submissions')"><i class="fas fa-file-alt"></i><span>My Submissions</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('withdrawals')"><i class="fas fa-money-bill-wave"></i><span>Withdrawals</span></div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('submit')" style="position: relative;">
+            <i class="fas fa-paper-plane"></i><span>Submit Task</span>
+            <span id="mobileSubmitBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span>
+        </div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('messages')">
             <i class="fas fa-envelope"></i><span>Messages</span>
             <span id="mobileMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span>
@@ -585,7 +621,7 @@
                     </div>
                 </div>
                 <div class="user-menu">
-                    <div class="wallet-badge" id="walletDisplay">$0.00</div>
+                    <div class="wallet-badge" id="walletDisplay">$0.00 | KSH 0</div>
                     <span id="userName">Loading...</span>
                     <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
@@ -604,6 +640,10 @@
             <button class="tab" onclick="switchTab('training')">🎓 Training Center</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
             <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
+            <button class="tab" onclick="switchTab('submit')" style="position: relative;">
+                📤 Submit Task
+                <span id="desktopSubmitBadge" class="submit-badge-tab" style="display:none;">0</span>
+            </button>
             <button class="tab" onclick="switchTab('messages')">💬 Messages<span id="unreadMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span></button>
             <button class="tab" onclick="switchTab('notifications')">🔔 Notifications<span id="unreadNotifBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span></button>
             <!-- NEW TABS -->
@@ -657,6 +697,23 @@
         const REFERRAL_BONUS_REFERRER = 2, REFERRAL_BONUS_REFERRED = 0.5;
         let paymentUrl = "https://lipana.dev/pay/nextgen-membership";
 
+        // -------------------- NEW: USD to KSH conversion --------------------
+        let usdToKshRate = 130; // default, can be overridden from Firestore
+        async function loadConversionRate() {
+            try {
+                const doc = await db.collection('settings').doc('conversion').get();
+                if (doc.exists && doc.data().usdToKsh) {
+                    usdToKshRate = doc.data().usdToKsh;
+                }
+            } catch (e) { console.error('Error loading conversion rate:', e); }
+        }
+        function formatBoth(amount) {
+            if (amount === undefined || amount === null) amount = 0;
+            const usd = amount.toFixed(2);
+            const ksh = (amount * usdToKshRate).toFixed(0);
+            return `$${usd} | KSH ${ksh}`;
+        }
+
         // -------------------- GLOBAL STATE (unchanged) --------------------
         let currentUser = null;
         let userData = null;
@@ -666,6 +723,8 @@
         let currentTaskViewed = null;
         let currentTab = 'tasks';
         let adminId = null;
+        // NEW: listener for accepted tasks count
+        let acceptedTasksListener = null;
 
         // -------------------- FETCH ADMIN ID (unchanged) --------------------
         async function getAdminId() {
@@ -722,7 +781,7 @@
                 <div class="mirror-tab-header">🔍 Viewing Task</div>
                 <div class="mirror-task-title">${escapeHtml(task.title || 'Task')}</div>
                 <div class="mirror-task-detail"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName || 'NextGen Admin')}</div>
-                <div class="mirror-task-detail"><i class="fas fa-tag"></i> $${(parseFloat(task.reward) || 0).toFixed(2)}</div>
+                <div class="mirror-task-detail"><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward) || 0)}</div>
                 ${task.deadline ? `<div class="mirror-deadline ${deadlineClass}"><i class="fas fa-calendar-alt"></i> ${deadlineText}</div>` : ''}
                 <div class="mirror-task-detail" style="margin-top:0.8rem;"><i class="fas fa-align-left"></i> ${escapeHtml((task.description || '').substring(0, 100))}${(task.description || '').length > 100 ? '…' : ''}</div>
             `;
@@ -740,7 +799,7 @@
                     html = `
                         <div class="mirror-tab-header">📋 Tasks Dashboard</div>
                         <div class="mirror-stats">
-                            <div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value" id="mirrorWallet">$${(userData?.wallet || 0).toFixed(2)}</div></div>
+                            <div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value" id="mirrorWallet">${formatBoth(userData?.wallet || 0)}</div></div>
                             <div class="mirror-stat-item"><div class="mirror-stat-label">Pending</div><div class="mirror-stat-value" id="mirrorPending">${getStatValue(2)}</div></div>
                             <div class="mirror-stat-item"><div class="mirror-stat-label">Approved</div><div class="mirror-stat-value" id="mirrorApproved">${getStatValue(3)}</div></div>
                             <div class="mirror-stat-item"><div class="mirror-stat-label">Activity Rate</div><div class="mirror-stat-value" id="mirrorActivityRate">${userData?.activityRate || '0%'}</div></div>
@@ -755,7 +814,15 @@
                             <div class="mirror-tab-stat-row"><span class="mirror-tab-stat-label"><i class="fas fa-clock"></i> Pending</span><span class="mirror-tab-stat-value" id="mirrorSubPending">${getSubmissionCount('pending')}</span></div>
                             <div class="mirror-tab-stat-row"><span class="mirror-tab-stat-label"><i class="fas fa-check-circle"></i> Approved</span><span class="mirror-tab-stat-value" id="mirrorSubApproved">${getSubmissionCount('approved')}</span></div>
                             <div class="mirror-tab-stat-row"><span class="mirror-tab-stat-label"><i class="fas fa-times-circle"></i> Rejected</span><span class="mirror-tab-stat-value" id="mirrorSubRejected">${getSubmissionCount('rejected')}</span></div>
-                            <div class="mirror-tab-stat-row" style="margin-top:0.5rem;"><span class="mirror-tab-stat-label"><i class="fas fa-dollar-sign"></i> Total Earned</span><span class="mirror-tab-stat-value">$${getTotalEarned()}</span></div>
+                            <div class="mirror-tab-stat-row" style="margin-top:0.5rem;"><span class="mirror-tab-stat-label"><i class="fas fa-dollar-sign"></i> Total Earned</span><span class="mirror-tab-stat-value">${formatBoth(getTotalEarned())}</span></div>
+                        </div>
+                    `;
+                    break;
+                case 'submit':
+                    html = `
+                        <div class="mirror-tab-header">📤 Pending Submissions</div>
+                        <div class="mirror-tab-stats">
+                            <div class="mirror-tab-stat-row"><span class="mirror-tab-stat-label"><i class="fas fa-hourglass-half"></i> Accepted Tasks</span><span class="mirror-tab-stat-value" id="mirrorAcceptedCount">${getAcceptedCount()}</span></div>
                         </div>
                     `;
                     break;
@@ -772,7 +839,7 @@
                     html = `
                         <div class="mirror-tab-header">💰 Withdrawals</div>
                         <div class="mirror-tab-stats">
-                            <div class="mirror-tab-stat-row"><span class="mirror-tab-stat-label"><i class="fas fa-wallet"></i> Balance</span><span class="mirror-tab-stat-value">$${(userData?.wallet || 0).toFixed(2)}</span></div>
+                            <div class="mirror-tab-stat-row"><span class="mirror-tab-stat-label"><i class="fas fa-wallet"></i> Balance</span><span class="mirror-tab-stat-value">${formatBoth(userData?.wallet || 0)}</span></div>
                             <div class="mirror-tab-stat-row"><span class="mirror-tab-stat-label"><i class="fas fa-hourglass-half"></i> Pending</span><span class="mirror-tab-stat-value" id="mirrorWithdrawalsPending">${getWithdrawalCount('pending')}</span></div>
                             <div class="mirror-tab-stat-row"><span class="mirror-tab-stat-label"><i class="fas fa-check"></i> Completed</span><span class="mirror-tab-stat-value" id="mirrorWithdrawalsCompleted">${getWithdrawalCount('paid')}</span></div>
                         </div>
@@ -810,7 +877,7 @@
                     html = `<div class="mirror-tab-header">📈 Earnings Graph</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Your earnings over time</span></div></div>`;
                     break;
                 default:
-                    html = `<div class="mirror-stats"><div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value">$${(userData?.wallet || 0).toFixed(2)}</div></div></div>`;
+                    html = `<div class="mirror-stats"><div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value">${formatBoth(userData?.wallet || 0)}</div></div></div>`;
             }
             mirror.innerHTML = html;
         }
@@ -818,6 +885,10 @@
         function getStatValue(index) { const el = document.querySelector(`.stat-card:nth-child(${index}) .stat-value`); return el ? el.textContent : '0'; }
         function getSubmissionCount(status) { return '...'; }
         function getTotalEarned() { return '0.00'; }
+        function getAcceptedCount() { 
+            const badge = document.getElementById('desktopSubmitBadge'); 
+            return badge && badge.style.display !== 'none' ? badge.textContent : '0'; 
+        }
         function getUnreadMessagesCount() { const badge = document.getElementById('unreadMessagesBadge'); return badge && badge.style.display !== 'none' ? badge.textContent : '0'; }
         function getTotalMessageThreads() { return '...'; }
         function getWithdrawalCount(status) { return '...'; }
@@ -840,7 +911,7 @@
         document.getElementById('modalBackdrop').addEventListener('click', closeModal);
 
         // -------------------- LOGOUT (unchanged) --------------------
-        function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); auth.signOut(); window.location.href = 'index.html'; }
+        function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); auth.signOut(); window.location.href = 'index.html'; }
 
         // -------------------- TAB SWITCHING (updated with new cases) --------------------
         function switchTab(tab) {
@@ -863,7 +934,8 @@
                     (tab === 'tasks' && item.textContent.includes('Tasks')) ||
                     (tab === 'training' && item.textContent.includes('Training')) ||
                     (tab === 'submissions' && item.textContent.includes('Submissions')) ||
-                    (tab === 'messages' && item.textContent.includes('Messages'))) {
+                    (tab === 'messages' && item.textContent.includes('Messages')) ||
+                    (tab === 'submit' && item.textContent.includes('Submit'))) {
                     item.classList.add('active');
                 }
             });
@@ -873,6 +945,7 @@
                 case 'training': loadTrainings(); break;
                 case 'submissions': loadSubmissions(); break;
                 case 'withdrawals': loadWithdrawals(); break;
+                case 'submit': loadPendingSubmissions(); break;
                 case 'messages': loadMessages(); break;
                 case 'notifications': loadNotificationsPage(); break;
                 case 'profile': loadProfile(); break;
@@ -962,7 +1035,7 @@
                 if (userData.active === false) { await auth.signOut(); window.location.href = 'index.html'; return; }
                 currentUser = user;
                 document.getElementById('userName').textContent = userData.displayName;
-                document.getElementById('walletDisplay').textContent = `$${(userData.wallet || 0).toFixed(2)}`;
+                updateWalletDisplay();
 
                 // Record login
                 try {
@@ -975,11 +1048,13 @@
                     });
                 } catch (loginError) { console.warn('Failed to record login:', loginError); }
 
+                await loadConversionRate(); // load USD/KSH rate
                 await loadFeeSettings(); 
                 await loadMembershipPackages();
                 await loadWithdrawalSettings();
                 await loadPaymentSettings();
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
+                setupAcceptedTasksListener(); // NEW: listen to accepted tasks count
                 loadDashboard();
                 refreshMirror();
             } catch (error) {
@@ -988,10 +1063,30 @@
             }
         });
 
+        function updateWalletDisplay() {
+            document.getElementById('walletDisplay').textContent = formatBoth(userData?.wallet || 0);
+        }
+
         // -------------------- LISTENERS (unchanged) --------------------
         function setupMessageCounter() { if (messagesListener) messagesListener(); messagesListener = db.collection('messages').where('recipientId','==',currentUser.uid).where('fromAdmin','==',true).where('read','==',false).onSnapshot(snap => { const cnt = snap.size; ['unreadMessagesBadge','mobileMessagesBadge','bottomMessagesBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = cnt; el.style.display = cnt ? 'inline' : 'none'; } }); db.collection('users').doc(currentUser.uid).update({ unreadMessages: cnt }).catch(console.log); refreshMirror(); }, err => { console.error('Message counter error:', err); setTimeout(setupMessageCounter,5000); }); }
-        function setupWalletListener() { db.collection('users').doc(currentUser.uid).onSnapshot(doc => { if (doc.exists) { userData.wallet = doc.data().wallet || 0; document.getElementById('walletDisplay').textContent = `$${userData.wallet.toFixed(2)}`; refreshMirror(); } }, console.error); }
+        function setupWalletListener() { db.collection('users').doc(currentUser.uid).onSnapshot(doc => { if (doc.exists) { userData.wallet = doc.data().wallet || 0; updateWalletDisplay(); refreshMirror(); } }, console.error); }
         function setupNotificationsListener() { if (notificationsListener) notificationsListener(); notificationsListener = db.collection('notifications').where('userId','==',currentUser.uid).onSnapshot(snap => { const unread = snap.docs.filter(d => !d.data().read).length; ['notificationBadge','unreadNotifBadge','mobileNotifBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = unread; el.style.display = unread ? 'inline' : 'none'; } }); if (notificationsPanelVisible) { const recent = snap.docs.slice(0,20); renderNotificationsPanel(recent); } refreshMirror(); }, console.error); }
+
+        // NEW: Listener for accepted tasks count (for Submit badges)
+        function setupAcceptedTasksListener() {
+            if (acceptedTasksListener) acceptedTasksListener();
+            acceptedTasksListener = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').onSnapshot(snap => {
+                const count = snap.size;
+                ['desktopSubmitBadge', 'mobileSubmitBadge', 'bottomSubmitBadge'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = count;
+                        el.style.display = count ? 'inline' : 'none';
+                    }
+                });
+                refreshMirror();
+            }, console.error);
+        }
 
         // -------------------- LOAD DASHBOARD (added productivity score) --------------------
         async function loadDashboard() {
@@ -1014,7 +1109,7 @@
                 userData.productivityScore = Math.max(0, Math.round(productivityScore));
                 
                 document.getElementById('statsGrid').innerHTML = `
-                    <div class="stat-card"><i class="fas fa-wallet"></i><div class="stat-value">$${userData.wallet.toFixed(2)}</div><div class="stat-label">Balance</div></div>
+                    <div class="stat-card"><i class="fas fa-wallet"></i><div class="stat-value">${formatBoth(userData.wallet)}</div><div class="stat-label">Balance</div></div>
                     <div class="stat-card"><i class="fas fa-clock"></i><div class="stat-value">${pendingSnap.size}</div><div class="stat-label">Pending</div></div>
                     <div class="stat-card"><i class="fas fa-check-circle"></i><div class="stat-value">${approvedSnap.size}</div><div class="stat-label">Approved</div></div>
                     <div class="stat-card"><i class="fas fa-chart-line"></i><div class="stat-value">${activityRate}</div><div class="stat-label">Activity Rate</div></div>
@@ -1079,7 +1174,7 @@
                             ${t.deadline ? `<div class="deadline-badge ${getDeadlineClass(t.deadline)}"><i class="fas fa-calendar-alt"></i> ${formatDeadline(t.deadline)}</div>` : ''}
                             <p>${escapeHtml((t.description||'').substring(0,80))}...</p>
                             <div><span class="badge primary">${t.category||'other'}</span> <span class="badge warning">${t.difficulty||'medium'}</span></div>
-                            <div class="task-amount">$${(parseFloat(t.reward)||0).toFixed(2)}</div>
+                            <div class="task-amount">${formatBoth(parseFloat(t.reward)||0)}</div>
                             ${expired && !submitted ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
                             ${t.collaborable && t.team && t.team.length ? `<div class="team-list"><i class="fas fa-users"></i> Team: ${t.team.join(', ')}</div>` : ''}
                             <div style="display:flex; gap:0.5rem;">
@@ -1103,7 +1198,7 @@
 
         async function hasUserSubmitted(taskId) { const snap = await db.collection('submissions').where('userId','==',currentUser.uid).where('taskId','==',taskId).get(); return !snap.empty; }
 
-        // Modified acceptTask to handle collaborable tasks (no limit of 2)
+        // Modified acceptTask to handle collaborable tasks and store in user's acceptedTasks subcollection
         async function acceptTask(taskId) {
             try {
                 const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
@@ -1134,6 +1229,16 @@
                         userName: userData.displayName,
                         acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+                    // Also store in user's acceptedTasks subcollection for easy query
+                    const userAcceptedRef = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId);
+                    transaction.set(userAcceptedRef, {
+                        taskId: taskId,
+                        title: task.title,
+                        reward: task.reward,
+                        deadline: task.deadline,
+                        clientName: task.clientName,
+                        acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
                 });
                 showSubmitForm(taskId);
             } catch (error) {
@@ -1142,9 +1247,9 @@
             }
         }
 
-        async function viewTaskDetails(taskId) { /* unchanged */ try { const doc = await db.collection('tasks').doc(taskId).get(); if (!doc.exists) { showAlert('Task not found','error'); return; } const task = { id: taskId, ...doc.data() }; currentTaskViewed = task; refreshMirror(); showModal(`<div class="pdf-document"><div class="pdf-header"><div><h2>Task Details</h2></div><span class="pdf-badge">#${taskId.substring(0,8)}</span></div><div class="pdf-content"><div class="pdf-title">${escapeHtml(task.title)}</div><div class="pdf-grid"><div class="pdf-grid-item"><span class="pdf-grid-label">Client</span><span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span></div><div class="pdf-grid-item"><span class="pdf-grid-label">Reward</span><span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> $${(parseFloat(task.reward)||0).toFixed(2)}</span></div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div><div class="pdf-section-content">${escapeHtml(task.description||'No description')}</div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div><div class="pdf-section-content">${escapeHtml(task.instructions||'No instructions')}</div></div><div class="pdf-actions"><button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button><button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button></div></div></div>`); } catch (e) { showAlert('Error loading task details','error'); } }
+        async function viewTaskDetails(taskId) { /* unchanged */ try { const doc = await db.collection('tasks').doc(taskId).get(); if (!doc.exists) { showAlert('Task not found','error'); return; } const task = { id: taskId, ...doc.data() }; currentTaskViewed = task; refreshMirror(); showModal(`<div class="pdf-document"><div class="pdf-header"><div><h2>Task Details</h2></div><span class="pdf-badge">#${taskId.substring(0,8)}</span></div><div class="pdf-content"><div class="pdf-title">${escapeHtml(task.title)}</div><div class="pdf-grid"><div class="pdf-grid-item"><span class="pdf-grid-label">Client</span><span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span></div><div class="pdf-grid-item"><span class="pdf-grid-label">Reward</span><span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> ${formatBoth(parseFloat(task.reward)||0)}</span></div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div><div class="pdf-section-content">${escapeHtml(task.description||'No description')}</div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div><div class="pdf-section-content">${escapeHtml(task.instructions||'No instructions')}</div></div><div class="pdf-actions"><button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button><button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button></div></div></div>`); } catch (e) { showAlert('Error loading task details','error'); } }
 
-        // ===== UPDATED showSubmitForm FUNCTION (with live countdown and upload simulation) =====
+        // ===== UPDATED showSubmitForm FUNCTION (with live countdown, upload simulation, and draft loading) =====
         async function showSubmitForm(taskId, existingWork = '') {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -1159,6 +1264,10 @@
                 }
                 sessionStorage.removeItem('pendingSubmission');
                 const deadline = task.deadline ? task.deadline.toDate() : null;
+                // Load draft from localStorage if exists
+                const draftKey = `draft_${taskId}`;
+                const savedDraft = localStorage.getItem(draftKey) || '';
+                const workToShow = savedDraft || existingWork;
                 showModal(`
                     <div class="modal-content" style="padding:0; overflow:hidden; max-width:800px;">
                         <div class="smart-submission">
@@ -1167,7 +1276,7 @@
                                 <p>Complete the task and preview before submitting</p>
                                 <div class="submission-meta">
                                     <span class="meta-item"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName || 'Admin')}</span>
-                                    <span class="meta-item"><i class="fas fa-tag"></i> $${(parseFloat(task.reward) || 0).toFixed(2)}</span>
+                                    <span class="meta-item"><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward) || 0)}</span>
                                     ${deadline ? `<span class="meta-item"><i class="fas fa-hourglass-half"></i> <span id="countdownTimer">Loading...</span></span>` : ''}
                                 </div>
                             </div>
@@ -1181,14 +1290,14 @@
                                         <span class="editor-label"><i class="fas fa-pencil-alt"></i> Your Work</span>
                                         <span class="word-counter" id="wordCounter">0 / 20 words</span>
                                     </div>
-                                    <textarea id="workText" class="smart-textarea" placeholder="Paste your work here..." oninput="updateWordCount()">${escapeHtml(existingWork)}</textarea>
+                                    <textarea id="workText" class="smart-textarea" placeholder="Paste your work here..." oninput="updateWordCount(); saveDraft('${taskId}', this.value)">${escapeHtml(workToShow)}</textarea>
                                     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                                         <button id="uploadBtn" class="btn btn-secondary" style="flex:1;"><i class="fas fa-upload"></i> Upload File</button>
                                         <button class="btn btn-preview" onclick="previewSubmission('${taskId}')" style="flex:1;"><i class="fas fa-eye"></i> Preview</button>
                                     </div>
                                 </div>
                                 <div class="action-buttons">
-                                    <button class="btn btn-cancel" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button>
+                                    <button class="btn btn-cancel" onclick="closeModal(); clearDraft('${taskId}')"><i class="fas fa-times"></i> Cancel</button>
                                 </div>
                             </div>
                         </div>
@@ -1239,17 +1348,67 @@
             }
         }
 
+        // Draft functions
+        function saveDraft(taskId, text) {
+            localStorage.setItem(`draft_${taskId}`, text);
+        }
+        function clearDraft(taskId) {
+            localStorage.removeItem(`draft_${taskId}`);
+        }
+
         function updateWordCount() { /* unchanged */ const ta = document.getElementById('workText'); if (!ta) return; const wc = ta.value.trim().split(/\s+/).filter(w => w.length>0).length; const counter = document.getElementById('wordCounter'); if (counter) { counter.textContent = `${wc} / 20 words`; counter.className = 'word-counter' + (wc >= 20 ? ' valid' : ' warning'); ta.classList.toggle('valid', wc >= 20); ta.classList.toggle('invalid', wc < 20); } }
 
-        async function previewSubmission(taskId) { /* unchanged */ const work = document.getElementById('workText').value; const wc = work.trim().split(/\s+/).filter(w => w.length>0).length; if (wc < 20) { showAlert(`Please provide at least 20 words (current: ${wc})`, 'error'); return; } try { const taskDoc = await db.collection('tasks').doc(taskId).get(); const task = taskDoc.data(); sessionStorage.setItem('pendingSubmission', JSON.stringify({ taskId, work, wc })); showModal(`<div class="modal-content" style="max-width:700px;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); padding:2rem; color:white; border-radius:1rem 1rem 0 0; margin:-2rem -2rem 1.5rem -2rem;"><h3 style="font-size:1.5rem;">Preview Your Submission</h3><p>${escapeHtml(task.title)}</p><div style="display:flex; gap:1rem; margin-top:1rem;"><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-tag"></i> $${(parseFloat(task.reward)||0).toFixed(2)}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-file-word"></i> ${wc} words</span></div></div><div style="margin-bottom:1.5rem;"><h4><i class="fas fa-pencil-alt" style="color:#6366f1;"></i> Your Work:</h4><div style="background:#f8fafc; padding:1.5rem; border-left:4px solid #6366f1; max-height:300px; overflow-y:auto;">${work.replace(/\n/g,'<br>')}</div></div><div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:1rem; border-radius:0.5rem; margin-bottom:1.5rem;"><i class="fas fa-info-circle" style="color:#f59e0b;"></i> Please review carefully. Once submitted, you cannot edit.</div><div style="display:flex; gap:1rem;"><button class="btn btn-success" onclick="saveSubmission('${taskId}')">Confirm & Submit</button><button class="btn btn-primary" onclick="showSubmitForm('${taskId}', ${JSON.stringify(work)})">Edit</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); } catch (e) { showAlert('Error previewing','error'); } }
+        async function previewSubmission(taskId) { /* unchanged */ const work = document.getElementById('workText').value; const wc = work.trim().split(/\s+/).filter(w => w.length>0).length; if (wc < 20) { showAlert(`Please provide at least 20 words (current: ${wc})`, 'error'); return; } try { const taskDoc = await db.collection('tasks').doc(taskId).get(); const task = taskDoc.data(); sessionStorage.setItem('pendingSubmission', JSON.stringify({ taskId, work, wc })); showModal(`<div class="modal-content" style="max-width:700px;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); padding:2rem; color:white; border-radius:1rem 1rem 0 0; margin:-2rem -2rem 1.5rem -2rem;"><h3 style="font-size:1.5rem;">Preview Your Submission</h3><p>${escapeHtml(task.title)}</p><div style="display:flex; gap:1rem; margin-top:1rem;"><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward)||0)}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-file-word"></i> ${wc} words</span></div></div><div style="margin-bottom:1.5rem;"><h4><i class="fas fa-pencil-alt" style="color:#6366f1;"></i> Your Work:</h4><div style="background:#f8fafc; padding:1.5rem; border-left:4px solid #6366f1; max-height:300px; overflow-y:auto;">${work.replace(/\n/g,'<br>')}</div></div><div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:1rem; border-radius:0.5rem; margin-bottom:1.5rem;"><i class="fas fa-info-circle" style="color:#f59e0b;"></i> Please review carefully. Once submitted, you cannot edit.</div><div style="display:flex; gap:1rem;"><button class="btn btn-success" onclick="saveSubmission('${taskId}')">Confirm & Submit</button><button class="btn btn-primary" onclick="showSubmitForm('${taskId}', ${JSON.stringify(work)})">Edit</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); } catch (e) { showAlert('Error previewing','error'); } }
 
-        async function saveSubmission(taskId) { /* unchanged */ let work = null; const pending = sessionStorage.getItem('pendingSubmission'); if (pending) { const data = JSON.parse(pending); if (data.taskId === taskId) work = data.work; } if (!work) work = document.getElementById('workText')?.value; if (!work) { showAlert('No work found','error'); return; } const wc = work.trim().split(/\s+/).filter(w => w.length>0).length; if (wc < 20) { showAlert('At least 20 words required','error'); return; } try { const taskDoc = await db.collection('tasks').doc(taskId).get(); if (!taskDoc.exists) { showAlert('Task not found','error'); return; } const task = taskDoc.data(); if (isDeadlinePassed(task.deadline)) { showAlert('Task expired','error'); closeModal(); return; } if (await hasUserSubmitted(taskId)) { showAlert('Already submitted','error'); closeModal(); return; } showModal(`<div class="modal-content" style="text-align:center;"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`); await db.collection('submissions').add({ userId: currentUser.uid, userEmail: currentUser.email, taskId: taskId, taskTitle: task.title || 'Untitled', workText: work, status: 'pending', wordCount: wc, submittedAt: firebase.firestore.FieldValue.serverTimestamp() }); sessionStorage.removeItem('pendingSubmission'); showModal(`<div class="modal-content" style="text-align:center;"><div class="success-check"><i class="fas fa-check"></i></div><h3 style="color:#10b981;">Success!</h3><p>Your work has been submitted.<br>${wc} words • Pending review</p><button class="btn btn-success" onclick="loadSubmissions()">View My Submissions</button><button class="btn btn-primary" onclick="loadTasks()">Browse More Tasks</button></div>`); refreshMirror(); } catch (e) { console.error('Error saving submission:', e); showAlert('Error saving submission. Please try again.', 'error'); } }
+        async function saveSubmission(taskId) { /* unchanged */ let work = null; const pending = sessionStorage.getItem('pendingSubmission'); if (pending) { const data = JSON.parse(pending); if (data.taskId === taskId) work = data.work; } if (!work) work = document.getElementById('workText')?.value; if (!work) { showAlert('No work found','error'); return; } const wc = work.trim().split(/\s+/).filter(w => w.length>0).length; if (wc < 20) { showAlert('At least 20 words required','error'); return; } try { const taskDoc = await db.collection('tasks').doc(taskId).get(); if (!taskDoc.exists) { showAlert('Task not found','error'); return; } const task = taskDoc.data(); if (isDeadlinePassed(task.deadline)) { showAlert('Task expired','error'); closeModal(); return; } if (await hasUserSubmitted(taskId)) { showAlert('Already submitted','error'); closeModal(); return; } showModal(`<div class="modal-content" style="text-align:center;"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`); await db.collection('submissions').add({ userId: currentUser.uid, userEmail: currentUser.email, taskId: taskId, taskTitle: task.title || 'Untitled', workText: work, status: 'pending', wordCount: wc, submittedAt: firebase.firestore.FieldValue.serverTimestamp() }); // Remove from acceptedTasks and delete draft
+                await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
+                clearDraft(taskId);
+                sessionStorage.removeItem('pendingSubmission');
+                showModal(`<div class="modal-content" style="text-align:center;"><div class="success-check"><i class="fas fa-check"></i></div><h3 style="color:#10b981;">Success!</h3><p>Your work has been submitted.<br>${wc} words • Pending review</p><button class="btn btn-success" onclick="loadSubmissions()">View My Submissions</button><button class="btn btn-primary" onclick="loadTasks()">Browse More Tasks</button></div>`);
+                refreshMirror();
+            } catch (e) { console.error('Error saving submission:', e); showAlert('Error saving submission. Please try again.', 'error'); }
+        }
 
         // -------------------- SUBMISSIONS (unchanged) --------------------
-        async function loadSubmissions() { /* unchanged */ currentTaskViewed = null; refreshMirror(); document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>'; try { const snap = await db.collection('submissions').where('userId','==',currentUser.uid).get(); let html = '<h3>My Submissions</h3>'; if (snap.empty) html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p></div>'; else { const subs = []; snap.forEach(d => subs.push({ id: d.id, ...d.data() })); subs.sort((a,b) => (b.submittedAt?.seconds||0) - (a.submittedAt?.seconds||0)); html += '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0.8rem;">'; subs.forEach(s => { const sc = s.status === 'approved' ? 'success' : s.status === 'rejected' ? 'danger' : 'warning'; const date = s.submittedAt?.seconds ? new Date(s.submittedAt.seconds*1000).toLocaleDateString() : 'N/A'; html += `<div class="submission-card" style="padding:1rem;"><div style="display:flex; justify-content:space-between;"><h4 style="font-size:0.9rem;">${escapeHtml(s.taskTitle||'Untitled')}</h4><span class="badge ${sc}">${s.status}</span></div><p style="color:#64748b; font-size:0.75rem;">${escapeHtml((s.workText||'').substring(0,60))}...</p><div style="display:flex; gap:0.5rem; font-size:0.7rem; color:#64748b;"><span><i class="far fa-calendar"></i> ${date}</span>${s.earned ? `<span><i class="fas fa-dollar-sign"></i> $${s.earned.toFixed(2)}</span>` : ''}${s.wordCount ? `<span><i class="fas fa-file-word"></i> ${s.wordCount} words</span>` : ''}</div>${s.review ? `<p style="background:#f1f5f9; padding:0.3rem; border-radius:0.3rem; font-size:0.7rem;"><strong>Feedback:</strong> ${escapeHtml(s.review)}</p>` : ''}</div>`; }); html += '</div>'; } document.getElementById('content').innerHTML = html; } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadSubmissions()">Retry</button></div>`; } }
+        async function loadSubmissions() { /* unchanged */ currentTaskViewed = null; refreshMirror(); document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>'; try { const snap = await db.collection('submissions').where('userId','==',currentUser.uid).get(); let html = '<h3>My Submissions</h3>'; if (snap.empty) html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p></div>'; else { const subs = []; snap.forEach(d => subs.push({ id: d.id, ...d.data() })); subs.sort((a,b) => (b.submittedAt?.seconds||0) - (a.submittedAt?.seconds||0)); html += '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0.8rem;">'; subs.forEach(s => { const sc = s.status === 'approved' ? 'success' : s.status === 'rejected' ? 'danger' : 'warning'; const date = s.submittedAt?.seconds ? new Date(s.submittedAt.seconds*1000).toLocaleDateString() : 'N/A'; html += `<div class="submission-card" style="padding:1rem;"><div style="display:flex; justify-content:space-between;"><h4 style="font-size:0.9rem;">${escapeHtml(s.taskTitle||'Untitled')}</h4><span class="badge ${sc}">${s.status}</span></div><p style="color:#64748b; font-size:0.75rem;">${escapeHtml((s.workText||'').substring(0,60))}...</p><div style="display:flex; gap:0.5rem; font-size:0.7rem; color:#64748b;"><span><i class="far fa-calendar"></i> ${date}</span>${s.earned ? `<span><i class="fas fa-dollar-sign"></i> ${formatBoth(s.earned)}</span>` : ''}${s.wordCount ? `<span><i class="fas fa-file-word"></i> ${s.wordCount} words</span>` : ''}</div>${s.review ? `<p style="background:#f1f5f9; padding:0.3rem; border-radius:0.3rem; font-size:0.7rem;"><strong>Feedback:</strong> ${escapeHtml(s.review)}</p>` : ''}</div>`; }); html += '</div>'; } document.getElementById('content').innerHTML = html; } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadSubmissions()">Retry</button></div>`; } }
+
+        // -------------------- PENDING SUBMISSIONS (new) --------------------
+        async function loadPendingSubmissions() {
+            currentTaskViewed = null; refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading pending submissions...</p></div>';
+            try {
+                const acceptedSnap = await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').get();
+                if (acceptedSnap.empty) {
+                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><h4>No pending tasks</h4><p>You have not accepted any tasks yet.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse Tasks</button></div>';
+                    return;
+                }
+                let html = '<h3>📤 Tasks Ready to Submit</h3><div class="task-grid">';
+                acceptedSnap.forEach(doc => {
+                    const t = doc.data();
+                    const deadline = t.deadline ? t.deadline.toDate() : null;
+                    const expired = deadline ? new Date() > deadline : false;
+                    html += `
+                        <div class="task-card">
+                            <h4 class="task-title">${escapeHtml(t.title)}</h4>
+                            <div class="client-info"><i class="fas fa-user-circle"></i> ${escapeHtml(t.clientName || 'Admin')}</div>
+                            ${deadline ? `<div class="deadline-badge ${expired ? 'expired' : getDeadlineClass(t.deadline)}"><i class="fas fa-calendar-alt"></i> ${formatDeadline(t.deadline)}</div>` : ''}
+                            <div class="task-amount">${formatBoth(parseFloat(t.reward) || 0)}</div>
+                            ${expired ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="btn btn-success" onclick="showSubmitForm('${doc.id}')" ${expired ? 'disabled' : ''} style="flex:1;">Continue Work</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('content').innerHTML = html;
+            } catch (e) {
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
+            }
+        }
 
         // -------------------- WITHDRAWALS (UPDATED with immediate deduction and pending check) --------------------
-        async function loadWithdrawals() { /* unchanged */ currentTaskViewed = null; refreshMirror(); try { if (!membershipPackages) await loadMembershipPackages(); const userDoc = await db.collection('users').doc(currentUser.uid).get(); const bal = userDoc.data().wallet || 0; userData.wallet = bal; document.getElementById('walletDisplay').textContent = `$${bal.toFixed(2)}`; const canWithdraw = (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE) && !userData.frozen; let ws = ''; if (userData.frozen) { ws = `<div class="petition-section"><h4><i class="fas fa-exclamation-triangle"></i> Account Frozen</h4><p>Your account is currently frozen. You cannot withdraw funds. If you believe this is a mistake, please send a petition to the admin.</p><textarea id="petitionMessage" class="smart-textarea" placeholder="Explain your situation..."></textarea><button class="btn" onclick="sendPetition()"><i class="fas fa-paper-plane"></i> Send Petition</button></div>`; } else if (!canWithdraw) { ws = `<div class="withdrawal-section"><p>You need a premium membership to withdraw.</p><button class="btn btn-primary" onclick="simulateWithdrawalAttempt()">Initiate Withdrawal</button></div>`; } else { ws = `<div class="withdrawal-section"><h4><i class="fas fa-money-bill-wave"></i> Withdraw Funds</h4><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;"><span style="font-size:0.9rem; font-weight:600;">Available Balance:</span><span class="balance-highlight">$${bal.toFixed(2)}</span></div><div class="input-group"><label for="withdrawAmount">Amount (USD) - Minimum $${MIN_WITHDRAWAL}</label><i class="fas fa-dollar-sign input-icon"></i><input type="number" id="withdrawAmount" placeholder="0.00" min="${MIN_WITHDRAWAL}" max="${bal}" step="0.01" oninput="updateFeeBreakdown(${bal})"></div><div id="feeBreakdown" class="fee-breakdown" style="display:none;"></div><div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div><div class="input-group"><label for="withdrawMethod">Withdrawal Method</label><i class="fas fa-credit-card input-icon"></i><select id="withdrawMethod"><option value="M-Pesa">M-Pesa</option><option value="Airtel Money">Airtel Money</option><option value="Bank Transfer">Bank Transfer</option></select></div><div class="input-group"><label for="withdrawPhone">Account / Phone Number</label><i class="fas fa-phone-alt input-icon"></i><input type="tel" id="withdrawPhone" placeholder="Enter your account number or phone"></div><button class="btn btn-primary" onclick="requestWithdrawal()">Request Withdrawal</button></div>`; } const histSnap = await db.collection('withdrawals').where('userId','==',currentUser.uid).get(); let hist = '<h4 style="margin-top:1rem;">Withdrawal History</h4>'; if (histSnap.empty) hist += '<div class="empty-state"><i class="fas fa-history"></i><p>No withdrawals yet.</p></div>'; else { const wds = []; histSnap.forEach(d => wds.push({ id: d.id, ...d.data() })); wds.sort((a,b) => (b.requestedAt?.seconds||0) - (a.requestedAt?.seconds||0)); hist += '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:0.8rem;">'; wds.forEach(w => { const date = w.requestedAt?.seconds ? new Date(w.requestedAt.seconds*1000).toLocaleDateString() : 'N/A'; const sc = w.status === 'paid' ? 'success' : w.status === 'rejected' ? 'danger' : 'warning'; hist += `<div class="submission-card"><div style="display:flex; justify-content:space-between;"><strong>$${w.amount}</strong><span class="badge ${sc}">${w.status}</span></div><p style="font-size:0.7rem;">${w.phone||'No account'} • ${date}</p></div>`; }); hist += '</div>'; } document.getElementById('content').innerHTML = ws + hist; } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadWithdrawals()">Retry</button></div>`; } }
+        async function loadWithdrawals() { /* unchanged */ currentTaskViewed = null; refreshMirror(); try { if (!membershipPackages) await loadMembershipPackages(); const userDoc = await db.collection('users').doc(currentUser.uid).get(); const bal = userDoc.data().wallet || 0; userData.wallet = bal; updateWalletDisplay(); const canWithdraw = (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE) && !userData.frozen; let ws = ''; if (userData.frozen) { ws = `<div class="petition-section"><h4><i class="fas fa-exclamation-triangle"></i> Account Frozen</h4><p>Your account is currently frozen. You cannot withdraw funds. If you believe this is a mistake, please send a petition to the admin.</p><textarea id="petitionMessage" class="smart-textarea" placeholder="Explain your situation..."></textarea><button class="btn" onclick="sendPetition()"><i class="fas fa-paper-plane"></i> Send Petition</button></div>`; } else if (!canWithdraw) { ws = `<div class="withdrawal-section"><p>You need a premium membership to withdraw.</p><button class="btn btn-primary" onclick="simulateWithdrawalAttempt()">Initiate Withdrawal</button></div>`; } else { ws = `<div class="withdrawal-section"><h4><i class="fas fa-money-bill-wave"></i> Withdraw Funds</h4><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;"><span style="font-size:0.9rem; font-weight:600;">Available Balance:</span><span class="balance-highlight">${formatBoth(bal)}</span></div><div class="input-group"><label for="withdrawAmount">Amount (USD) - Minimum $${MIN_WITHDRAWAL}</label><i class="fas fa-dollar-sign input-icon"></i><input type="number" id="withdrawAmount" placeholder="0.00" min="${MIN_WITHDRAWAL}" max="${bal}" step="0.01" oninput="updateFeeBreakdown(${bal})"></div><div id="feeBreakdown" class="fee-breakdown" style="display:none;"></div><div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div><div class="input-group"><label for="withdrawMethod">Withdrawal Method</label><i class="fas fa-credit-card input-icon"></i><select id="withdrawMethod"><option value="M-Pesa">M-Pesa</option><option value="Airtel Money">Airtel Money</option><option value="Bank Transfer">Bank Transfer</option></select></div><div class="input-group"><label for="withdrawPhone">Account / Phone Number</label><i class="fas fa-phone-alt input-icon"></i><input type="tel" id="withdrawPhone" placeholder="Enter your account number or phone"></div><button class="btn btn-primary" onclick="requestWithdrawal()">Request Withdrawal</button></div>`; } const histSnap = await db.collection('withdrawals').where('userId','==',currentUser.uid).get(); let hist = '<h4 style="margin-top:1rem;">Withdrawal History</h4>'; if (histSnap.empty) hist += '<div class="empty-state"><i class="fas fa-history"></i><p>No withdrawals yet.</p></div>'; else { const wds = []; histSnap.forEach(d => wds.push({ id: d.id, ...d.data() })); wds.sort((a,b) => (b.requestedAt?.seconds||0) - (a.requestedAt?.seconds||0)); hist += '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:0.8rem;">'; wds.forEach(w => { const date = w.requestedAt?.seconds ? new Date(w.requestedAt.seconds*1000).toLocaleDateString() : 'N/A'; const sc = w.status === 'paid' ? 'success' : w.status === 'rejected' ? 'danger' : 'warning'; hist += `<div class="submission-card"><div style="display:flex; justify-content:space-between;"><strong>${formatBoth(w.amount)}</strong><span class="badge ${sc}">${w.status}</span></div><p style="font-size:0.7rem;">${w.phone||'No account'} • ${date}</p></div>`; }); hist += '</div>'; } document.getElementById('content').innerHTML = ws + hist; } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadWithdrawals()">Retry</button></div>`; } }
 
         // UPDATED sendPetition – using userData.email and userData.displayName, better error handling
         async function sendPetition() {
@@ -1277,7 +1436,7 @@
 
         function simulateWithdrawalAttempt() { showModal(`<div class="modal-content"><i class="fas fa-spinner fa-spin" style="font-size:3rem;"></i><h3>Processing...</h3></div>`); setTimeout(() => { closeModal(); showUpgradePrompt(); }, 2000); }
         function showUpgradePrompt() { showModal(`<div class="modal-content"><i class="fas fa-exclamation-circle" style="font-size:4rem; color:#ef4444;"></i><h3>Withdrawal Failed</h3><p>You need a premium membership.</p><button class="btn btn-success" onclick="showMembershipOptions()">Upgrade Now</button><button class="btn btn-secondary" onclick="closeModal()">Later</button></div>`); }
-        function updateFeeBreakdown(maxBal) { const amt = parseFloat(document.getElementById('withdrawAmount')?.value) || 0; const fb = document.getElementById('feeBreakdown'); if (amt <= 0) { fb.style.display = 'none'; return; } const tf = amt * (TRANSACTION_FEE_PERCENT/100), pf = amt * (PLATFORM_FEE_PERCENT/100), net = amt - tf - pf; fb.innerHTML = `<h4>Fee Breakdown</h4><div class="fee-row"><span>Amount:</span><span>$${amt.toFixed(2)}</span></div><div class="fee-row"><span>Transaction Fee (${TRANSACTION_FEE_PERCENT}%):</span><span>-$${tf.toFixed(2)}</span></div><div class="fee-row"><span>Platform Fee (${PLATFORM_FEE_PERCENT}%):</span><span>-$${pf.toFixed(2)}</span></div><div class="fee-row total"><span>You Receive:</span><span>$${net.toFixed(2)}</span></div>`; fb.style.display = 'block'; }
+        function updateFeeBreakdown(maxBal) { const amt = parseFloat(document.getElementById('withdrawAmount')?.value) || 0; const fb = document.getElementById('feeBreakdown'); if (amt <= 0) { fb.style.display = 'none'; return; } const tf = amt * (TRANSACTION_FEE_PERCENT/100), pf = amt * (PLATFORM_FEE_PERCENT/100), net = amt - tf - pf; fb.innerHTML = `<h4>Fee Breakdown</h4><div class="fee-row"><span>Amount:</span><span>${formatBoth(amt)}</span></div><div class="fee-row"><span>Transaction Fee (${TRANSACTION_FEE_PERCENT}%):</span><span>-${formatBoth(tf)}</span></div><div class="fee-row"><span>Platform Fee (${PLATFORM_FEE_PERCENT}%):</span><span>-${formatBoth(pf)}</span></div><div class="fee-row total"><span>You Receive:</span><span>${formatBoth(net)}</span></div>`; fb.style.display = 'block'; }
 
         // UPDATED requestWithdrawal – immediate deduction + pending check
         async function requestWithdrawal() {
@@ -1346,7 +1505,7 @@
                 <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
                     <div style="background:#f8fafc; padding:2rem; border:2px solid #6366f1; border-radius:1.5rem;">
                         <h4 style="color:#6366f1; font-size:1.8rem;">${escapeHtml(premiumPkg.name)}</h4>
-                        <p style="font-size:2rem; font-weight:800; color:#0f172a;">$${premiumPkg.price}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
+                        <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(premiumPkg.price)}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
                         <p style="color:#475569;">✓ Access to all tasks<br>✓ Withdrawals enabled<br>✓ Priority support</p>
                     </div>
                 </div>
@@ -1401,11 +1560,11 @@
         }
 
         // -------------------- TRAINING CENTER (unchanged except adding userName) --------------------
-        async function loadTrainings() { /* unchanged */ currentTaskViewed = null; refreshMirror(); document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>'; try { const [trainingsSnap, applicationsSnap] = await Promise.all([ db.collection('trainings').where('active', '==', true).get(), db.collection('trainingApplications').where('userId', '==', currentUser.uid).get() ]); if (trainingsSnap.empty) { document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-graduation-cap"></i><h4>No trainings available</h4></div>'; return; } const userApps = {}; applicationsSnap.forEach(doc => { const app = doc.data(); userApps[app.trainingId] = { id: doc.id, ...app }; }); let html = '<h3>Training Center</h3><div class="training-grid">'; trainingsSnap.forEach(doc => { const t = doc.data(); const app = userApps[doc.id]; const status = app ? app.status : null; const typeClass = t.type === 'free' ? 'free' : 'prepaid'; const priceDisplay = t.type === 'prepaid' ? `$${t.price}` : 'Free'; let actionHtml = ''; if (status === 'approved') { let resourcesHtml = ''; if (t.resources && t.resources.length > 0) { resourcesHtml = '<div class="resources-list"><strong>Resources:</strong>'; t.resources.forEach(r => { if (r.type === 'text') { resourcesHtml += `<div class="resource-item"><i class="fas fa-file-alt"></i> ${escapeHtml(r.content)}</div>`; } else if (r.type === 'link') { resourcesHtml += `<div class="resource-item"><i class="fas fa-link"></i> <a href="${r.content}" target="_blank">${r.content}</a></div>`; } }); resourcesHtml += '</div>'; } else { resourcesHtml = '<p>No resources available.</p>'; } actionHtml = `<div class="training-status approved"><i class="fas fa-check-circle"></i> Approved</div>${resourcesHtml}`; } else if (status === 'pending') { actionHtml = `<div class="training-status pending"><i class="fas fa-hourglass-half"></i> Pending Approval</div>`; } else if (status === 'rejected') { actionHtml = `<div class="training-status rejected"><i class="fas fa-times-circle"></i> Rejected</div>`; } else { if (t.type === 'free') { actionHtml = `<button class="btn btn-success" onclick="applyForTraining('${doc.id}', 'free')">Apply Now</button>`; } else { actionHtml = `<button class="btn btn-warning" onclick="showPrepaidPayment('${doc.id}', ${t.price})">Apply (Prepaid)</button>`; } } html += `<div class="training-card ${typeClass}"><div class="training-header"><span class="training-title">${escapeHtml(t.title)}</span><span class="training-price">${priceDisplay}</span></div><div class="training-duration"><i class="fas fa-clock"></i> ${escapeHtml(t.duration || 'N/A')}</div><div class="training-description">${escapeHtml(t.description)}</div>${t.requirements ? `<div class="training-requirements"><strong>Requirements:</strong> ${escapeHtml(t.requirements)}</div>` : ''}${actionHtml}</div>`; }); html += '</div>'; document.getElementById('content').innerHTML = html; } catch (e) { console.error('Error loading trainings:', e); document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadTrainings()">Retry</button></div>`; } }
+        async function loadTrainings() { /* unchanged */ currentTaskViewed = null; refreshMirror(); document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>'; try { const [trainingsSnap, applicationsSnap] = await Promise.all([ db.collection('trainings').where('active', '==', true).get(), db.collection('trainingApplications').where('userId', '==', currentUser.uid).get() ]); if (trainingsSnap.empty) { document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-graduation-cap"></i><h4>No trainings available</h4></div>'; return; } const userApps = {}; applicationsSnap.forEach(doc => { const app = doc.data(); userApps[app.trainingId] = { id: doc.id, ...app }; }); let html = '<h3>Training Center</h3><div class="training-grid">'; trainingsSnap.forEach(doc => { const t = doc.data(); const app = userApps[doc.id]; const status = app ? app.status : null; const typeClass = t.type === 'free' ? 'free' : 'prepaid'; const priceDisplay = t.type === 'prepaid' ? formatBoth(t.price) : 'Free'; let actionHtml = ''; if (status === 'approved') { let resourcesHtml = ''; if (t.resources && t.resources.length > 0) { resourcesHtml = '<div class="resources-list"><strong>Resources:</strong>'; t.resources.forEach(r => { if (r.type === 'text') { resourcesHtml += `<div class="resource-item"><i class="fas fa-file-alt"></i> ${escapeHtml(r.content)}</div>`; } else if (r.type === 'link') { resourcesHtml += `<div class="resource-item"><i class="fas fa-link"></i> <a href="${r.content}" target="_blank">${r.content}</a></div>`; } }); resourcesHtml += '</div>'; } else { resourcesHtml = '<p>No resources available.</p>'; } actionHtml = `<div class="training-status approved"><i class="fas fa-check-circle"></i> Approved</div>${resourcesHtml}`; } else if (status === 'pending') { actionHtml = `<div class="training-status pending"><i class="fas fa-hourglass-half"></i> Pending Approval</div>`; } else if (status === 'rejected') { actionHtml = `<div class="training-status rejected"><i class="fas fa-times-circle"></i> Rejected</div>`; } else { if (t.type === 'free') { actionHtml = `<button class="btn btn-success" onclick="applyForTraining('${doc.id}', 'free')">Apply Now</button>`; } else { actionHtml = `<button class="btn btn-warning" onclick="showPrepaidPayment('${doc.id}', ${t.price})">Apply (Prepaid)</button>`; } } html += `<div class="training-card ${typeClass}"><div class="training-header"><span class="training-title">${escapeHtml(t.title)}</span><span class="training-price">${priceDisplay}</span></div><div class="training-duration"><i class="fas fa-clock"></i> ${escapeHtml(t.duration || 'N/A')}</div><div class="training-description">${escapeHtml(t.description)}</div>${t.requirements ? `<div class="training-requirements"><strong>Requirements:</strong> ${escapeHtml(t.requirements)}</div>` : ''}${actionHtml}</div>`; }); html += '</div>'; document.getElementById('content').innerHTML = html; } catch (e) { console.error('Error loading trainings:', e); document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadTrainings()">Retry</button></div>`; } }
 
         async function applyForTraining(trainingId, type) { /* unchanged */ try { const existing = await db.collection('trainingApplications').where('userId','==',currentUser.uid).where('trainingId','==',trainingId).get(); if (!existing.empty) { showAlert('You have already applied for this training.', 'error'); return; } const trainingDoc = await db.collection('trainings').doc(trainingId).get(); if (!trainingDoc.exists) { showAlert('Training not found', 'error'); return; } const training = trainingDoc.data(); await db.collection('trainingApplications').add({ userId: currentUser.uid, userEmail: currentUser.email, trainingId: trainingId, trainingTitle: training.title, type: type, status: 'pending', appliedAt: firebase.firestore.FieldValue.serverTimestamp() }); showAlert('Application submitted! You will be notified once approved.', 'success'); loadTrainings(); } catch (e) { console.error('Error applying for training:', e); showAlert('Error applying. Please try again.', 'error'); } }
 
-        async function showPrepaidPayment(trainingId, price) { /* unchanged */ showModal(`<div class="modal-content" style="text-align:center;"><i class="fas fa-credit-card" style="font-size:3rem; color:#f59e0b;"></i><h3>Prepaid Training</h3><p>Amount to pay: <strong>$${price}</strong></p><p>Click the button below to pay (opens in new tab). After payment, enter the transaction code.</p><a href="${paymentUrl}" target="_blank" class="btn btn-warning" style="display:inline-block; margin-bottom:1rem;">Pay $${price} now</a><input type="text" id="transactionCode" class="smart-input" placeholder="Transaction code"><textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea><div style="display:flex; gap:1rem; margin-top:1rem;"><button class="btn btn-success" onclick="submitPrepaidApplication('${trainingId}', ${price})">Submit Application</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); }
+        async function showPrepaidPayment(trainingId, price) { /* unchanged */ showModal(`<div class="modal-content" style="text-align:center;"><i class="fas fa-credit-card" style="font-size:3rem; color:#f59e0b;"></i><h3>Prepaid Training</h3><p>Amount to pay: <strong>${formatBoth(price)}</strong></p><p>Click the button below to pay (opens in new tab). After payment, enter the transaction code.</p><a href="${paymentUrl}" target="_blank" class="btn btn-warning" style="display:inline-block; margin-bottom:1rem;">Pay ${formatBoth(price)} now</a><input type="text" id="transactionCode" class="smart-input" placeholder="Transaction code"><textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea><div style="display:flex; gap:1rem; margin-top:1rem;"><button class="btn btn-success" onclick="submitPrepaidApplication('${trainingId}', ${price})">Submit Application</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); }
 
         // UPDATED submitPrepaidApplication – added userName
         async function submitPrepaidApplication(trainingId, price) {
@@ -1517,7 +1676,7 @@
         document.addEventListener('click', (e) => { const panel = document.getElementById('notificationsPanel'); const bell = document.querySelector('.notification-bell'); if (notificationsPanelVisible && panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) { panel.classList.remove('active'); notificationsPanelVisible = false; } });
 
         // -------------------- PROFILE (unchanged, added productivity score display) --------------------
-        function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> $${(userData.wallet||0).toFixed(2)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p></div>`; }
+        function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p></div>`; }
         async function updateProfile() { const name = document.getElementById('profileName').value; const phone = document.getElementById('profilePhone').value; if (!name) { showAlert('Name is required','error'); return; } await db.collection('users').doc(currentUser.uid).update({ displayName: name, phone: phone||'' }); userData.displayName = name; document.getElementById('userName').textContent = name; showAlert('Profile updated!','success'); refreshMirror(); }
 
         // -------------------- LOAD FEE & MEMBERSHIP (unchanged) --------------------
@@ -1557,7 +1716,7 @@
                     leaderboard.sort((a,b) => b.points - a.points);
                     let html = '<h3>🏆 Leaderboard (by earnings & approvals)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th><th>Wallet</th></tr>';
                     leaderboard.slice(0, 20).forEach((u, idx) => {
-                        html += `<tr><td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>$${u.wallet.toFixed(2)}</td></tr>`;
+                        html += `<tr><td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td></tr>`;
                     });
                     html += '</table>';
                     document.getElementById('content').innerHTML = html;
@@ -1673,7 +1832,8 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            scales: { y: { beginAtZero: true } }
+                            scales: { y: { beginAtZero: true,
+                                         ticks: { callback: (value) => formatBoth(value) } } }
                         }
                     });
                 }, 100);
