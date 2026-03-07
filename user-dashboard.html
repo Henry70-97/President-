@@ -231,6 +231,15 @@
         .btn-cancel { background: white; color: #64748b; border: 2px solid #e2e8f0; }
         .btn-cancel:hover { background: #f1f5f9; transform: translateY(-2px); }
 
+        /* Upload button styling */
+        #uploadBtn i.fa-spinner {
+            margin-right: 0.3rem;
+        }
+        #uploadBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .pdf-document { background: white; font-family: 'Inter', sans-serif; border-radius: 1rem; overflow: hidden; }
         .pdf-header { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #10b981; }
         .pdf-header h2 { margin: 0; font-size: 1.2rem; }
@@ -1135,7 +1144,100 @@
 
         async function viewTaskDetails(taskId) { /* unchanged */ try { const doc = await db.collection('tasks').doc(taskId).get(); if (!doc.exists) { showAlert('Task not found','error'); return; } const task = { id: taskId, ...doc.data() }; currentTaskViewed = task; refreshMirror(); showModal(`<div class="pdf-document"><div class="pdf-header"><div><h2>Task Details</h2></div><span class="pdf-badge">#${taskId.substring(0,8)}</span></div><div class="pdf-content"><div class="pdf-title">${escapeHtml(task.title)}</div><div class="pdf-grid"><div class="pdf-grid-item"><span class="pdf-grid-label">Client</span><span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span></div><div class="pdf-grid-item"><span class="pdf-grid-label">Reward</span><span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> $${(parseFloat(task.reward)||0).toFixed(2)}</span></div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div><div class="pdf-section-content">${escapeHtml(task.description||'No description')}</div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div><div class="pdf-section-content">${escapeHtml(task.instructions||'No instructions')}</div></div><div class="pdf-actions"><button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button><button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button></div></div></div>`); } catch (e) { showAlert('Error loading task details','error'); } }
 
-        async function showSubmitForm(taskId, existingWork = '') { /* unchanged */ try { const taskDoc = await db.collection('tasks').doc(taskId).get(); const task = taskDoc.data(); if (isDeadlinePassed(task.deadline)) { showAlert('Task expired','error'); return; } if (await hasUserSubmitted(taskId)) { showModal(`<div class="modal-content"><i class="fas fa-exclamation-circle" style="font-size:4rem; color:#ef4444;"></i><h3>Already Submitted</h3><button class="btn btn-primary" onclick="closeModal()">Close</button></div>`); return; } sessionStorage.removeItem('pendingSubmission'); showModal(`<div class="modal-content" style="padding:0; overflow:hidden; max-width:800px;"><div class="smart-submission"><div class="submission-header"><h2>${escapeHtml(task.title || 'Submit Your Work')}</h2><p>Complete the task and preview before submitting</p><div class="submission-meta"><span class="meta-item"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span><span class="meta-item"><i class="fas fa-tag"></i> $${(parseFloat(task.reward)||0).toFixed(2)}</span>${task.deadline ? `<span class="meta-item"><i class="fas fa-calendar-alt"></i> ${formatDeadline(task.deadline)}</span>` : ''}</div></div><div class="submission-body"><div class="instructions-card"><h3><i class="fas fa-clipboard-list"></i> Instructions</h3><div class="instructions-content">${escapeHtml(task.instructions||'No specific instructions.')}</div></div><div class="work-editor"><div class="editor-toolbar"><span class="editor-label"><i class="fas fa-pencil-alt"></i> Your Work</span><span class="word-counter" id="wordCounter">0 / 20 words</span></div><textarea id="workText" class="smart-textarea" placeholder="Enter your work..." oninput="updateWordCount()">${escapeHtml(existingWork)}</textarea></div><div class="action-buttons"><button class="btn btn-preview" onclick="previewSubmission('${taskId}')"><i class="fas fa-eye"></i> Preview</button><button class="btn btn-cancel" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button></div></div></div></div>`); setTimeout(updateWordCount,100); } catch (e) { showAlert('Error preparing form','error'); } }
+        // ===== UPDATED showSubmitForm FUNCTION (with live countdown and upload simulation) =====
+        async function showSubmitForm(taskId, existingWork = '') {
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                const task = taskDoc.data();
+                if (isDeadlinePassed(task.deadline)) {
+                    showAlert('Task expired', 'error');
+                    return;
+                }
+                if (await hasUserSubmitted(taskId)) {
+                    showModal(`<div class="modal-content"><i class="fas fa-exclamation-circle" style="font-size:4rem; color:#ef4444;"></i><h3>Already Submitted</h3><button class="btn btn-primary" onclick="closeModal()">Close</button></div>`);
+                    return;
+                }
+                sessionStorage.removeItem('pendingSubmission');
+                const deadline = task.deadline ? task.deadline.toDate() : null;
+                showModal(`
+                    <div class="modal-content" style="padding:0; overflow:hidden; max-width:800px;">
+                        <div class="smart-submission">
+                            <div class="submission-header">
+                                <h2>${escapeHtml(task.title || 'Submit Your Work')}</h2>
+                                <p>Complete the task and preview before submitting</p>
+                                <div class="submission-meta">
+                                    <span class="meta-item"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName || 'Admin')}</span>
+                                    <span class="meta-item"><i class="fas fa-tag"></i> $${(parseFloat(task.reward) || 0).toFixed(2)}</span>
+                                    ${deadline ? `<span class="meta-item"><i class="fas fa-hourglass-half"></i> <span id="countdownTimer">Loading...</span></span>` : ''}
+                                </div>
+                            </div>
+                            <div class="submission-body">
+                                <div class="instructions-card">
+                                    <h3><i class="fas fa-clipboard-list"></i> Instructions</h3>
+                                    <div class="instructions-content">${escapeHtml(task.instructions || 'No specific instructions.')}</div>
+                                </div>
+                                <div class="work-editor">
+                                    <div class="editor-toolbar">
+                                        <span class="editor-label"><i class="fas fa-pencil-alt"></i> Your Work</span>
+                                        <span class="word-counter" id="wordCounter">0 / 20 words</span>
+                                    </div>
+                                    <textarea id="workText" class="smart-textarea" placeholder="Paste your work here..." oninput="updateWordCount()">${escapeHtml(existingWork)}</textarea>
+                                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                        <button id="uploadBtn" class="btn btn-secondary" style="flex:1;"><i class="fas fa-upload"></i> Upload File</button>
+                                        <button class="btn btn-preview" onclick="previewSubmission('${taskId}')" style="flex:1;"><i class="fas fa-eye"></i> Preview</button>
+                                    </div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="btn btn-cancel" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                setTimeout(updateWordCount, 100);
+
+                // ----- LIVE COUNTDOWN -----
+                if (deadline) {
+                    const countdownEl = document.getElementById('countdownTimer');
+                    const interval = setInterval(() => {
+                        if (!document.body.contains(countdownEl)) {
+                            clearInterval(interval);
+                            return;
+                        }
+                        const now = new Date();
+                        const diff = deadline - now;
+                        if (diff <= 0) {
+                            countdownEl.innerHTML = '<span style="color:#ef4444;">Expired</span>';
+                            clearInterval(interval);
+                            return;
+                        }
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (86400000)) / (3600000));
+                        const minutes = Math.floor((diff % 3600000) / 60000);
+                        const seconds = Math.floor((diff % 60000) / 1000);
+                        countdownEl.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                    }, 1000);
+                }
+
+                // ----- UPLOAD BUTTON SIMULATION -----
+                const uploadBtn = document.getElementById('uploadBtn');
+                if (uploadBtn) {
+                    uploadBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const originalHTML = this.innerHTML;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+                        this.disabled = true;
+                        setTimeout(() => {
+                            this.innerHTML = originalHTML;
+                            this.disabled = false;
+                            showAlert('Failed to upload. Please paste your work instead.', 'error');
+                        }, 2000);
+                    });
+                }
+            } catch (e) {
+                showAlert('Error preparing form', 'error');
+            }
+        }
 
         function updateWordCount() { /* unchanged */ const ta = document.getElementById('workText'); if (!ta) return; const wc = ta.value.trim().split(/\s+/).filter(w => w.length>0).length; const counter = document.getElementById('wordCounter'); if (counter) { counter.textContent = `${wc} / 20 words`; counter.className = 'word-counter' + (wc >= 20 ? ' valid' : ' warning'); ta.classList.toggle('valid', wc >= 20); ta.classList.toggle('invalid', wc < 20); } }
 
