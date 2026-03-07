@@ -15,7 +15,7 @@
     <style>
         /* All existing styles remain the same – only additions for new tabs are minimal and reuse existing classes */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
+        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding-bottom: 80px; } /* Add padding for bottom nav */
         .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
         .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; position: relative; }
         .logo h2 { background: linear-gradient(135deg, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -28,7 +28,7 @@
         .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
         .tab { padding: 0.8rem 1.5rem; border: none; border-radius: 40px; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }
         .tab.active { background: #6366f1; }
-        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 500px; }
+        .content { background: white; border-radius: 2rem; padding: 2rem; min-height: 500px; margin-bottom: 20px; }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th { text-align: left; padding: 1rem; background: #f8fafc; }
         .data-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; }
@@ -191,16 +191,168 @@
         .resource-item { background: #f1f5f9; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
         .resource-item input, .resource-item select { margin-bottom: 0; flex: 1; }
         .resource-controls { display: flex; gap: 0.3rem; }
+
+        /* Bottom Navigation for Mobile */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 1.5rem 1.5rem 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            padding: 0.5rem 0.25rem;
+            z-index: 1000;
+            border-top: 1px solid #e2e8f0;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            padding: 0.3rem 0.2rem;
+            color: #64748b;
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: center;
+            border-radius: 0.5rem;
+        }
+        .bottom-nav-item i {
+            font-size: 1.1rem;
+            color: #94a3b8;
+        }
+        .bottom-nav-item.active {
+            color: #6366f1;
+            background: #6366f110;
+        }
+        .bottom-nav-item.active i {
+            color: #6366f1;
+        }
+        .bottom-nav-item:hover {
+            background: #f1f5f9;
+        }
+
+        /* Mobile menu overlay for more options */
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1999;
+        }
+        .mobile-menu-overlay.active {
+            display: block;
+        }
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 2rem 2rem 0 0;
+            padding: 2rem 1rem;
+            z-index: 2000;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        .mobile-menu.active {
+            transform: translateY(0);
+            display: block;
+        }
+        .mobile-menu-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .mobile-menu-item:hover {
+            background: #f8fafc;
+        }
+        .mobile-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .close-menu {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) { 
             .header { flex-direction: column; gap: 1rem; text-align: center; }
             .user-info-grid { grid-template-columns: 1fr; }
             .referral-actions { flex-direction: column; }
             .action-btn { width: 100%; }
             .notification-dropdown { right: 10px; width: 280px; }
+            .tabs { display: none; } /* Hide desktop tabs on mobile */
+            .bottom-nav { display: flex; } /* Show bottom nav */
+            .content { padding: 1.5rem; min-height: auto; margin-bottom: 70px; }
         }  
     </style>  
 </head>  
 <body>  
+    <!-- Bottom Navigation (Mobile) -->
+    <div class="bottom-nav" id="bottomNav">
+        <div class="bottom-nav-item" onclick="switchTab('users')">
+            <i class="fas fa-users"></i>
+            <span>Users</span>
+        </div>
+        <div class="bottom-nav-item" onclick="switchTab('tasks')">
+            <i class="fas fa-tasks"></i>
+            <span>Tasks</span>
+        </div>
+        <div class="bottom-nav-item" onclick="switchTab('submissions')">
+            <i class="fas fa-file-alt"></i>
+            <span>Submissions</span>
+        </div>
+        <div class="bottom-nav-item" onclick="switchTab('withdrawals')">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Withdrawals</span>
+        </div>
+        <div class="bottom-nav-item" onclick="toggleMobileMenu()">
+            <i class="fas fa-ellipsis-h"></i>
+            <span>More</span>
+        </div>
+    </div>
+
+    <!-- Mobile Menu (More Options) -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="toggleMobileMenu()"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <span>All Sections</span>
+            <i class="fas fa-times close-menu" onclick="toggleMobileMenu()"></i>
+        </div>
+        <div class="mobile-menu-item" onclick="switchTab('users'); toggleMobileMenu()">👥 Users</div>
+        <div class="mobile-menu-item" onclick="switchTab('tasks'); toggleMobileMenu()">📋 Tasks</div>
+        <div class="mobile-menu-item" onclick="switchTab('teams'); toggleMobileMenu()">👥 Team Approvals</div>
+        <div class="mobile-menu-item" onclick="switchTab('submissions'); toggleMobileMenu()">📝 Submissions</div>
+        <div class="mobile-menu-item" onclick="switchTab('withdrawals'); toggleMobileMenu()">💰 Withdrawals</div>
+        <div class="mobile-menu-item" onclick="switchTab('memberships'); toggleMobileMenu()">👑 Memberships</div>
+        <div class="mobile-menu-item" onclick="switchTab('referrals'); toggleMobileMenu()">🤝 Referrals</div>
+        <div class="mobile-menu-item" onclick="switchTab('messages'); toggleMobileMenu()">💬 Messages</div>
+        <div class="mobile-menu-item" onclick="switchTab('transactions'); toggleMobileMenu()">💸 Transactions</div>
+        <div class="mobile-menu-item" onclick="switchTab('training'); toggleMobileMenu()">🎓 Training Center</div>
+        <div class="mobile-menu-item" onclick="switchTab('logins'); toggleMobileMenu()">📊 User Logins</div>
+        <div class="mobile-menu-item" onclick="switchTab('petitions'); toggleMobileMenu()">📢 Petitions</div>
+        <div class="mobile-menu-item" onclick="switchTab('leaderboard'); toggleMobileMenu()">🏆 Leaderboard</div>
+        <div class="mobile-menu-item" onclick="switchTab('faq'); toggleMobileMenu()">❓ FAQ</div>
+        <div class="mobile-menu-item" onclick="switchTab('feedback'); toggleMobileMenu()">⭐ Client Feedback</div>
+        <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
+    </div>
+
     <div class="app-container">  
         <div class="header">  
             <div class="logo">  
@@ -227,6 +379,7 @@
         
         <div class="stats-grid" id="statsGrid"></div>  
       
+        <!-- Desktop Tabs (hidden on mobile) -->
         <div class="tabs">  
             <button class="tab active" data-tab="users">👥 Users</button>  
             <button class="tab" data-tab="tasks">📋 Tasks</button>  
@@ -239,7 +392,9 @@
             <button class="tab" data-tab="transactions">💸 Transactions</button>  
             <button class="tab" data-tab="training">🎓 Training Center</button>  
             <button class="tab" data-tab="logins">📊 User Logins</button>  
-            <!-- NEW TABS for user-facing features -->
+            <!-- NEW PETITIONS TAB -->
+            <button class="tab" data-tab="petitions">📢 Petitions</button>  
+            <!-- Other user-facing feature tabs -->
             <button class="tab" data-tab="leaderboard">🏆 Leaderboard</button>  
             <button class="tab" data-tab="faq">❓ FAQ</button>  
             <button class="tab" data-tab="feedback">⭐ Client Feedback</button>  
@@ -779,12 +934,29 @@
             window.location.href = 'index.html';  
         }  
           
-        // Tab switching function (added new tabs)
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const overlay = document.getElementById('mobileMenuOverlay');
+            const menu = document.getElementById('mobileMenu');
+            overlay.classList.toggle('active');
+            menu.classList.toggle('active');
+        }
+          
+        // Tab switching function (added petitions tab)
         function switchTab(tab) {  
             currentTab = tab;  
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));  
             const activeTab = document.querySelector(`[data-tab="${tab}"]`);  
             if (activeTab) activeTab.classList.add('active');  
+            
+            // Update bottom nav active state
+            document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
+            const bottomMap = {
+                'users': 0, 'tasks': 1, 'submissions': 2, 'withdrawals': 3
+            };
+            if (bottomMap[tab] !== undefined) {
+                document.querySelectorAll('.bottom-nav-item')[bottomMap[tab]].classList.add('active');
+            }
             
             // Show loading indicator
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>';
@@ -801,6 +973,7 @@
                 case 'transactions': loadTransactions(); break;  
                 case 'training': loadTrainingCenter(); break;  
                 case 'logins': loadLoginLogs(); break;  
+                case 'petitions': loadPetitions(); break;  
                 case 'leaderboard': loadLeaderboardManager(); break;  
                 case 'faq': loadFaqManager(); break;  
                 case 'feedback': loadFeedbackManager(); break;  
@@ -3796,7 +3969,7 @@
                     ${messagesHtml || '<p style="text-align: center; padding: 2rem; background: #f8fafc; border-radius: 1rem;">No messages yet</p>'}  
                     
                     ${petitionsHtml ? `
-                        <h4 style="margin: 2rem 0 1rem 0; color: #f59e0b;">Petitions from Frozen Users</h4>
+                        <h4 style="margin: 2rem 0 1rem 0; color: #f59e0b;">Petitions from Users</h4>
                         ${petitionsHtml}
                     ` : ''}
                 `;  
@@ -4385,6 +4558,58 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading transactions: ${error.message}</p><button class="btn btn-primary" onclick="loadTransactions()">Retry</button></div>`;
             }
         }
+
+        // ========== NEW: Petitions Management ==========
+        async function loadPetitions() {
+            try {
+                const snapshot = await db.collection('petitions').orderBy('createdAt', 'desc').get();
+                let html = `
+                    <h3 style="margin-bottom:1.5rem;">📢 Petitions from Users</h3>
+                    <table class="data-table">
+                        <tr><th>User</th><th>Message</th><th>Date</th><th>Response</th><th>Actions</th></tr>
+                `;
+                if (snapshot.empty) {
+                    html += '<tr><td colspan="5" style="text-align:center;">No petitions yet.</td></tr>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const p = doc.data();
+                        const date = p.createdAt ? formatDate(p.createdAt) : 'N/A';
+                        const hasResponse = p.response ? 'Yes' : 'No';
+                        html += `
+                            <tr>
+                                <td>${p.userEmail || p.userName || p.userId}</td>
+                                <td>${p.message.substring(0,50)}...</td>
+                                <td>${date}</td>
+                                <td><span class="badge ${p.response ? 'success' : 'warning'}">${hasResponse}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="viewPetition('${doc.id}', '${p.userId}', '${p.message.replace(/'/g, "\\'")}', '${p.response || ''}')">View</button>
+                                    ${!p.response ? `<button class="btn btn-sm btn-warning" onclick="replyToPetition('${doc.id}', '${p.userId}', '${p.message.replace(/'/g, "\\'")}')">Reply</button>` : ''}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                html += '</table>';
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading petitions:', error);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading petitions: ${error.message}</p><button class="btn btn-primary" onclick="loadPetitions()">Retry</button></div>`;
+            }
+        }
+
+        window.viewPetition = function(petitionId, userId, message, response) {
+            const respHtml = response ? `<p><strong>Response:</strong> ${response}</p>` : '<p>No response yet.</p>';
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Petition Details</h3>
+                <p><strong>User ID:</strong> ${userId}</p>
+                <p><strong>Message:</strong> ${message}</p>
+                ${respHtml}
+                <div style="margin-top:1rem;">
+                    ${!response ? `<button class="btn btn-warning" onclick="replyToPetition('${petitionId}', '${userId}', '${message.replace(/'/g, "\\'")}'); closeModal();">Reply</button>` : ''}
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                </div>
+            `);
+        };
 
         // ========== NEW: Leaderboard Management ==========
         async function loadLeaderboardManager() {
@@ -5236,6 +5461,7 @@
         window.viewUserConversation = viewUserConversation;
         window.replyToPetition = replyToPetition;
         window.sendPetitionReply = sendPetitionReply;
+        window.toggleMobileMenu = toggleMobileMenu;
     </script>  
 </body>  
 </html>
