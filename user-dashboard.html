@@ -883,17 +883,17 @@
         }
 
         function getStatValue(index) { const el = document.querySelector(`.stat-card:nth-child(${index}) .stat-value`); return el ? el.textContent : '0'; }
-        function getSubmissionCount(status) { return '...'; }
-        function getTotalEarned() { return '0.00'; }
+        function getSubmissionCount(status) { return '0'; }
+        function getTotalEarned() { return 0; }
         function getAcceptedCount() { 
             const badge = document.getElementById('desktopSubmitBadge'); 
             return badge && badge.style.display !== 'none' ? badge.textContent : '0'; 
         }
         function getUnreadMessagesCount() { const badge = document.getElementById('unreadMessagesBadge'); return badge && badge.style.display !== 'none' ? badge.textContent : '0'; }
-        function getTotalMessageThreads() { return '...'; }
-        function getWithdrawalCount(status) { return '...'; }
+        function getTotalMessageThreads() { return '0'; }
+        function getWithdrawalCount(status) { return '0'; }
         function getUnreadNotificationsCount() { const badge = document.getElementById('unreadNotifBadge'); return badge && badge.style.display !== 'none' ? badge.textContent : '0'; }
-        function getTotalNotificationsCount() { return '...'; }
+        function getTotalNotificationsCount() { return '0'; }
         function formatJoinDate(ts) { if (!ts) return 'N/A'; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString(); }
         function escapeHtml(unsafe) { if (!unsafe) return unsafe; return unsafe.replace(/[&<>"]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; if (m === '"') return '&quot;'; return m; }); }
         function refreshMirror() { updateMirrorForTab(currentTab); }
@@ -1360,17 +1360,200 @@
 
         async function previewSubmission(taskId) { /* unchanged */ const work = document.getElementById('workText').value; const wc = work.trim().split(/\s+/).filter(w => w.length>0).length; if (wc < 20) { showAlert(`Please provide at least 20 words (current: ${wc})`, 'error'); return; } try { const taskDoc = await db.collection('tasks').doc(taskId).get(); const task = taskDoc.data(); sessionStorage.setItem('pendingSubmission', JSON.stringify({ taskId, work, wc })); showModal(`<div class="modal-content" style="max-width:700px;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); padding:2rem; color:white; border-radius:1rem 1rem 0 0; margin:-2rem -2rem 1.5rem -2rem;"><h3 style="font-size:1.5rem;">Preview Your Submission</h3><p>${escapeHtml(task.title)}</p><div style="display:flex; gap:1rem; margin-top:1rem;"><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward)||0)}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-file-word"></i> ${wc} words</span></div></div><div style="margin-bottom:1.5rem;"><h4><i class="fas fa-pencil-alt" style="color:#6366f1;"></i> Your Work:</h4><div style="background:#f8fafc; padding:1.5rem; border-left:4px solid #6366f1; max-height:300px; overflow-y:auto;">${work.replace(/\n/g,'<br>')}</div></div><div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:1rem; border-radius:0.5rem; margin-bottom:1.5rem;"><i class="fas fa-info-circle" style="color:#f59e0b;"></i> Please review carefully. Once submitted, you cannot edit.</div><div style="display:flex; gap:1rem;"><button class="btn btn-success" onclick="saveSubmission('${taskId}')">Confirm & Submit</button><button class="btn btn-primary" onclick="showSubmitForm('${taskId}', ${JSON.stringify(work)})">Edit</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); } catch (e) { showAlert('Error previewing','error'); } }
 
-        async function saveSubmission(taskId) { /* unchanged */ let work = null; const pending = sessionStorage.getItem('pendingSubmission'); if (pending) { const data = JSON.parse(pending); if (data.taskId === taskId) work = data.work; } if (!work) work = document.getElementById('workText')?.value; if (!work) { showAlert('No work found','error'); return; } const wc = work.trim().split(/\s+/).filter(w => w.length>0).length; if (wc < 20) { showAlert('At least 20 words required','error'); return; } try { const taskDoc = await db.collection('tasks').doc(taskId).get(); if (!taskDoc.exists) { showAlert('Task not found','error'); return; } const task = taskDoc.data(); if (isDeadlinePassed(task.deadline)) { showAlert('Task expired','error'); closeModal(); return; } if (await hasUserSubmitted(taskId)) { showAlert('Already submitted','error'); closeModal(); return; } showModal(`<div class="modal-content" style="text-align:center;"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`); await db.collection('submissions').add({ userId: currentUser.uid, userEmail: currentUser.email, taskId: taskId, taskTitle: task.title || 'Untitled', workText: work, status: 'pending', wordCount: wc, submittedAt: firebase.firestore.FieldValue.serverTimestamp() }); // Remove from acceptedTasks and delete draft
+        // ===== IMPROVED saveSubmission FUNCTION (handles sessionStorage safely) =====
+        async function saveSubmission(taskId) {
+            let work = null;
+
+            // Safely retrieve pending submission from sessionStorage
+            try {
+                const pending = sessionStorage.getItem('pendingSubmission');
+                if (pending) {
+                    const data = JSON.parse(pending);
+                    if (data && data.taskId === taskId) {
+                        work = data.work;
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to parse pending submission from sessionStorage', e);
+                sessionStorage.removeItem('pendingSubmission'); // clear corrupted data
+            }
+
+            // If no pending submission, try to get work from the textarea (should not happen in preview mode)
+            if (!work) {
+                const textarea = document.getElementById('workText');
+                if (textarea) work = textarea.value;
+            }
+
+            if (!work) {
+                showAlert('No work found. Please start again.', 'error');
+                return;
+            }
+
+            const wc = work.trim().split(/\s+/).filter(w => w.length > 0).length;
+            if (wc < 20) {
+                showAlert(`At least 20 words required (current: ${wc})`, 'error');
+                return;
+            }
+
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                if (!taskDoc.exists) {
+                    showAlert('Task not found', 'error');
+                    return;
+                }
+                const task = taskDoc.data();
+
+                if (isDeadlinePassed(task.deadline)) {
+                    showAlert('Task expired', 'error');
+                    closeModal();
+                    return;
+                }
+
+                if (await hasUserSubmitted(taskId)) {
+                    showAlert('You have already submitted this task', 'error');
+                    closeModal();
+                    return;
+                }
+
+                // Show loading spinner
+                showModal(`
+                    <div class="modal-content" style="text-align:center;">
+                        <div class="loading-spinner"></div>
+                        <h3>Submitting...</h3>
+                    </div>
+                `);
+
+                // Save submission to Firestore
+                await db.collection('submissions').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    taskId: taskId,
+                    taskTitle: task.title || 'Untitled',
+                    workText: work,
+                    status: 'pending',
+                    wordCount: wc,
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Remove from acceptedTasks and delete draft
                 await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
                 clearDraft(taskId);
                 sessionStorage.removeItem('pendingSubmission');
-                showModal(`<div class="modal-content" style="text-align:center;"><div class="success-check"><i class="fas fa-check"></i></div><h3 style="color:#10b981;">Success!</h3><p>Your work has been submitted.<br>${wc} words • Pending review</p><button class="btn btn-success" onclick="loadSubmissions()">View My Submissions</button><button class="btn btn-primary" onclick="loadTasks()">Browse More Tasks</button></div>`);
+
+                // Show success
+                showModal(`
+                    <div class="modal-content" style="text-align:center;">
+                        <div class="success-check"><i class="fas fa-check"></i></div>
+                        <h3 style="color:#10b981;">Success!</h3>
+                        <p>Your work has been submitted.<br>${wc} words • Pending review</p>
+                        <button class="btn btn-success" onclick="loadSubmissions()">View My Submissions</button>
+                        <button class="btn btn-primary" onclick="loadTasks()">Browse More Tasks</button>
+                    </div>
+                `);
                 refreshMirror();
-            } catch (e) { console.error('Error saving submission:', e); showAlert('Error saving submission. Please try again.', 'error'); }
+            } catch (e) {
+                console.error('Error saving submission:', e);
+                showAlert('Error saving submission. Please try again.', 'error');
+            }
         }
 
-        // -------------------- SUBMISSIONS (unchanged) --------------------
-        async function loadSubmissions() { /* unchanged */ currentTaskViewed = null; refreshMirror(); document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>'; try { const snap = await db.collection('submissions').where('userId','==',currentUser.uid).get(); let html = '<h3>My Submissions</h3>'; if (snap.empty) html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p></div>'; else { const subs = []; snap.forEach(d => subs.push({ id: d.id, ...d.data() })); subs.sort((a,b) => (b.submittedAt?.seconds||0) - (a.submittedAt?.seconds||0)); html += '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:0.8rem;">'; subs.forEach(s => { const sc = s.status === 'approved' ? 'success' : s.status === 'rejected' ? 'danger' : 'warning'; const date = s.submittedAt?.seconds ? new Date(s.submittedAt.seconds*1000).toLocaleDateString() : 'N/A'; html += `<div class="submission-card" style="padding:1rem;"><div style="display:flex; justify-content:space-between;"><h4 style="font-size:0.9rem;">${escapeHtml(s.taskTitle||'Untitled')}</h4><span class="badge ${sc}">${s.status}</span></div><p style="color:#64748b; font-size:0.75rem;">${escapeHtml((s.workText||'').substring(0,60))}...</p><div style="display:flex; gap:0.5rem; font-size:0.7rem; color:#64748b;"><span><i class="far fa-calendar"></i> ${date}</span>${s.earned ? `<span><i class="fas fa-dollar-sign"></i> ${formatBoth(s.earned)}</span>` : ''}${s.wordCount ? `<span><i class="fas fa-file-word"></i> ${s.wordCount} words</span>` : ''}</div>${s.review ? `<p style="background:#f1f5f9; padding:0.3rem; border-radius:0.3rem; font-size:0.7rem;"><strong>Feedback:</strong> ${escapeHtml(s.review)}</p>` : ''}</div>`; }); html += '</div>'; } document.getElementById('content').innerHTML = html; } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadSubmissions()">Retry</button></div>`; } }
+        // -------------------- SUBMISSIONS (CORRECTED) --------------------
+        async function loadSubmissions() {
+            currentTaskViewed = null;
+            refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>';
+            
+            try {
+                const snap = await db.collection('submissions')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('submittedAt', 'desc')
+                    .get();
+                
+                let html = '<h3>📝 My Submissions</h3>';
+                
+                if (snap.empty) {
+                    html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse Tasks</button></div>';
+                } else {
+                    const submissions = [];
+                    snap.forEach(doc => submissions.push({ id: doc.id, ...doc.data() }));
+                    
+                    html += '<div class="submissions-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem;">';
+                    
+                    submissions.forEach(sub => {
+                        const statusClass = sub.status === 'approved' ? 'success' : 
+                                          sub.status === 'rejected' ? 'danger' : 'warning';
+                        const date = sub.submittedAt?.toDate ? 
+                            sub.submittedAt.toDate().toLocaleDateString() : 'N/A';
+                        const earned = sub.earned ? formatBoth(sub.earned) : '';
+                        
+                        html += `
+                            <div class="submission-card" style="background:white; border-radius:1rem; padding:1.2rem; border:1px solid #e2e8f0;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                                    <h4 style="font-size:1rem; font-weight:700; color:#0f172a;">${escapeHtml(sub.taskTitle || 'Untitled')}</h4>
+                                    <span class="badge ${statusClass}">${sub.status}</span>
+                                </div>
+                                
+                                <p style="color:#475569; font-size:0.8rem; margin-bottom:0.5rem; line-height:1.5;">
+                                    ${escapeHtml((sub.workText || '').substring(0, 100))}${(sub.workText || '').length > 100 ? '...' : ''}
+                                </p>
+                                
+                                <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; font-size:0.7rem; color:#64748b;">
+                                    <span><i class="far fa-calendar"></i> ${date}</span>
+                                    ${sub.wordCount ? `<span><i class="fas fa-file-word"></i> ${sub.wordCount} words</span>` : ''}
+                                    ${earned ? `<span><i class="fas fa-dollar-sign"></i> ${earned}</span>` : ''}
+                                </div>
+                                
+                                ${sub.review ? `
+                                    <div style="background:#f1f5f9; padding:0.8rem; border-radius:0.5rem; margin-top:0.5rem;">
+                                        <strong style="font-size:0.7rem; color:#475569;">Feedback:</strong>
+                                        <p style="font-size:0.75rem; margin-top:0.2rem;">${escapeHtml(sub.review)}</p>
+                                    </div>
+                                ` : ''}
+                                
+                                ${sub.status === 'pending' ? `
+                                    <div style="margin-top:0.8rem;">
+                                        <button class="btn btn-warning" onclick="cancelSubmission('${sub.id}')" style="width:100%;">
+                                            <i class="fas fa-times"></i> Cancel Submission
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                }
+                
+                document.getElementById('content').innerHTML = html;
+                
+            } catch (e) {
+                console.error('Error loading submissions:', e);
+                document.getElementById('content').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
+                        <h4>Failed to Load Submissions</h4>
+                        <p>${e.message}</p>
+                        <button class="btn btn-primary" onclick="loadSubmissions()">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Add cancel submission function
+        async function cancelSubmission(submissionId) {
+            if (!confirm('Are you sure you want to cancel this submission? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                await db.collection('submissions').doc(submissionId).delete();
+                showAlert('Submission cancelled successfully', 'success');
+                loadSubmissions(); // Refresh the list
+            } catch (e) {
+                console.error('Error cancelling submission:', e);
+                showAlert('Failed to cancel submission', 'error');
+            }
+        }
 
         // -------------------- PENDING SUBMISSIONS (new) --------------------
         async function loadPendingSubmissions() {
