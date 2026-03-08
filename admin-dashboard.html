@@ -1799,7 +1799,7 @@
                                 ` : ''}
                                   
                                 <div class="flex-row" style="margin:1rem 0;">  
-                                    <input type="number" class="submission-score" placeholder="Score (0-100)" min="0" max="100" style="width:120px;">  
+                                    <input type="number" class="submission-score" placeholder="Score (10-100)" min="10" max="100" style="width:120px;">  
                                     <textarea class="submission-review" placeholder="Feedback (required)" style="flex:1;"></textarea>  
                                 </div>  
                                 <div class="flex-row">  
@@ -1823,8 +1823,8 @@
             const score = parseInt(submissionCard.querySelector('.submission-score')?.value || 0);  
             const review = submissionCard.querySelector('.submission-review')?.value || '';  
               
-            if (approved && (!score || score < 0 || score > 100)) {  
-                showAlert('Please enter a valid score between 0 and 100', 'error');  
+            if (approved && (!score || score < 10 || score > 100)) {  
+                showAlert('Please enter a valid score between 10 and 100', 'error');  
                 return;  
             }  
               
@@ -1842,7 +1842,8 @@
             let earned = 0;  
             let status = approved ? 'approved' : 'rejected';  
             
-            const THRESHOLD = 30;
+            // UPDATED: Threshold changed from 30 to 10
+            const THRESHOLD = 10;
               
             if (approved && score >= THRESHOLD) {  
                 earned = (task.reward * score) / 100;  
