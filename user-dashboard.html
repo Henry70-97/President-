@@ -420,6 +420,35 @@
             outline: none;
         }
 
+        /* Transactions table */
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .transactions-table th {
+            text-align: left;
+            padding: 0.75rem;
+            background: #f1f5f9;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .transactions-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .transactions-table tr:hover {
+            background: #f8fafc;
+        }
+        .tx-amount.positive {
+            color: #10b981;
+            font-weight: 700;
+        }
+        .tx-amount.negative {
+            color: #ef4444;
+            font-weight: 700;
+        }
+
         @media (max-width: 768px) {
             .tabs { display: none; }
             .hamburger-menu { display: block; }
@@ -436,6 +465,8 @@
             .wallet-badge { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
             .header { padding: 0.6rem; }
             .logo h2 { font-size: 1rem; }
+            .transactions-table td, .transactions-table th { padding: 0.5rem; }
+            .transactions-table { font-size: 0.7rem; }
         }
 
         @media (max-width: 480px) {
@@ -449,6 +480,7 @@
             .action-buttons { flex-direction: column; }
             .filter-row { flex-direction: column; }
             .filter-group { width: 100%; }
+            .transactions-table { font-size: 0.65rem; }
         }
 
         .withdrawal-section { background: linear-gradient(145deg, #ffffff, #f8fafc); border-radius: 1.5rem; padding: 1.2rem; margin-top: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
@@ -575,9 +607,9 @@
             <i class="fas fa-tasks"></i>
             <span>Tasks</span>
         </div>
-        <div class="bottom-nav-item" onclick="switchTab('training')">
-            <i class="fas fa-graduation-cap"></i>
-            <span>Training</span>
+        <div class="bottom-nav-item" onclick="switchTab('transactions')">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Transactions</span>
         </div>
         <div class="bottom-nav-item" onclick="switchTab('submissions')">
             <i class="fas fa-file-alt"></i>
@@ -587,15 +619,14 @@
             <i class="fas fa-money-bill-wave"></i>
             <span>Withdraw</span>
         </div>
-        <div class="bottom-nav-item" onclick="switchTab('submit')">
-            <i class="fas fa-paper-plane"></i>
-            <span>Submit</span>
-            <span id="bottomSubmitBadge" class="submit-badge" style="display:none;">0</span>
-        </div>
         <div class="bottom-nav-item" onclick="switchTab('messages')">
             <i class="fas fa-envelope"></i>
             <span>Messages</span>
             <span id="bottomMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.1rem 0.3rem; font-size:0.5rem; margin-left:0;">0</span>
+        </div>
+        <div class="bottom-nav-item" onclick="toggleMobileMenu()">
+            <i class="fas fa-ellipsis-h"></i>
+            <span>More</span>
         </div>
     </div>
 
@@ -630,6 +661,7 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('feedback')"><i class="fas fa-star"></i><span>Client Feedback</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('earnings')"><i class="fas fa-chart-line"></i><span>Earnings Graph</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('transactions')"><i class="fas fa-exchange-alt"></i><span>Transactions</span></div>
         <div class="mobile-nav-item" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t', '_blank')" style="color: #25D366;">
             <i class="fab fa-whatsapp"></i><span>Join WhatsApp Group</span>
         </div>
@@ -701,6 +733,7 @@
             <button class="tab" onclick="switchTab('messages')">💬 Messages<span id="unreadMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span></button>
             <button class="tab" onclick="switchTab('notifications')">🔔 Notifications<span id="unreadNotifBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span></button>
             <!-- NEW TABS -->
+            <button class="tab" onclick="switchTab('transactions')">💸 Transactions</button>
             <button class="tab" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
             <button class="tab" onclick="switchTab('faq')">❓ FAQ</button>
             <button class="tab" onclick="switchTab('feedback')">⭐ Client Feedback</button>
@@ -925,6 +958,9 @@
                         </div>
                     `;
                     break;
+                case 'transactions':
+                    html = `<div class="mirror-tab-header">💸 Transactions</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>All your financial activity</span></div></div>`;
+                    break;
                 case 'leaderboard':
                     html = `<div class="mirror-tab-header">🏆 Leaderboard</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Top performers</span><span>Check rankings</span></div></div>`;
                     break;
@@ -992,10 +1028,9 @@
                 if (item.textContent.toLowerCase().includes(tab) || 
                     (tab === 'withdrawals' && item.textContent.includes('Withdraw')) ||
                     (tab === 'tasks' && item.textContent.includes('Tasks')) ||
-                    (tab === 'training' && item.textContent.includes('Training')) ||
+                    (tab === 'transactions' && item.textContent.includes('Transactions')) ||
                     (tab === 'submissions' && item.textContent.includes('Submissions')) ||
-                    (tab === 'messages' && item.textContent.includes('Messages')) ||
-                    (tab === 'submit' && item.textContent.includes('Submit'))) {
+                    (tab === 'messages' && item.textContent.includes('Messages'))) {
                     item.classList.add('active');
                 }
             });
@@ -1033,6 +1068,9 @@
                     break;
                 case 'profile':
                     loadProfile();
+                    break;
+                case 'transactions':
+                    loadTransactions();
                     break;
                 case 'leaderboard':
                     loadLeaderboard();
@@ -2413,6 +2451,52 @@
         function getPackageByType(type) { return (membershipPackages && membershipPackages[type]) || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic; }
         function getWelcomeBonus(type) { return (type === MEMBERSHIP_TYPES.ELITE) ? (getPackageByType(type).welcomeBonus || 10) : 0; }
         function generateReferralCode(uid) { return uid.substring(0,8).toUpperCase(); }
+
+        // ==================== TRANSACTIONS SECTION (NEW) ====================
+        async function loadTransactions() {
+            currentTaskViewed = null; refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading transactions...</p></div>';
+            try {
+                const snap = await db.collection('transactions')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                let html = '<h3>💸 Transaction History</h3>';
+                if (snap.empty) {
+                    html += '<div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No transactions yet.</p></div>';
+                } else {
+                    html += '<table class="transactions-table"><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr>';
+                    snap.forEach(doc => {
+                        const tx = doc.data();
+                        const date = tx.createdAt ? formatDate(tx.createdAt) : 'N/A';
+                        const type = tx.type || 'other';
+                        const description = tx.description || '';
+                        const amount = tx.amount || 0;
+                        const amountClass = amount >= 0 ? 'positive' : 'negative';
+                        const amountStr = (amount >= 0 ? '+' : '') + formatBoth(amount);
+                        html += `<tr>
+                            <td>${date}</td>
+                            <td><span class="badge primary">${type.replace(/_/g, ' ')}</span></td>
+                            <td>${escapeHtml(description)}</td>
+                            <td class="tx-amount ${amountClass}">${amountStr}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                }
+                document.getElementById('content').innerHTML = html;
+            } catch (e) {
+                console.error('Error loading transactions:', e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadTransactions()">Retry</button></div>`;
+            }
+        }
+
+        // Helper to format Firestore timestamp
+        function formatDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
 
         // ==================== NEW FUNCTIONS (leaderboard, faq, feedback, earnings) ====================
         async function loadLeaderboard() {
