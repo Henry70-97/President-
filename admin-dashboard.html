@@ -1259,7 +1259,7 @@
             }  
         }  
           
-        // ========== Tasks with Collaboration fields ==========
+        // ========== Tasks with Collaboration fields and PROJECT category added ==========
         async function loadTasks() { 
             try {
                 const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get(); 
@@ -1359,6 +1359,7 @@
                     <option value="design">Design</option>  
                     <option value="development">Development</option>  
                     <option value="marketing">Marketing</option>  
+                    <option value="project">Project</option>  
                     <option value="other">Other</option>  
                 </select>  
                 <select id="taskDifficulty">  
@@ -1513,6 +1514,7 @@
                     <option value="design" ${data.category === 'design' ? 'selected' : ''}>Design</option>  
                     <option value="development" ${data.category === 'development' ? 'selected' : ''}>Development</option>  
                     <option value="marketing" ${data.category === 'marketing' ? 'selected' : ''}>Marketing</option>  
+                    <option value="project" ${data.category === 'project' ? 'selected' : ''}>Project</option>  
                     <option value="other" ${data.category === 'other' ? 'selected' : ''}>Other</option>  
                 </select>  
                 <select id="editDifficulty">  

@@ -20,6 +20,13 @@
         body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; padding-bottom: 80px; } /* Add padding for bottom nav */
         .app-container { max-width: 1200px; margin: 0 auto; padding: 0.75rem; } /* Reduced padding for mobile */
 
+        /* Logo styling inside header */
+        .logo img {
+            max-height: 40px;
+            width: auto;
+            display: block;
+        }
+
         .news-tv-container { background: #0b0f18; border-radius: 1.5rem; padding: 0.6rem 0.8rem 0.8rem 0.8rem; margin-bottom: 1rem; box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 1px 4px rgba(255,255,255,0.1); border: 1px solid #2d3748; }
         .news-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; padding-left: 0.3rem; flex-wrap: wrap; }
         .live-badge { background: #dc2626; color: white; font-weight: 700; font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 30px; text-transform: uppercase; letter-spacing: 0.5px; animation: pulseLive 1.5s infinite; }
@@ -49,7 +56,7 @@
         @keyframes pulseLive { 0% { opacity: 1; background-color: #b91c1c; } 50% { opacity: 0.85; background-color: #dc2626; } 100% { opacity: 1; background-color: #b91c1c; } }
 
         .header { background: white; border-radius: 1.5rem; padding: 0.8rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .logo img { height: 40px; width: auto; display: block; }
+        .logo h2 { background: linear-gradient(135deg, #6366f1, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
         .user-menu { display: flex; align-items: center; gap: 0.5rem; }
         .wallet-badge { background: #6366f120; padding: 0.4rem 0.8rem; border-radius: 40px; color: #6366f1; font-weight: 700; font-size: 0.9rem; white-space: nowrap; }
         #userName { font-weight: 600; font-size: 0.9rem; color: #1e293b; }
@@ -60,27 +67,6 @@
         .whatsapp-group-btn:hover { background: #128C7E; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3); }
         .whatsapp-group-btn i { font-size: 1rem; }
         .desktop-only { display: inline; }
-
-        /* New refund button style */
-        .refund-btn {
-            background: #f59e0b;
-            color: white;
-            padding: 0.4rem 0.8rem;
-            border-radius: 40px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            cursor: pointer;
-            border: none;
-            font-size: 0.8rem;
-            transition: all 0.3s;
-        }
-        .refund-btn:hover {
-            background: #d97706;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
-        }
 
         /* Bottom Navigation Bar */
         .bottom-nav {
@@ -389,12 +375,57 @@
         .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; }
         .overlay.show { display: block; }
 
+        /* New styles for design/projects features */
+        .iframe-modal .modal-content {
+            padding: 0;
+            height: 80vh;
+            max-height: 600px;
+        }
+        .iframe-modal iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 1rem;
+        }
+        .link-generator-btn {
+            background: #6366f1;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            margin-left: 0.5rem;
+            transition: all 0.3s;
+        }
+        .link-generator-btn:hover {
+            background: #4f52e0;
+            transform: translateY(-2px);
+        }
+        .design-link-input {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+        .design-link-input input {
+            flex: 1;
+            padding: 0.6rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 40px;
+            font-size: 0.85rem;
+        }
+        .design-link-input input:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+
         @media (max-width: 768px) {
             .tabs { display: none; }
             .hamburger-menu { display: block; }
             .desktop-only { display: none; }
-            .whatsapp-group-btn, .refund-btn { padding: 0.4rem; }
-            .whatsapp-group-btn i, .refund-btn i { font-size: 1.2rem; margin: 0; }
+            .whatsapp-group-btn { padding: 0.4rem; }
+            .whatsapp-group-btn i { font-size: 1.2rem; margin: 0; }
             .bottom-nav { display: flex; }
             body { padding-bottom: 70px; }
             .app-container { padding: 0.5rem; }
@@ -404,7 +435,7 @@
             .user-menu #userName { display: none; }
             .wallet-badge { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
             .header { padding: 0.6rem; }
-            .logo img { height: 30px; }
+            .logo h2 { font-size: 1rem; }
         }
 
         @media (max-width: 480px) {
@@ -619,17 +650,13 @@
             </div>
         </div>
 
-        <!-- Header with Logo and Refund Button -->
+        <!-- Header with logo image -->
         <div class="header">
             <div class="hamburger-menu" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></div>
             <div class="logo">
-                <img src="logo.jpg" alt="NextGen Tasks">
+                <img src="logo.jpg" alt="NextGen Hub Logo">
             </div>
             <div class="header-actions">
-                <!-- New Refund Button -->
-                <button class="refund-btn" onclick="requestRefund()" title="Request Refund">
-                    <i class="fas fa-undo-alt"></i><span class="desktop-only"> Refund</span>
-                </button>
                 <button class="whatsapp-group-btn" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t', '_blank')">
                     <i class="fab fa-whatsapp"></i><span class="desktop-only">Join WhatsApp Group</span>
                 </button>
@@ -686,7 +713,7 @@
     </div>
 
     <!-- Modal & Alert -->
-    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
     <div class="modal" id="modal"><div id="modalContent"></div></div>
     <div class="overlay" id="overlay" onclick="hideAlert()"></div>
     <div class="alert-dialog" id="alertDialog">
@@ -696,8 +723,16 @@
         <button onclick="hideAlert()">OK</button>
     </div>
 
+    <!-- Iframe Modal for Link Generator -->
+    <div class="modal-backdrop" id="iframeModalBackdrop" onclick="closeIframeModal()"></div>
+    <div class="modal iframe-modal" id="iframeModal">
+        <div id="iframeModalContent" class="modal-content">
+            <!-- iframe will be inserted here -->
+        </div>
+    </div>
+
     <script>
-        // -------------------- FIREBASE CONFIG --------------------
+        // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
             apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
             authDomain: "nextgen-5fb6f.firebaseapp.com",
@@ -711,9 +746,8 @@
         const db = firebase.firestore();
         db.enablePersistence().catch(console.log);
 
-        // -------------------- CONSTANTS --------------------
+        // ==================== CONSTANTS ====================
         let TRANSACTION_FEE_PERCENT = 3, PLATFORM_FEE_PERCENT = 2, TOTAL_FEE_PERCENT = 5;
-        // UPDATED: Minimum withdrawal changed from 5 to 0.001
         let MIN_WITHDRAWAL = 0.001;
         const MEMBERSHIP_TYPES = { BASIC: 'basic', PREMIUM: 'premium', ELITE: 'elite' };
         const DEFAULT_MEMBERSHIP_PACKAGES = {
@@ -725,7 +759,7 @@
         const REFERRAL_BONUS_REFERRER = 2, REFERRAL_BONUS_REFERRED = 0.5;
         let paymentUrl = "https://lipana.dev/pay/nextgen-membership";
 
-        // -------------------- USD to KSH conversion --------------------
+        // ==================== USD to KSH conversion ====================
         let usdToKshRate = 130; // default, can be overridden from Firestore
         async function loadConversionRate() {
             try {
@@ -742,7 +776,7 @@
             return `$${usd} | KSH ${ksh}`;
         }
 
-        // -------------------- GLOBAL STATE --------------------
+        // ==================== GLOBAL STATE ====================
         let currentUser = null;
         let userData = null;
         let messagesListener = null;
@@ -751,10 +785,9 @@
         let currentTaskViewed = null;
         let currentTab = 'tasks';
         let adminId = null;
-        // listener for accepted tasks count
         let acceptedTasksListener = null;
 
-        // -------------------- FETCH ADMIN ID --------------------
+        // ==================== FETCH ADMIN ID ====================
         async function getAdminId() {
             if (adminId) return adminId;
             try {
@@ -776,12 +809,11 @@
             }
         }
 
-        // -------------------- LOAD WITHDRAWAL SETTINGS (UPDATED) --------------------
+        // ==================== LOAD WITHDRAWAL SETTINGS ====================
         async function loadWithdrawalSettings() {
             try {
                 const doc = await db.collection('settings').doc('withdrawal').get();
                 if (doc.exists) {
-                    // Use value from settings or default to 0.001
                     MIN_WITHDRAWAL = doc.data().minAmount || 0.001;
                 }
             } catch (e) { console.error('Error loading withdrawal settings:', e); }
@@ -801,7 +833,7 @@
             }
         }
 
-        // -------------------- MIRROR FUNCTIONS --------------------
+        // ==================== MIRROR FUNCTIONS ====================
         function updateMirrorWithTask(task) { if (!task) return;
             const mirror = document.getElementById('mirrorContent');
             const deadlineClass = task.deadline ? getDeadlineClass(task.deadline) : '';
@@ -824,7 +856,7 @@
             const mirror = document.getElementById('mirrorContent');
             let html = '';
             switch (tab) {
-                case 'tasks': case 'transcription': case 'design': case 'projects':
+                case 'tasks': case 'design': case 'projects': case 'transcription':
                     html = `
                         <div class="mirror-tab-header">📋 Tasks Dashboard</div>
                         <div class="mirror-stats">
@@ -927,22 +959,21 @@
         function escapeHtml(unsafe) { if (!unsafe) return unsafe; return unsafe.replace(/[&<>"]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; if (m === '"') return '&quot;'; return m; }); }
         function refreshMirror() { updateMirrorForTab(currentTab); }
 
-        // -------------------- MOBILE MENU --------------------
+        // ==================== MOBILE MENU ====================
         function toggleMobileMenu() { document.getElementById('mobileNav').classList.toggle('active'); document.getElementById('mobileNavOverlay').classList.toggle('active'); }
         function closeMobileMenu() { document.getElementById('mobileNav').classList.remove('active'); document.getElementById('mobileNavOverlay').classList.remove('active'); }
         function handleMobileNavClick(tab) { closeMobileMenu(); switchTab(tab); event.currentTarget.classList.add('active'); }
 
-        // -------------------- ALERT & MODAL --------------------
+        // ==================== ALERT & MODAL ====================
         function showAlert(message, type = 'error') { const dlg = document.getElementById('alertDialog'); document.getElementById('overlay').classList.add('show'); dlg.className = 'alert-dialog ' + type; document.getElementById('alertIcon').className = 'fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'); document.getElementById('alertTitle').textContent = type === 'error' ? 'Error!' : 'Success!'; document.getElementById('alertMessage').textContent = message; dlg.classList.add('show'); if (type === 'success') setTimeout(hideAlert, 3000); }
         function hideAlert() { document.getElementById('alertDialog').classList.remove('show'); document.getElementById('overlay').classList.remove('show'); }
         function showModal(html) { document.getElementById('modalContent').innerHTML = html; document.getElementById('modal').classList.add('active'); document.getElementById('modalBackdrop').classList.add('active'); }
         function closeModal() { document.getElementById('modal').classList.remove('active'); document.getElementById('modalBackdrop').classList.remove('active'); if (currentTaskViewed) { currentTaskViewed = null; refreshMirror(); } }
-        document.getElementById('modalBackdrop').addEventListener('click', closeModal);
 
-        // -------------------- LOGOUT --------------------
+        // ==================== LOGOUT ====================
         function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); auth.signOut(); window.location.href = 'index.html'; }
 
-        // -------------------- TAB SWITCHING --------------------
+        // ==================== TAB SWITCHING (MODIFIED) ====================
         function switchTab(tab) {
             currentTab = tab;
             currentTaskViewed = null;
@@ -955,7 +986,7 @@
             document.querySelectorAll('.mobile-nav-item').forEach(i => {
                 if ((i.textContent || '').toLowerCase().includes(tab)) i.classList.add('active');
             });
-            // Update bottom nav active state
+            // Update bottom nav
             document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
             document.querySelectorAll('.bottom-nav-item').forEach(item => {
                 if (item.textContent.toLowerCase().includes(tab) || 
@@ -968,187 +999,124 @@
                     item.classList.add('active');
                 }
             });
+
             switch (tab) {
-                case 'tasks': loadTasks(); break;
-                case 'transcription': case 'design': case 'projects': showNotQualifiedDialog(tab); break;
-                case 'training': loadTrainings(); break;
-                case 'submissions': loadSubmissions(); break;
-                case 'withdrawals': loadWithdrawals(); break;
-                case 'submit': loadPendingSubmissions(); break;
-                case 'messages': loadMessages(); break;
-                case 'notifications': loadNotificationsPage(); break;
-                case 'profile': loadProfile(); break;
-                // NEW TABS
-                case 'leaderboard': loadLeaderboard(); break;
-                case 'faq': loadFaq(); break;
-                case 'feedback': loadClientFeedback(); break;
-                case 'earnings': loadEarningsGraph(); break;
-                default: loadTasks();
+                case 'tasks':
+                    loadTasks();
+                    break;
+                case 'transcription':
+                    showNotQualifiedDialog(tab);
+                    break;
+                case 'design':
+                    showCheckingQualification('design');
+                    break;
+                case 'projects':
+                    showCheckingQualification('projects');
+                    break;
+                case 'training':
+                    loadTrainings();
+                    break;
+                case 'submissions':
+                    loadSubmissions();
+                    break;
+                case 'withdrawals':
+                    loadWithdrawals();
+                    break;
+                case 'submit':
+                    loadPendingSubmissions();
+                    break;
+                case 'messages':
+                    loadMessages();
+                    break;
+                case 'notifications':
+                    loadNotificationsPage();
+                    break;
+                case 'profile':
+                    loadProfile();
+                    break;
+                case 'leaderboard':
+                    loadLeaderboard();
+                    break;
+                case 'faq':
+                    loadFaq();
+                    break;
+                case 'feedback':
+                    loadClientFeedback();
+                    break;
+                case 'earnings':
+                    loadEarningsGraph();
+                    break;
+                default:
+                    loadTasks();
             }
         }
 
-        // -------------------- NOT QUALIFIED DIALOG --------------------
-        function showNotQualifiedDialog(section) { showModal(`<div class="modal-content" style="text-align:center;"><div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div><h3 style="color:#ef4444;">Access Restricted</h3><p>You don't qualify for <strong>${section}</strong>.</p><div style="background:#f1f5f9; padding:1rem; border-radius:1rem; margin:1rem 0;"><p>This section requires specific qualifications. Contact admin.</p></div><div style="display:flex; gap:1rem; justify-content:center;"><button class="btn btn-primary" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t','_blank')"><i class="fab fa-whatsapp"></i> Contact Admin</button><button class="btn btn-secondary" onclick="closeModal()">Close</button></div></div>`); }
+        // ==================== NEW: CHECKING QUALIFICATION ====================
+        function showCheckingQualification(category) {
+            showModal(`
+                <div class="modal-content" style="text-align:center;">
+                    <div class="loading-spinner"></div>
+                    <h3>Checking qualifications...</h3>
+                    <p>Verifying your Elite membership status</p>
+                </div>
+            `);
+            setTimeout(() => {
+                closeModal();
+                loadTasksByCategory(category);
+            }, 1500);
+        }
 
-        // -------------------- HELPER FUNCTIONS --------------------
-        function isDeadlinePassed(deadline) { if (!deadline) return false; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); return new Date() > d; }
-        function formatDeadline(deadline) { if (!deadline) return 'No deadline'; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); const diff = d - new Date(); if (diff < 0) return 'Expired'; const days = Math.ceil(diff / (1000*60*60*24)); if (days > 7) return d.toLocaleDateString(); if (days > 1) return `${days} days left`; if (days === 1) return '1 day left'; return `${Math.ceil(diff / (1000*60*60))} hours left`; }
-        function getDeadlineClass(deadline) { if (!deadline) return ''; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); const diff = d - new Date(); if (diff < 0) return 'expired'; if (diff < 24*60*60*1000) return 'urgent'; return 'upcoming'; }
-
-        // -------------------- AUTH STATE --------------------
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) { window.location.href = 'index.html'; return; }
-            const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
-            if (!user.emailVerified && !isGoogle) { window.location.href = 'index.html'; return; }
+        async function loadTasksByCategory(category) {
+            currentTaskViewed = null;
+            refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
             try {
-                const doc = await db.collection('users').doc(user.uid).get();
-                if (!doc.exists) {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const referralCode = urlParams.get('ref');
-                    let referredBy = null;
-                    if (referralCode) {
-                        const usersSnapshot = await db.collection('users').get();
-                        for (const u of usersSnapshot.docs) {
-                            if (generateReferralCode(u.id) === referralCode) {
-                                referredBy = u.id;
-                                break;
-                            }
-                        }
-                    }
-                    await db.collection('users').doc(user.uid).set({
-                        email: user.email,
-                        displayName: user.displayName || 'User',
-                        phone: '',
-                        role: 'user',
-                        wallet: 0,
-                        active: true,
-                        verified: user.emailVerified || isGoogle,
-                        frozen: false,
-                        membershipType: MEMBERSHIP_TYPES.BASIC,
-                        membershipPaid: false,
-                        membershipStatus: 'active',
-                        membershipExpiry: null,
-                        totalFeesPaid: 0,
-                        unreadMessages: 0,
-                        referredBy: referredBy,
-                        totalReferrals: 0,
-                        referralEarnings: 0,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    if (referredBy) {
-                        await db.collection('referrals').add({
-                            referrerId: referredBy,
-                            referredId: user.uid,
-                            referredEmail: user.email,
-                            status: 'pending',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                    const newDoc = await db.collection('users').doc(user.uid).get();
-                    userData = { id: user.uid, ...newDoc.data() };
-                } else {
-                    userData = { id: user.uid, ...doc.data() };
-                    if (userData.frozen === undefined) {
-                        await db.collection('users').doc(user.uid).update({ frozen: false });
-                        userData.frozen = false;
-                    }
-                    const welcomeBonus = getWelcomeBonus(MEMBERSHIP_TYPES.ELITE);
-                    if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
-                        await db.collection('users').doc(user.uid).update({
-                            wallet: firebase.firestore.FieldValue.increment(welcomeBonus),
-                            eliteBonusApplied: true
-                        });
-                        userData.wallet = (userData.wallet || 0) + welcomeBonus;
-                    }
+                const snap = await db.collection('tasks')
+                    .where('category', '==', category)
+                    .where('active', '==', true)
+                    .get();
+                if (snap.empty) {
+                    document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-tasks"></i><h4>No ${category} tasks available</h4></div>`;
+                    return;
                 }
-                if (userData.active === false) { await auth.signOut(); window.location.href = 'index.html'; return; }
-                currentUser = user;
-                document.getElementById('userName').textContent = userData.displayName;
-                updateWalletDisplay();
-
-                // Record login
-                try {
-                    await db.collection('userLogins').add({
-                        userId: currentUser.uid,
-                        userName: userData.displayName,
-                        userEmail: userData.email,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        ip: null
-                    });
-                } catch (loginError) { console.warn('Failed to record login:', loginError); }
-
-                await loadConversionRate(); // load USD/KSH rate
-                await loadFeeSettings(); 
-                await loadMembershipPackages();
-                await loadWithdrawalSettings(); // This now loads MIN_WITHDRAWAL (0.001 default)
-                await loadPaymentSettings();
-                setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
-                setupAcceptedTasksListener(); // listen to accepted tasks count
-                loadDashboard();
-                refreshMirror();
-            } catch (error) {
-                console.error('Auth error:', error);
-                showAlert('Error loading user data: ' + error.message, 'error');
+                allTasks = [];
+                snap.forEach(doc => allTasks.push({ id: doc.id, ...doc.data() }));
+                await Promise.all(allTasks.map(async t => {
+                    if (t.acceptedCount === undefined) t.acceptedCount = 0;
+                    const acceptSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').where('userId', '==', currentUser.uid).get();
+                    t.userAccepted = !acceptSnap.empty;
+                    if (t.collaborable) {
+                        const teamSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').get();
+                        t.team = teamSnap.docs.map(d => d.data().userName || d.data().userEmail || 'User');
+                    }
+                }));
+                filteredTasks = [...allTasks];
+                renderTasks();
+            } catch (e) {
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadTasksByCategory('${category}')">Retry</button></div>`;
             }
-        });
-
-        function updateWalletDisplay() {
-            document.getElementById('walletDisplay').textContent = formatBoth(userData?.wallet || 0);
         }
 
-        // -------------------- LISTENERS --------------------
-        function setupMessageCounter() { if (messagesListener) messagesListener(); messagesListener = db.collection('messages').where('recipientId','==',currentUser.uid).where('fromAdmin','==',true).where('read','==',false).onSnapshot(snap => { const cnt = snap.size; ['unreadMessagesBadge','mobileMessagesBadge','bottomMessagesBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = cnt; el.style.display = cnt ? 'inline' : 'none'; } }); db.collection('users').doc(currentUser.uid).update({ unreadMessages: cnt }).catch(console.log); refreshMirror(); }, err => { console.error('Message counter error:', err); setTimeout(setupMessageCounter,5000); }); }
-        function setupWalletListener() { db.collection('users').doc(currentUser.uid).onSnapshot(doc => { if (doc.exists) { userData.wallet = doc.data().wallet || 0; updateWalletDisplay(); refreshMirror(); } }, console.error); }
-        function setupNotificationsListener() { if (notificationsListener) notificationsListener(); notificationsListener = db.collection('notifications').where('userId','==',currentUser.uid).onSnapshot(snap => { const unread = snap.docs.filter(d => !d.data().read).length; ['notificationBadge','unreadNotifBadge','mobileNotifBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = unread; el.style.display = unread ? 'inline' : 'none'; } }); if (notificationsPanelVisible) { const recent = snap.docs.slice(0,20); renderNotificationsPanel(recent); } refreshMirror(); }, console.error); }
-
-        // Listener for accepted tasks count (for Submit badges)
-        function setupAcceptedTasksListener() {
-            if (acceptedTasksListener) acceptedTasksListener();
-            acceptedTasksListener = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').onSnapshot(snap => {
-                const count = snap.size;
-                ['desktopSubmitBadge', 'mobileSubmitBadge', 'bottomSubmitBadge'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.textContent = count;
-                        el.style.display = count ? 'inline' : 'none';
-                    }
-                });
-                refreshMirror();
-            }, console.error);
+        // ==================== LINK GENERATOR IFRAME ====================
+        function openLinkGenerator() {
+            const iframeContent = `
+                <iframe src="https://www.linkgenerator.com/" title="Link Generator"></iframe>
+                <div style="text-align:center; padding:0.5rem;">
+                    <button class="btn btn-secondary" onclick="closeIframeModal()">Close</button>
+                </div>
+            `;
+            document.getElementById('iframeModalContent').innerHTML = iframeContent;
+            document.getElementById('iframeModal').classList.add('active');
+            document.getElementById('iframeModalBackdrop').classList.add('active');
         }
 
-        // -------------------- LOAD DASHBOARD --------------------
-        async function loadDashboard() {
-            try {
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                userData.wallet = userDoc.data().wallet || 0;
-                const pendingSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','pending').get();
-                const approvedSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','approved').get();
-                const rejectedSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','rejected').get();
-                
-                const totalSubmissions = pendingSnap.size + approvedSnap.size + rejectedSnap.size;
-                let activityRate = '0%';
-                if (totalSubmissions > 0) {
-                    activityRate = Math.round((approvedSnap.size / totalSubmissions) * 100) + '%';
-                }
-                userData.activityRate = activityRate;
-
-                // Productivity score: simple formula: (approved * 10) + (wallet * 2) - (rejected * 5)
-                const productivityScore = (approvedSnap.size * 10) + (userData.wallet * 2) - (rejectedSnap.size * 5);
-                userData.productivityScore = Math.max(0, Math.round(productivityScore));
-                
-                document.getElementById('statsGrid').innerHTML = `
-                    <div class="stat-card"><i class="fas fa-wallet"></i><div class="stat-value">${formatBoth(userData.wallet)}</div><div class="stat-label">Balance</div></div>
-                    <div class="stat-card"><i class="fas fa-clock"></i><div class="stat-value">${pendingSnap.size}</div><div class="stat-label">Pending</div></div>
-                    <div class="stat-card"><i class="fas fa-check-circle"></i><div class="stat-value">${approvedSnap.size}</div><div class="stat-label">Approved</div></div>
-                    <div class="stat-card"><i class="fas fa-chart-line"></i><div class="stat-value">${activityRate}</div><div class="stat-label">Activity Rate</div></div>
-                    <div class="stat-card"><i class="fas fa-star"></i><div class="stat-value">${userData.productivityScore}</div><div class="stat-label">Productivity</div></div>
-                `;
-                switchTab('tasks');
-            } catch (e) { console.error('Dashboard error:', e); switchTab('tasks'); }
+        function closeIframeModal() {
+            document.getElementById('iframeModal').classList.remove('active');
+            document.getElementById('iframeModalBackdrop').classList.remove('active');
+            document.getElementById('iframeModalContent').innerHTML = '';
         }
 
-        // -------------------- TASKS --------------------
+        // ==================== TASKS ====================
         let allTasks = [], filteredTasks = [], currentFilters = { category:'all', deadline:'all', amount:'all', difficulty:'all', sortBy:'newest' };
         async function loadTasks() {
             currentTaskViewed = null; refreshMirror();
@@ -1162,7 +1130,6 @@
                     if (t.acceptedCount === undefined) t.acceptedCount = 0;
                     const acceptSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').where('userId', '==', currentUser.uid).get();
                     t.userAccepted = !acceptSnap.empty;
-                    // For collaborable tasks, fetch team list
                     if (t.collaborable) {
                         const teamSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').get();
                         t.team = teamSnap.docs.map(d => d.data().userName || d.data().userEmail || 'User');
@@ -1181,7 +1148,6 @@
                 for (let t of filteredTasks) {
                     const submitted = await hasUserSubmitted(t.id);
                     const expired = isDeadlinePassed(t.deadline);
-                    // For collaborable tasks, allow more than 2 (set maxCollaborators from task or default 5)
                     const maxCollab = t.collaborable ? (t.maxCollaborators || 5) : 2;
                     const acceptDisabled = t.userAccepted || (t.acceptedCount >= maxCollab) || expired;
                     let acceptButton;
@@ -1227,39 +1193,47 @@
 
         async function hasUserSubmitted(taskId) { const snap = await db.collection('submissions').where('userId','==',currentUser.uid).where('taskId','==',taskId).get(); return !snap.empty; }
 
-        // ===== acceptTask FUNCTION =====
+        // ==================== acceptTask (MODIFIED with Elite check) ====================
         async function acceptTask(taskId) {
             try {
-                // First, check if user has already accepted this task
                 const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
                 const acceptDoc = await acceptRef.get();
-                
                 if (acceptDoc.exists) {
                     showAlert('You have already accepted this task.', 'error');
                     return;
                 }
 
-                // Get the task document
                 const taskRef = db.collection('tasks').doc(taskId);
                 const taskDoc = await taskRef.get();
-                
                 if (!taskDoc.exists) {
                     showAlert('Task not found', 'error');
                     return;
                 }
-                
                 const task = taskDoc.data();
-                
-                // Check if task is full
+
+                // --- Elite check for design/projects ---
+                if (task.category === 'design' || task.category === 'projects') {
+                    if (!userData || userData.membershipType !== MEMBERSHIP_TYPES.ELITE) {
+                        showModal(`
+                            <div class="modal-content" style="text-align:center;">
+                                <div class="error-icon"><i class="fas fa-crown"></i></div>
+                                <h3 style="color:#f59e0b;">Elite Membership Required</h3>
+                                <p>This task is only available to Elite members.</p>
+                                <button class="btn btn-warning" onclick="showMembershipOptions()">Upgrade to Elite</button>
+                                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                            </div>
+                        `);
+                        return;
+                    }
+                }
+
                 const maxCollab = task.collaborable ? (task.maxCollaborators || 5) : 2;
                 const currentAccepted = task.acceptedCount || 0;
-                
                 if (currentAccepted >= maxCollab) {
                     showAlert(`This task is already full (${currentAccepted}/${maxCollab}).`, 'error');
                     return;
                 }
 
-                // Show loading state
                 showModal(`
                     <div class="modal-content" style="text-align:center;">
                         <div class="loading-spinner"></div>
@@ -1267,42 +1241,27 @@
                     </div>
                 `);
 
-                // Use a transaction to ensure data consistency
                 await db.runTransaction(async (transaction) => {
-                    // Get fresh data within transaction
                     const taskDocTrans = await transaction.get(taskRef);
                     if (!taskDocTrans.exists) throw new Error('Task not found');
-                    
                     const taskData = taskDocTrans.data();
                     const currentCount = taskData.acceptedCount || 0;
-                    
-                    // Double-check capacity within transaction
                     const maxAllowed = taskData.collaborable ? (taskData.maxCollaborators || 5) : 2;
                     if (currentCount >= maxAllowed) {
                         throw new Error(`Task is full (${currentCount}/${maxAllowed})`);
                     }
-                    
-                    // Check if user already accepted (within transaction)
                     const userAcceptRef = taskRef.collection('taskAccepts').doc(currentUser.uid);
                     const userAcceptDoc = await transaction.get(userAcceptRef);
                     if (userAcceptDoc.exists) {
                         throw new Error('You have already accepted this task');
                     }
-                    
-                    // Update task accepted count
-                    transaction.update(taskRef, { 
-                        acceptedCount: firebase.firestore.FieldValue.increment(1) 
-                    });
-                    
-                    // Add user to taskAccepts subcollection
+                    transaction.update(taskRef, { acceptedCount: firebase.firestore.FieldValue.increment(1) });
                     transaction.set(userAcceptRef, {
                         userId: currentUser.uid,
                         userEmail: currentUser.email,
                         userName: userData.displayName,
                         acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    
-                    // Add to user's acceptedTasks subcollection
                     const userAcceptedRef = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId);
                     transaction.set(userAcceptedRef, {
                         taskId: taskId,
@@ -1316,19 +1275,16 @@
 
                 closeModal();
                 showAlert('Task accepted successfully! You can now submit your work.', 'success');
-                
-                // Refresh the current view
-                if (currentTab === 'tasks') {
-                    loadTasks();
+                if (currentTab === 'tasks' || currentTab === 'design' || currentTab === 'projects') {
+                    if (currentTab === 'design') loadTasksByCategory('design');
+                    else if (currentTab === 'projects') loadTasksByCategory('projects');
+                    else loadTasks();
                 } else if (currentTab === 'submit') {
                     loadPendingSubmissions();
                 }
-                
-                // Show the submission form
                 setTimeout(() => {
                     showSubmitForm(taskId);
                 }, 1000);
-                
             } catch (error) {
                 console.error('Accept error:', error);
                 closeModal();
@@ -1338,7 +1294,7 @@
 
         async function viewTaskDetails(taskId) { try { const doc = await db.collection('tasks').doc(taskId).get(); if (!doc.exists) { showAlert('Task not found','error'); return; } const task = { id: taskId, ...doc.data() }; currentTaskViewed = task; refreshMirror(); showModal(`<div class="pdf-document"><div class="pdf-header"><div><h2>Task Details</h2></div><span class="pdf-badge">#${taskId.substring(0,8)}</span></div><div class="pdf-content"><div class="pdf-title">${escapeHtml(task.title)}</div><div class="pdf-grid"><div class="pdf-grid-item"><span class="pdf-grid-label">Client</span><span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span></div><div class="pdf-grid-item"><span class="pdf-grid-label">Reward</span><span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> ${formatBoth(parseFloat(task.reward)||0)}</span></div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div><div class="pdf-section-content">${escapeHtml(task.description||'No description')}</div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div><div class="pdf-section-content">${escapeHtml(task.instructions||'No instructions')}</div></div><div class="pdf-actions"><button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button><button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button></div></div></div>`); } catch (e) { showAlert('Error loading task details','error'); } }
 
-        // ===== showSubmitForm FUNCTION =====
+        // ==================== showSubmitForm (MODIFIED with design link) ====================
         async function showSubmitForm(taskId, existingWork = '') {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -1353,10 +1309,24 @@
                 }
                 sessionStorage.removeItem('pendingSubmission');
                 const deadline = task.deadline ? task.deadline.toDate() : null;
-                // Load draft from localStorage if exists
                 const draftKey = `draft_${taskId}`;
                 const savedDraft = localStorage.getItem(draftKey) || '';
                 const workToShow = savedDraft || existingWork;
+
+                let extraFieldsHtml = '';
+                if (task.category === 'design' || task.category === 'projects') {
+                    extraFieldsHtml = `
+                        <div style="margin-top:1rem;">
+                            <label style="font-weight:600; color:#0f172a;">Design Link (optional)</label>
+                            <div class="design-link-input">
+                                <input type="url" id="designLink" placeholder="https://..." value="${localStorage.getItem(`link_${taskId}`) || ''}">
+                                <button type="button" class="link-generator-btn" onclick="openLinkGenerator()">Generate Link</button>
+                            </div>
+                            <p style="font-size:0.7rem; color:#64748b; margin-top:0.2rem;">If you don't have a link, use the generator above.</p>
+                        </div>
+                    `;
+                }
+
                 showModal(`
                     <div class="modal-content" style="padding:0; overflow:hidden; max-width:800px;">
                         <div class="smart-submission">
@@ -1380,6 +1350,7 @@
                                         <span class="word-counter" id="wordCounter">0 / 20 words</span>
                                     </div>
                                     <textarea id="workText" class="smart-textarea" placeholder="Paste your work here..." oninput="updateWordCount(); saveDraft('${taskId}', this.value)">${escapeHtml(workToShow)}</textarea>
+                                    ${extraFieldsHtml}
                                     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                                         <button id="uploadBtn" class="btn btn-secondary" style="flex:1;"><i class="fas fa-upload"></i> Upload File</button>
                                         <button class="btn btn-preview" onclick="previewSubmission('${taskId}')" style="flex:1;"><i class="fas fa-eye"></i> Preview</button>
@@ -1394,7 +1365,13 @@
                 `);
                 setTimeout(updateWordCount, 100);
 
-                // ----- LIVE COUNTDOWN -----
+                const linkInput = document.getElementById('designLink');
+                if (linkInput) {
+                    linkInput.addEventListener('input', () => {
+                        localStorage.setItem(`link_${taskId}`, linkInput.value);
+                    });
+                }
+
                 if (deadline) {
                     const countdownEl = document.getElementById('countdownTimer');
                     const interval = setInterval(() => {
@@ -1417,7 +1394,6 @@
                     }, 1000);
                 }
 
-                // ----- UPLOAD BUTTON SIMULATION -----
                 const uploadBtn = document.getElementById('uploadBtn');
                 if (uploadBtn) {
                     uploadBtn.addEventListener('click', function(e) {
@@ -1437,7 +1413,6 @@
             }
         }
 
-        // Draft functions
         function saveDraft(taskId, text) {
             localStorage.setItem(`draft_${taskId}`, text);
         }
@@ -1447,27 +1422,41 @@
 
         function updateWordCount() { const ta = document.getElementById('workText'); if (!ta) return; const wc = ta.value.trim().split(/\s+/).filter(w => w.length>0).length; const counter = document.getElementById('wordCounter'); if (counter) { counter.textContent = `${wc} / 20 words`; counter.className = 'word-counter' + (wc >= 20 ? ' valid' : ' warning'); ta.classList.toggle('valid', wc >= 20); ta.classList.toggle('invalid', wc < 20); } }
 
-        async function previewSubmission(taskId) { const work = document.getElementById('workText').value; const wc = work.trim().split(/\s+/).filter(w => w.length>0).length; if (wc < 20) { showAlert(`Please provide at least 20 words (current: ${wc})`, 'error'); return; } try { const taskDoc = await db.collection('tasks').doc(taskId).get(); const task = taskDoc.data(); sessionStorage.setItem('pendingSubmission', JSON.stringify({ taskId, work, wc })); showModal(`<div class="modal-content" style="max-width:700px;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); padding:2rem; color:white; border-radius:1rem 1rem 0 0; margin:-2rem -2rem 1.5rem -2rem;"><h3 style="font-size:1.5rem;">Preview Your Submission</h3><p>${escapeHtml(task.title)}</p><div style="display:flex; gap:1rem; margin-top:1rem;"><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward)||0)}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-file-word"></i> ${wc} words</span></div></div><div style="margin-bottom:1.5rem;"><h4><i class="fas fa-pencil-alt" style="color:#6366f1;"></i> Your Work:</h4><div style="background:#f8fafc; padding:1.5rem; border-left:4px solid #6366f1; max-height:300px; overflow-y:auto;">${work.replace(/\n/g,'<br>')}</div></div><div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:1rem; border-radius:0.5rem; margin-bottom:1.5rem;"><i class="fas fa-info-circle" style="color:#f59e0b;"></i> Please review carefully. Once submitted, you cannot edit.</div><div style="display:flex; gap:1rem;"><button class="btn btn-success" onclick="saveSubmission('${taskId}')">Confirm & Submit</button><button class="btn btn-primary" onclick="showSubmitForm('${taskId}', ${JSON.stringify(work)})">Edit</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); } catch (e) { showAlert('Error previewing','error'); } }
+        async function previewSubmission(taskId) {
+            const work = document.getElementById('workText').value;
+            const wc = work.trim().split(/\s+/).filter(w => w.length>0).length;
+            if (wc < 20) {
+                showAlert(`Please provide at least 20 words (current: ${wc})`, 'error');
+                return;
+            }
+            const designLink = document.getElementById('designLink') ? document.getElementById('designLink').value : '';
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                const task = taskDoc.data();
+                sessionStorage.setItem('pendingSubmission', JSON.stringify({ taskId, work, wc, designLink }));
+                showModal(`<div class="modal-content" style="max-width:700px;"><div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); padding:2rem; color:white; border-radius:1rem 1rem 0 0; margin:-2rem -2rem 1.5rem -2rem;"><h3 style="font-size:1.5rem;">Preview Your Submission</h3><p>${escapeHtml(task.title)}</p><div style="display:flex; gap:1rem; margin-top:1rem;"><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward)||0)}</span><span style="background:rgba(255,255,255,0.2); padding:0.3rem 1rem; border-radius:40px;"><i class="fas fa-file-word"></i> ${wc} words</span></div></div><div style="margin-bottom:1.5rem;"><h4><i class="fas fa-pencil-alt" style="color:#6366f1;"></i> Your Work:</h4><div style="background:#f8fafc; padding:1.5rem; border-left:4px solid #6366f1; max-height:300px; overflow-y:auto;">${work.replace(/\n/g,'<br>')}</div></div>${designLink ? `<div style="margin-bottom:1.5rem;"><h4><i class="fas fa-link" style="color:#6366f1;"></i> Design Link:</h4><div style="background:#f8fafc; padding:0.8rem; border-left:4px solid #10b981;">${escapeHtml(designLink)}</div></div>` : ''}<div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:1rem; border-radius:0.5rem; margin-bottom:1.5rem;"><i class="fas fa-info-circle" style="color:#f59e0b;"></i> Please review carefully. Once submitted, you cannot edit.</div><div style="display:flex; gap:1rem;"><button class="btn btn-success" onclick="saveSubmission('${taskId}')">Confirm & Submit</button><button class="btn btn-primary" onclick="showSubmitForm('${taskId}', ${JSON.stringify(work)})">Edit</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`);
+            } catch (e) {
+                showAlert('Error previewing','error');
+            }
+        }
 
-        // ===== UPDATED saveSubmission FUNCTION (with productivity score message) =====
+        // ==================== saveSubmission (MODIFIED to include designLink) ====================
         async function saveSubmission(taskId) {
-            let work = null;
-
-            // Safely retrieve pending submission from sessionStorage
+            let work = null, designLink = null;
             try {
                 const pending = sessionStorage.getItem('pendingSubmission');
                 if (pending) {
                     const data = JSON.parse(pending);
                     if (data && data.taskId === taskId) {
                         work = data.work;
+                        designLink = data.designLink || null;
                     }
                 }
             } catch (e) {
                 console.warn('Failed to parse pending submission from sessionStorage', e);
-                sessionStorage.removeItem('pendingSubmission'); // clear corrupted data
+                sessionStorage.removeItem('pendingSubmission');
             }
 
-            // If no pending submission, try to get work from the textarea (should not happen in preview mode)
             if (!work) {
                 const textarea = document.getElementById('workText');
                 if (textarea) work = textarea.value;
@@ -1504,7 +1493,6 @@
                     return;
                 }
 
-                // Show loading spinner
                 showModal(`
                     <div class="modal-content" style="text-align:center;">
                         <div class="loading-spinner"></div>
@@ -1512,24 +1500,22 @@
                     </div>
                 `);
 
-                // Save submission to Firestore
                 await db.collection('submissions').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     taskId: taskId,
                     taskTitle: task.title || 'Untitled',
                     workText: work,
+                    designLink: designLink,  // new field
                     status: 'pending',
                     wordCount: wc,
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Remove from acceptedTasks and delete draft
                 await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
                 clearDraft(taskId);
                 sessionStorage.removeItem('pendingSubmission');
 
-                // Show success with productivity score message
                 showModal(`
                     <div class="modal-content" style="text-align:center;">
                         <div class="success-check"><i class="fas fa-check"></i></div>
@@ -1558,42 +1544,40 @@
             }
         }
 
-        // -------------------- SUBMISSIONS --------------------
+        // ==================== SUBMISSIONS ====================
         async function loadSubmissions() {
             currentTaskViewed = null;
             refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>';
-            
+
             try {
-                // Fetch WITHOUT orderBy - this doesn't require an index
                 const snap = await db.collection('submissions')
                     .where('userId', '==', currentUser.uid)
                     .get();
-                
+
                 let html = '<h3>📝 My Submissions</h3>';
-                
+
                 if (snap.empty) {
                     html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse Tasks</button></div>';
                 } else {
                     const submissions = [];
                     snap.forEach(doc => submissions.push({ id: doc.id, ...doc.data() }));
-                    
-                    // Sort in JavaScript by submittedAt (descending - newest first)
+
                     submissions.sort((a, b) => {
                         const timeA = a.submittedAt?.seconds || 0;
                         const timeB = b.submittedAt?.seconds || 0;
-                        return timeB - timeA; // Descending order
+                        return timeB - timeA;
                     });
-                    
+
                     html += '<div class="submissions-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem;">';
-                    
+
                     submissions.forEach(sub => {
                         const statusClass = sub.status === 'approved' ? 'success' : 
                                           sub.status === 'rejected' ? 'danger' : 'warning';
                         const date = sub.submittedAt?.toDate ? 
                             sub.submittedAt.toDate().toLocaleDateString() : 'N/A';
                         const earned = sub.earned ? formatBoth(sub.earned) : '';
-                        
+
                         html += `
                             <div class="submission-card" style="background:white; border-radius:1rem; padding:1.2rem; border:1px solid #e2e8f0;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
@@ -1608,6 +1592,7 @@
                                 <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; font-size:0.7rem; color:#64748b;">
                                     <span><i class="far fa-calendar"></i> ${date}</span>
                                     ${sub.wordCount ? `<span><i class="fas fa-file-word"></i> ${sub.wordCount} words</span>` : ''}
+                                    ${sub.designLink ? `<span><i class="fas fa-link"></i> <a href="${sub.designLink}" target="_blank">Link</a></span>` : ''}
                                     ${earned ? `<span><i class="fas fa-dollar-sign"></i> ${earned}</span>` : ''}
                                 </div>
                                 
@@ -1628,12 +1613,12 @@
                             </div>
                         `;
                     });
-                    
+
                     html += '</div>';
                 }
-                
+
                 document.getElementById('content').innerHTML = html;
-                
+
             } catch (e) {
                 console.error('Error loading submissions:', e);
                 document.getElementById('content').innerHTML = `
@@ -1647,23 +1632,21 @@
             }
         }
 
-        // Cancel submission function
         async function cancelSubmission(submissionId) {
             if (!confirm('Are you sure you want to cancel this submission? This action cannot be undone.')) {
                 return;
             }
-            
             try {
                 await db.collection('submissions').doc(submissionId).delete();
                 showAlert('Submission cancelled successfully', 'success');
-                loadSubmissions(); // Refresh the list
+                loadSubmissions();
             } catch (e) {
                 console.error('Error cancelling submission:', e);
                 showAlert('Failed to cancel submission', 'error');
             }
         }
 
-        // -------------------- PENDING SUBMISSIONS --------------------
+        // ==================== PENDING SUBMISSIONS ====================
         async function loadPendingSubmissions() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading pending submissions...</p></div>';
@@ -1698,7 +1681,7 @@
             }
         }
 
-        // -------------------- WITHDRAWALS (UPDATED with 0.001 minimum) --------------------
+        // ==================== WITHDRAWALS ====================
         async function loadWithdrawals() { 
             currentTaskViewed = null; refreshMirror(); 
             try { 
@@ -1714,7 +1697,6 @@
                 } else if (!canWithdraw) { 
                     ws = `<div class="withdrawal-section"><p>You need a premium membership to withdraw.</p><button class="btn btn-primary" onclick="simulateWithdrawalAttempt()">Initiate Withdrawal</button></div>`; 
                 } else { 
-                    // UPDATED: Show minimum withdrawal as 0.001 with 3 decimal places
                     ws = `<div class="withdrawal-section">
                         <h4><i class="fas fa-money-bill-wave"></i> Withdraw Funds</h4>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
@@ -1766,7 +1748,6 @@
             } 
         }
 
-        // sendPetition function
         async function sendPetition() {
             const message = document.getElementById('petitionMessage')?.value;
             if (!message || message.trim() === '') {
@@ -1794,18 +1775,14 @@
         function showUpgradePrompt() { showModal(`<div class="modal-content"><i class="fas fa-exclamation-circle" style="font-size:4rem; color:#ef4444;"></i><h3>Withdrawal Failed</h3><p>You need a premium membership.</p><button class="btn btn-success" onclick="showMembershipOptions()">Upgrade Now</button><button class="btn btn-secondary" onclick="closeModal()">Later</button></div>`); }
         function updateFeeBreakdown(maxBal) { const amt = parseFloat(document.getElementById('withdrawAmount')?.value) || 0; const fb = document.getElementById('feeBreakdown'); if (amt <= 0) { fb.style.display = 'none'; return; } const tf = amt * (TRANSACTION_FEE_PERCENT/100); const pf = amt * (PLATFORM_FEE_PERCENT/100); const net = amt - tf - pf; fb.innerHTML = `<h4>Fee Breakdown</h4><div class="fee-row"><span>Amount:</span><span>${formatBoth(amt)}</span></div><div class="fee-row"><span>Transaction Fee (${TRANSACTION_FEE_PERCENT}%):</span><span>-${formatBoth(tf)}</span></div><div class="fee-row"><span>Platform Fee (${PLATFORM_FEE_PERCENT}%):</span><span>-${formatBoth(pf)}</span></div><div class="fee-row total"><span>You Receive:</span><span>${formatBoth(net)}</span></div>`; fb.style.display = 'block'; }
 
-        // UPDATED requestWithdrawal – with 0.001 minimum
         async function requestWithdrawal() {
             const amt = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             const phone = document.getElementById('withdrawPhone').value;
-            
-            // Check minimum withdrawal (using 0.001)
             if (!amt || amt < MIN_WITHDRAWAL) {
                 showAlert(`Minimum withdrawal is $${MIN_WITHDRAWAL.toFixed(3)}`, 'error');
                 return;
             }
-            // Prevent new request if a pending withdrawal exists
             const pendingSnap = await db.collection('withdrawals')
                 .where('userId', '==', currentUser.uid)
                 .where('status', '==', 'pending')
@@ -1814,22 +1791,15 @@
                 showAlert('You have a pending withdrawal request. Please wait until it is processed.', 'error');
                 return;
             }
-
             try {
                 await db.runTransaction(async (transaction) => {
                     const userRef = db.collection('users').doc(currentUser.uid);
                     const userDoc = await transaction.get(userRef);
                     if (!userDoc.exists) throw new Error('User not found');
                     const bal = userDoc.data().wallet || 0;
-                    
-                    // Validate amount
                     if (amt < MIN_WITHDRAWAL) throw new Error(`Minimum withdrawal is $${MIN_WITHDRAWAL.toFixed(3)}`);
                     if (amt > bal) throw new Error('Insufficient balance');
-
-                    // Deduct amount immediately
                     transaction.update(userRef, { wallet: firebase.firestore.FieldValue.increment(-amt) });
-
-                    // Create withdrawal record with fees
                     const withdrawalRef = db.collection('withdrawals').doc();
                     transaction.set(withdrawalRef, {
                         userId: currentUser.uid,
@@ -1845,14 +1815,14 @@
                     });
                 });
                 showAlert('Withdrawal requested! Amount deducted from your wallet.', 'success');
-                loadWithdrawals(); // Refresh the withdrawals tab
+                loadWithdrawals();
             } catch (e) {
                 console.error('Withdrawal error:', e);
                 showAlert(e.message || 'Error requesting withdrawal', 'error');
             }
         }
 
-        // -------------------- MEMBERSHIP OPTIONS --------------------
+        // ==================== MEMBERSHIP OPTIONS ====================
         function showMembershipOptions() {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
             showModal(`<div class="modal-content" style="text-align:center;">
@@ -1881,7 +1851,6 @@
             </div>`);
         }
 
-        // submitPaymentVerification function
         async function submitPaymentVerification() {
             const txCode = document.getElementById('transactionCode')?.value;
             const amount = parseFloat(document.getElementById('paymentAmount')?.value);
@@ -1920,7 +1889,7 @@
             }
         }
 
-        // -------------------- TRAINING CENTER --------------------
+        // ==================== TRAINING CENTER ====================
         async function loadTrainings() { 
             currentTaskViewed = null; refreshMirror(); 
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>'; 
@@ -2048,7 +2017,7 @@
             }
         }
 
-        // -------------------- MESSAGES --------------------
+        // ==================== MESSAGES ====================
         async function loadMessages() { 
             currentTaskViewed = null; refreshMirror(); 
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>'; 
@@ -2125,28 +2094,6 @@
             }
         }
 
-        // New function for refund request: open message compose with subject pre-filled
-        function showRefundCompose() {
-            showModal(`
-                <div class="modal-content message-compose-modal">
-                    <h3 style="margin-bottom:1rem;">Request Refund</h3>
-                    <input type="text" id="messageSubject" class="smart-input" value="Refund Request" readonly>
-                    <textarea id="messageContent" class="smart-textarea" placeholder="Please explain why you need a refund..."></textarea>
-                    <div class="action-buttons">
-                        <button class="btn btn-success" onclick="sendMessage()"><i class="fas fa-paper-plane"></i> Send Refund Request</button>
-                        <button class="btn btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button>
-                    </div>
-                </div>
-            `);
-        }
-
-        // Refund request handler: go to messages and open compose modal
-        function requestRefund() {
-            switchTab('messages');
-            // Small delay to ensure messages tab content is loaded
-            setTimeout(showRefundCompose, 300);
-        }
-
         async function sendReply(threadId) {
             if (!currentUser) { showAlert('You must be logged in','error'); return; }
             const reply = document.getElementById('replyMessage')?.value;
@@ -2200,7 +2147,7 @@
             } 
         }
 
-        // -------------------- NOTIFICATIONS --------------------
+        // ==================== NOTIFICATIONS ====================
         function toggleNotificationsPanel() { 
             const panel = document.getElementById('notificationsPanel'); 
             notificationsPanelVisible = !notificationsPanelVisible; 
@@ -2357,25 +2304,22 @@
         function viewAllNotifications() { switchTab('notifications'); }
         document.addEventListener('click', (e) => { const panel = document.getElementById('notificationsPanel'); const bell = document.querySelector('.notification-bell'); if (notificationsPanelVisible && panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) { panel.classList.remove('active'); notificationsPanelVisible = false; } });
 
-        // -------------------- PROFILE --------------------
+        // ==================== PROFILE ====================
         function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p></div>`; }
         async function updateProfile() { const name = document.getElementById('profileName').value; const phone = document.getElementById('profilePhone').value; if (!name) { showAlert('Name is required','error'); return; } await db.collection('users').doc(currentUser.uid).update({ displayName: name, phone: phone||'' }); userData.displayName = name; document.getElementById('userName').textContent = name; showAlert('Profile updated!','success'); refreshMirror(); }
 
-        // -------------------- LOAD FEE & MEMBERSHIP --------------------
+        // ==================== LOAD FEE & MEMBERSHIP ====================
         async function loadFeeSettings() { try { const doc = await db.collection('settings').doc('feeSettings').get(); if (doc.exists) { const fd = doc.data(); TRANSACTION_FEE_PERCENT = fd.transactionFeePercent || 3; PLATFORM_FEE_PERCENT = fd.platformFeePercent || 2; TOTAL_FEE_PERCENT = TRANSACTION_FEE_PERCENT + PLATFORM_FEE_PERCENT; } } catch (e) { console.error('Fee settings error:', e); } }
         async function loadMembershipPackages() { try { const doc = await db.collection('settings').doc('membershipPackages').get(); membershipPackages = doc.exists ? doc.data() : DEFAULT_MEMBERSHIP_PACKAGES; } catch (e) { membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES; } }
         function getPackageByType(type) { return (membershipPackages && membershipPackages[type]) || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic; }
         function getWelcomeBonus(type) { return (type === MEMBERSHIP_TYPES.ELITE) ? (getPackageByType(type).welcomeBonus || 10) : 0; }
         function generateReferralCode(uid) { return uid.substring(0,8).toUpperCase(); }
 
-        // -------------------- NEW FUNCTIONS FOR ADDED FEATURES --------------------
-
-        // Leaderboard
+        // ==================== NEW FUNCTIONS (leaderboard, faq, feedback, earnings) ====================
         async function loadLeaderboard() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading leaderboard...</p></div>';
             try {
-                // Try to get admin-defined leaderboard first
                 const leaderboardSnap = await db.collection('leaderboard').orderBy('rank', 'asc').get();
                 if (!leaderboardSnap.empty) {
                     let html = '<h3>🏆 Leaderboard (Admin curated)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th></tr>';
@@ -2386,7 +2330,6 @@
                     html += '</table>';
                     document.getElementById('content').innerHTML = html;
                 } else {
-                    // Fallback: compute from users (wallet + approved submissions)
                     const usersSnap = await db.collection('users').get();
                     const leaderboard = [];
                     for (const doc of usersSnap.docs) {
@@ -2408,7 +2351,6 @@
             }
         }
 
-        // FAQ
         async function loadFaq() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading FAQ...</p></div>';
@@ -2429,7 +2371,6 @@
             }
         }
 
-        // Client Feedback
         async function loadClientFeedback() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading client feedback...</p></div>';
@@ -2451,7 +2392,6 @@
             }
         }
 
-        // Earnings Graph
         async function loadEarningsGraph() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading earnings graph...</p></div>';
@@ -2459,7 +2399,6 @@
                 const submissionsSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','approved').get();
                 const withdrawalsSnap = await db.collection('withdrawals').where('userId','==',currentUser.uid).where('status','==','paid').get();
 
-                // Aggregate earnings by date (last 30 days)
                 const earningsByDate = new Map();
                 const today = new Date();
                 for (let i = 29; i >= 0; i--) {
@@ -2484,7 +2423,7 @@
                     if (wd.requestedAt && wd.amount) {
                         const date = wd.requestedAt.toDate().toISOString().split('T')[0];
                         if (earningsByDate.has(date)) {
-                            earningsByDate.set(date, earningsByDate.get(date) - wd.amount); // subtract withdrawals
+                            earningsByDate.set(date, earningsByDate.get(date) - wd.amount);
                         }
                     }
                 });
@@ -2523,6 +2462,160 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
             }
         }
+
+        // ==================== AUTH STATE LISTENER ====================
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'index.html'; return; }
+            const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+            if (!user.emailVerified && !isGoogle) { window.location.href = 'index.html'; return; }
+            try {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (!doc.exists) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const referralCode = urlParams.get('ref');
+                    let referredBy = null;
+                    if (referralCode) {
+                        const usersSnapshot = await db.collection('users').get();
+                        for (const u of usersSnapshot.docs) {
+                            if (generateReferralCode(u.id) === referralCode) {
+                                referredBy = u.id;
+                                break;
+                            }
+                        }
+                    }
+                    await db.collection('users').doc(user.uid).set({
+                        email: user.email,
+                        displayName: user.displayName || 'User',
+                        phone: '',
+                        role: 'user',
+                        wallet: 0,
+                        active: true,
+                        verified: user.emailVerified || isGoogle,
+                        frozen: false,
+                        membershipType: MEMBERSHIP_TYPES.BASIC,
+                        membershipPaid: false,
+                        membershipStatus: 'active',
+                        membershipExpiry: null,
+                        totalFeesPaid: 0,
+                        unreadMessages: 0,
+                        referredBy: referredBy,
+                        totalReferrals: 0,
+                        referralEarnings: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    if (referredBy) {
+                        await db.collection('referrals').add({
+                            referrerId: referredBy,
+                            referredId: user.uid,
+                            referredEmail: user.email,
+                            status: 'pending',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                    const newDoc = await db.collection('users').doc(user.uid).get();
+                    userData = { id: user.uid, ...newDoc.data() };
+                } else {
+                    userData = { id: user.uid, ...doc.data() };
+                    if (userData.frozen === undefined) {
+                        await db.collection('users').doc(user.uid).update({ frozen: false });
+                        userData.frozen = false;
+                    }
+                    const welcomeBonus = getWelcomeBonus(MEMBERSHIP_TYPES.ELITE);
+                    if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
+                        await db.collection('users').doc(user.uid).update({
+                            wallet: firebase.firestore.FieldValue.increment(welcomeBonus),
+                            eliteBonusApplied: true
+                        });
+                        userData.wallet = (userData.wallet || 0) + welcomeBonus;
+                    }
+                }
+                if (userData.active === false) { await auth.signOut(); window.location.href = 'index.html'; return; }
+                currentUser = user;
+                document.getElementById('userName').textContent = userData.displayName;
+                updateWalletDisplay();
+
+                try {
+                    await db.collection('userLogins').add({
+                        userId: currentUser.uid,
+                        userName: userData.displayName,
+                        userEmail: userData.email,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        ip: null
+                    });
+                } catch (loginError) { console.warn('Failed to record login:', loginError); }
+
+                await loadConversionRate();
+                await loadFeeSettings(); 
+                await loadMembershipPackages();
+                await loadWithdrawalSettings();
+                await loadPaymentSettings();
+                setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
+                setupAcceptedTasksListener();
+                loadDashboard();
+                refreshMirror();
+            } catch (error) {
+                console.error('Auth error:', error);
+                showAlert('Error loading user data: ' + error.message, 'error');
+            }
+        });
+
+        function updateWalletDisplay() {
+            document.getElementById('walletDisplay').textContent = formatBoth(userData?.wallet || 0);
+        }
+
+        function setupMessageCounter() { if (messagesListener) messagesListener(); messagesListener = db.collection('messages').where('recipientId','==',currentUser.uid).where('fromAdmin','==',true).where('read','==',false).onSnapshot(snap => { const cnt = snap.size; ['unreadMessagesBadge','mobileMessagesBadge','bottomMessagesBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = cnt; el.style.display = cnt ? 'inline' : 'none'; } }); db.collection('users').doc(currentUser.uid).update({ unreadMessages: cnt }).catch(console.log); refreshMirror(); }, err => { console.error('Message counter error:', err); setTimeout(setupMessageCounter,5000); }); }
+        function setupWalletListener() { db.collection('users').doc(currentUser.uid).onSnapshot(doc => { if (doc.exists) { userData.wallet = doc.data().wallet || 0; updateWalletDisplay(); refreshMirror(); } }, console.error); }
+        function setupNotificationsListener() { if (notificationsListener) notificationsListener(); notificationsListener = db.collection('notifications').where('userId','==',currentUser.uid).onSnapshot(snap => { const unread = snap.docs.filter(d => !d.data().read).length; ['notificationBadge','unreadNotifBadge','mobileNotifBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = unread; el.style.display = unread ? 'inline' : 'none'; } }); if (notificationsPanelVisible) { const recent = snap.docs.slice(0,20); renderNotificationsPanel(recent); } refreshMirror(); }, console.error); }
+        function setupAcceptedTasksListener() {
+            if (acceptedTasksListener) acceptedTasksListener();
+            acceptedTasksListener = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').onSnapshot(snap => {
+                const count = snap.size;
+                ['desktopSubmitBadge', 'mobileSubmitBadge', 'bottomSubmitBadge'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = count;
+                        el.style.display = count ? 'inline' : 'none';
+                    }
+                });
+                refreshMirror();
+            }, console.error);
+        }
+
+        async function loadDashboard() {
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                userData.wallet = userDoc.data().wallet || 0;
+                const pendingSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','pending').get();
+                const approvedSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','approved').get();
+                const rejectedSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','rejected').get();
+
+                const totalSubmissions = pendingSnap.size + approvedSnap.size + rejectedSnap.size;
+                let activityRate = '0%';
+                if (totalSubmissions > 0) {
+                    activityRate = Math.round((approvedSnap.size / totalSubmissions) * 100) + '%';
+                }
+                userData.activityRate = activityRate;
+
+                const productivityScore = (approvedSnap.size * 10) + (userData.wallet * 2) - (rejectedSnap.size * 5);
+                userData.productivityScore = Math.max(0, Math.round(productivityScore));
+
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card"><i class="fas fa-wallet"></i><div class="stat-value">${formatBoth(userData.wallet)}</div><div class="stat-label">Balance</div></div>
+                    <div class="stat-card"><i class="fas fa-clock"></i><div class="stat-value">${pendingSnap.size}</div><div class="stat-label">Pending</div></div>
+                    <div class="stat-card"><i class="fas fa-check-circle"></i><div class="stat-value">${approvedSnap.size}</div><div class="stat-label">Approved</div></div>
+                    <div class="stat-card"><i class="fas fa-chart-line"></i><div class="stat-value">${activityRate}</div><div class="stat-label">Activity Rate</div></div>
+                    <div class="stat-card"><i class="fas fa-star"></i><div class="stat-value">${userData.productivityScore}</div><div class="stat-label">Productivity</div></div>
+                `;
+                switchTab('tasks');
+            } catch (e) { console.error('Dashboard error:', e); switchTab('tasks'); }
+        }
+
+        // ==================== NOT QUALIFIED DIALOG ====================
+        function showNotQualifiedDialog(section) { showModal(`<div class="modal-content" style="text-align:center;"><div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div><h3 style="color:#ef4444;">Access Restricted</h3><p>You don't qualify for <strong>${section}</strong>.</p><div style="background:#f1f5f9; padding:1rem; border-radius:1rem; margin:1rem 0;"><p>This section requires specific qualifications. Contact admin.</p></div><div style="display:flex; gap:1rem; justify-content:center;"><button class="btn btn-primary" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t','_blank')"><i class="fab fa-whatsapp"></i> Contact Admin</button><button class="btn btn-secondary" onclick="closeModal()">Close</button></div></div>`); }
+
+        function isDeadlinePassed(deadline) { if (!deadline) return false; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); return new Date() > d; }
+        function formatDeadline(deadline) { if (!deadline) return 'No deadline'; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); const diff = d - new Date(); if (diff < 0) return 'Expired'; const days = Math.ceil(diff / (1000*60*60*24)); if (days > 7) return d.toLocaleDateString(); if (days > 1) return `${days} days left`; if (days === 1) return '1 day left'; return `${Math.ceil(diff / (1000*60*60))} hours left`; }
+        function getDeadlineClass(deadline) { if (!deadline) return ''; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); const diff = d - new Date(); if (diff < 0) return 'expired'; if (diff < 24*60*60*1000) return 'urgent'; return 'upcoming'; }
     </script>
 </body>
 </html>
