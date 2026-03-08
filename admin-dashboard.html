@@ -1277,7 +1277,7 @@
                         <button class="btn btn-primary" id="createTaskBtn">+ New Task</button> 
                     </div> 
                     <table class="data-table"> 
-                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Status</th><th>Actions</th></tr> 
+                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Audio</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Status</th><th>Actions</th></tr> 
                 `; 
                 
                 for (let i = 0; i < tasks.length; i++) { 
@@ -1296,6 +1296,15 @@
                         }
                     }
                     
+                    // Audio column display
+                    let audioDisplay = '—';
+                    if (task.audioUrl) {
+                        audioDisplay = `<a href="${task.audioUrl}" target="_blank"><i class="fas fa-headphones"></i> Audio</a>`;
+                        if (task.audioDuration) {
+                            audioDisplay += `<br><small>${task.audioDuration}</small>`;
+                        }
+                    }
+                    
                     html += ` 
                         <tr> 
                             <td>${task.title}</td> 
@@ -1306,6 +1315,7 @@
                                 ${deadlineStatus ? `<br><small class="badge ${deadlineStatus.class}">${deadlineStatus.text}</small>` : ''} 
                             </td> 
                             <td>${task.category}</td> 
+                            <td>${audioDisplay}</td>
                             <td>${task.collaborable ? '✅' : '❌'}</td> 
                             <td><span class="badge info">${assignedDisplay}</span></td> 
                             <td><span class="badge primary">${subCount}</span></td> 
@@ -1360,6 +1370,7 @@
                     <option value="development">Development</option>  
                     <option value="marketing">Marketing</option>  
                     <option value="project">Project</option>  
+                    <option value="transcription">Transcription</option>  
                     <option value="other">Other</option>  
                 </select>  
                 <select id="taskDifficulty">  
@@ -1367,6 +1378,13 @@
                     <option value="medium">Medium</option>  
                     <option value="hard">Hard</option>  
                 </select>  
+
+                <!-- Transcription fields (hidden by default) -->
+                <div id="transcriptionFields" style="display:none; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
+                    <h4 style="margin-bottom:0.5rem;">Audio Details</h4>
+                    <input type="url" id="taskAudioUrl" placeholder="Audio File URL (e.g., Dropbox, Google Drive link)">
+                    <input type="text" id="taskAudioDuration" placeholder="Audio Duration (e.g., 5 minutes, 1 hour)">
+                </div>
 
                 <h4 style="margin: 1rem 0 0.5rem;">Collaboration</h4>  
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">  
@@ -1387,6 +1405,12 @@
             document.getElementById('taskCollaborable').addEventListener('change', function(e) {  
                 document.getElementById('maxCollabField').style.display = e.target.checked ? 'block' : 'none';  
             });  
+
+            // Show/hide transcription fields based on category
+            document.getElementById('taskCategory').addEventListener('change', function(e) {
+                const transcriptionDiv = document.getElementById('transcriptionFields');
+                transcriptionDiv.style.display = e.target.value === 'transcription' ? 'block' : 'none';
+            });
         }  
           
         async function createTask() {  
@@ -1402,6 +1426,13 @@
             const assignedTo = document.getElementById('taskAssignedTo').value;  
             const collaborable = document.getElementById('taskCollaborable').checked;  
             const maxCollaborators = collaborable ? parseInt(document.getElementById('taskMaxCollaborators').value) || 5 : 2;  
+            
+            // Transcription fields
+            let audioUrl = null, audioDuration = null;
+            if (category === 'transcription') {
+                audioUrl = document.getElementById('taskAudioUrl').value || null;
+                audioDuration = document.getElementById('taskAudioDuration').value || null;
+            }
               
             if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
                 showAlert('Please fill all required fields', 'error');  
@@ -1426,6 +1457,8 @@
                     assignedTo: assignedTo || 'all',  
                     collaborable,  
                     maxCollaborators,  
+                    audioUrl,          // new field
+                    audioDuration,      // new field
                     acceptedCount: 0,  
                     active: true,  
                     submissionsCount: 0,  
@@ -1490,6 +1523,9 @@
                 userOptions += `<option value="${doc.id}" ${selected}>${user.email} (${user.displayName})</option>`;  
             });  
               
+            // Determine if transcription fields should be visible initially
+            const showTranscription = data.category === 'transcription' ? 'block' : 'none';
+            
             showModal(`  
                 <h3 style="margin-bottom:1rem;">Edit Task</h3>  
                 <input type="text" id="editTitle" value="${data.title}" required>  
@@ -1515,6 +1551,7 @@
                     <option value="development" ${data.category === 'development' ? 'selected' : ''}>Development</option>  
                     <option value="marketing" ${data.category === 'marketing' ? 'selected' : ''}>Marketing</option>  
                     <option value="project" ${data.category === 'project' ? 'selected' : ''}>Project</option>  
+                    <option value="transcription" ${data.category === 'transcription' ? 'selected' : ''}>Transcription</option>  
                     <option value="other" ${data.category === 'other' ? 'selected' : ''}>Other</option>  
                 </select>  
                 <select id="editDifficulty">  
@@ -1522,6 +1559,13 @@
                     <option value="medium" ${data.difficulty === 'medium' ? 'selected' : ''}>Medium</option>  
                     <option value="hard" ${data.difficulty === 'hard' ? 'selected' : ''}>Hard</option>  
                 </select>  
+
+                <!-- Transcription fields -->
+                <div id="editTranscriptionFields" style="display:${showTranscription}; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
+                    <h4 style="margin-bottom:0.5rem;">Audio Details</h4>
+                    <input type="url" id="editAudioUrl" placeholder="Audio File URL" value="${data.audioUrl || ''}">
+                    <input type="text" id="editAudioDuration" placeholder="Audio Duration" value="${data.audioDuration || ''}">
+                </div>
 
                 <h4 style="margin: 1rem 0 0.5rem;">Collaboration</h4>  
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">  
@@ -1542,6 +1586,12 @@
             document.getElementById('editCollaborable').addEventListener('change', function(e) {  
                 document.getElementById('editMaxCollabField').style.display = e.target.checked ? 'block' : 'none';  
             });  
+
+            // Show/hide transcription fields based on category
+            document.getElementById('editCategory').addEventListener('change', function(e) {
+                const transcriptionDiv = document.getElementById('editTranscriptionFields');
+                transcriptionDiv.style.display = e.target.value === 'transcription' ? 'block' : 'none';
+            });
         }  
           
         async function updateTask(taskId) {  
@@ -1557,6 +1607,13 @@
             const assignedTo = document.getElementById('editAssignedTo').value;  
             const collaborable = document.getElementById('editCollaborable').checked;  
             const maxCollaborators = collaborable ? parseInt(document.getElementById('editMaxCollaborators').value) || 5 : 2;  
+            
+            // Transcription fields
+            let audioUrl = null, audioDuration = null;
+            if (category === 'transcription') {
+                audioUrl = document.getElementById('editAudioUrl').value || null;
+                audioDuration = document.getElementById('editAudioDuration').value || null;
+            }
               
             if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
                 showAlert('Please fill all required fields', 'error');  
@@ -1579,7 +1636,9 @@
                 difficulty,  
                 assignedTo: assignedTo || 'all',  
                 collaborable,  
-                maxCollaborators  
+                maxCollaborators,  
+                audioUrl,  
+                audioDuration  
             });  
               
             closeModal();  
@@ -1593,6 +1652,17 @@
               
             const deadlineStatus = data.deadline ? getDeadlineStatus(data.deadline) : null;  
             const deadlineDisplay = data.deadline ? formatDate(data.deadline) : 'No deadline';  
+            
+            // Audio display
+            let audioHtml = '';
+            if (data.audioUrl) {
+                audioHtml = `
+                    <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <strong>🔊 Audio File:</strong> <a href="${data.audioUrl}" target="_blank">${data.audioUrl}</a>
+                        ${data.audioDuration ? `<br><strong>Duration:</strong> ${data.audioDuration}` : ''}
+                    </div>
+                `;
+            }
               
             showModal(`  
                 <h3 style="margin-bottom:1rem;">${data.title}</h3>  
@@ -1622,6 +1692,8 @@
                 <div style="background: #dbeafe; padding: 1rem; border-radius: 0.5rem; white-space: pre-wrap;">  
                     ${data.instructions || 'No instructions provided.'}  
                 </div>  
+
+                ${audioHtml}
             `);  
         }  
 

@@ -1005,7 +1005,7 @@
                     loadTasks();
                     break;
                 case 'transcription':
-                    showNotQualifiedDialog(tab);
+                    showCheckingQualification('transcription');
                     break;
                 case 'design':
                     showCheckingQualification('design');
@@ -1067,6 +1067,22 @@
         }
 
         async function loadTasksByCategory(category) {
+            // Check membership for restricted categories
+            if (category === 'design' || category === 'projects' || category === 'transcription') {
+                if (!userData || userData.membershipType !== MEMBERSHIP_TYPES.ELITE) {
+                    showModal(`
+                        <div class="modal-content" style="text-align:center;">
+                            <div class="error-icon"><i class="fas fa-crown"></i></div>
+                            <h3 style="color:#f59e0b;">Elite Membership Required</h3>
+                            <p>This category is only available to Elite members.</p>
+                            <button class="btn btn-warning" onclick="showEliteUpgradeOptions()">Upgrade to Elite</button>
+                            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        </div>
+                    `);
+                    return;
+                }
+            }
+
             currentTaskViewed = null;
             refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
@@ -1162,6 +1178,29 @@
                     } else {
                         acceptButton = `<button class="btn btn-accept" onclick="acceptTask('${t.id}')">Accept (${t.acceptedCount}/${maxCollab})</button>`;
                     }
+
+                    // ========== AUDIO SECTION FOR TRANSCRIPTION TASKS ==========
+                    let audioHtml = '';
+                    if (t.category === 'transcription' && t.audioUrl) {
+                        audioHtml = `
+                            <div style="margin: 0.5rem 0; padding: 0.5rem; background: #f1f5f9; border-radius: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+                                    <i class="fas fa-headphones" style="color:#6366f1;"></i>
+                                    <span style="font-weight:600; font-size:0.8rem;">Audio File:</span>
+                                </div>
+                                <audio controls style="width:100%; height:30px;">
+                                    <source src="${t.audioUrl}" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
+                                ${t.audioDuration ? `<div style="font-size:0.7rem; margin-top:0.2rem;">Duration: ${t.audioDuration}</div>` : ''}
+                                <div style="display: flex; gap: 0.3rem; margin-top: 0.3rem;">
+                                    <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${t.audioUrl}')" style="padding:0.2rem 0.5rem; font-size:0.6rem;"><i class="fas fa-copy"></i> Copy Link</button>
+                                    <span class="task-amount" style="font-size:0.8rem;">${formatBoth(parseFloat(t.reward)||0)}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+
                     html += `
                         <div class="task-card">
                             <h4 class="task-title">${escapeHtml(t.title || 'Untitled')} ${t.collaborable ? '<span class="collab-badge"><i class="fas fa-users"></i> Collab</span>' : ''}</h4>
@@ -1172,6 +1211,7 @@
                             <div class="task-amount">${formatBoth(parseFloat(t.reward)||0)}</div>
                             ${expired && !submitted ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
                             ${t.collaborable && t.team && t.team.length ? `<div class="team-list"><i class="fas fa-users"></i> Team: ${t.team.join(', ')}</div>` : ''}
+                            ${audioHtml}   <!-- Audio player inserted here -->
                             <div style="display:flex; gap:0.5rem;">
                                 <button class="btn btn-secondary" onclick="viewTaskDetails('${t.id}')" style="flex:1;">Details</button>
                                 ${acceptButton}
@@ -1211,8 +1251,8 @@
                 }
                 const task = taskDoc.data();
 
-                // --- Elite check for design/projects ---
-                if (task.category === 'design' || task.category === 'projects') {
+                // --- Elite check for design/projects/transcription ---
+                if (task.category === 'design' || task.category === 'projects' || task.category === 'transcription') {
                     if (!userData || userData.membershipType !== MEMBERSHIP_TYPES.ELITE) {
                         showModal(`
                             <div class="modal-content" style="text-align:center;">
@@ -1275,9 +1315,10 @@
 
                 closeModal();
                 showAlert('Task accepted successfully! You can now submit your work.', 'success');
-                if (currentTab === 'tasks' || currentTab === 'design' || currentTab === 'projects') {
+                if (currentTab === 'tasks' || currentTab === 'design' || currentTab === 'projects' || currentTab === 'transcription') {
                     if (currentTab === 'design') loadTasksByCategory('design');
                     else if (currentTab === 'projects') loadTasksByCategory('projects');
+                    else if (currentTab === 'transcription') loadTasksByCategory('transcription');
                     else loadTasks();
                 } else if (currentTab === 'submit') {
                     loadPendingSubmissions();
@@ -1294,7 +1335,7 @@
 
         async function viewTaskDetails(taskId) { try { const doc = await db.collection('tasks').doc(taskId).get(); if (!doc.exists) { showAlert('Task not found','error'); return; } const task = { id: taskId, ...doc.data() }; currentTaskViewed = task; refreshMirror(); showModal(`<div class="pdf-document"><div class="pdf-header"><div><h2>Task Details</h2></div><span class="pdf-badge">#${taskId.substring(0,8)}</span></div><div class="pdf-content"><div class="pdf-title">${escapeHtml(task.title)}</div><div class="pdf-grid"><div class="pdf-grid-item"><span class="pdf-grid-label">Client</span><span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span></div><div class="pdf-grid-item"><span class="pdf-grid-label">Reward</span><span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> ${formatBoth(parseFloat(task.reward)||0)}</span></div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div><div class="pdf-section-content">${escapeHtml(task.description||'No description')}</div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div><div class="pdf-section-content">${escapeHtml(task.instructions||'No instructions')}</div></div><div class="pdf-actions"><button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button><button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button></div></div></div>`); } catch (e) { showAlert('Error loading task details','error'); } }
 
-        // ==================== showSubmitForm (MODIFIED with design link) ====================
+        // ==================== showSubmitForm (MODIFIED with design link and audio player) ====================
         async function showSubmitForm(taskId, existingWork = '') {
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
@@ -1314,8 +1355,23 @@
                 const workToShow = savedDraft || existingWork;
 
                 let extraFieldsHtml = '';
+                // Audio player for transcription tasks
+                if (task.category === 'transcription' && task.audioUrl) {
+                    extraFieldsHtml += `
+                        <div style="margin-bottom:1rem; background:#f0f9ff; padding:1rem; border-radius:0.5rem; border-left:4px solid #0284c7;">
+                            <h4 style="font-size:0.9rem; margin-bottom:0.5rem;"><i class="fas fa-headphones"></i> Audio to Transcribe</h4>
+                            <audio controls style="width:100%;">
+                                <source src="${task.audioUrl}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                            ${task.audioDuration ? `<p style="font-size:0.7rem; margin-top:0.2rem;">Duration: ${task.audioDuration}</p>` : ''}
+                            <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${task.audioUrl}')" style="margin-top:0.3rem;"><i class="fas fa-copy"></i> Copy Audio Link</button>
+                        </div>
+                    `;
+                }
+                // Design link for design/projects tasks
                 if (task.category === 'design' || task.category === 'projects') {
-                    extraFieldsHtml = `
+                    extraFieldsHtml += `
                         <div style="margin-top:1rem;">
                             <label style="font-weight:600; color:#0f172a;">Design Link (optional)</label>
                             <div class="design-link-input">
@@ -1340,6 +1396,7 @@
                                 </div>
                             </div>
                             <div class="submission-body">
+                                ${extraFieldsHtml}   <!-- Audio/Design fields inserted here -->
                                 <div class="instructions-card">
                                     <h3><i class="fas fa-clipboard-list"></i> Instructions</h3>
                                     <div class="instructions-content">${escapeHtml(task.instructions || 'No specific instructions.')}</div>
@@ -1350,7 +1407,6 @@
                                         <span class="word-counter" id="wordCounter">0 / 20 words</span>
                                     </div>
                                     <textarea id="workText" class="smart-textarea" placeholder="Paste your work here..." oninput="updateWordCount(); saveDraft('${taskId}', this.value)">${escapeHtml(workToShow)}</textarea>
-                                    ${extraFieldsHtml}
                                     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                                         <button id="uploadBtn" class="btn btn-secondary" style="flex:1;"><i class="fas fa-upload"></i> Upload File</button>
                                         <button class="btn btn-preview" onclick="previewSubmission('${taskId}')" style="flex:1;"><i class="fas fa-eye"></i> Preview</button>
@@ -1542,6 +1598,15 @@
                 console.error('Error saving submission:', e);
                 showAlert('Error saving submission. Please try again.', 'error');
             }
+        }
+
+        // ==================== COPY TO CLIPBOARD ====================
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('Link copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy', 'error');
+            });
         }
 
         // ==================== SUBMISSIONS ====================
@@ -1867,7 +1932,7 @@
                         <h4 style="color:#f59e0b; font-size:1.8rem;">${escapeHtml(elitePkg.name)}</h4>
                         <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(elitePkg.price)}<span style="font-size:1rem; color:#64748b;">/${elitePkg.duration}</span></p>
                         <p style="color:#475569;">
-                            ✓ Access to all tasks including Design & Projects<br>
+                            ✓ Access to all tasks including Design & Projects & Transcription<br>
                             ✓ Withdrawals enabled<br>
                             ✓ Priority support<br>
                             ✓ Welcome bonus: ${formatBoth(elitePkg.welcomeBonus || 10)}
