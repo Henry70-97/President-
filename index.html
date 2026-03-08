@@ -46,6 +46,7 @@
             text-shadow: 0 4px 30px rgba(0,0,0,0.6);
             transform: translateY(0);
             animation: professionalFloat 3s ease-in-out infinite;
+            padding: 1rem;
         }
         
         @keyframes professionalFloat {
@@ -54,44 +55,19 @@
             100% { transform: translateY(0px); filter: drop-shadow(0 0 5px #ccb16b); }
         }
         
-        .intro-content h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #f5e9d8, #e9d2a8, #dbb67b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.75rem;
+        /* Intro logo styling */
+        .intro-logo {
+            max-width: 80%;
+            max-height: 300px;
+            object-fit: contain;
             animation: fadeReveal 1.8s ease;
-        }
-        
-        .intro-content p {
-            font-size: 1.5rem;
-            font-weight: 400;
-            background: linear-gradient(135deg, #eedbbc, #e2c895);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            border-right: 3px solid #e1c16e;
-            white-space: nowrap;
-            overflow: hidden;
-            width: 0;
-            animation: typewriter 2.8s steps(40, end) forwards, cursorBlink 0.8s step-end infinite;
-            margin: 0 auto;
-        }
-        
-        @keyframes typewriter {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-        
-        @keyframes cursorBlink {
-            from, to { border-color: transparent; }
-            50% { border-color: #eac25c; }
+            filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+            border-radius: 20px; /* optional, in case logo has sharp corners */
         }
         
         @keyframes fadeReveal {
             0% { opacity: 0; letter-spacing: 6px; filter: blur(8px); }
-            100% { opacity: 1; letter-spacing: -0.02em; filter: blur(0); }
+            100% { opacity: 1; letter-spacing: normal; filter: blur(0); }
         }
         
         .intro-overlay.fade-out {
@@ -130,18 +106,18 @@
             box-shadow: 0 40px 70px -20px #3d3429, 0 0 0 1px #dac292 inset;
         }
         
+        /* Logo inside the auth card */
         .logo {
             text-align: center;
             margin-bottom: 2rem;
         }
         
-        .logo h1 {
-            font-size: 2.2rem;
-            font-weight: 600;
-            background: linear-gradient(150deg, #9c824e, #b79b60, #cbb178);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -0.5px;
+        .card-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(120, 90, 40, 0.2));
         }
         
         /* Tabs - clean, professional */
@@ -408,16 +384,17 @@
     </style>
 </head>
 <body>
+    <!-- Intro overlay with logo only -->
     <div class="intro-overlay" id="introOverlay">
         <div class="intro-content">
-            <h1>NEXTGEN HUB</h1>
-            <p>hub of academic writers</p>
+            <img src="logo.jpg" alt="NextGen Hub Logo" class="intro-logo">
         </div>
     </div>
 
     <div class="auth-card">
         <div class="logo">
-            <h1>◈ NEXTGEN HUB</h1>
+            <!-- Replaced text with image logo -->
+            <img src="logo.jpg" alt="NextGen Hub Logo" class="card-logo">
         </div>
         
         <div class="tabs">
@@ -511,13 +488,13 @@
     </div>
     
     <script>
-        // Fade out intro after animation
+        // Fade out intro after animation (allowing time for logo to be seen)
         window.addEventListener('load', function() {
             const intro = document.getElementById('introOverlay');
             setTimeout(() => {
                 intro.classList.add('fade-out');
                 setTimeout(() => intro.style.display = 'none', 1200);
-            }, 4200); // gives enough time for typewriter
+            }, 3000); // slightly shorter than before because no typewriter, but still pleasant
         });
 
         // Firebase Config (unchanged, functional)
