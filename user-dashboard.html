@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Chart.js for earnings graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- WaveSurfer for audio visualization -->
+    <script src="https://unpkg.com/wavesurfer.js@7"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -197,10 +199,8 @@
         .filter-tag { background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 40px; font-size: 0.65rem; display: flex; align-items: center; gap: 0.2rem; }
         .filter-tag i { cursor: pointer; color: #ef4444; margin-left: 0.2rem; }
 
-        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
-        .task-card:nth-child(odd) { background: #f8fafc; border-left: 4px solid #6366f1; }
-        .task-card:nth-child(even) { background: #eef2ff; border-left: 4px solid #10b981; }
-        .task-card { border-radius: 1.2rem; padding: 1.2rem; border: 1px solid #e2e8f0; transition: transform 0.2s; }
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .task-card { border-radius: 1.2rem; padding: 1.2rem; border: 1px solid #e2e8f0; transition: transform 0.2s; background: white; }
         .task-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
         .task-title { color: #10b981; font-weight: 800; font-size: 1.1rem; margin-bottom: 0.3rem; line-height: 1.3; }
         .client-info { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.5rem; color: #4b5563; font-size: 0.75rem; background: rgba(255,255,255,0.5); padding: 0.2rem 0.6rem; border-radius: 40px; width: fit-content; }
@@ -219,6 +219,63 @@
         .badge.warning { background: #f59e0b20; color: #f59e0b; }
         .badge.danger { background: #ef444420; color: #ef4444; }
 
+        /* Transcription task specific styling */
+        .transcription-task {
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .task-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-bottom: 0.3rem;
+            align-items: center;
+        }
+        .task-datetime {
+            font-weight: 600;
+            color: #0f172a;
+            min-width: 140px;
+        }
+        .task-category {
+            background: #6366f120;
+            color: #6366f1;
+            padding: 0.1rem 0.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+        .task-language, .task-source {
+            color: #475569;
+        }
+        .task-source::before {
+            content: "•";
+            margin-right: 0.3rem;
+            color: #94a3b8;
+        }
+        .task-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            color: #334155;
+        }
+        .task-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+        .task-meta i {
+            color: #6366f1;
+            width: 14px;
+        }
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 0.5rem;
+        }
+
         .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.3px; cursor: pointer; transition: all 0.3s; }
         .btn-primary { background: #6366f1; color: white; }
         .btn-primary:hover { background: #4f52e0; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
@@ -232,6 +289,7 @@
         .btn-disabled:hover { background: #94a3b8; transform: none; box-shadow: none; }
         .btn-warning { background: #f59e0b; color: white; }
         .btn-warning:hover { background: #d97706; }
+        .btn-sm { padding: 0.2rem 0.8rem; font-size: 0.7rem; }
 
         .smart-submission { max-width: 800px; margin: 0 auto; background: white; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .submission-header { background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 1.2rem; color: white; position: relative; overflow: hidden; }
@@ -1217,49 +1275,117 @@
                         acceptButton = `<button class="btn btn-accept" onclick="acceptTask('${t.id}')">Accept (${t.acceptedCount}/${maxCollab})</button>`;
                     }
 
-                    // ========== AUDIO SECTION FOR TRANSCRIPTION TASKS ==========
-                    let audioHtml = '';
-                    if (t.category === 'transcription' && t.audioUrl) {
-                        audioHtml = `
-                            <div style="margin: 0.5rem 0; padding: 0.5rem; background: #f1f5f9; border-radius: 0.5rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
-                                    <i class="fas fa-headphones" style="color:#6366f1;"></i>
-                                    <span style="font-weight:600; font-size:0.8rem;">Audio File:</span>
+                    // Special layout for transcription tasks
+                    if (t.category === 'transcription') {
+                        const datetime = t.createdAt ? formatDateForTranscription(t.createdAt) : '2026-03-10 09:58:56';
+                        const language = t.language || 'English (USA)';
+                        const source = t.source || 'aws';
+                        const duration = t.audioDuration || '00:20:00';
+                        const format = t.audioFormat || 'mp3';
+                        const size = t.audioSize || '14.39 MB';
+                        const amount = formatBoth(parseFloat(t.reward) || 0);
+
+                        html += `
+                            <div class="task-card transcription-task">
+                                <div class="task-row">
+                                    <span class="task-datetime">${datetime}</span>
+                                    <span class="task-category">${escapeHtml(t.category)}</span>
+                                    <span class="task-language">${escapeHtml(language)}</span>
+                                    <span class="task-source">${escapeHtml(source)}</span>
                                 </div>
-                                <audio controls style="width:100%; height:30px;">
-                                    <source src="${t.audioUrl}" type="audio/mpeg">
-                                    Your browser does not support the audio element.
-                                </audio>
-                                ${t.audioDuration ? `<div style="font-size:0.7rem; margin-top:0.2rem;">Duration: ${t.audioDuration}</div>` : ''}
-                                <div style="display: flex; gap: 0.3rem; margin-top: 0.3rem;">
-                                    <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${t.audioUrl}')" style="padding:0.2rem 0.5rem; font-size:0.6rem;"><i class="fas fa-copy"></i> Copy Link</button>
-                                    <span class="task-amount" style="font-size:0.8rem;">${formatBoth(parseFloat(t.reward)||0)}</span>
+                                <div class="task-row task-meta">
+                                    <span><i class="fas fa-clock"></i> Status: Pending</span>
+                                    <span><i class="fas fa-hourglass-half"></i> ${duration}</span>
+                                    <span><i class="fas fa-file-audio"></i> ${format}</span>
+                                    <span><i class="fas fa-database"></i> ${size}</span>
+                                </div>
+                                <div class="task-footer">
+                                    <span class="task-amount">${amount}</span>
+                                    <button class="btn btn-sm btn-primary" onclick="showTranscriptionTaskView('${t.id}')">View Task</button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Regular task card (non-transcription)
+                        html += `
+                            <div class="task-card">
+                                <h4 class="task-title">${escapeHtml(t.title || 'Untitled')} ${t.collaborable ? '<span class="collab-badge"><i class="fas fa-users"></i> Collab</span>' : ''}</h4>
+                                <div class="client-info"><i class="fas fa-user-circle"></i> ${escapeHtml(t.clientName || 'Admin')}</div>
+                                ${t.deadline ? `<div class="deadline-badge ${getDeadlineClass(t.deadline)}"><i class="fas fa-calendar-alt"></i> ${formatDeadline(t.deadline)}</div>` : ''}
+                                <p>${escapeHtml((t.description||'').substring(0,80))}...</p>
+                                <div><span class="badge primary">${t.category||'other'}</span> <span class="badge warning">${t.difficulty||'medium'}</span></div>
+                                <div class="task-amount">${formatBoth(parseFloat(t.reward)||0)}</div>
+                                ${expired && !submitted ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
+                                ${t.collaborable && t.team && t.team.length ? `<div class="team-list"><i class="fas fa-users"></i> Team: ${t.team.join(', ')}</div>` : ''}
+                                <div style="display:flex; gap:0.5rem;">
+                                    <button class="btn btn-secondary" onclick="viewTaskDetails('${t.id}')" style="flex:1;">Details</button>
+                                    ${acceptButton}
                                 </div>
                             </div>
                         `;
                     }
-
-                    html += `
-                        <div class="task-card">
-                            <h4 class="task-title">${escapeHtml(t.title || 'Untitled')} ${t.collaborable ? '<span class="collab-badge"><i class="fas fa-users"></i> Collab</span>' : ''}</h4>
-                            <div class="client-info"><i class="fas fa-user-circle"></i> ${escapeHtml(t.clientName || 'Admin')}</div>
-                            ${t.deadline ? `<div class="deadline-badge ${getDeadlineClass(t.deadline)}"><i class="fas fa-calendar-alt"></i> ${formatDeadline(t.deadline)}</div>` : ''}
-                            <p>${escapeHtml((t.description||'').substring(0,80))}...</p>
-                            <div><span class="badge primary">${t.category||'other'}</span> <span class="badge warning">${t.difficulty||'medium'}</span></div>
-                            <div class="task-amount">${formatBoth(parseFloat(t.reward)||0)}</div>
-                            ${expired && !submitted ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
-                            ${t.collaborable && t.team && t.team.length ? `<div class="team-list"><i class="fas fa-users"></i> Team: ${t.team.join(', ')}</div>` : ''}
-                            ${audioHtml}   <!-- Audio player inserted here -->
-                            <div style="display:flex; gap:0.5rem;">
-                                <button class="btn btn-secondary" onclick="viewTaskDetails('${t.id}')" style="flex:1;">Details</button>
-                                ${acceptButton}
-                            </div>
-                        </div>
-                    `;
                 }
                 html += '</div>';
             }
             document.getElementById('content').innerHTML = html;
+        }
+
+        // Helper to format date for transcription display
+        function formatDateForTranscription(timestamp) {
+            if (!timestamp) return '2026-03-10 09:58:56';
+            const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // ==================== TRANSCRIPTION TASK VIEW WITH WAVESURFER ====================
+        async function showTranscriptionTaskView(taskId) {
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                if (!taskDoc.exists) {
+                    showAlert('Task not found', 'error');
+                    return;
+                }
+                const task = taskDoc.data();
+
+                const modalHtml = `
+                    <div class="modal-content" style="max-width: 700px; text-align: center;">
+                        <h3>${escapeHtml(task.title || 'Transcription Task')}</h3>
+                        <div id="waveform" style="width:100%; height:128px; margin: 1rem 0;"></div>
+                        <div style="display: flex; justify-content: space-around; margin: 1rem 0;">
+                            <span><i class="fas fa-clock"></i> ${task.audioDuration || '00:20:00'}</span>
+                            <span><i class="fas fa-database"></i> ${task.audioSize || '14.39 MB'}</span>
+                            <span><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward) || 0)}</span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                    </div>
+                `;
+                showModal(modalHtml);
+
+                // Initialize WaveSurfer after modal is visible
+                setTimeout(() => {
+                    if (!task.audioUrl) {
+                        document.getElementById('waveform').innerHTML = '<p style="color:red;">Audio URL missing</p>';
+                        return;
+                    }
+                    const wavesurfer = WaveSurfer.create({
+                        container: '#waveform',
+                        waveColor: '#6366f1',
+                        progressColor: '#10b981',
+                        url: task.audioUrl,
+                        mediaControls: true,  // shows play/pause, volume, etc.
+                        height: 128,
+                    });
+                }, 200);
+            } catch (e) {
+                console.error('Error loading transcription task view:', e);
+                showAlert('Error loading audio', 'error');
+            }
         }
 
         function filterBarHTML() { function options(arr) { return arr.map(v => `<option value="${v}">${v}</option>`).join(''); } return `<div class="filter-bar"><div class="filter-title"><i class="fas fa-sliders-h"></i> Filter & Sort</div><div class="filter-row"><div class="filter-group"><label>Category</label><select id="categoryFilter" class="filter-select" onchange="currentFilters.category=this.value;applyFilters()">${options(['all','writing','data-entry','research','translation','other'])}</select></div><div class="filter-group"><label>Deadline</label><select id="deadlineFilter" class="filter-select" onchange="currentFilters.deadline=this.value;applyFilters()">${options(['all','urgent','week','expired'])}</select></div><div class="filter-group"><label>Amount</label><select id="amountFilter" class="filter-select" onchange="currentFilters.amount=this.value;applyFilters()">${options(['all','0-5','5-10','10-20','20-50','50-999'])}</select></div><div class="filter-group"><label>Difficulty</label><select id="difficultyFilter" class="filter-select" onchange="currentFilters.difficulty=this.value;applyFilters()">${options(['all','beginner','medium','hard'])}</select></div><div class="filter-group"><label>Sort By</label><select id="sortFilter" class="filter-select" onchange="currentFilters.sortBy=this.value;applyFilters()">${options(['newest','oldest','amount-high','amount-low','deadline-urgent'])}</select></div><div class="filter-actions"><button class="filter-btn reset" onclick="resetFilters()"><i class="fas fa-redo-alt"></i> Reset</button></div></div><div id="activeFilters" class="active-filters"></div></div>`; }

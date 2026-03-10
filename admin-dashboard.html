@@ -1303,6 +1303,18 @@
                         if (task.audioDuration) {
                             audioDisplay += `<br><small>${task.audioDuration}</small>`;
                         }
+                        if (task.language) {
+                            audioDisplay += `<br><small>Language: ${task.language}</small>`;
+                        }
+                        if (task.source) {
+                            audioDisplay += `<br><small>Source: ${task.source}</small>`;
+                        }
+                        if (task.audioFormat) {
+                            audioDisplay += `<br><small>Format: ${task.audioFormat}</small>`;
+                        }
+                        if (task.audioSize) {
+                            audioDisplay += `<br><small>Size: ${task.audioSize}</small>`;
+                        }
                     }
                     
                     html += ` 
@@ -1383,7 +1395,11 @@
                 <div id="transcriptionFields" style="display:none; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
                     <h4 style="margin-bottom:0.5rem;">Audio Details</h4>
                     <input type="url" id="taskAudioUrl" placeholder="Audio File URL (e.g., Dropbox, Google Drive link)">
-                    <input type="text" id="taskAudioDuration" placeholder="Audio Duration (e.g., 5 minutes, 1 hour)">
+                    <input type="text" id="taskAudioDuration" placeholder="Audio Duration (e.g., 00:20:00)">
+                    <input type="text" id="taskLanguage" placeholder="Language (e.g., English USA)">
+                    <input type="text" id="taskSource" placeholder="Source (e.g., aws)">
+                    <input type="text" id="taskAudioFormat" placeholder="Format (e.g., mp3)">
+                    <input type="text" id="taskAudioSize" placeholder="Size (e.g., 14.39 MB)">
                 </div>
 
                 <h4 style="margin: 1rem 0 0.5rem;">Collaboration</h4>  
@@ -1428,10 +1444,14 @@
             const maxCollaborators = collaborable ? parseInt(document.getElementById('taskMaxCollaborators').value) || 5 : 2;  
             
             // Transcription fields
-            let audioUrl = null, audioDuration = null;
+            let audioUrl = null, audioDuration = null, language = null, source = null, audioFormat = null, audioSize = null;
             if (category === 'transcription') {
                 audioUrl = document.getElementById('taskAudioUrl').value || null;
                 audioDuration = document.getElementById('taskAudioDuration').value || null;
+                language = document.getElementById('taskLanguage').value || null;
+                source = document.getElementById('taskSource').value || null;
+                audioFormat = document.getElementById('taskAudioFormat').value || null;
+                audioSize = document.getElementById('taskAudioSize').value || null;
             }
               
             if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
@@ -1457,8 +1477,12 @@
                     assignedTo: assignedTo || 'all',  
                     collaborable,  
                     maxCollaborators,  
-                    audioUrl,          // new field
-                    audioDuration,      // new field
+                    audioUrl,  
+                    audioDuration,
+                    language,
+                    source,
+                    audioFormat,
+                    audioSize,
                     acceptedCount: 0,  
                     active: true,  
                     submissionsCount: 0,  
@@ -1565,6 +1589,10 @@
                     <h4 style="margin-bottom:0.5rem;">Audio Details</h4>
                     <input type="url" id="editAudioUrl" placeholder="Audio File URL" value="${data.audioUrl || ''}">
                     <input type="text" id="editAudioDuration" placeholder="Audio Duration" value="${data.audioDuration || ''}">
+                    <input type="text" id="editLanguage" placeholder="Language" value="${data.language || ''}">
+                    <input type="text" id="editSource" placeholder="Source" value="${data.source || ''}">
+                    <input type="text" id="editAudioFormat" placeholder="Format" value="${data.audioFormat || ''}">
+                    <input type="text" id="editAudioSize" placeholder="Size" value="${data.audioSize || ''}">
                 </div>
 
                 <h4 style="margin: 1rem 0 0.5rem;">Collaboration</h4>  
@@ -1609,10 +1637,14 @@
             const maxCollaborators = collaborable ? parseInt(document.getElementById('editMaxCollaborators').value) || 5 : 2;  
             
             // Transcription fields
-            let audioUrl = null, audioDuration = null;
+            let audioUrl = null, audioDuration = null, language = null, source = null, audioFormat = null, audioSize = null;
             if (category === 'transcription') {
                 audioUrl = document.getElementById('editAudioUrl').value || null;
                 audioDuration = document.getElementById('editAudioDuration').value || null;
+                language = document.getElementById('editLanguage').value || null;
+                source = document.getElementById('editSource').value || null;
+                audioFormat = document.getElementById('editAudioFormat').value || null;
+                audioSize = document.getElementById('editAudioSize').value || null;
             }
               
             if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
@@ -1638,7 +1670,11 @@
                 collaborable,  
                 maxCollaborators,  
                 audioUrl,  
-                audioDuration  
+                audioDuration,
+                language,
+                source,
+                audioFormat,
+                audioSize
             });  
               
             closeModal();  
@@ -1660,6 +1696,10 @@
                     <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
                         <strong>🔊 Audio File:</strong> <a href="${data.audioUrl}" target="_blank">${data.audioUrl}</a>
                         ${data.audioDuration ? `<br><strong>Duration:</strong> ${data.audioDuration}` : ''}
+                        ${data.language ? `<br><strong>Language:</strong> ${data.language}` : ''}
+                        ${data.source ? `<br><strong>Source:</strong> ${data.source}` : ''}
+                        ${data.audioFormat ? `<br><strong>Format:</strong> ${data.audioFormat}` : ''}
+                        ${data.audioSize ? `<br><strong>Size:</strong> ${data.audioSize}` : ''}
                     </div>
                 `;
             }
