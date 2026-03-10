@@ -15,11 +15,18 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* All existing styles (unchanged) */
+        /* All existing styles (unchanged) plus minor additions for new sections */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
-        body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; padding-bottom: 80px; }
-        .app-container { max-width: 1200px; margin: 0 auto; padding: 0.75rem; }
-        .logo img { max-height: 40px; width: auto; display: block; }
+        body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; padding-bottom: 80px; } /* Add padding for bottom nav */
+        .app-container { max-width: 1200px; margin: 0 auto; padding: 0.75rem; } /* Reduced padding for mobile */
+
+        /* Logo styling inside header */
+        .logo img {
+            max-height: 40px;
+            width: auto;
+            display: block;
+        }
+
         .news-tv-container { background: #0b0f18; border-radius: 1.5rem; padding: 0.6rem 0.8rem 0.8rem 0.8rem; margin-bottom: 1rem; box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 1px 4px rgba(255,255,255,0.1); border: 1px solid #2d3748; }
         .news-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; padding-left: 0.3rem; flex-wrap: wrap; }
         .live-badge { background: #dc2626; color: white; font-weight: 700; font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 30px; text-transform: uppercase; letter-spacing: 0.5px; animation: pulseLive 1.5s infinite; }
@@ -54,13 +61,28 @@
         .wallet-badge { background: #6366f120; padding: 0.4rem 0.8rem; border-radius: 40px; color: #6366f1; font-weight: 700; font-size: 0.9rem; white-space: nowrap; }
         #userName { font-weight: 600; font-size: 0.9rem; color: #1e293b; }
         .logout-btn { background: none; border: none; color: #ef4444; font-size: 1.1rem; cursor: pointer; padding: 0.3rem; }
-        .hamburger-menu { display: none; font-size: 1.5rem; cursor: pointer; color: #6366f1; padding: 0.3rem; }
+        .hamburger-menu { 
+            display: none; 
+            font-size: 1.5rem; 
+            cursor: pointer; 
+            color: #1e293b; 
+            padding: 0.3rem; 
+            background: linear-gradient(145deg, #C0C0C0, #FFD700); 
+            border-radius: 8px; 
+            width: 40px; 
+            height: 40px; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,215,0,0.5);
+        }
         .header-actions { display: flex; align-items: center; gap: 0.5rem; }
         .whatsapp-group-btn { background: #25D366; color: white; padding: 0.4rem 0.8rem; border-radius: 40px; font-weight: 600; display: flex; align-items: center; gap: 0.3rem; cursor: pointer; border: none; font-size: 0.8rem; transition: all 0.3s; }
         .whatsapp-group-btn:hover { background: #128C7E; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3); }
         .whatsapp-group-btn i { font-size: 1rem; }
         .desktop-only { display: inline; }
 
+        /* Bottom Navigation Bar */
         .bottom-nav {
             display: none;
             position: fixed;
@@ -443,9 +465,86 @@
             font-weight: 700;
         }
 
+        /* AI Assistant Floating Button */
+        .ai-assistant-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #6366f1, #8b5cf6);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+            cursor: pointer;
+            z-index: 999;
+            transition: all 0.3s ease;
+            border: 2px solid white;
+        }
+        .ai-assistant-btn:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.6);
+        }
+        .ai-assistant-btn i {
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        /* AI Assistant Modal - improved for mobile */
+        .ai-modal .modal-content {
+            padding: 0;
+            height: 80vh;
+            max-height: 700px;
+            width: 90vw;
+            max-width: 500px;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .ai-modal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+        .ai-modal .modal-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .ai-modal .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .ai-modal .close-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .ai-modal iframe {
+            width: 100%;
+            flex: 1;
+            border: none;
+            min-height: 500px; /* ensures iframe has height even when flex is not fully supported */
+        }
+
         @media (max-width: 768px) {
             .tabs { display: none; }
-            .hamburger-menu { display: block; }
+            .hamburger-menu { display: flex !important; }
             .desktop-only { display: none; }
             .whatsapp-group-btn { padding: 0.4rem; }
             .whatsapp-group-btn i { font-size: 1.2rem; margin: 0; }
@@ -461,6 +560,14 @@
             .logo h2 { font-size: 1rem; }
             .transactions-table td, .transactions-table th { padding: 0.5rem; }
             .transactions-table { font-size: 0.7rem; }
+            .ai-assistant-btn { bottom: 80px; width: 50px; height: 50px; font-size: 1.5rem; }
+            .ai-modal .modal-content {
+                height: 90vh;
+                max-height: none;
+            }
+            .ai-modal iframe {
+                min-height: 600px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -595,6 +702,27 @@
     </style>
 </head>
 <body>
+    <!-- AI Assistant Floating Button -->
+    <div class="ai-assistant-btn" onclick="openAIAssistant()">
+        <i class="fas fa-robot"></i>
+    </div>
+
+    <!-- AI Assistant Modal -->
+    <div class="modal-backdrop" id="aiModalBackdrop" onclick="closeAIAssistant()"></div>
+    <div class="modal ai-modal" id="aiModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-robot" style="margin-right: 8px;"></i> AI Assistant</h3>
+                <button class="close-btn" onclick="closeAIAssistant()">×</button>
+            </div>
+            <iframe
+                src="https://www.chatbase.co/chatbot-iframe/SfgFDHAuNKYYX-mzfnNvq"
+                width="100%"
+                frameborder="0"
+            ></iframe>
+        </div>
+    </div>
+
     <!-- Bottom Navigation Bar (Mobile) -->
     <div class="bottom-nav" id="bottomNav">
         <div class="bottom-nav-item" onclick="switchTab('tasks')">
@@ -759,6 +887,16 @@
     </div>
 
     <script>
+        // ==================== AI ASSISTANT FUNCTIONS ====================
+        function openAIAssistant() {
+            document.getElementById('aiModal').classList.add('active');
+            document.getElementById('aiModalBackdrop').classList.add('active');
+        }
+        function closeAIAssistant() {
+            document.getElementById('aiModal').classList.remove('active');
+            document.getElementById('aiModalBackdrop').classList.remove('active');
+        }
+
         // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
             apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
