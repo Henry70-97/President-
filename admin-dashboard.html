@@ -291,6 +291,73 @@
             cursor: pointer;
         }
 
+        /* How It Works Editor Styles */
+        .howitworks-editor {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .section-card {
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #6366f1;
+            position: relative;
+        }
+        .section-type {
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .section-type.heading { background: #f59e0b20; color: #f59e0b; }
+        .section-type.paragraph { background: #10b98120; color: #10b981; }
+        .section-type.image { background: #6366f120; color: #6366f1; }
+        .section-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.3rem;
+        }
+        .section-controls button {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+        .image-preview {
+            max-width: 200px;
+            max-height: 150px;
+            margin-top: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        .toolbar {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 40px;
+            padding: 0.3rem 0.8rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.2rem;
+        }
+        .toolbar button {
+            background: none;
+            border: none;
+            padding: 0.3rem 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+            color: #1e293b;
+        }
+        .toolbar button:hover {
+            background: #f1f5f9;
+        }
+        .toolbar button i {
+            font-size: 1rem;
+        }
+
         @media (max-width: 768px) { 
             .header { flex-direction: column; gap: 1rem; text-align: center; }
             .user-info-grid { grid-template-columns: 1fr; }
@@ -350,6 +417,7 @@
         <div class="mobile-menu-item" onclick="switchTab('leaderboard'); toggleMobileMenu()">🏆 Leaderboard</div>
         <div class="mobile-menu-item" onclick="switchTab('faq'); toggleMobileMenu()">❓ FAQ</div>
         <div class="mobile-menu-item" onclick="switchTab('feedback'); toggleMobileMenu()">⭐ Client Feedback</div>
+        <div class="mobile-menu-item" onclick="switchTab('howitworks'); toggleMobileMenu()">📘 How It Works</div>
         <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
     </div>
 
@@ -392,12 +460,12 @@
             <button class="tab" data-tab="transactions">💸 Transactions</button>  
             <button class="tab" data-tab="training">🎓 Training Center</button>  
             <button class="tab" data-tab="logins">📊 User Logins</button>  
-            <!-- NEW PETITIONS TAB -->
             <button class="tab" data-tab="petitions">📢 Petitions</button>  
-            <!-- Other user-facing feature tabs -->
             <button class="tab" data-tab="leaderboard">🏆 Leaderboard</button>  
             <button class="tab" data-tab="faq">❓ FAQ</button>  
             <button class="tab" data-tab="feedback">⭐ Client Feedback</button>  
+            <!-- NEW HOW IT WORKS TAB -->
+            <button class="tab" data-tab="howitworks">📘 How It Works</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
         </div>  
       
@@ -942,7 +1010,7 @@
             menu.classList.toggle('active');
         }
           
-        // Tab switching function (added petitions tab)
+        // Tab switching function (added howitworks tab)
         function switchTab(tab) {  
             currentTab = tab;  
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));  
@@ -977,6 +1045,7 @@
                 case 'leaderboard': loadLeaderboardManager(); break;  
                 case 'faq': loadFaqManager(); break;  
                 case 'feedback': loadFeedbackManager(); break;  
+                case 'howitworks': loadHowItWorksEditor(); break;  
                 case 'settings': loadSettings(); break;  
             }  
         }  
@@ -1059,7 +1128,6 @@
             }
         }
 
-        // NEW: Reset password function
         async function resetUserPassword(userId, userEmail) {
             if (!confirm(`Send password reset email to ${userEmail}?`)) return;
             try {
@@ -1071,7 +1139,6 @@
             }
         }
 
-        // NEW: Show change membership modal
         function showChangeMembership(userId, currentType) {
             const options = Object.values(MEMBERSHIP_TYPES).map(type => {
                 const selected = type === currentType ? 'selected' : '';
@@ -1145,7 +1212,6 @@
                                 <button class="btn btn-secondary toggle-frozen-btn" data-user-id="${user.id}" data-new-status="${!frozen}">${frozen ? 'Unfreeze' : 'Freeze'}</button> 
                                 <button class="btn btn-danger delete-user-btn" data-user-id="${user.id}" data-user-email="${user.email}">Delete</button> 
                                 <button class="btn btn-primary change-membership-btn" data-user-id="${user.id}" data-current-type="${user.membershipType || 'basic'}">Change Membership</button>
-                                <!-- NEW: Reset Password Button -->
                                 <button class="btn btn-warning reset-password-btn" data-user-id="${user.id}" data-user-email="${user.email}">Reset Password</button>
                             </td> 
                         </tr> 
@@ -1904,7 +1970,7 @@
                                     <p style="margin: 0;">${sub.workText}</p>  
                                 </div>  
 
-                                <!-- NEW: Display design link if provided -->
+                                <!-- Display design link if provided -->
                                 ${sub.designLink ? `
                                     <div style="background: #e0f2fe; padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0;">  
                                         <p style="margin: 0 0 0.25rem 0;"><strong>🔗 Design Link:</strong></p>  
@@ -1956,7 +2022,6 @@
             let earned = 0;  
             let status = approved ? 'approved' : 'rejected';  
             
-            // UPDATED: Threshold changed from 30 to 10
             const THRESHOLD = 10;
               
             if (approved && score >= THRESHOLD) {  
@@ -3831,7 +3896,6 @@
         }
           
         // ========== Messages (updated with petition reply and conversation view) ==========
-        // New function to view conversation with a user
         async function viewUserConversation(userId) {
             try {
                 const userDoc = await db.collection('users').doc(userId).get();
@@ -3922,7 +3986,6 @@
             }
         }
 
-        // NEW: Reply to petition
         async function replyToPetition(petitionId, userId, originalMessage) {
             showModal(`
                 <h3 style="margin-bottom:1rem;">Reply to Petition</h3>
@@ -3987,7 +4050,6 @@
                             ${msg.title ? `<h4 style="margin: 0.5rem 0; color: #1f2937;">${msg.title}</h4>` : ''}  
                             <p style="margin: 0.5rem 0;">${msg.message}</p>  
                             ${msg.sentCount ? `<small style="color: #6b7280;">✓ Delivered to ${msg.sentCount} users</small>` : ''}  
-                            <!-- Add reply button for non-broadcast messages -->
                             ${!isBroadcast && msg.senderId && msg.senderId !== currentUser.uid ? 
                                 `<button class="btn btn-sm btn-primary" onclick="viewUserConversation('${msg.senderId}')">View Conversation</button>` : ''}
                         </div>  
@@ -4695,7 +4757,7 @@
             }
         }
 
-        // ========== NEW: Petitions Management ==========
+        // ========== Petitions Management ==========
         async function loadPetitions() {
             try {
                 const snapshot = await db.collection('petitions').orderBy('createdAt', 'desc').get();
@@ -4747,7 +4809,7 @@
             `);
         };
 
-        // ========== NEW: Leaderboard Management ==========
+        // ========== Leaderboard Management ==========
         async function loadLeaderboardManager() {
             try {
                 const snapshot = await db.collection('leaderboard').orderBy('rank', 'asc').get();
@@ -4790,7 +4852,6 @@
             }
         }
 
-        // Show add manual entry form
         window.showAddLeaderboardEntry = function() {
             showModal(`
                 <h3 style="margin-bottom:1rem;">Add Manual Leaderboard Entry</h3>
@@ -4824,7 +4885,6 @@
             });
         };
 
-        // Edit manual entry
         window.editLeaderboardEntry = function(id, rank, userName, points) {
             showModal(`
                 <h3 style="margin-bottom:1rem;">Edit Leaderboard Entry</h3>
@@ -4857,7 +4917,6 @@
             });
         };
 
-        // Delete any entry
         window.deleteLeaderboardEntry = async function(id) {
             if (!confirm('Delete this leaderboard entry?')) return;
             try {
@@ -4869,13 +4928,11 @@
             }
         };
 
-        // Generate leaderboard from user data (UPDATED to handle missing fields)
         window.generateLeaderboardFromUsers = async function() {
             if (!confirm('This will replace all auto-generated entries. Manual entries will be preserved and re-ranked. Continue?')) return;
 
             showAlert('Processing users...', 'info', 'Please wait');
             try {
-                // 1. Fetch all users
                 const usersSnap = await db.collection('users').get();
                 const users = [];
                 usersSnap.forEach(doc => {
@@ -4888,7 +4945,6 @@
                     });
                 });
 
-                // 2. Compute scores for each user
                 const userScores = users.map(u => ({
                     userId: u.id,
                     userName: u.name,
@@ -4896,13 +4952,11 @@
                     type: 'auto'
                 }));
 
-                // 3. Fetch existing leaderboard entries
                 const existingSnap = await db.collection('leaderboard').get();
                 const manualEntries = [];
                 existingSnap.forEach(doc => {
                     const data = doc.data();
                     if (data.type === 'manual') {
-                        // Ensure manual entry has required fields
                         manualEntries.push({ 
                             id: doc.id, 
                             userId: data.userId || null,
@@ -4913,25 +4967,17 @@
                     }
                 });
 
-                // 4. Build combined list: start with all user auto entries, then overlay manual ones
                 const combinedMap = new Map();
-                // Add auto entries
                 userScores.forEach(u => {
                     combinedMap.set(u.userId, { ...u });
                 });
-                // Override with manual entries (if they have the same userId)
                 manualEntries.forEach(m => {
-                    const key = m.userId || m.id; // if no userId, use doc id as key
+                    const key = m.userId || m.id;
                     combinedMap.set(key, { ...m, type: 'manual' });
                 });
 
-                // Convert map to array
                 let combined = Array.from(combinedMap.values());
-
-                // 5. Sort by points descending
                 combined.sort((a, b) => b.points - a.points);
-
-                // 6. Assign ranks and sanitize each entry
                 combined = combined.map((entry, index) => ({
                     userId: entry.userId || null,
                     userName: entry.userName || 'Anonymous',
@@ -4941,15 +4987,12 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }));
 
-                // 7. Replace the leaderboard collection in batches
                 const batch = db.batch();
-                // Delete all existing entries first
                 existingSnap.forEach(doc => {
                     batch.delete(doc.ref);
                 });
-                // Add new combined entries
                 combined.forEach(entry => {
-                    const newRef = db.collection('leaderboard').doc(); // new auto-id
+                    const newRef = db.collection('leaderboard').doc();
                     batch.set(newRef, entry);
                 });
                 await batch.commit();
@@ -4962,7 +5005,7 @@
             }
         };
 
-        // ========== NEW: FAQ Management ==========
+        // ========== FAQ Management ==========
         async function loadFaqManager() {
             try {
                 const snapshot = await db.collection('faqs').orderBy('order', 'asc').get();
@@ -5066,7 +5109,6 @@
             }
         };
 
-        // Load default FAQs
         window.loadDefaultFaqs = async function() {
             if (!confirm('This will add a set of default FAQs. Existing FAQs will not be deleted. Continue?')) return;
             const defaultFaqs = [
@@ -5088,7 +5130,7 @@
             }
         };
 
-        // ========== NEW: Client Feedback Management ==========
+        // ========== Client Feedback Management ==========
         async function loadFeedbackManager() {
             try {
                 const snapshot = await db.collection('clientFeedback').orderBy('createdAt', 'desc').get();
@@ -5167,7 +5209,6 @@
             }
         };
 
-        // Load sample feedback
         window.loadSampleFeedback = async function() {
             if (!confirm('This will add a few sample feedback entries. Existing feedback will not be deleted. Continue?')) return;
             const samples = [
@@ -5188,6 +5229,227 @@
                 loadFeedbackManager();
             } catch (error) {
                 console.error('Error loading sample feedback:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // ========== HOW IT WORKS EDITOR ==========
+        async function loadHowItWorksEditor() {
+            try {
+                const doc = await db.collection('howItWorks').doc('content').get();
+                let sections = doc.exists ? doc.data().sections || [] : [];
+                // Ensure sections array
+                if (!Array.isArray(sections)) sections = [];
+
+                let html = `
+                    <div class="howitworks-editor">
+                        <h3 style="margin-bottom:1.5rem;">📘 Edit How It Works</h3>
+                        <div id="sectionsContainer">
+                `;
+
+                if (sections.length === 0) {
+                    html += '<p style="color:#64748b;">No sections yet. Add your first section below.</p>';
+                } else {
+                    sections.forEach((section, index) => {
+                        html += renderSection(section, index);
+                    });
+                }
+
+                html += `
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button class="btn btn-success" onclick="addSection('heading')">+ Add Heading</button>
+                            <button class="btn btn-success" onclick="addSection('paragraph')">+ Add Paragraph</button>
+                            <button class="btn btn-success" onclick="addSection('image')">+ Add Image</button>
+                        </div>
+                        <div style="margin-top: 2rem;">
+                            <button class="btn btn-primary" onclick="saveHowItWorks()">Save All Changes</button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading How It Works editor:', error);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p><button class="btn btn-primary" onclick="loadHowItWorksEditor()">Retry</button></div>`;
+            }
+        }
+
+        // Helper to render a section with toolbar and controls
+        function renderSection(section, index) {
+            const type = section.type || 'paragraph';
+            let contentHtml = '';
+            if (type === 'image') {
+                contentHtml = `
+                    <div class="section-card">
+                        <div class="section-type image">📷 Image</div>
+                        <div class="section-controls">
+                            <button class="btn btn-sm btn-secondary" onclick="moveSection(${index}, 'up')"><i class="fas fa-arrow-up"></i></button>
+                            <button class="btn btn-sm btn-secondary" onclick="moveSection(${index}, 'down')"><i class="fas fa-arrow-down"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteSection(${index})"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div>
+                            <label>Image URL</label>
+                            <input type="url" class="section-content" data-index="${index}" value="${section.content || ''}" placeholder="https://...">
+                        </div>
+                        ${section.content ? `<img src="${section.content}" class="image-preview" onerror="this.style.display='none'">` : ''}
+                    </div>
+                `;
+            } else {
+                // heading or paragraph – add formatting toolbar
+                const placeholder = type === 'heading' ? 'Enter heading text (supports HTML, e.g. <strong>bold</strong>)' : 'Enter paragraph text (supports HTML)';
+                contentHtml = `
+                    <div class="section-card">
+                        <div class="section-type ${type === 'heading' ? 'heading' : 'paragraph'}">${type === 'heading' ? '📌 Heading' : '📄 Paragraph'}</div>
+                        <div class="section-controls">
+                            <button class="btn btn-sm btn-secondary" onclick="moveSection(${index}, 'up')"><i class="fas fa-arrow-up"></i></button>
+                            <button class="btn btn-sm btn-secondary" onclick="moveSection(${index}, 'down')"><i class="fas fa-arrow-down"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteSection(${index})"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="toolbar">
+                            <button onclick="wrapText(${index}, '<strong>', '</strong>')" title="Bold"><i class="fas fa-bold"></i></button>
+                            <button onclick="wrapText(${index}, '<em>', '</em>')" title="Italic"><i class="fas fa-italic"></i></button>
+                            <button onclick="wrapText(${index}, '<u>', '</u>')" title="Underline"><i class="fas fa-underline"></i></button>
+                            <button onclick="insertLink(${index})" title="Insert Link"><i class="fas fa-link"></i></button>
+                            <button onclick="wrapText(${index}, '<ul><li>', '</li></ul>')" title="List"><i class="fas fa-list"></i></button>
+                            <button onclick="wrapText(${index}, '<h2>', '</h2>')" title="Heading"><i class="fas fa-heading"></i></button>
+                        </div>
+                        <textarea class="section-content" data-index="${index}" placeholder="${placeholder}" rows="${type === 'heading' ? 2 : 4}">${section.content || ''}</textarea>
+                    </div>
+                `;
+            }
+            return contentHtml;
+        }
+
+        // Add a new section (triggered by buttons)
+        window.addSection = function(type) {
+            const container = document.getElementById('sectionsContainer');
+            if (!container) return;
+            const sections = [];
+            const existingDivs = container.querySelectorAll('.section-card');
+            existingDivs.forEach((div, idx) => {
+                const textarea = div.querySelector('.section-content');
+                const content = textarea ? textarea.value : '';
+                const typeDiv = div.querySelector('.section-type');
+                let sectionType = 'paragraph';
+                if (typeDiv) {
+                    if (typeDiv.classList.contains('heading')) sectionType = 'heading';
+                    else if (typeDiv.classList.contains('image')) sectionType = 'image';
+                }
+                sections.push({ type: sectionType, content });
+            });
+            // Add new empty section
+            sections.push({ type, content: '' });
+            renderSections(sections);
+        };
+
+        // Render sections from array
+        function renderSections(sections) {
+            const container = document.getElementById('sectionsContainer');
+            if (!container) return;
+            let html = '';
+            sections.forEach((section, index) => {
+                html += renderSection(section, index);
+            });
+            container.innerHTML = html;
+        }
+
+        // Move section up/down
+        window.moveSection = function(index, direction) {
+            const container = document.getElementById('sectionsContainer');
+            const sections = [];
+            const existingDivs = container.querySelectorAll('.section-card');
+            existingDivs.forEach((div, idx) => {
+                const textarea = div.querySelector('.section-content');
+                const content = textarea ? textarea.value : '';
+                const typeDiv = div.querySelector('.section-type');
+                let sectionType = 'paragraph';
+                if (typeDiv) {
+                    if (typeDiv.classList.contains('heading')) sectionType = 'heading';
+                    else if (typeDiv.classList.contains('image')) sectionType = 'image';
+                }
+                sections.push({ type: sectionType, content });
+            });
+            const newIndex = direction === 'up' ? index - 1 : index + 1;
+            if (newIndex < 0 || newIndex >= sections.length) return;
+            [sections[index], sections[newIndex]] = [sections[newIndex], sections[index]];
+            renderSections(sections);
+        };
+
+        // Delete section
+        window.deleteSection = function(index) {
+            if (!confirm('Delete this section?')) return;
+            const container = document.getElementById('sectionsContainer');
+            const sections = [];
+            const existingDivs = container.querySelectorAll('.section-card');
+            existingDivs.forEach((div, idx) => {
+                if (idx === index) return;
+                const textarea = div.querySelector('.section-content');
+                const content = textarea ? textarea.value : '';
+                const typeDiv = div.querySelector('.section-type');
+                let sectionType = 'paragraph';
+                if (typeDiv) {
+                    if (typeDiv.classList.contains('heading')) sectionType = 'heading';
+                    else if (typeDiv.classList.contains('image')) sectionType = 'image';
+                }
+                sections.push({ type: sectionType, content });
+            });
+            renderSections(sections);
+        };
+
+        // Wrap selected text in textarea with given tags
+        window.wrapText = function(index, openTag, closeTag) {
+            const textarea = document.querySelector(`.section-content[data-index="${index}"]`);
+            if (!textarea) return;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selected = textarea.value.substring(start, end);
+            const newText = textarea.value.substring(0, start) + openTag + selected + closeTag + textarea.value.substring(end);
+            textarea.value = newText;
+            textarea.focus();
+            textarea.setSelectionRange(start + openTag.length, end + openTag.length);
+        };
+
+        // Insert link (prompt for URL)
+        window.insertLink = function(index) {
+            const textarea = document.querySelector(`.section-content[data-index="${index}"]`);
+            if (!textarea) return;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selected = textarea.value.substring(start, end) || 'link text';
+            const url = prompt('Enter URL:', 'https://');
+            if (!url) return;
+            const newText = textarea.value.substring(0, start) + `<a href="${url}" target="_blank">${selected}</a>` + textarea.value.substring(end);
+            textarea.value = newText;
+            textarea.focus();
+        };
+
+        // Save all sections to Firestore
+        window.saveHowItWorks = async function() {
+            const container = document.getElementById('sectionsContainer');
+            if (!container) return;
+            const sections = [];
+            const existingDivs = container.querySelectorAll('.section-card');
+            existingDivs.forEach((div) => {
+                const textarea = div.querySelector('.section-content');
+                const content = textarea ? textarea.value : '';
+                const typeDiv = div.querySelector('.section-type');
+                let sectionType = 'paragraph';
+                if (typeDiv) {
+                    if (typeDiv.classList.contains('heading')) sectionType = 'heading';
+                    else if (typeDiv.classList.contains('image')) sectionType = 'image';
+                }
+                sections.push({ type: sectionType, content });
+            });
+
+            try {
+                await db.collection('howItWorks').doc('content').set({
+                    sections,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showAlert('How It Works content saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving How It Works:', error);
                 showAlert('Error: ' + error.message, 'error');
             }
         };
@@ -5274,7 +5536,6 @@
                     return;
                 }
 
-                // NEW: Change membership button
                 if (target.classList.contains('change-membership-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const currentType = target.getAttribute('data-current-type');
@@ -5288,7 +5549,6 @@
                     return;
                 }
 
-                // NEW: Reset password button
                 if (target.classList.contains('reset-password-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const userEmail = target.getAttribute('data-user-email');
@@ -5492,14 +5752,12 @@
                     return;  
                 }  
 
-                // NEW: View conversation button
                 if (target.classList.contains('view-conversation-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     await viewUserConversation(userId);
                     return;
                 }
 
-                // NEW: Reply to petition button
                 if (target.classList.contains('reply-to-petition-btn')) {
                     const petitionId = target.getAttribute('data-petition-id');
                     const userId = target.getAttribute('data-user-id');
