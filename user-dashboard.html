@@ -205,11 +205,19 @@
 
         /* ==================== STATS GRID ==================== */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-        .stat-card { background: white; border-radius: 1.2rem; padding: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .stat-card { border-radius: 1.2rem; padding: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-3px); }
         .stat-card i { font-size: 1.5rem; color: #6366f1; margin-bottom: 0.3rem; }
         .stat-value { font-size: 1.4rem; font-weight: 800; color: #0f172a; line-height: 1.2; letter-spacing: -0.5px; }
         .stat-label { color: #64748b; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Alternating colors for stats cards */
+        .stats-grid .stat-card:nth-child(6n+1) { background-color: #e6f0ff; }
+        .stats-grid .stat-card:nth-child(6n+2) { background-color: #e0ffe0; }
+        .stats-grid .stat-card:nth-child(6n+3) { background-color: #fff9c4; }
+        .stats-grid .stat-card:nth-child(6n+4) { background-color: #ffe0b2; }
+        .stats-grid .stat-card:nth-child(6n+5) { background-color: #e6ccff; }
+        .stats-grid .stat-card:nth-child(6n+6) { background-color: #ffe0f0; }
 
         /* ==================== DESKTOP TABS ==================== */
         .tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 1rem; }
@@ -229,67 +237,6 @@
 
         /* ==================== MAIN CONTENT ==================== */
         .content { background: white; border-radius: 1.5rem; padding: 1rem; min-height: 400px; }
-
-        /* ==================== HOW IT WORKS – enhanced ==================== */
-        .how-it-works {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: #ffffff;
-            border-radius: 1.5rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-            line-height: 1.8;
-            color: #1e293b;
-        }
-        .how-it-works h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #0f172a;
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            border-bottom: 3px solid #6366f1;
-            padding-bottom: 0.5rem;
-        }
-        .how-it-works h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        .how-it-works h3 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #0f172a;
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-        }
-        .how-it-works p {
-            margin-bottom: 1.2rem;
-            font-size: 1rem;
-            color: #334155;
-        }
-        .how-it-works img {
-            max-width: 100%;
-            border-radius: 1rem;
-            margin: 1.5rem 0;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        .how-it-works ul, .how-it-works ol {
-            margin: 1rem 0 1.5rem 2rem;
-            color: #334155;
-        }
-        .how-it-works li {
-            margin-bottom: 0.5rem;
-        }
-        .how-it-works .last-updated {
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-top: 2.5rem;
-            text-align: right;
-            border-top: 1px dashed #cbd5e1;
-            padding-top: 1rem;
-        }
 
         /* ==================== LEADERBOARD / FAQ / FEEDBACK ==================== */
         .leaderboard-table { width:100%; border-collapse: collapse; font-size: 0.8rem; }
@@ -1381,7 +1328,7 @@
                     showCheckingQualification('projects');
                     break;
                 case 'howitworks':
-                    loadHowItWorks();
+                    showHowItWorksComingSoon();  // <-- NEW: show coming soon with AI link
                     break;
                 case 'training':
                     loadTrainings();
@@ -1424,44 +1371,21 @@
             }
         }
 
-        // ==================== HOW IT WORKS ====================
-        async function loadHowItWorks() {
-            currentTaskViewed = null; refreshMirror();
-            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading guide...</p></div>';
-            try {
-                const doc = await db.collection('howItWorks').doc('content').get();
-                if (!doc.exists) {
-                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-info-circle"></i><h4>No content yet</h4><p>Admin will add instructions soon.</p></div>';
-                    return;
-                }
-                const data = doc.data();
-                const sections = data.sections || [];
-                let html = '<div class="how-it-works">';
-                sections.forEach(section => {
-                    if (section.type === 'heading') {
-                        const level = section.level || 2;
-                        html += `<h${level}>${escapeHtml(section.content)}</h${level}>`;
-                    } else if (section.type === 'paragraph') {
-                        html += `<p>${escapeHtml(section.content)}</p>`;
-                    } else if (section.type === 'image') {
-                        html += `<img src="${escapeHtml(section.content)}" alt="${escapeHtml(section.alt || '')}">`;
-                    } else if (section.type === 'list') {
-                        const listType = section.ordered ? 'ol' : 'ul';
-                        html += `<${listType}>`;
-                        section.items.forEach(item => html += `<li>${escapeHtml(item)}</li>`);
-                        html += `</${listType}>`;
-                    }
-                });
-                if (data.lastUpdated) {
-                    const date = data.lastUpdated.toDate ? data.lastUpdated.toDate().toLocaleString() : new Date(data.lastUpdated).toLocaleString();
-                    html += `<div class="last-updated"><i class="far fa-calendar-alt"></i> Last updated: ${date}</div>`;
-                }
-                html += '</div>';
-                document.getElementById('content').innerHTML = html;
-            } catch (e) {
-                console.error('Error loading how it works:', e);
-                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadHowItWorks()">Retry</button></div>`;
-            }
+        // ==================== HOW IT WORKS (NEW) ====================
+        function showHowItWorksComingSoon() {
+            currentTaskViewed = null;
+            refreshMirror();
+            showModal(`
+                <div style="text-align: center; padding: 1rem;">
+                    <i class="fas fa-tools" style="font-size: 4rem; color: #6366f1; margin-bottom: 1rem;"></i>
+                    <h3 style="margin-bottom: 1rem;">How It Works - Coming Soon!</h3>
+                    <p style="margin: 1rem 0; color: #475569;">We're working hard to bring you a comprehensive guide. In the meantime, feel free to ask our AI assistant for help.</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                        <button class="btn btn-primary" onclick="openAIAssistant(); closeModal();">Ask AI Assistant</button>
+                        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                    </div>
+                </div>
+            `);
         }
 
         // ==================== CHECKING QUALIFICATION ====================

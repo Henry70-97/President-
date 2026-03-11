@@ -13,9 +13,9 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* All existing styles remain the same – only additions for new tabs are minimal and reuse existing classes */
+        /* All existing styles remain exactly as they were */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding-bottom: 80px; } /* Add padding for bottom nav */
+        body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding-bottom: 80px; }
         .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
         .header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 2rem; padding: 1rem 2rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; color: white; position: relative; }
         .logo h2 { background: linear-gradient(135deg, #818cf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -387,8 +387,8 @@
             .referral-actions { flex-direction: column; }
             .action-btn { width: 100%; }
             .notification-dropdown { right: 10px; width: 280px; }
-            .tabs { display: none; } /* Hide desktop tabs on mobile */
-            .bottom-nav { display: flex; } /* Show bottom nav */
+            .tabs { display: none; }
+            .bottom-nav { display: flex; }
             .content { padding: 1.5rem; min-height: auto; margin-bottom: 70px; }
         }  
     </style>  
@@ -441,6 +441,8 @@
         <div class="mobile-menu-item" onclick="switchTab('faq'); toggleMobileMenu()">❓ FAQ</div>
         <div class="mobile-menu-item" onclick="switchTab('feedback'); toggleMobileMenu()">⭐ Client Feedback</div>
         <div class="mobile-menu-item" onclick="switchTab('howitworks'); toggleMobileMenu()">📘 How It Works</div>
+        <!-- NEW Tickers tab -->
+        <div class="mobile-menu-item" onclick="switchTab('tickers'); toggleMobileMenu()">📢 Tickers</div>
         <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
     </div>
 
@@ -487,8 +489,9 @@
             <button class="tab" data-tab="leaderboard">🏆 Leaderboard</button>  
             <button class="tab" data-tab="faq">❓ FAQ</button>  
             <button class="tab" data-tab="feedback">⭐ Client Feedback</button>  
-            <!-- NEW HOW IT WORKS TAB -->
             <button class="tab" data-tab="howitworks">📘 How It Works</button>  
+            <!-- NEW TICKERS TAB -->
+            <button class="tab" data-tab="tickers">📢 Tickers</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
         </div>  
       
@@ -1033,7 +1036,7 @@
             menu.classList.toggle('active');
         }
           
-        // Tab switching function (added howitworks tab)
+        // Tab switching function (added tickers tab)
         function switchTab(tab) {  
             currentTab = tab;  
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));  
@@ -1069,6 +1072,7 @@
                 case 'faq': loadFaqManager(); break;  
                 case 'feedback': loadFeedbackManager(); break;  
                 case 'howitworks': loadHowItWorksEditor(); break;  
+                case 'tickers': loadTickers(); break;   // NEW TICKERS TAB
                 case 'settings': loadSettings(); break;  
             }  
         }  
@@ -1125,89 +1129,9 @@
               
             loadUsers();  
         }  
-          
-        // ==================== User Functions (updated with membership change, reset password, and demote admin) ====================
-        async function toggleVerified(userId, newStatus) {
-            await db.collection('users').doc(userId).update({ verified: newStatus });
-            showAlert(`User verified status set to ${newStatus}`, 'success');
-            loadUsers();
-        }
 
-        async function toggleFrozen(userId, newStatus) {
-            await db.collection('users').doc(userId).update({ frozen: newStatus });
-            showAlert(`User frozen status set to ${newStatus}`, 'success');
-            loadUsers();
-        }
-
-        async function deleteUser(userId, userEmail) {
-            if (!confirm(`Are you sure you want to delete user ${userEmail}? This action cannot be undone.`)) return;
-            try {
-                await db.collection('users').doc(userId).delete();
-                showAlert(`User ${userEmail} deleted successfully`, 'success');
-                loadUsers();
-            } catch (error) {
-                console.error('Error deleting user:', error);
-                showAlert('Error deleting user: ' + error.message, 'error');
-            }
-        }
-
-        async function resetUserPassword(userId, userEmail) {
-            if (!confirm(`Send password reset email to ${userEmail}?`)) return;
-            try {
-                await auth.sendPasswordResetEmail(userEmail);
-                showAlert(`Password reset email sent to ${userEmail}`, 'success');
-            } catch (error) {
-                console.error('Error sending password reset:', error);
-                showAlert('Error sending reset email: ' + error.message, 'error');
-            }
-        }
-
-        function showChangeMembership(userId, currentType) {
-            const options = Object.values(MEMBERSHIP_TYPES).map(type => {
-                const selected = type === currentType ? 'selected' : '';
-                return `<option value="${type}" ${selected}>${type.toUpperCase()}</option>`;
-            }).join('');
-            showModal(`
-                <h3 style="margin-bottom:1rem;">Change Membership for User</h3>
-                <select id="newMembershipType">
-                    ${options}
-                </select>
-                <p style="margin-bottom:1rem; color:#64748b;">Changing membership will update the user's type. No wallet adjustments will be made automatically.</p>
-                <button class="btn btn-primary" id="confirmMembershipChangeBtn" data-user-id="${userId}">Update Membership</button>
-            `);
-        }
-
-        async function changeMembership(userId) {
-            const newType = document.getElementById('newMembershipType').value;
-            try {
-                await db.collection('users').doc(userId).update({
-                    membershipType: newType,
-                    membershipPaid: newType !== MEMBERSHIP_TYPES.BASIC, // if premium/elite, mark as paid (you might want to adjust)
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                closeModal();
-                showAlert(`Membership updated to ${newType.toUpperCase()}`, 'success');
-                loadUsers();
-            } catch (error) {
-                console.error('Error changing membership:', error);
-                showAlert('Error: ' + error.message, 'error');
-            }
-        }
-
-        // NEW: Demote admin to regular user
-        async function demoteAdmin(userId, userEmail) {
-            if (!confirm(`Are you sure you want to remove admin privileges from ${userEmail}?`)) return;
-            try {
-                await db.collection('users').doc(userId).update({ role: 'user' });
-                showAlert(`${userEmail} is no longer an admin.`, 'success');
-                loadUsers();
-            } catch (error) {
-                console.error('Error demoting admin:', error);
-                showAlert('Error demoting admin: ' + error.message, 'error');
-            }
-        }
-
-        async function loadUsers() { 
+        // ==================== User Functions ====================
+        async function loadUsers() {
             try {
                 const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get(); 
                 const users = [];
@@ -1279,7 +1203,86 @@
                 }
             });
         };
-          
+
+        async function toggleVerified(userId, newStatus) {
+            await db.collection('users').doc(userId).update({ verified: newStatus });
+            showAlert(`User verified status set to ${newStatus}`, 'success');
+            loadUsers();
+        }
+
+        async function toggleFrozen(userId, newStatus) {
+            await db.collection('users').doc(userId).update({ frozen: newStatus });
+            showAlert(`User frozen status set to ${newStatus}`, 'success');
+            loadUsers();
+        }
+
+        async function deleteUser(userId, userEmail) {
+            if (!confirm(`Are you sure you want to delete user ${userEmail}? This action cannot be undone.`)) return;
+            try {
+                await db.collection('users').doc(userId).delete();
+                showAlert(`User ${userEmail} deleted successfully`, 'success');
+                loadUsers();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showAlert('Error deleting user: ' + error.message, 'error');
+            }
+        }
+
+        async function resetUserPassword(userId, userEmail) {
+            if (!confirm(`Send password reset email to ${userEmail}?`)) return;
+            try {
+                await auth.sendPasswordResetEmail(userEmail);
+                showAlert(`Password reset email sent to ${userEmail}`, 'success');
+            } catch (error) {
+                console.error('Error sending password reset:', error);
+                showAlert('Error sending reset email: ' + error.message, 'error');
+            }
+        }
+
+        function showChangeMembership(userId, currentType) {
+            const options = Object.values(MEMBERSHIP_TYPES).map(type => {
+                const selected = type === currentType ? 'selected' : '';
+                return `<option value="${type}" ${selected}>${type.toUpperCase()}</option>`;
+            }).join('');
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Change Membership for User</h3>
+                <select id="newMembershipType">
+                    ${options}
+                </select>
+                <p style="margin-bottom:1rem; color:#64748b;">Changing membership will update the user's type. No wallet adjustments will be made automatically.</p>
+                <button class="btn btn-primary" id="confirmMembershipChangeBtn" data-user-id="${userId}">Update Membership</button>
+            `);
+        }
+
+        async function changeMembership(userId) {
+            const newType = document.getElementById('newMembershipType').value;
+            try {
+                await db.collection('users').doc(userId).update({
+                    membershipType: newType,
+                    membershipPaid: newType !== MEMBERSHIP_TYPES.BASIC,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert(`Membership updated to ${newType.toUpperCase()}`, 'success');
+                loadUsers();
+            } catch (error) {
+                console.error('Error changing membership:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function demoteAdmin(userId, userEmail) {
+            if (!confirm(`Are you sure you want to remove admin privileges from ${userEmail}?`)) return;
+            try {
+                await db.collection('users').doc(userId).update({ role: 'user' });
+                showAlert(`${userEmail} is no longer an admin.`, 'success');
+                loadUsers();
+            } catch (error) {
+                console.error('Error demoting admin:', error);
+                showAlert('Error demoting admin: ' + error.message, 'error');
+            }
+        }
+
         async function toggleUserStatus(userId, newStatus) {  
             await db.collection('users').doc(userId).update({ active: newStatus });  
             showAlert(`User status updated to ${newStatus ? 'Active' : 'Inactive'}`, 'success');  
@@ -1321,11 +1324,6 @@
                 return;  
             }  
               
-            if (!userId) {  
-                showAlert('User ID is missing', 'error');  
-                return;  
-            }  
-              
             const adjustment = type === 'add' ? amount : -amount;  
               
             try {  
@@ -1362,8 +1360,8 @@
                 showAlert('Error adjusting wallet: ' + error.message, 'error');  
             }  
         }  
-          
-        // ========== Tasks with Collaboration fields and PROJECT category added ==========
+
+        // ==================== Tasks Functions ====================
         async function loadTasks() { 
             try {
                 const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get(); 
@@ -1400,7 +1398,6 @@
                         }
                     }
                     
-                    // Audio column display
                     let audioDisplay = '—';
                     if (task.audioUrl) {
                         audioDisplay = `<a href="${task.audioUrl}" target="_blank"><i class="fas fa-headphones"></i> Audio</a>`;
@@ -1452,7 +1449,7 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading tasks: ${error.message}</p><button class="btn btn-primary" onclick="loadTasks()">Retry</button></div>`;
             }
         }
-          
+
         async function showCreateTask() {  
             const usersSnapshot = await db.collection('users').orderBy('email').get();
             let userOptions = '<option value="all">All Users</option>';
@@ -1495,7 +1492,6 @@
                     <option value="hard">Hard</option>  
                 </select>  
 
-                <!-- Transcription fields (hidden by default) -->
                 <div id="transcriptionFields" style="display:none; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
                     <h4 style="margin-bottom:0.5rem;">Audio Details</h4>
                     <input type="url" id="taskAudioUrl" placeholder="Audio File URL (e.g., Dropbox, Google Drive link)">
@@ -1526,7 +1522,6 @@
                 document.getElementById('maxCollabField').style.display = e.target.checked ? 'block' : 'none';  
             });  
 
-            // Show/hide transcription fields based on category
             document.getElementById('taskCategory').addEventListener('change', function(e) {
                 const transcriptionDiv = document.getElementById('transcriptionFields');
                 transcriptionDiv.style.display = e.target.value === 'transcription' ? 'block' : 'none';
@@ -1547,7 +1542,6 @@
             const collaborable = document.getElementById('taskCollaborable').checked;  
             const maxCollaborators = collaborable ? parseInt(document.getElementById('taskMaxCollaborators').value) || 5 : 2;  
             
-            // Transcription fields
             let audioUrl = null, audioDuration = null, language = null, source = null, audioFormat = null, audioSize = null;
             if (category === 'transcription') {
                 audioUrl = document.getElementById('taskAudioUrl').value || null;
@@ -1651,7 +1645,6 @@
                 userOptions += `<option value="${doc.id}" ${selected}>${user.email} (${user.displayName})</option>`;  
             });  
               
-            // Determine if transcription fields should be visible initially
             const showTranscription = data.category === 'transcription' ? 'block' : 'none';
             
             showModal(`  
@@ -1688,7 +1681,6 @@
                     <option value="hard" ${data.difficulty === 'hard' ? 'selected' : ''}>Hard</option>  
                 </select>  
 
-                <!-- Transcription fields -->
                 <div id="editTranscriptionFields" style="display:${showTranscription}; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
                     <h4 style="margin-bottom:0.5rem;">Audio Details</h4>
                     <input type="url" id="editAudioUrl" placeholder="Audio File URL" value="${data.audioUrl || ''}">
@@ -1719,7 +1711,6 @@
                 document.getElementById('editMaxCollabField').style.display = e.target.checked ? 'block' : 'none';  
             });  
 
-            // Show/hide transcription fields based on category
             document.getElementById('editCategory').addEventListener('change', function(e) {
                 const transcriptionDiv = document.getElementById('editTranscriptionFields');
                 transcriptionDiv.style.display = e.target.value === 'transcription' ? 'block' : 'none';
@@ -1740,7 +1731,6 @@
             const collaborable = document.getElementById('editCollaborable').checked;  
             const maxCollaborators = collaborable ? parseInt(document.getElementById('editMaxCollaborators').value) || 5 : 2;  
             
-            // Transcription fields
             let audioUrl = null, audioDuration = null, language = null, source = null, audioFormat = null, audioSize = null;
             if (category === 'transcription') {
                 audioUrl = document.getElementById('editAudioUrl').value || null;
@@ -1793,7 +1783,6 @@
             const deadlineStatus = data.deadline ? getDeadlineStatus(data.deadline) : null;  
             const deadlineDisplay = data.deadline ? formatDate(data.deadline) : 'No deadline';  
             
-            // Audio display
             let audioHtml = '';
             if (data.audioUrl) {
                 audioHtml = `
@@ -1841,10 +1830,9 @@
             `);  
         }  
 
-        // ========== NEW: Team Approvals for Collaborable Tasks ==========
+        // ==================== Team Approvals ====================
         async function loadTeamApprovals() {
             try {
-                // Fetch all taskInvites with status 'accepted' (waiting for admin approval)
                 const invitesSnap = await db.collectionGroup('taskInvites').where('status', '==', 'accepted').get();
                 let html = '<h3 style="margin-bottom:1.5rem;">👥 Team Member Approvals</h3>';
                 if (invitesSnap.empty) {
@@ -1853,13 +1841,10 @@
                     html += '<table class="data-table"><tr><th>Task</th><th>User</th><th>Invited By</th><th>Actions</th></tr>';
                     for (const doc of invitesSnap.docs) {
                         const invite = doc.data();
-                        // Get task title
                         const taskDoc = await db.collection('tasks').doc(invite.taskId).get();
                         const taskTitle = taskDoc.exists ? taskDoc.data().title : 'Unknown Task';
-                        // Get user name
                         const userDoc = await db.collection('users').doc(invite.userId).get();
                         const userEmail = userDoc.exists ? userDoc.data().email : invite.userEmail;
-                        // Get inviter name
                         const inviterDoc = await db.collection('users').doc(invite.invitedBy).get();
                         const inviterName = inviterDoc.exists ? inviterDoc.data().displayName || inviterDoc.data().email : invite.invitedByName || 'Unknown';
                         html += `
@@ -1883,7 +1868,6 @@
             }
         }
 
-        // Approve a team member (add to taskAccepts, increment acceptedCount, notify)
         window.approveTeamMember = async function(taskId, userId, inviteDocId) {
             try {
                 const taskRef = db.collection('tasks').doc(taskId);
@@ -1896,10 +1880,8 @@
                     const maxCollab = task.maxCollaborators || 5;
                     if (currentAccepted >= maxCollab) throw new Error('Task is already full');
 
-                    // Update invite status
                     transaction.update(inviteRef, { status: 'approved', approvedAt: firebase.firestore.FieldValue.serverTimestamp() });
 
-                    // Add to taskAccepts
                     const acceptRef = taskRef.collection('taskAccepts').doc(userId);
                     const userDoc = await db.collection('users').doc(userId).get();
                     const userEmail = userDoc.exists ? userDoc.data().email : 'unknown';
@@ -1912,22 +1894,19 @@
                         acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // Increment acceptedCount
                     transaction.update(taskRef, { acceptedCount: firebase.firestore.FieldValue.increment(1) });
                 });
 
-                // Send notification to user
                 await sendNotification(userId, 'Team Approval', `Your membership for task has been approved. You can now submit work.`, 'task', `task:${taskId}`);
 
                 showAlert('Team member approved', 'success');
-                loadTeamApprovals(); // Refresh
+                loadTeamApprovals();
             } catch (error) {
                 console.error('Error approving team member:', error);
                 showAlert('Error: ' + error.message, 'error');
             }
         };
 
-        // Reject a team member
         window.rejectTeamMember = async function(taskId, userId, inviteDocId) {
             try {
                 const inviteRef = db.collection('tasks').doc(taskId).collection('taskInvites').doc(userId);
@@ -1941,7 +1920,7 @@
             }
         };
 
-        // ========== Submissions (updated with design link display) ==========
+        // ==================== Submissions ====================
         async function loadSubmissions() {  
             try {
                 const snapshot = await db.collection('submissions')  
@@ -2008,7 +1987,6 @@
                                     <p style="margin: 0;">${sub.workText}</p>  
                                 </div>  
 
-                                <!-- Display design link if provided -->
                                 ${sub.designLink ? `
                                     <div style="background: #e0f2fe; padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0;">  
                                         <p style="margin: 0 0 0.25rem 0;"><strong>🔗 Design Link:</strong></p>  
@@ -2121,8 +2099,8 @@
               
             loadSubmissions();  
         }  
-          
-        // ========== Withdrawals (with Reject) ==========
+
+        // ==================== Withdrawals ====================
         async function loadWithdrawals() { 
             try {
                 const snapshot = await db.collection('withdrawals') 
@@ -2191,7 +2169,6 @@
         async function rejectWithdrawal(withdrawalId) {
             const withdrawalDoc = await db.collection('withdrawals').doc(withdrawalId).get();
             const withdrawal = withdrawalDoc.data();
-            // Refund the amount (since it was deducted immediately)
             await db.runTransaction(async (transaction) => {
                 const userRef = db.collection('users').doc(withdrawal.userId);
                 const userDoc = await transaction.get(userRef);
@@ -2206,8 +2183,8 @@
             showAlert('Withdrawal rejected and amount refunded', 'success');
             loadWithdrawals();
         }
-        
-        // ========== Fee Settings (unchanged) ==========
+
+        // ==================== Fee Settings ====================
         function showEditFeeSettings() {
             if (!feeSettings) {
                 showAlert('Fee settings not loaded', 'error');
@@ -2490,8 +2467,8 @@
                 return false;
             }
         }
-        
-        // ========== Membership Packages (unchanged) ==========
+
+        // ==================== Membership Packages ====================
         function showEditPackages() {
             if (!membershipPackages) {
                 showAlert('Membership packages not loaded', 'error');
@@ -2719,7 +2696,7 @@
                 showAlert('Error saving packages: ' + error.message, 'error');
             }
         }
-        
+
         async function loadMemberships() {  
             try {
                 const snapshot = await db.collection('membershipPayments')  
@@ -2781,7 +2758,6 @@
                 } else {  
                     snapshot.forEach(doc => {  
                         const p = doc.data();  
-                        // Handle both membershipType and packageType
                         const membershipType = p.membershipType || p.packageType || 'premium';
                         const pkg = getPackageByType(membershipType);  
                         
@@ -2811,7 +2787,7 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading memberships: ${error.message}</p><button class="btn btn-primary" onclick="loadMemberships()">Retry</button></div>`;
             }
         }  
-        
+
         async function approveMembership(userId, paymentId) {
             try {
                 const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
@@ -3001,7 +2977,7 @@
             }
         }  
 
-        // ========== Settings (updated with Payment URL) ==========
+        // ==================== Settings ====================
         async function loadSettings() {
             try {
                 if (!feeSettings) {
@@ -3140,7 +3116,7 @@
             await savePaymentSettings(url);
         };
 
-        // ========== Referrals (unchanged) ==========
+        // ==================== Referrals ====================
         async function initializeReferralCollections() {
             try {
                 const testQuery = await db.collection('referrals').limit(1).get();
@@ -3801,8 +3777,8 @@
                 showAlert('Error rejecting referral: ' + error.message, 'error');  
             }  
         }  
-          
-        // ========== NOTIFICATION FUNCTIONS (unchanged) ==========
+
+        // ==================== Messages & Notifications ====================
         async function sendNotification(userId, title, message, type = 'info', link = null) {
             try {
                 if (!userId) throw new Error('No user ID');
@@ -3932,8 +3908,7 @@
             closeModal();
             await sendNotificationToAll(title, message, type, link);
         }
-          
-        // ========== Messages (updated with searchable user dropdown) ==========
+
         async function loadMessages() {  
             try {
                 const users = await db.collection('users').get();  
@@ -4004,7 +3979,6 @@
                       
                     <div id="individualMessageForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: ${currentMessageType === 'individual' ? 'block' : 'none'};">  
                         <h4 style="margin-bottom:1rem;">Send Individual Message</h4>  
-                        <!-- Search input for user dropdown -->
                         <input type="text" id="userSearch" placeholder="Type to filter users..." style="margin-bottom:0.5rem;">
                         <select id="messageUser" size="8" style="height:auto; min-height:150px;">  
                             <option value="">Select User</option>  
@@ -4091,14 +4065,13 @@
                   
                 document.getElementById('content').innerHTML = html;  
 
-                // Add search filtering for user select
                 const searchInput = document.getElementById('userSearch');
                 const userSelect = document.getElementById('messageUser');
                 if (searchInput && userSelect) {
                     searchInput.addEventListener('keyup', function() {
                         const filter = this.value.toLowerCase();
                         const options = userSelect.options;
-                        for (let i = 1; i < options.length; i++) { // skip first empty option
+                        for (let i = 1; i < options.length; i++) {
                             const text = options[i].text.toLowerCase();
                             options[i].style.display = text.includes(filter) ? '' : 'none';
                         }
@@ -4260,7 +4233,7 @@
             `);  
         }  
 
-        // ========== TRAINING CENTER (unchanged) ==========
+        // ==================== Training Center ====================
         function loadTrainingCenter() {
             let html = `
                 <h3 style="margin-bottom:1.5rem;">🎓 Training Center</h3>
@@ -4616,7 +4589,7 @@
             }
         };
 
-        // ========== User Logins (unchanged) ==========
+        // ==================== User Logins ====================
         async function loadLoginLogs() {
             try {
                 let html = '<h3 style="margin-bottom:1.5rem;">User Login Activity</h3>';
@@ -4652,7 +4625,7 @@
             }
         }
 
-        // ========== Transactions (unchanged) ==========
+        // ==================== Transactions ====================
         async function loadTransactions() {
             try {
                 let html = '<h3 style="margin-bottom:1.5rem;">All Transactions</h3>';
@@ -4688,7 +4661,7 @@
             }
         }
 
-        // ========== Petitions Management ==========
+        // ==================== Petitions ====================
         async function loadPetitions() {
             try {
                 const snapshot = await db.collection('petitions').orderBy('createdAt', 'desc').get();
@@ -4740,7 +4713,38 @@
             `);
         };
 
-        // ========== Leaderboard Management ==========
+        window.replyToPetition = function(petitionId, userId, message) {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Reply to Petition</h3>
+                <p><strong>Original Message:</strong> ${message}</p>
+                <textarea id="petitionReply" placeholder="Type your response..." style="min-height: 120px;"></textarea>
+                <button class="btn btn-success" id="sendPetitionReplyBtn" data-petition-id="${petitionId}" data-user-id="${userId}">Send Reply</button>
+            `);
+        };
+
+        window.sendPetitionReply = async function(petitionId, userId) {
+            const reply = document.getElementById('petitionReply').value.trim();
+            if (!reply) {
+                showAlert('Please enter a reply', 'error');
+                return;
+            }
+            try {
+                await db.collection('petitions').doc(petitionId).update({
+                    response: reply,
+                    respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    respondedBy: currentUser.email
+                });
+                await sendNotification(userId, 'Response to your Petition', reply, 'info', null);
+                closeModal();
+                showAlert('Reply sent and user notified', 'success');
+                loadPetitions();
+            } catch (error) {
+                console.error('Error sending petition reply:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // ==================== Leaderboard ====================
         async function loadLeaderboardManager() {
             try {
                 const snapshot = await db.collection('leaderboard').orderBy('rank', 'asc').get();
@@ -4804,7 +4808,7 @@
                         rank, 
                         userName, 
                         points,
-                        type: 'manual',          // mark as manual
+                        type: 'manual',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     closeModal();
@@ -4837,7 +4841,7 @@
                         rank: newRank, 
                         userName: newUserName, 
                         points: newPoints,
-                        type: 'manual'           // keep as manual
+                        type: 'manual'
                     });
                     closeModal();
                     showAlert('Leaderboard entry updated', 'success');
@@ -4936,7 +4940,7 @@
             }
         };
 
-        // ========== FAQ Management ==========
+        // ==================== FAQ ====================
         async function loadFaqManager() {
             try {
                 const snapshot = await db.collection('faqs').orderBy('order', 'asc').get();
@@ -5061,7 +5065,7 @@
             }
         };
 
-        // ========== Client Feedback Management ==========
+        // ==================== Client Feedback ====================
         async function loadFeedbackManager() {
             try {
                 const snapshot = await db.collection('clientFeedback').orderBy('createdAt', 'desc').get();
@@ -5164,7 +5168,7 @@
             }
         };
 
-        // ========== HOW IT WORKS EDITOR (Word‑like WYSIWYG) ==========
+        // ==================== How It Works Editor ====================
         async function loadHowItWorksEditor() {
             try {
                 const doc = await db.collection('howItWorks').doc('content').get();
@@ -5205,7 +5209,6 @@
             }
         }
 
-        // Render a section with contenteditable div (WYSIWYG)
         function renderWysiwygSection(section, index) {
             const type = section.type || 'paragraph';
             if (type === 'image') {
@@ -5225,7 +5228,6 @@
                     </div>
                 `;
             } else {
-                // Heading or paragraph – use contenteditable div with toolbar
                 const placeholder = type === 'heading' ? 'Heading text...' : 'Paragraph text...';
                 return `
                     <div class="section-card" data-index="${index}">
@@ -5258,7 +5260,6 @@
             }
         }
 
-        // Execute document command on the focused editor
         function execCmd(command, index, value = null) {
             const editor = document.querySelector(`.editor-content[data-index="${index}"]`);
             if (!editor) return;
@@ -5270,37 +5271,31 @@
             }
         }
 
-        // Prompt for link
         function promptLink(index) {
             const url = prompt('Enter URL:', 'https://');
             if (url) execCmd('createLink', index, url);
         }
 
-        // Prompt for color
         function promptColor(index) {
             const color = prompt('Enter color (name or hex):', 'red');
             if (color) execCmd('foreColor', index, color);
         }
 
-        // Prompt for font size
         function promptFontSize(index) {
             const size = prompt('Enter font size (e.g., 16px, 1.2em):', '16px');
-            if (size) execCmd('fontSize', index, size); // Note: fontSize uses 1-7, but we'll use styleWithCSS
-            // Better: use styleWithCSS and set font size via execCommand with style
-            document.execCommand('styleWithCSS', false, true);
-            document.execCommand('fontSize', false, '4'); // hack – real size can't be set directly. We'll use span.
-            // Instead we'll insert a span with style
-            const editor = document.querySelector(`.editor-content[data-index="${index}"]`);
-            const selection = window.getSelection();
-            if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                const span = document.createElement('span');
-                span.style.fontSize = size;
-                range.surroundContents(span);
+            if (size) {
+                document.execCommand('styleWithCSS', false, true);
+                const editor = document.querySelector(`.editor-content[data-index="${index}"]`);
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const span = document.createElement('span');
+                    span.style.fontSize = size;
+                    range.surroundContents(span);
+                }
             }
         }
 
-        // Add new WYSIWYG section
         window.addWysiwygSection = function(type) {
             const container = document.getElementById('sectionsContainer');
             if (!container) return;
@@ -5327,7 +5322,6 @@
             renderWysiwygSections(sections);
         };
 
-        // Render sections from array (WYSIWYG)
         function renderWysiwygSections(sections) {
             const container = document.getElementById('sectionsContainer');
             if (!container) return;
@@ -5338,7 +5332,6 @@
             container.innerHTML = html;
         }
 
-        // Move section
         window.moveWysiwygSection = function(index, direction) {
             const container = document.getElementById('sectionsContainer');
             const sections = [];
@@ -5366,7 +5359,6 @@
             renderWysiwygSections(sections);
         };
 
-        // Delete section
         window.deleteWysiwygSection = function(index) {
             if (!confirm('Delete this section?')) return;
             const container = document.getElementById('sectionsContainer');
@@ -5393,7 +5385,6 @@
             renderWysiwygSections(sections);
         };
 
-        // Save all sections to Firestore (WYSIWYG)
         window.saveWysiwygHowItWorks = async function() {
             const container = document.getElementById('sectionsContainer');
             if (!container) return;
@@ -5429,7 +5420,172 @@
             }
         };
 
-        // ========== EVENT DELEGATION (updated with new buttons) ==========
+        // ==================== TICKERS MANAGEMENT (NEW) ====================
+        async function loadTickers() {
+            try {
+                const snapshot = await db.collection('tickers').orderBy('order', 'asc').get();
+                let html = `
+                    <h3 style="margin-bottom:1.5rem;">📢 Live Tickers Management</h3>
+                    <p style="margin-bottom:1rem;">Tickers are scrolling messages that appear to users. Active tickers are shown in order.</p>
+                    <div style="margin-bottom:1rem;">
+                        <button class="btn btn-success" onclick="showAddTicker()">+ Add New Ticker</button>
+                    </div>
+                    <table class="data-table">
+                        <tr><th>Order</th><th>Message</th><th>Status</th><th>Actions</th></tr>
+                `;
+                if (snapshot.empty) {
+                    html += '<tr><td colspan="4" style="text-align:center;">No tickers. Add one.</td></tr>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const t = doc.data();
+                        const statusClass = t.active ? 'success' : 'secondary';
+                        const statusText = t.active ? 'Active' : 'Inactive';
+                        html += `
+                            <tr>
+                                <td>${t.order || 0}</td>
+                                <td>${t.message}</td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editTicker('${doc.id}', '${t.message}', ${t.order}, ${t.active})">Edit</button>
+                                    <button class="btn btn-sm btn-warning" onclick="toggleTickerStatus('${doc.id}', ${!t.active})">${t.active ? 'Deactivate' : 'Activate'}</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteTicker('${doc.id}')">Delete</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'up')"><i class="fas fa-arrow-up"></i></button>
+                                    <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'down')"><i class="fas fa-arrow-down"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                html += '</table>';
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading tickers:', error);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading tickers: ${error.message}</p><button class="btn btn-primary" onclick="loadTickers()">Retry</button></div>`;
+            }
+        }
+
+        window.showAddTicker = function() {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Add New Ticker</h3>
+                <input type="text" id="tickerMessage" placeholder="Ticker message" required>
+                <input type="number" id="tickerOrder" placeholder="Order (e.g., 1,2,3)" value="1" min="0">
+                <div style="margin-bottom:1rem;">
+                    <label><input type="checkbox" id="tickerActive" checked> Active</label>
+                </div>
+                <button class="btn btn-success" id="saveTickerBtn">Save Ticker</button>
+            `);
+            document.getElementById('saveTickerBtn').addEventListener('click', async function() {
+                const message = document.getElementById('tickerMessage').value.trim();
+                const order = parseInt(document.getElementById('tickerOrder').value) || 0;
+                const active = document.getElementById('tickerActive').checked;
+                if (!message) {
+                    showAlert('Message is required', 'error');
+                    return;
+                }
+                try {
+                    await db.collection('tickers').add({
+                        message,
+                        order,
+                        active,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    closeModal();
+                    showAlert('Ticker added successfully', 'success');
+                    loadTickers();
+                } catch (error) {
+                    showAlert('Error: ' + error.message, 'error');
+                }
+            });
+        };
+
+        window.editTicker = function(id, message, order, active) {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Edit Ticker</h3>
+                <input type="text" id="tickerMessage" value="${message}" required>
+                <input type="number" id="tickerOrder" value="${order}" min="0">
+                <div style="margin-bottom:1rem;">
+                    <label><input type="checkbox" id="tickerActive" ${active ? 'checked' : ''}> Active</label>
+                </div>
+                <button class="btn btn-success" id="updateTickerBtn">Update Ticker</button>
+            `);
+            document.getElementById('updateTickerBtn').addEventListener('click', async function() {
+                const newMessage = document.getElementById('tickerMessage').value.trim();
+                const newOrder = parseInt(document.getElementById('tickerOrder').value) || 0;
+                const newActive = document.getElementById('tickerActive').checked;
+                if (!newMessage) {
+                    showAlert('Message is required', 'error');
+                    return;
+                }
+                try {
+                    await db.collection('tickers').doc(id).update({
+                        message: newMessage,
+                        order: newOrder,
+                        active: newActive
+                    });
+                    closeModal();
+                    showAlert('Ticker updated', 'success');
+                    loadTickers();
+                } catch (error) {
+                    showAlert('Error: ' + error.message, 'error');
+                }
+            });
+        };
+
+        window.toggleTickerStatus = async function(id, newStatus) {
+            try {
+                await db.collection('tickers').doc(id).update({ active: newStatus });
+                showAlert(`Ticker ${newStatus ? 'activated' : 'deactivated'}`, 'success');
+                loadTickers();
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.deleteTicker = async function(id) {
+            if (!confirm('Delete this ticker?')) return;
+            try {
+                await db.collection('tickers').doc(id).delete();
+                showAlert('Ticker deleted', 'success');
+                loadTickers();
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.moveTicker = async function(id, direction) {
+            try {
+                const snapshot = await db.collection('tickers').orderBy('order', 'asc').get();
+                const tickers = [];
+                snapshot.forEach(doc => tickers.push({ id: doc.id, ...doc.data() }));
+                const index = tickers.findIndex(t => t.id === id);
+                if (index === -1) return;
+                if (direction === 'up' && index > 0) {
+                    const temp = tickers[index].order;
+                    tickers[index].order = tickers[index-1].order;
+                    tickers[index-1].order = temp;
+                } else if (direction === 'down' && index < tickers.length-1) {
+                    const temp = tickers[index].order;
+                    tickers[index].order = tickers[index+1].order;
+                    tickers[index+1].order = temp;
+                } else {
+                    return;
+                }
+                const batch = db.batch();
+                batch.update(db.collection('tickers').doc(tickers[index].id), { order: tickers[index].order });
+                if (direction === 'up') {
+                    batch.update(db.collection('tickers').doc(tickers[index-1].id), { order: tickers[index-1].order });
+                } else {
+                    batch.update(db.collection('tickers').doc(tickers[index+1].id), { order: tickers[index+1].order });
+                }
+                await batch.commit();
+                showAlert('Order updated', 'success');
+                loadTickers();
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // ==================== EVENT DELEGATION ====================
         document.addEventListener('click', async (e) => {  
             try {  
                 const target = e.target;  
@@ -5463,300 +5619,231 @@
                     return;  
                 }  
                   
-                if (target.classList.contains('adjust-wallet-btn')) {  
-                    const userId = target.getAttribute('data-user-id');  
-                    const userName = target.getAttribute('data-user-name');  
-                    const wallet = target.getAttribute('data-wallet');  
-                    showAdjustWallet(userId, userName, parseFloat(wallet || 0));  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('apply-adjustment-btn')) {  
-                    const userId = target.getAttribute('data-user-id');  
-                    await adjustWallet(userId);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('toggle-status-btn')) {  
-                    const userId = target.getAttribute('data-user-id');  
-                    const newStatus = target.getAttribute('data-new-status') === 'true';  
-                    await toggleUserStatus(userId, newStatus);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('make-admin-btn')) {  
-                    const userId = target.getAttribute('data-user-id');  
-                    await makeAdmin(userId);  
-                    return;  
-                }  
-
-                // NEW: Demote admin button
+                // User management buttons
+                if (target.classList.contains('toggle-status-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    const newStatus = target.getAttribute('data-new-status') === 'true';
+                    await toggleUserStatus(userId, newStatus);
+                    return;
+                }
+                if (target.classList.contains('make-admin-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    await makeAdmin(userId);
+                    return;
+                }
                 if (target.classList.contains('demote-admin-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const userEmail = target.getAttribute('data-user-email');
                     await demoteAdmin(userId, userEmail);
                     return;
                 }
-                  
                 if (target.classList.contains('toggle-verified-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const newStatus = target.getAttribute('data-new-status') === 'true';
                     await toggleVerified(userId, newStatus);
                     return;
                 }
-
                 if (target.classList.contains('toggle-frozen-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const newStatus = target.getAttribute('data-new-status') === 'true';
                     await toggleFrozen(userId, newStatus);
                     return;
                 }
-
                 if (target.classList.contains('delete-user-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const userEmail = target.getAttribute('data-user-email');
                     await deleteUser(userId, userEmail);
                     return;
                 }
-
                 if (target.classList.contains('change-membership-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const currentType = target.getAttribute('data-current-type');
                     showChangeMembership(userId, currentType);
                     return;
                 }
-
                 if (target.id === 'confirmMembershipChangeBtn') {
                     const userId = target.getAttribute('data-user-id');
                     await changeMembership(userId);
                     return;
                 }
-
                 if (target.classList.contains('reset-password-btn')) {
                     const userId = target.getAttribute('data-user-id');
                     const userEmail = target.getAttribute('data-user-email');
                     await resetUserPassword(userId, userEmail);
                     return;
                 }
-                  
-                if (target.id === 'createTaskBtn') {  
-                    await showCreateTask();  
-                    return;  
-                }  
-                  
-                if (target.id === 'createTaskConfirmBtn') {  
-                    await createTask();  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('edit-task-btn')) {  
-                    const taskId = target.getAttribute('data-task-id');  
-                    await editTask(taskId);  
-                    return;  
-                }  
-                  
-                if (target.id === 'updateTaskBtn') {  
-                    const taskId = target.getAttribute('data-task-id');  
-                    await updateTask(taskId);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('toggle-task-btn')) {  
-                    const taskId = target.getAttribute('data-task-id');  
-                    const newStatus = target.getAttribute('data-new-status') === 'true';  
-                    await toggleTask(taskId, newStatus);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('view-requirements-btn')) {  
-                    const taskId = target.getAttribute('data-task-id');  
-                    await viewRequirements(taskId);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('approve-submission')) {  
-                    const subId = target.getAttribute('data-sub-id');  
-                    await reviewSubmission(subId, true);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('reject-submission')) {  
-                    const subId = target.getAttribute('data-sub-id');  
-                    await reviewSubmission(subId, false);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('process-withdrawal')) {  
-                    const withdrawalId = target.getAttribute('data-withdrawal-id');  
-                    await processWithdrawal(withdrawalId);  
-                    return;  
-                }  
+                if (target.classList.contains('adjust-wallet-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    const userName = target.getAttribute('data-user-name');
+                    const wallet = target.getAttribute('data-wallet');
+                    showAdjustWallet(userId, userName, parseFloat(wallet || 0));
+                    return;
+                }
+                if (target.classList.contains('apply-adjustment-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    await adjustWallet(userId);
+                    return;
+                }
 
-                if (target.classList.contains('reject-withdrawal')) {  
-                    const withdrawalId = target.getAttribute('data-withdrawal-id');  
+                // Task management
+                if (target.id === 'createTaskBtn') {
+                    await showCreateTask();
+                    return;
+                }
+                if (target.id === 'createTaskConfirmBtn') {
+                    await createTask();
+                    return;
+                }
+                if (target.classList.contains('edit-task-btn')) {
+                    const taskId = target.getAttribute('data-task-id');
+                    await editTask(taskId);
+                    return;
+                }
+                if (target.id === 'updateTaskBtn') {
+                    const taskId = target.getAttribute('data-task-id');
+                    await updateTask(taskId);
+                    return;
+                }
+                if (target.classList.contains('toggle-task-btn')) {
+                    const taskId = target.getAttribute('data-task-id');
+                    const newStatus = target.getAttribute('data-new-status') === 'true';
+                    await toggleTask(taskId, newStatus);
+                    return;
+                }
+                if (target.classList.contains('view-requirements-btn')) {
+                    const taskId = target.getAttribute('data-task-id');
+                    await viewRequirements(taskId);
+                    return;
+                }
+
+                // Submissions
+                if (target.classList.contains('approve-submission')) {
+                    const subId = target.getAttribute('data-sub-id');
+                    await reviewSubmission(subId, true);
+                    return;
+                }
+                if (target.classList.contains('reject-submission')) {
+                    const subId = target.getAttribute('data-sub-id');
+                    await reviewSubmission(subId, false);
+                    return;
+                }
+
+                // Withdrawals
+                if (target.classList.contains('process-withdrawal')) {
+                    const withdrawalId = target.getAttribute('data-withdrawal-id');
+                    await processWithdrawal(withdrawalId);
+                    return;
+                }
+                if (target.classList.contains('reject-withdrawal')) {
+                    const withdrawalId = target.getAttribute('data-withdrawal-id');
                     if (confirm('Reject this withdrawal? The amount will be refunded to the user.')) {
-                        await rejectWithdrawal(withdrawalId);  
+                        await rejectWithdrawal(withdrawalId);
                     }
-                    return;  
-                }  
-                  
-                if (target.classList.contains('approve-membership')) {  
-                    const userId = target.getAttribute('data-user-id');  
-                    const paymentId = target.getAttribute('data-payment-id');  
-                    await approveMembership(userId, paymentId);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('reject-membership')) {  
-                    const userId = target.getAttribute('data-user-id');  
-                    const paymentId = target.getAttribute('data-payment-id');  
-                    await rejectMembership(userId, paymentId);  
-                    return;  
-                }  
-                
-                if (target.classList.contains('edit-packages-btn') || target.id === 'editPackagesBtn' || 
-                    (target.closest('button') && target.closest('button').textContent.includes('Edit Packages'))) {
-                    showEditPackages();
                     return;
                 }
-                
-                if (target.id === 'savePackagesBtn' || (target.closest('button') && target.closest('button').id === 'savePackagesBtn')) {
-                    e.preventDefault();
-                    await savePackages();
-                    return;
-                }
-                
-                if (target.id === 'editFeeSettingsBtn' || (target.closest('button') && target.closest('button').textContent.includes('Edit Fee Settings'))) {
-                    showEditFeeSettings();
-                    return;
-                }
-                
-                if (target.id === 'saveFeeSettingsBtn' || (target.closest('button') && target.closest('button').id === 'saveFeeSettingsBtn')) {
-                    e.preventDefault();
-                    await saveFeeSettings();
-                    return;
-                }
-                  
-                if (target.classList.contains('credit-referral-btn')) {  
-                    const referralId = target.getAttribute('data-referral-id');  
-                    const referrerId = target.getAttribute('data-referrer-id');  
-                    const referredId = target.getAttribute('data-referred-id');  
-                    const referredEmail = target.getAttribute('data-referred-email');  
-                    await creditReferralBonus(referralId, referrerId, referredId, referredEmail);  
-                    return;  
-                }  
-                  
-                if (target.id === 'confirmCreditBtn') {  
-                    const referralId = target.getAttribute('data-referral-id');  
-                    const referrerId = target.getAttribute('data-referrer-id');  
-                    const referredId = target.getAttribute('data-referred-id');  
-                    const referredEmail = target.getAttribute('data-referred-email');  
-                    await executeCreditBonus(referralId, referrerId, referredId, referredEmail);  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('reject-referral-btn')) {  
-                    const referralId = target.getAttribute('data-referral-id');  
-                    if (confirm('Are you sure you want to reject this referral?')) {  
-                        await rejectReferral(referralId);  
-                    }  
-                    return;  
-                }  
-                  
-                if (target.id === 'sendMessageBtn') {  
-                    await sendMessage();  
-                    return;  
-                }  
-                  
-                if (target.id === 'individualMessageBtn') {  
-                    currentMessageType = 'individual';  
-                    document.getElementById('individualMessageForm').style.display = 'block';  
-                    document.getElementById('broadcastMessageForm').style.display = 'none';  
-                    target.classList.add('btn-primary');  
-                    document.getElementById('broadcastMessageBtn').classList.remove('btn-primary');  
-                    return;  
-                }  
-                  
-                if (target.id === 'broadcastMessageBtn') {  
-                    currentMessageType = 'broadcast';  
-                    document.getElementById('broadcastMessageForm').style.display = 'block';  
-                    document.getElementById('individualMessageForm').style.display = 'none';  
-                    target.classList.add('btn-primary');  
-                    document.getElementById('individualMessageBtn').classList.remove('btn-primary');  
-                    return;  
-                }  
-                  
-                if (target.id === 'sendBroadcastBtn' || target.closest('#sendBroadcastBtn')) {  
-                    await sendBroadcast();  
-                    return;  
-                }  
-                  
-                if (target.id === 'previewBroadcastBtn') {  
-                    previewBroadcast();  
-                    return;  
-                }  
-                  
-                if (target.id === 'confirmBroadcastBtn') {  
-                    await executeBroadcast();  
-                    return;  
-                }  
-                  
-                if (target.id === 'cancelBroadcastBtn') {  
-                    closeModal();  
-                    return;  
-                }  
 
-                if (target.id === 'individualNotificationBtn') {  
-                    const form = document.getElementById('individualNotificationForm');  
-                    form.style.display = form.style.display === 'none' ? 'block' : 'none';  
-                    document.getElementById('broadcastNotificationForm').style.display = 'none';  
-                    return;  
-                }  
-
-                if (target.id === 'broadcastNotificationBtn') {  
-                    const form = document.getElementById('broadcastNotificationForm');  
-                    form.style.display = form.style.display === 'none' ? 'block' : 'none';  
-                    document.getElementById('individualNotificationForm').style.display = 'none';  
-                    return;  
-                }  
-
-                if (target.id === 'sendIndividualNotifBtn') {  
-                    await sendIndividualNotification();  
-                    return;  
-                }  
-
-                if (target.id === 'sendBroadcastNotifBtn') {  
-                    await sendBroadcastNotification();  
-                    return;  
-                }  
-
-                if (target.id === 'confirmBroadcastNotifBtn') {  
-                    await executeBroadcastNotification();  
-                    return;  
-                }  
-
-                if (target.classList.contains('view-conversation-btn')) {
+                // Memberships
+                if (target.classList.contains('approve-membership')) {
                     const userId = target.getAttribute('data-user-id');
-                    await viewUserConversation(userId);
+                    const paymentId = target.getAttribute('data-payment-id');
+                    await approveMembership(userId, paymentId);
                     return;
                 }
-
-                if (target.classList.contains('reply-to-petition-btn')) {
-                    const petitionId = target.getAttribute('data-petition-id');
+                if (target.classList.contains('reject-membership')) {
                     const userId = target.getAttribute('data-user-id');
-                    const message = target.getAttribute('data-message');
-                    await replyToPetition(petitionId, userId, message);
+                    const paymentId = target.getAttribute('data-payment-id');
+                    await rejectMembership(userId, paymentId);
                     return;
                 }
 
-                if (target.id === 'sendPetitionReplyBtn') {
-                    const petitionId = target.getAttribute('data-petition-id');
-                    const userId = target.getAttribute('data-user-id');
-                    await sendPetitionReply(petitionId, userId);
+                // Referrals
+                if (target.classList.contains('credit-referral-btn')) {
+                    const referralId = target.getAttribute('data-referral-id');
+                    const referrerId = target.getAttribute('data-referrer-id');
+                    const referredId = target.getAttribute('data-referred-id');
+                    const referredEmail = target.getAttribute('data-referred-email');
+                    await creditReferralBonus(referralId, referrerId, referredId, referredEmail);
+                    return;
+                }
+                if (target.id === 'confirmCreditBtn') {
+                    const referralId = target.getAttribute('data-referral-id');
+                    const referrerId = target.getAttribute('data-referrer-id');
+                    const referredId = target.getAttribute('data-referred-id');
+                    const referredEmail = target.getAttribute('data-referred-email');
+                    await executeCreditBonus(referralId, referrerId, referredId, referredEmail);
+                    return;
+                }
+                if (target.classList.contains('reject-referral-btn')) {
+                    const referralId = target.getAttribute('data-referral-id');
+                    if (confirm('Are you sure you want to reject this referral?')) {
+                        await rejectReferral(referralId);
+                    }
                     return;
                 }
 
-                // Training Center buttons
+                // Messages
+                if (target.id === 'sendMessageBtn') {
+                    await sendMessage();
+                    return;
+                }
+                if (target.id === 'individualMessageBtn') {
+                    currentMessageType = 'individual';
+                    document.getElementById('individualMessageForm').style.display = 'block';
+                    document.getElementById('broadcastMessageForm').style.display = 'none';
+                    target.classList.add('btn-primary');
+                    document.getElementById('broadcastMessageBtn').classList.remove('btn-primary');
+                    return;
+                }
+                if (target.id === 'broadcastMessageBtn') {
+                    currentMessageType = 'broadcast';
+                    document.getElementById('broadcastMessageForm').style.display = 'block';
+                    document.getElementById('individualMessageForm').style.display = 'none';
+                    target.classList.add('btn-primary');
+                    document.getElementById('individualMessageBtn').classList.remove('btn-primary');
+                    return;
+                }
+                if (target.id === 'sendBroadcastBtn') {
+                    await sendBroadcast();
+                    return;
+                }
+                if (target.id === 'previewBroadcastBtn') {
+                    previewBroadcast();
+                    return;
+                }
+                if (target.id === 'confirmBroadcastBtn') {
+                    await executeBroadcast();
+                    return;
+                }
+                if (target.id === 'cancelBroadcastBtn') {
+                    closeModal();
+                    return;
+                }
+                if (target.id === 'individualNotificationBtn') {
+                    const form = document.getElementById('individualNotificationForm');
+                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                    document.getElementById('broadcastNotificationForm').style.display = 'none';
+                    return;
+                }
+                if (target.id === 'broadcastNotificationBtn') {
+                    const form = document.getElementById('broadcastNotificationForm');
+                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                    document.getElementById('individualNotificationForm').style.display = 'none';
+                    return;
+                }
+                if (target.id === 'sendIndividualNotifBtn') {
+                    await sendIndividualNotification();
+                    return;
+                }
+                if (target.id === 'sendBroadcastNotifBtn') {
+                    await sendBroadcastNotification();
+                    return;
+                }
+                if (target.id === 'confirmBroadcastNotifBtn') {
+                    await executeBroadcastNotification();
+                    return;
+                }
+
+                // Training
                 if (target.id === 'createTrainingBtn') {
                     e.preventDefault();
                     await createTraining();
@@ -5769,30 +5856,43 @@
                     return;
                 }
 
-                // Leaderboard buttons
+                // Leaderboard
                 if (target.id === 'saveLeaderboardBtn') {
                     // handled by its own listener
                 }
                 if (target.id === 'updateLeaderboardBtn') {
                     // handled by its own listener
                 }
-                // FAQ buttons
+
+                // FAQ
                 if (target.id === 'saveFaqBtn') {
                     // handled by its own listener
                 }
                 if (target.id === 'updateFaqBtn') {
                     // handled by its own listener
                 }
-                // Feedback buttons
+
+                // Feedback
                 if (target.id === 'saveFeedbackBtn') {
                     // handled by its own listener
                 }
+
+                // Petitions
+                if (target.id === 'sendPetitionReplyBtn') {
+                    const petitionId = target.getAttribute('data-petition-id');
+                    const userId = target.getAttribute('data-user-id');
+                    await sendPetitionReply(petitionId, userId);
+                    return;
+                }
+
+                // Tickers (buttons inside modal are handled by their own listeners)
             } catch (error) {
                 console.error('Error in click handler:', error);
                 showAlert('An error occurred: ' + error.message, 'error');
             }
         });  
           
+        // Expose functions globally
         window.showAlert = showAlert;  
         window.showModal = showModal;  
         window.closeModal = closeModal;  
@@ -5845,9 +5945,7 @@
         window.filterUsersTable = filterUsersTable;
         window.loadDefaultFaqs = loadDefaultFaqs;
         window.loadSampleFeedback = loadSampleFeedback;
-        window.viewUserConversation = viewUserConversation;
-        window.replyToPetition = replyToPetition;
-        window.sendPetitionReply = sendPetitionReply;
+        // Ticker functions are already attached via window.*
         window.toggleMobileMenu = toggleMobileMenu;
     </script>  
 </body>  
