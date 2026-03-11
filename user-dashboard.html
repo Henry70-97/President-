@@ -15,13 +15,47 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* All existing styles (unchanged) plus additions for How It Works */
+        /* ==================== BASE STYLES ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; padding-bottom: 80px; }
         .app-container { max-width: 1200px; margin: 0 auto; padding: 0.75rem; }
 
         .logo img { max-height: 40px; width: auto; display: block; }
 
+        /* ==================== TICKER ==================== */
+        .ticker-container {
+            background: #0f172a;
+            color: #fbbf24;
+            padding: 0.4rem 0;
+            border-radius: 2rem;
+            margin-bottom: 0.8rem;
+            border: 1px solid #fbbf24;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+        .ticker-content {
+            display: inline-block;
+            animation: tickerMove 20s linear infinite;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        .ticker-content span {
+            margin-right: 3rem;
+            color: #fbbf24;
+        }
+        .ticker-content i {
+            margin: 0 0.5rem;
+            color: #10b981;
+        }
+        @keyframes tickerMove {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* ==================== NEWS TV (MIRROR) ==================== */
         .news-tv-container { background: #0b0f18; border-radius: 1.5rem; padding: 0.6rem 0.8rem 0.8rem 0.8rem; margin-bottom: 1rem; box-shadow: 0 15px 30px rgba(0,0,0,0.3), inset 0 1px 4px rgba(255,255,255,0.1); border: 1px solid #2d3748; }
         .news-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; padding-left: 0.3rem; flex-wrap: wrap; }
         .live-badge { background: #dc2626; color: white; font-weight: 700; font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 30px; text-transform: uppercase; letter-spacing: 0.5px; animation: pulseLive 1.5s infinite; }
@@ -50,6 +84,7 @@
         .mirror-tab-stat-value { font-weight: 700; color: #10b981; }
         @keyframes pulseLive { 0% { opacity: 1; background-color: #b91c1c; } 50% { opacity: 0.85; background-color: #dc2626; } 100% { opacity: 1; background-color: #b91c1c; } }
 
+        /* ==================== HEADER ==================== */
         .header { background: white; border-radius: 1.5rem; padding: 0.8rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .logo h2 { background: linear-gradient(135deg, #6366f1, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
         .user-menu { display: flex; align-items: center; gap: 0.5rem; }
@@ -93,6 +128,7 @@
             font-size: 0.8rem;
         }
 
+        /* ==================== BOTTOM NAV (mobile) ==================== */
         .bottom-nav {
             display: none;
             position: fixed;
@@ -154,6 +190,7 @@
             border: 2px solid white;
         }
 
+        /* ==================== MOBILE MENU ==================== */
         .mobile-nav { display: none; position: fixed; top: 0; left: -100%; width: 85%; max-width: 350px; height: 100vh; background: white; z-index: 2000; padding: 2rem; box-shadow: 0 0 30px rgba(0,0,0,0.2); transition: left 0.3s ease; overflow-y: auto; }
         .mobile-nav.active { left: 0; display: block; }
         .mobile-nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9; }
@@ -166,6 +203,7 @@
         .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1999; }
         .mobile-nav-overlay.active { display: block; }
 
+        /* ==================== STATS GRID ==================== */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
         .stat-card { background: white; border-radius: 1.2rem; padding: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-3px); }
@@ -173,6 +211,7 @@
         .stat-value { font-size: 1.4rem; font-weight: 800; color: #0f172a; line-height: 1.2; letter-spacing: -0.5px; }
         .stat-label { color: #64748b; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
+        /* ==================== DESKTOP TABS ==================== */
         .tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .tab { padding: 0.5rem 1rem; border: none; border-radius: 40px; background: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; position: relative; }
         .tab.active { background: #6366f1; color: white; }
@@ -188,41 +227,71 @@
             font-weight: 600;
         }
 
+        /* ==================== MAIN CONTENT ==================== */
         .content { background: white; border-radius: 1.5rem; padding: 1rem; min-height: 400px; }
 
-        /* How It Works styles */
+        /* ==================== HOW IT WORKS – enhanced ==================== */
         .how-it-works {
             max-width: 800px;
             margin: 0 auto;
-            padding: 1rem;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            line-height: 1.8;
+            color: #1e293b;
         }
-        .how-it-works h1, .how-it-works h2, .how-it-works h3 {
+        .how-it-works h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid #6366f1;
+            padding-bottom: 0.5rem;
+        }
+        .how-it-works h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .how-it-works h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #0f172a;
             margin-top: 1.5rem;
             margin-bottom: 0.75rem;
-            color: #0f172a;
         }
-        .how-it-works h1 { font-size: 2rem; }
-        .how-it-works h2 { font-size: 1.5rem; }
-        .how-it-works h3 { font-size: 1.2rem; }
         .how-it-works p {
-            margin-bottom: 1rem;
-            line-height: 1.6;
+            margin-bottom: 1.2rem;
+            font-size: 1rem;
             color: #334155;
         }
         .how-it-works img {
             max-width: 100%;
-            height: auto;
-            border-radius: 0.5rem;
-            margin: 1rem 0;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 1rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .how-it-works ul, .how-it-works ol {
+            margin: 1rem 0 1.5rem 2rem;
+            color: #334155;
+        }
+        .how-it-works li {
+            margin-bottom: 0.5rem;
         }
         .how-it-works .last-updated {
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 2.5rem;
             text-align: right;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 1rem;
         }
 
+        /* ==================== LEADERBOARD / FAQ / FEEDBACK ==================== */
         .leaderboard-table { width:100%; border-collapse: collapse; font-size: 0.8rem; }
         .leaderboard-table th { text-align:left; padding:0.5rem; background:#f1f5f9; }
         .leaderboard-table td { padding:0.5rem; border-bottom:1px solid #e2e8f0; }
@@ -235,6 +304,7 @@
         .team-list { margin-top:0.3rem; font-size:0.75rem; color:#475569; }
         .graph-container { height:250px; margin-top:0.5rem; }
 
+        /* ==================== FILTER BAR ==================== */
         .filter-bar { background: #f8fafc; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; }
         .filter-title { font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.3rem; font-size: 0.9rem; }
         .filter-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; align-items: flex-end; }
@@ -253,8 +323,8 @@
         .filter-tag { background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 40px; font-size: 0.65rem; display: flex; align-items: center; gap: 0.2rem; }
         .filter-tag i { cursor: pointer; color: #ef4444; margin-left: 0.2rem; }
 
+        /* ==================== TASK GRID – bright alternating colors ==================== */
         .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-        /* Bright alternating colors for task cards – matching the stats pattern */
         .task-card:nth-child(6n+1) { background-color: #e6f0ff; }
         .task-card:nth-child(6n+2) { background-color: #e0ffe0; }
         .task-card:nth-child(6n+3) { background-color: #fff9c4; }
@@ -271,8 +341,6 @@
             transform: translateY(-3px); 
             box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
         }
-        /* Removed previous odd/even background rules – now using bright alternating colors */
-
         .task-title { color: #10b981; font-weight: 800; font-size: 1.1rem; margin-bottom: 0.3rem; line-height: 1.3; }
         .client-info { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.5rem; color: #4b5563; font-size: 0.75rem; background: rgba(255,255,255,0.5); padding: 0.2rem 0.6rem; border-radius: 40px; width: fit-content; }
         .client-info i { color: #6366f1; font-size: 0.7rem; }
@@ -291,6 +359,7 @@
         .badge.danger { background: #ef444420; color: #ef4444; }
         .badge.info { background: #8b5cf620; color: #8b5cf6; }
 
+        /* ==================== BUTTONS ==================== */
         .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.3px; cursor: pointer; transition: all 0.3s; }
         .btn-primary { background: #6366f1; color: white; }
         .btn-primary:hover { background: #4f52e0; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
@@ -307,6 +376,7 @@
         .btn-danger { background: #ef4444; color: white; }
         .btn-danger:hover { background: #dc2626; }
 
+        /* ==================== SMART SUBMISSION ==================== */
         .smart-submission { max-width: 800px; margin: 0 auto; background: white; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
         .submission-header { background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 1.2rem; color: white; position: relative; overflow: hidden; }
         .submission-header::before { content: ''; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: rotate 20s linear infinite; }
@@ -342,42 +412,190 @@
         #uploadBtn i.fa-spinner { margin-right: 0.3rem; }
         #uploadBtn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .pdf-document { background: white; font-family: 'Inter', sans-serif; border-radius: 1rem; overflow: hidden; }
-        .pdf-header { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 1rem 1.2rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid #10b981; }
-        .pdf-header h2 { margin: 0; font-size: 1.2rem; }
-        .pdf-badge { background: #10b981; color: white; padding: 0.2rem 0.8rem; border-radius: 40px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
-        .pdf-content { padding: 1.2rem; }
-        .pdf-title { font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 1rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem; }
-        .pdf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem; background: #f8fafc; padding: 1rem; border-radius: 0.5rem; }
-        .pdf-grid-item { display: flex; flex-direction: column; }
-        .pdf-grid-label { font-size: 0.65rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.3px; font-weight: 600; margin-bottom: 0.2rem; }
-        .pdf-grid-value { font-size: 0.9rem; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 0.3rem; }
-        .pdf-grid-value i { color: #10b981; width: 16px; }
-        .pdf-section { margin-bottom: 1rem; }
-        .pdf-section-title { font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.3rem; }
-        .pdf-section-title i { color: #10b981; }
-        .pdf-section-content { background: #f8fafc; padding: 0.8rem; border-radius: 0.5rem; border-left: 4px solid #10b981; font-size: 0.85rem; line-height: 1.6; color: #334155; }
-        .pdf-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid #e5e7eb; }
-        .pdf-btn { flex: 1; padding: 0.6rem; border: none; border-radius: 0.5rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.3rem; }
-        .pdf-btn-primary { background: #10b981; color: white; }
-        .pdf-btn-primary:hover { background: #059669; }
-        .pdf-btn-secondary { background: #f1f5f9; color: #334155; }
-        .pdf-btn-secondary:hover { background: #e2e8f0; }
+        /* ==================== PDF-STYLE TASK DETAILS ==================== */
+        .pdf-document {
+            background: white;
+            font-family: 'Inter', sans-serif;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border: 1px solid #e2e8f0;
+        }
+        .pdf-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 4px solid #10b981;
+        }
+        .pdf-header .company {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .pdf-header .company img {
+            height: 40px;
+            width: auto;
+            border-radius: 8px;
+            background: white;
+            padding: 4px;
+        }
+        .pdf-header .company h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+        }
+        .pdf-badge {
+            background: #10b981;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .pdf-content {
+            padding: 2rem;
+        }
+        .pdf-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+            background: #f8fafc;
+            padding: 1.2rem;
+            border-radius: 1rem;
+        }
+        .pdf-grid-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .pdf-grid-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        .pdf-grid-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pdf-grid-value i {
+            color: #10b981;
+            width: 20px;
+        }
+        .pdf-section {
+            margin-bottom: 1.8rem;
+        }
+        .pdf-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pdf-section-title i {
+            color: #10b981;
+            font-size: 1.2rem;
+        }
+        .pdf-section-content {
+            background: #f8fafc;
+            padding: 1.2rem;
+            border-radius: 1rem;
+            border-left: 4px solid #10b981;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #334155;
+        }
+        .pdf-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 2rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        .pdf-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .pdf-btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        .pdf-btn-primary:hover {
+            background: #059669;
+        }
+        .pdf-btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+        .pdf-btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .pdf-btn-download {
+            background: #6366f1;
+            color: white;
+        }
+        .pdf-btn-download:hover {
+            background: #4f52e0;
+        }
 
-        .loading-spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid #f1f5f9; border-radius: 50%; border-top-color: #6366f1; animation: spin 1s ease-in-out infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .success-check { width: 60px; height: 60px; margin: 0 auto 1rem; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: scaleIn 0.5s ease-out; }
-        .success-check i { font-size: 2rem; color: white; animation: checkmark 0.5s ease-out 0.2s both; }
-        .error-icon { width: 60px; height: 60px; margin: 0 auto 1rem; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: shake 0.5s ease-out; }
-        .error-icon i { font-size: 2rem; color: white; }
-        @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
-        @keyframes checkmark { from { transform: scale(0) rotate(-45deg); } to { transform: scale(1) rotate(0); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
-        .empty-state { text-align: center; padding: 2rem; color: #64748b; }
-        .empty-state i { font-size: 3rem; color: #cbd5e1; margin-bottom: 0.5rem; }
-        .loading { text-align: center; padding: 2rem; color: #64748b; }
-        .loading i { font-size: 2rem; margin-bottom: 0.5rem; color: #6366f1; }
+        /* ==================== MODALS & ALERTS ==================== */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 1rem; padding: 0; max-width: 500px; width: 95%; z-index: 1000; max-height: 85vh; overflow-y: auto; border: 1px solid #e5e7eb; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .modal.active { display: block; }
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
+        .modal-backdrop.active { display: block; }
+        .modal-content { padding: 1rem; }
+        .alert-dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 1.2rem; border-radius: 0.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); z-index: 2000; max-width: 350px; width: 90%; text-align: center; display: none; border: 1px solid #e5e7eb; }
+        .alert-dialog.show { display: block; }
+        .alert-dialog.error { border-top: 4px solid #dc2626; }
+        .alert-dialog.success { border-top: 4px solid #10b981; }
+        .alert-dialog i { font-size: 2rem; margin-bottom: 0.5rem; }
+        .alert-dialog.error i { color: #dc2626; }
+        .alert-dialog.success i { color: #10b981; }
+        .alert-dialog h3 { margin-bottom: 0.3rem; font-size: 1rem; }
+        .alert-dialog p { color: #64748b; margin-bottom: 1rem; font-size: 0.85rem; }
+        .alert-dialog button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 0.3rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; }
+        .overlay.show { display: block; }
+        .iframe-modal .modal-content { padding: 0; height: 80vh; max-height: 600px; }
+        .iframe-modal iframe { width: 100%; height: 100%; border: none; border-radius: 1rem; }
+        .link-generator-btn { background: #6366f1; color: white; padding: 0.5rem 1rem; border-radius: 40px; font-weight: 600; cursor: pointer; border: none; margin-left: 0.5rem; transition: all 0.3s; }
+        .link-generator-btn:hover { background: #4f52e0; transform: translateY(-2px); }
+        .design-link-input { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+        .design-link-input input { flex: 1; padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 40px; font-size: 0.85rem; }
+        .design-link-input input:focus { border-color: #6366f1; outline: none; }
 
+        /* ==================== NOTIFICATIONS ==================== */
         .notification-wrapper { position: relative; margin-right: 0.3rem; }
         .notification-bell { font-size: 1.2rem; color: #64748b; cursor: pointer; position: relative; padding: 0.3rem; }
         .notification-bell i { transition: color 0.2s; }
@@ -405,6 +623,7 @@
         .notifications-footer { padding: 0.5rem 1rem; text-align: center; border-top: 1px solid #e2e8f0; background: #f8fafc; }
         .notifications-footer a { color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.7rem; }
 
+        /* ==================== MESSAGES ==================== */
         .messages-container { max-width: 800px; margin: 0 auto; }
         .messages-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
         .message-thread-card { background: white; border-radius: 1rem; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; position: relative; }
@@ -418,46 +637,45 @@
         .message-meta { display: flex; gap: 0.5rem; font-size: 0.65rem; color: #64748b; align-items: center; }
         .message-badge { background: #e2e8f0; padding: 0.1rem 0.5rem; border-radius: 40px; font-size: 0.6rem; font-weight: 600; color: #475569; }
 
-        .message-compose-modal .modal-content { padding: 1rem; }
-        .message-compose-modal .smart-input { width: 100%; padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 1rem; font-size: 0.85rem; margin-bottom: 0.8rem; transition: all 0.3s ease; }
-        .message-compose-modal .smart-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
-        .message-compose-modal .smart-textarea { width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 1rem; font-size: 0.85rem; line-height: 1.6; min-height: 120px; resize: vertical; background: white; transition: all 0.3s ease; font-family: 'Inter', monospace; margin-bottom: 0.8rem; }
-        .message-compose-modal .smart-textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+        /* ==================== WITHDRAWALS & PETITIONS ==================== */
+        .withdrawal-section { background: linear-gradient(145deg, #ffffff, #f8fafc); border-radius: 1.5rem; padding: 1.2rem; margin-top: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        .withdrawal-section h4 { font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.3rem; }
+        .withdrawal-section h4 i { color: #6366f1; font-size: 1.2rem; }
+        .balance-highlight { font-size: 1.5rem; font-weight: 800; color: #10b981; background: #10b98110; padding: 0.3rem 1rem; border-radius: 60px; display: inline-block; }
+        .withdrawal-section .input-group { margin-bottom: 0.8rem; position: relative; }
+        .withdrawal-section label { display: block; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .withdrawal-section .input-icon { position: absolute; left: 0.8rem; top: 1.9rem; color: #94a3b8; font-size: 0.9rem; }
+        .withdrawal-section input, .withdrawal-section select { width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.2rem; border: 2px solid #e2e8f0; border-radius: 60px; font-size: 0.85rem; transition: all 0.3s; background: white; }
+        .withdrawal-section input:focus, .withdrawal-section select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+        .withdrawal-section .fee-breakdown { background: #f1f5f9; border-radius: 1rem; padding: 0.8rem; margin: 0.8rem 0; border-left: 4px solid #6366f1; font-size: 0.8rem; }
+        .withdrawal-section .withdrawal-warning { color: #ef4444; font-size: 0.7rem; margin-top: 0.3rem; display: none; }
+        .withdrawal-section .btn { width: 100%; padding: 0.8rem; font-size: 0.9rem; border-radius: 60px; margin-top: 0.5rem; }
+        .petition-section { background: #fef3c7; border-radius: 1.5rem; padding: 1.2rem; border-left: 4px solid #f59e0b; margin-top: 1rem; }
+        .petition-section h4 { color: #92400e; font-size: 1rem; }
+        .petition-section .btn { background: #f59e0b; color: white; }
 
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 1rem; padding: 0; max-width: 500px; width: 95%; z-index: 1000; max-height: 85vh; overflow-y: auto; border: 1px solid #e5e7eb; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
-        .modal.active { display: block; }
-        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 999; }
-        .modal-backdrop.active { display: block; }
-        .modal-content { padding: 1rem; }
+        /* ==================== TRAINING ==================== */
+        .training-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 0.8rem; }
+        .training-card { background: white; border-radius: 1.2rem; padding: 1.2rem; border: 2px solid #e2e8f0; transition: all 0.2s; }
+        .training-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .training-card.free { border-top: 4px solid #10b981; }
+        .training-card.prepaid { border-top: 4px solid #f59e0b; }
+        .training-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; }
+        .training-title { font-size: 1rem; font-weight: 700; color: #0f172a; }
+        .training-price { font-size: 0.9rem; font-weight: 800; color: #f59e0b; }
+        .training-duration { color: #64748b; font-size: 0.7rem; margin-bottom: 0.3rem; }
+        .training-description { color: #475569; margin-bottom: 0.5rem; line-height: 1.5; font-size: 0.8rem; }
+        .training-requirements { background: #f1f5f9; padding: 0.4rem; border-radius: 0.5rem; font-size: 0.7rem; margin-bottom: 0.5rem; }
+        .training-status { margin: 0.5rem 0; padding: 0.3rem; border-radius: 0.5rem; text-align: center; font-weight: 600; font-size: 0.75rem; }
+        .training-status.pending { background: #f59e0b20; color: #f59e0b; }
+        .training-status.approved { background: #10b98120; color: #10b981; }
+        .training-status.rejected { background: #ef444420; color: #ef4444; }
+        .resources-list { background: #f8fafc; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0; font-size: 0.7rem; }
+        .resource-item { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem; }
+        .resource-item a { color: #6366f1; text-decoration: none; }
+        .resource-item a:hover { text-decoration: underline; }
 
-        .alert-dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 1.2rem; border-radius: 0.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); z-index: 2000; max-width: 350px; width: 90%; text-align: center; display: none; border: 1px solid #e5e7eb; }
-        .alert-dialog.show { display: block; }
-        .alert-dialog.error { border-top: 4px solid #dc2626; }
-        .alert-dialog.success { border-top: 4px solid #10b981; }
-        .alert-dialog i { font-size: 2rem; margin-bottom: 0.5rem; }
-        .alert-dialog.error i { color: #dc2626; }
-        .alert-dialog.success i { color: #10b981; }
-        .alert-dialog h3 { margin-bottom: 0.3rem; font-size: 1rem; }
-        .alert-dialog p { color: #64748b; margin-bottom: 1rem; font-size: 0.85rem; }
-        .alert-dialog button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 0.3rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; }
-        .overlay.show { display: block; }
-
-        .iframe-modal .modal-content { padding: 0; height: 80vh; max-height: 600px; }
-        .iframe-modal iframe { width: 100%; height: 100%; border: none; border-radius: 1rem; }
-        .link-generator-btn { background: #6366f1; color: white; padding: 0.5rem 1rem; border-radius: 40px; font-weight: 600; cursor: pointer; border: none; margin-left: 0.5rem; transition: all 0.3s; }
-        .link-generator-btn:hover { background: #4f52e0; transform: translateY(-2px); }
-        .design-link-input { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
-        .design-link-input input { flex: 1; padding: 0.6rem; border: 2px solid #e2e8f0; border-radius: 40px; font-size: 0.85rem; }
-        .design-link-input input:focus { border-color: #6366f1; outline: none; }
-
-        .transactions-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        .transactions-table th { text-align: left; padding: 0.75rem; background: #f1f5f9; color: #0f172a; font-weight: 600; }
-        .transactions-table td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
-        .transactions-table tr:hover { background: #f8fafc; }
-        .tx-amount.positive { color: #10b981; font-weight: 700; }
-        .tx-amount.negative { color: #ef4444; font-weight: 700; }
-
+        /* ==================== AI ASSISTANT ==================== */
         .ai-assistant-btn {
             position: fixed;
             bottom: 90px;
@@ -484,7 +702,6 @@
         .ai-assistant-btn i {
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
-
         .ai-modal .modal-content {
             padding: 0;
             height: 80vh;
@@ -533,6 +750,7 @@
             min-height: 500px;
         }
 
+        /* ==================== ACCEPTED USERS LIST ==================== */
         .accepted-users-list {
             margin-top: 0.8rem;
             padding: 0.5rem;
@@ -569,6 +787,30 @@
             font-weight: 700;
         }
 
+        /* ==================== LOADING / EMPTY STATES ==================== */
+        .loading-spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid #f1f5f9; border-radius: 50%; border-top-color: #6366f1; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .success-check { width: 60px; height: 60px; margin: 0 auto 1rem; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: scaleIn 0.5s ease-out; }
+        .success-check i { font-size: 2rem; color: white; animation: checkmark 0.5s ease-out 0.2s both; }
+        .error-icon { width: 60px; height: 60px; margin: 0 auto 1rem; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: shake 0.5s ease-out; }
+        .error-icon i { font-size: 2rem; color: white; }
+        @keyframes scaleIn { from { transform: scale(0); } to { transform: scale(1); } }
+        @keyframes checkmark { from { transform: scale(0) rotate(-45deg); } to { transform: scale(1) rotate(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        .empty-state { text-align: center; padding: 2rem; color: #64748b; }
+        .empty-state i { font-size: 3rem; color: #cbd5e1; margin-bottom: 0.5rem; }
+        .loading { text-align: center; padding: 2rem; color: #64748b; }
+        .loading i { font-size: 2rem; margin-bottom: 0.5rem; color: #6366f1; }
+
+        /* ==================== TRANSACTIONS TABLE ==================== */
+        .transactions-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .transactions-table th { text-align: left; padding: 0.75rem; background: #f1f5f9; color: #0f172a; font-weight: 600; }
+        .transactions-table td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
+        .transactions-table tr:hover { background: #f8fafc; }
+        .tx-amount.positive { color: #10b981; font-weight: 700; }
+        .tx-amount.negative { color: #ef4444; font-weight: 700; }
+
+        /* ==================== RESPONSIVE ==================== */
         @media (max-width: 768px) {
             .tabs { display: none; }
             .hamburger-menu { display: flex !important; }
@@ -588,18 +830,10 @@
             .transactions-table td, .transactions-table th { padding: 0.5rem; }
             .transactions-table { font-size: 0.7rem; }
             .ai-assistant-btn { bottom: 80px; width: 50px; height: 50px; font-size: 1.5rem; }
-            .ai-modal .modal-content {
-                height: 90vh;
-                max-height: none;
-            }
-            .ai-modal iframe {
-                min-height: 600px;
-            }
-            .live-clock {
-                display: none;
-            }
+            .ai-modal .modal-content { height: 90vh; max-height: none; }
+            .ai-modal iframe { min-height: 600px; }
+            .live-clock { display: none; }
         }
-
         @media (max-width: 480px) {
             .user-menu { gap: 0.3rem; }
             #userName { display: none; }
@@ -613,124 +847,14 @@
             .filter-group { width: 100%; }
             .transactions-table { font-size: 0.65rem; }
         }
-
-        .withdrawal-section { background: linear-gradient(145deg, #ffffff, #f8fafc); border-radius: 1.5rem; padding: 1.2rem; margin-top: 1rem; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
-        .withdrawal-section h4 { font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.3rem; }
-        .withdrawal-section h4 i { color: #6366f1; font-size: 1.2rem; }
-        .balance-highlight { font-size: 1.5rem; font-weight: 800; color: #10b981; background: #10b98110; padding: 0.3rem 1rem; border-radius: 60px; display: inline-block; }
-        .withdrawal-section .input-group { margin-bottom: 0.8rem; position: relative; }
-        .withdrawal-section label { display: block; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .withdrawal-section .input-icon { position: absolute; left: 0.8rem; top: 1.9rem; color: #94a3b8; font-size: 0.9rem; }
-        .withdrawal-section input, .withdrawal-section select { width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.2rem; border: 2px solid #e2e8f0; border-radius: 60px; font-size: 0.85rem; transition: all 0.3s; background: white; }
-        .withdrawal-section input:focus, .withdrawal-section select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
-        .withdrawal-section .fee-breakdown { background: #f1f5f9; border-radius: 1rem; padding: 0.8rem; margin: 0.8rem 0; border-left: 4px solid #6366f1; font-size: 0.8rem; }
-        .withdrawal-section .withdrawal-warning { color: #ef4444; font-size: 0.7rem; margin-top: 0.3rem; display: none; }
-        .withdrawal-section .btn { width: 100%; padding: 0.8rem; font-size: 0.9rem; border-radius: 60px; margin-top: 0.5rem; }
-
-        .petition-section { background: #fef3c7; border-radius: 1.5rem; padding: 1.2rem; border-left: 4px solid #f59e0b; margin-top: 1rem; }
-        .petition-section h4 { color: #92400e; font-size: 1rem; }
-        .petition-section .btn { background: #f59e0b; color: white; }
-
-        .training-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 0.8rem; }
-        .training-card { background: white; border-radius: 1.2rem; padding: 1.2rem; border: 2px solid #e2e8f0; transition: all 0.2s; }
-        .training-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-        .training-card.free { border-top: 4px solid #10b981; }
-        .training-card.prepaid { border-top: 4px solid #f59e0b; }
-        .training-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; }
-        .training-title { font-size: 1rem; font-weight: 700; color: #0f172a; }
-        .training-price { font-size: 0.9rem; font-weight: 800; color: #f59e0b; }
-        .training-duration { color: #64748b; font-size: 0.7rem; margin-bottom: 0.3rem; }
-        .training-description { color: #475569; margin-bottom: 0.5rem; line-height: 1.5; font-size: 0.8rem; }
-        .training-requirements { background: #f1f5f9; padding: 0.4rem; border-radius: 0.5rem; font-size: 0.7rem; margin-bottom: 0.5rem; }
-        .training-status { margin: 0.5rem 0; padding: 0.3rem; border-radius: 0.5rem; text-align: center; font-weight: 600; font-size: 0.75rem; }
-        .training-status.pending { background: #f59e0b20; color: #f59e0b; }
-        .training-status.approved { background: #10b98120; color: #10b981; }
-        .training-status.rejected { background: #ef444420; color: #ef4444; }
-        .resources-list { background: #f8fafc; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0; font-size: 0.7rem; }
-        .resource-item { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem; }
-        .resource-item a { color: #6366f1; text-decoration: none; }
-        .resource-item a:hover { text-decoration: underline; }
-
-        .stats-grid .stat-card:nth-child(6n+1),
-        .training-grid .training-card:nth-child(6n+1),
-        .submission-card:nth-child(6n+1),
-        .message-thread-card:nth-child(6n+1),
-        .faq-item:nth-child(6n+1),
-        .feedback-card:nth-child(6n+1) {
-            background-color: #e6f0ff;
-        }
-        .stats-grid .stat-card:nth-child(6n+2),
-        .training-grid .training-card:nth-child(6n+2),
-        .submission-card:nth-child(6n+2),
-        .message-thread-card:nth-child(6n+2),
-        .faq-item:nth-child(6n+2),
-        .feedback-card:nth-child(6n+2) {
-            background-color: #e0ffe0;
-        }
-        .stats-grid .stat-card:nth-child(6n+3),
-        .training-grid .training-card:nth-child(6n+3),
-        .submission-card:nth-child(6n+3),
-        .message-thread-card:nth-child(6n+3),
-        .faq-item:nth-child(6n+3),
-        .feedback-card:nth-child(6n+3) {
-            background-color: #fff9c4;
-        }
-        .stats-grid .stat-card:nth-child(6n+4),
-        .training-grid .training-card:nth-child(6n+4),
-        .submission-card:nth-child(6n+4),
-        .message-thread-card:nth-child(6n+4),
-        .faq-item:nth-child(6n+4),
-        .feedback-card:nth-child(6n+4) {
-            background-color: #ffe0b2;
-        }
-        .stats-grid .stat-card:nth-child(6n+5),
-        .training-grid .training-card:nth-child(6n+5),
-        .submission-card:nth-child(6n+5),
-        .message-thread-card:nth-child(6n+5),
-        .faq-item:nth-child(6n+5),
-        .feedback-card:nth-child(6n+5) {
-            background-color: #e6ccff;
-        }
-        .stats-grid .stat-card:nth-child(6n+6),
-        .training-grid .training-card:nth-child(6n+6),
-        .submission-card:nth-child(6n+6),
-        .message-thread-card:nth-child(6n+6),
-        .faq-item:nth-child(6n+6),
-        .feedback-card:nth-child(6n+6) {
-            background-color: #ffe0f0;
-        }
-
-        .stats-grid .stat-card:hover,
-        .training-grid .training-card:hover,
-        .submission-card:hover,
-        .message-thread-card:hover,
-        .faq-item:hover,
-        .feedback-card:hover {
-            filter: brightness(0.98);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .withdrawal-section,
-        .petition-section,
-        .referral-card {
-            background: inherit;
-        }
-
-        .submission-card {
-            background: transparent;
-            border-radius: 1rem;
-            padding: 1.2rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .message-thread-card.unread {
-            background: #6366f108 !important;
-            border-left: 4px solid #6366f1;
-        }
     </style>
 </head>
 <body>
+    <!-- ==================== TICKER ==================== -->
+    <div class="ticker-container" id="tickerContainer" style="display: none;">
+        <div class="ticker-content" id="tickerContent"></div>
+    </div>
+
     <!-- AI Assistant Floating Button -->
     <div class="ai-assistant-btn" onclick="openAIAssistant()">
         <i class="fas fa-robot"></i>
@@ -995,8 +1119,36 @@
         let currentTab = 'tasks';
         let adminId = null;
         let acceptedTasksListener = null;
-        // Cache for user data to avoid repeated Firestore reads
         const userCache = new Map();
+
+        // ==================== TICKER ====================
+        function setupTicker() {
+            const tickerContainer = document.getElementById('tickerContainer');
+            const tickerContent = document.getElementById('tickerContent');
+            db.collection('tickers').where('active', '==', true).orderBy('order', 'asc').onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    tickerContainer.style.display = 'none';
+                    return;
+                }
+                let messages = [];
+                snapshot.forEach(doc => messages.push(doc.data().message));
+                if (messages.length === 0) {
+                    tickerContainer.style.display = 'none';
+                    return;
+                }
+                tickerContainer.style.display = 'block';
+                let fullText = '';
+                for (let i = 0; i < 3; i++) { // repeat to make animation smooth
+                    messages.forEach(msg => {
+                        fullText += `<span><i class="fas fa-bullhorn"></i> ${escapeHtml(msg)}</span>`;
+                    });
+                }
+                tickerContent.innerHTML = fullText;
+            }, error => {
+                console.error('Ticker error:', error);
+                tickerContainer.style.display = 'none';
+            });
+        }
 
         // ==================== FETCH ADMIN ID ====================
         async function getAdminId() {
@@ -1293,6 +1445,11 @@
                         html += `<p>${escapeHtml(section.content)}</p>`;
                     } else if (section.type === 'image') {
                         html += `<img src="${escapeHtml(section.content)}" alt="${escapeHtml(section.alt || '')}">`;
+                    } else if (section.type === 'list') {
+                        const listType = section.ordered ? 'ol' : 'ul';
+                        html += `<${listType}>`;
+                        section.items.forEach(item => html += `<li>${escapeHtml(item)}</li>`);
+                        html += `</${listType}>`;
                     }
                 });
                 if (data.lastUpdated) {
@@ -1356,12 +1513,10 @@
                     if (t.acceptedCount === undefined) t.acceptedCount = 0;
                     const acceptSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').where('userId', '==', currentUser.uid).get();
                     t.userAccepted = !acceptSnap.empty;
-                    // Fetch all accepted users for this task
                     const allAcceptsSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').get();
                     t.acceptedUsers = [];
                     for (const doc of allAcceptsSnap.docs) {
                         const data = doc.data();
-                        // Get user details from cache or fetch
                         let user = userCache.get(data.userId);
                         if (!user) {
                             const userDoc = await db.collection('users').doc(data.userId).get();
@@ -1418,12 +1573,10 @@
                     if (t.acceptedCount === undefined) t.acceptedCount = 0;
                     const acceptSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').where('userId', '==', currentUser.uid).get();
                     t.userAccepted = !acceptSnap.empty;
-                    // Fetch all accepted users for this task
                     const allAcceptsSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').get();
                     t.acceptedUsers = [];
                     for (const doc of allAcceptsSnap.docs) {
                         const data = doc.data();
-                        // Get user details from cache or fetch
                         let user = userCache.get(data.userId);
                         if (!user) {
                             const userDoc = await db.collection('users').doc(data.userId).get();
@@ -1445,14 +1598,12 @@
             } catch (e) { document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadTasks()">Retry</button></div>`; }
         }
 
-        // Helper: format date/time
         function formatDateTime(timestamp) {
             if (!timestamp) return 'N/A';
             const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
             return d.toISOString().slice(0,10).replace(/-/g,'-') + ' ' + d.toTimeString().slice(0,8);
         }
 
-        // Render tasks (with transcription card and accepted users)
         async function renderTasks() {
             let html = '<h3>Available Tasks</h3>' + filterBarHTML();
             if (filteredTasks.length === 0) html += '<div class="empty-state"><i class="fas fa-filter"></i><p>No tasks match filters.</p></div>';
@@ -1476,7 +1627,6 @@
                         acceptButton = `<button class="btn btn-accept" onclick="acceptTask('${t.id}')">Accept (${t.acceptedCount}/${maxCollab})</button>`;
                     }
 
-                    // Build accepted users HTML
                     let acceptedUsersHtml = '';
                     if (t.acceptedUsers && t.acceptedUsers.length > 0) {
                         acceptedUsersHtml = '<div class="accepted-users-list"><div class="title"><i class="fas fa-users"></i> Accepted by:</div>';
@@ -1521,7 +1671,6 @@
                             </div>
                         `;
                     } else {
-                        // Default card for other categories
                         let audioHtml = '';
                         if (t.audioUrl) {
                             audioHtml = `
@@ -1682,7 +1831,6 @@
                 return;
             }
             try {
-                // Check if already submitted
                 const submitted = await hasUserSubmitted(taskId);
                 if (submitted) {
                     showAlert('You have already submitted this task. Cannot cancel acceptance.', 'error');
@@ -1707,32 +1855,22 @@
                     const acceptDoc = await transaction.get(userAcceptRef);
                     if (!acceptDoc.exists) throw new Error('You have not accepted this task');
 
-                    // Decrement acceptedCount
-                    transaction.update(taskRef, {
-                        acceptedCount: firebase.firestore.FieldValue.increment(-1)
-                    });
-
-                    // Delete acceptance from task subcollection
+                    transaction.update(taskRef, { acceptedCount: firebase.firestore.FieldValue.increment(-1) });
                     transaction.delete(userAcceptRef);
-
-                    // Delete from user's acceptedTasks
                     transaction.delete(userAcceptedTaskRef);
                 });
 
                 closeModal();
                 showAlert('Task acceptance cancelled successfully.', 'success');
 
-                // Refresh current view
                 if (currentTab === 'submit') {
                     loadPendingSubmissions();
                 } else if (currentTab === 'tasks' || currentTab === 'design' || currentTab === 'projects' || currentTab === 'transcription') {
-                    // Reload tasks to reflect updated acceptedCount
                     if (currentTab === 'design') loadTasksByCategory('design');
                     else if (currentTab === 'projects') loadTasksByCategory('projects');
                     else if (currentTab === 'transcription') loadTasksByCategory('transcription');
                     else loadTasks();
                 }
-
             } catch (error) {
                 console.error('Cancel acceptance error:', error);
                 closeModal();
@@ -1740,22 +1878,174 @@
             }
         }
 
-        async function viewTaskDetails(taskId) { try { const doc = await db.collection('tasks').doc(taskId).get(); if (!doc.exists) { showAlert('Task not found','error'); return; } const task = { id: taskId, ...doc.data() }; currentTaskViewed = task; refreshMirror(); 
-            let audioHtml = '';
-            if (task.category === 'transcription' && task.audioUrl) {
-                audioHtml = `
-                    <div style="margin-bottom:1rem; background:#f0f9ff; padding:1rem; border-radius:0.5rem; border-left:4px solid #0284c7;">
-                        <h4 style="font-size:0.9rem; margin-bottom:0.5rem;"><i class="fas fa-headphones"></i> Audio to Transcribe</h4>
-                        <audio controls style="width:100%;">
-                            <source src="${task.audioUrl}" type="audio/mpeg">
-                            Your browser does not support the audio element.
-                        </audio>
-                        ${task.audioDuration ? `<p style="font-size:0.7rem; margin-top:0.2rem;">Duration: ${task.audioDuration}</p>` : ''}
-                        <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${task.audioUrl}')" style="margin-top:0.3rem;"><i class="fas fa-copy"></i> Copy Audio Link</button>
+        // ==================== DOWNLOAD TASK DETAILS (PDF-style HTML) ====================
+        function downloadTaskDetails(task) {
+            const companyName = "NextGen Hub";
+            const logoHtml = '<img src="logo.jpg" alt="Logo" style="height:40px;">';
+            const dateStr = new Date().toLocaleDateString();
+            const content = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Task Details - ${escapeHtml(task.title)}</title>
+                    <style>
+                        body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 2rem; }
+                        .paper { max-width: 800px; margin: 0 auto; background: white; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; }
+                        .header { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; padding: 1.2rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #10b981; }
+                        .company { display: flex; align-items: center; gap: 1rem; }
+                        .company img { height: 40px; width: auto; border-radius: 8px; background: white; padding: 4px; }
+                        .company h2 { font-size: 1.5rem; font-weight: 700; margin: 0; color: white; }
+                        .badge { background: #10b981; color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+                        .content { padding: 2rem; }
+                        .title { font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; }
+                        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1.2rem; border-radius: 1rem; }
+                        .grid-item { display: flex; flex-direction: column; }
+                        .grid-label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 0.3rem; }
+                        .grid-value { font-size: 1rem; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 0.5rem; }
+                        .grid-value i { color: #10b981; width: 20px; }
+                        .section { margin-bottom: 1.8rem; }
+                        .section-title { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+                        .section-content { background: #f8fafc; padding: 1.2rem; border-radius: 1rem; border-left: 4px solid #10b981; font-size: 0.95rem; line-height: 1.7; color: #334155; }
+                        .footer { margin-top: 2rem; text-align: center; color: #94a3b8; font-size: 0.8rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
+                    </style>
+                </head>
+                <body>
+                    <div class="paper">
+                        <div class="header">
+                            <div class="company">
+                                <img src="logo.jpg" alt="Logo">
+                                <h2>${companyName}</h2>
+                            </div>
+                            <span class="badge">Task #${task.id.substring(0,8)}</span>
+                        </div>
+                        <div class="content">
+                            <div class="title">${escapeHtml(task.title)}</div>
+                            <div class="grid">
+                                <div class="grid-item">
+                                    <span class="grid-label">Client</span>
+                                    <span class="grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName || 'Admin')}</span>
+                                </div>
+                                <div class="grid-item">
+                                    <span class="grid-label">Reward</span>
+                                    <span class="grid-value"><i class="fas fa-dollar-sign"></i> ${formatBoth(parseFloat(task.reward)||0)}</span>
+                                </div>
+                                ${task.deadline ? `
+                                <div class="grid-item">
+                                    <span class="grid-label">Deadline</span>
+                                    <span class="grid-value"><i class="fas fa-calendar-alt"></i> ${formatDeadline(task.deadline)}</span>
+                                </div>` : ''}
+                                <div class="grid-item">
+                                    <span class="grid-label">Category</span>
+                                    <span class="grid-value"><i class="fas fa-tag"></i> ${escapeHtml(task.category||'other')}</span>
+                                </div>
+                            </div>
+                            <div class="section">
+                                <div class="section-title"><i class="fas fa-align-left"></i> Description</div>
+                                <div class="section-content">${escapeHtml(task.description || 'No description')}</div>
+                            </div>
+                            <div class="section">
+                                <div class="section-title"><i class="fas fa-clipboard-list"></i> Instructions</div>
+                                <div class="section-content">${escapeHtml(task.instructions || 'No instructions')}</div>
+                            </div>
+                            ${task.audioUrl ? `
+                            <div class="section">
+                                <div class="section-title"><i class="fas fa-headphones"></i> Audio File</div>
+                                <div class="section-content">
+                                    <a href="${task.audioUrl}" target="_blank">${task.audioUrl}</a>
+                                    ${task.audioDuration ? `<br><small>Duration: ${task.audioDuration}</small>` : ''}
+                                </div>
+                            </div>` : ''}
+                            <div class="footer">Generated on ${dateStr} · NextGen Hub</div>
+                        </div>
                     </div>
-                `;
+                </body>
+                </html>
+            `;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `task_${task.id}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ==================== VIEW TASK DETAILS (with logo and download button) ====================
+        async function viewTaskDetails(taskId) {
+            try {
+                const doc = await db.collection('tasks').doc(taskId).get();
+                if (!doc.exists) { showAlert('Task not found','error'); return; }
+                const task = { id: taskId, ...doc.data() };
+                currentTaskViewed = task;
+                refreshMirror();
+                let audioHtml = '';
+                if (task.category === 'transcription' && task.audioUrl) {
+                    audioHtml = `
+                        <div style="margin-bottom:1rem; background:#f0f9ff; padding:1rem; border-radius:0.5rem; border-left:4px solid #0284c7;">
+                            <h4 style="font-size:0.9rem; margin-bottom:0.5rem;"><i class="fas fa-headphones"></i> Audio to Transcribe</h4>
+                            <audio controls style="width:100%;">
+                                <source src="${task.audioUrl}" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                            ${task.audioDuration ? `<p style="font-size:0.7rem; margin-top:0.2rem;">Duration: ${task.audioDuration}</p>` : ''}
+                            <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${task.audioUrl}')" style="margin-top:0.3rem;"><i class="fas fa-copy"></i> Copy Audio Link</button>
+                        </div>
+                    `;
+                }
+                showModal(`
+                    <div class="pdf-document">
+                        <div class="pdf-header">
+                            <div class="company">
+                                <img src="logo.jpg" alt="NextGen Logo">
+                                <h2>NextGen Hub</h2>
+                            </div>
+                            <span class="pdf-badge">Task #${taskId.substring(0,8)}</span>
+                        </div>
+                        <div class="pdf-content">
+                            <div class="pdf-title">${escapeHtml(task.title)}</div>
+                            <div class="pdf-grid">
+                                <div class="pdf-grid-item">
+                                    <span class="pdf-grid-label">Client</span>
+                                    <span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName || 'Admin')}</span>
+                                </div>
+                                <div class="pdf-grid-item">
+                                    <span class="pdf-grid-label">Reward</span>
+                                    <span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> ${formatBoth(parseFloat(task.reward)||0)}</span>
+                                </div>
+                                ${task.deadline ? `
+                                <div class="pdf-grid-item">
+                                    <span class="pdf-grid-label">Deadline</span>
+                                    <span class="pdf-grid-value"><i class="fas fa-calendar-alt"></i> ${formatDeadline(task.deadline)}</span>
+                                </div>` : ''}
+                                <div class="pdf-grid-item">
+                                    <span class="pdf-grid-label">Category</span>
+                                    <span class="pdf-grid-value"><i class="fas fa-tag"></i> ${escapeHtml(task.category||'other')}</span>
+                                </div>
+                            </div>
+                            ${audioHtml}
+                            <div class="pdf-section">
+                                <div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div>
+                                <div class="pdf-section-content">${escapeHtml(task.description || 'No description')}</div>
+                            </div>
+                            <div class="pdf-section">
+                                <div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div>
+                                <div class="pdf-section-content">${escapeHtml(task.instructions || 'No instructions')}</div>
+                            </div>
+                            <div class="pdf-actions">
+                                <button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button>
+                                <button class="pdf-btn pdf-btn-download" onclick="downloadTaskDetails(${JSON.stringify(task).replace(/"/g, '&quot;')})"><i class="fas fa-download"></i> Download Details</button>
+                                <button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            } catch (e) {
+                showAlert('Error loading task details','error');
             }
-            showModal(`<div class="pdf-document"><div class="pdf-header"><div><h2>Task Details</h2></div><span class="pdf-badge">#${taskId.substring(0,8)}</span></div><div class="pdf-content"><div class="pdf-title">${escapeHtml(task.title)}</div><div class="pdf-grid"><div class="pdf-grid-item"><span class="pdf-grid-label">Client</span><span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName||'Admin')}</span></div><div class="pdf-grid-item"><span class="pdf-grid-label">Reward</span><span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> ${formatBoth(parseFloat(task.reward)||0)}</span></div></div>${audioHtml}<div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div><div class="pdf-section-content">${escapeHtml(task.description||'No description')}</div></div><div class="pdf-section"><div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div><div class="pdf-section-content">${escapeHtml(task.instructions||'No instructions')}</div></div><div class="pdf-actions"><button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button><button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button></div></div></div>`); } catch (e) { showAlert('Error loading task details','error'); } }
+        }
 
         // ==================== showSubmitForm (with audio & design link) ====================
         async function showSubmitForm(taskId, existingWork = '') {
@@ -2031,96 +2321,51 @@
 
         // ==================== SUBMISSIONS ====================
         async function loadSubmissions() {
-            currentTaskViewed = null;
-            refreshMirror();
+            currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading submissions...</p></div>';
-
             try {
-                const snap = await db.collection('submissions')
-                    .where('userId', '==', currentUser.uid)
-                    .get();
-
+                const snap = await db.collection('submissions').where('userId', '==', currentUser.uid).get();
                 let html = '<h3>📝 My Submissions</h3>';
-
                 if (snap.empty) {
                     html += '<div class="empty-state"><i class="fas fa-file-alt"></i><p>No submissions yet.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse Tasks</button></div>';
                 } else {
                     const submissions = [];
                     snap.forEach(doc => submissions.push({ id: doc.id, ...doc.data() }));
-
-                    submissions.sort((a, b) => {
-                        const timeA = a.submittedAt?.seconds || 0;
-                        const timeB = b.submittedAt?.seconds || 0;
-                        return timeB - timeA;
-                    });
-
+                    submissions.sort((a, b) => (b.submittedAt?.seconds||0) - (a.submittedAt?.seconds||0));
                     html += '<div class="submissions-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem;">';
-
                     submissions.forEach(sub => {
-                        const statusClass = sub.status === 'approved' ? 'success' : 
-                                          sub.status === 'rejected' ? 'danger' : 'warning';
-                        const date = sub.submittedAt?.toDate ? 
-                            sub.submittedAt.toDate().toLocaleDateString() : 'N/A';
+                        const statusClass = sub.status === 'approved' ? 'success' : sub.status === 'rejected' ? 'danger' : 'warning';
+                        const date = sub.submittedAt?.toDate ? sub.submittedAt.toDate().toLocaleDateString() : 'N/A';
                         const earned = sub.earned ? formatBoth(sub.earned) : '';
-
                         html += `
                             <div class="submission-card" style="background:white; border-radius:1rem; padding:1.2rem; border:1px solid #e2e8f0;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
                                     <h4 style="font-size:1rem; font-weight:700; color:#0f172a;">${escapeHtml(sub.taskTitle || 'Untitled')}</h4>
                                     <span class="badge ${statusClass}">${sub.status}</span>
                                 </div>
-                                
-                                <p style="color:#475569; font-size:0.8rem; margin-bottom:0.5rem; line-height:1.5;">
-                                    ${escapeHtml((sub.workText || '').substring(0, 100))}${(sub.workText || '').length > 100 ? '...' : ''}
-                                </p>
-                                
+                                <p style="color:#475569; font-size:0.8rem; margin-bottom:0.5rem; line-height:1.5;">${escapeHtml((sub.workText || '').substring(0,100))}${(sub.workText||'').length>100?'...':''}</p>
                                 <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; font-size:0.7rem; color:#64748b;">
                                     <span><i class="far fa-calendar"></i> ${date}</span>
                                     ${sub.wordCount ? `<span><i class="fas fa-file-word"></i> ${sub.wordCount} words</span>` : ''}
                                     ${sub.designLink ? `<span><i class="fas fa-link"></i> <a href="${sub.designLink}" target="_blank">Link</a></span>` : ''}
                                     ${earned ? `<span><i class="fas fa-dollar-sign"></i> ${earned}</span>` : ''}
                                 </div>
-                                
-                                ${sub.review ? `
-                                    <div style="background:#f1f5f9; padding:0.8rem; border-radius:0.5rem; margin-top:0.5rem;">
-                                        <strong style="font-size:0.7rem; color:#475569;">Feedback:</strong>
-                                        <p style="font-size:0.75rem; margin-top:0.2rem;">${escapeHtml(sub.review)}</p>
-                                    </div>
-                                ` : ''}
-                                
-                                ${sub.status === 'pending' ? `
-                                    <div style="margin-top:0.8rem;">
-                                        <button class="btn btn-warning" onclick="cancelSubmission('${sub.id}')" style="width:100%;">
-                                            <i class="fas fa-times"></i> Cancel Submission
-                                        </button>
-                                    </div>
-                                ` : ''}
+                                ${sub.review ? `<div style="background:#f1f5f9; padding:0.8rem; border-radius:0.5rem; margin-top:0.5rem;"><strong style="font-size:0.7rem; color:#475569;">Feedback:</strong><p style="font-size:0.75rem; margin-top:0.2rem;">${escapeHtml(sub.review)}</p></div>` : ''}
+                                ${sub.status === 'pending' ? `<div style="margin-top:0.8rem;"><button class="btn btn-warning" onclick="cancelSubmission('${sub.id}')" style="width:100%;"><i class="fas fa-times"></i> Cancel Submission</button></div>` : ''}
                             </div>
                         `;
                     });
-
                     html += '</div>';
                 }
-
                 document.getElementById('content').innerHTML = html;
-
             } catch (e) {
                 console.error('Error loading submissions:', e);
-                document.getElementById('content').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i>
-                        <h4>Failed to Load Submissions</h4>
-                        <p>${e.message}</p>
-                        <button class="btn btn-primary" onclick="loadSubmissions()">Try Again</button>
-                    </div>
-                `;
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadSubmissions()">Try Again</button></div>`;
             }
         }
 
         async function cancelSubmission(submissionId) {
-            if (!confirm('Are you sure you want to cancel this submission? This action cannot be undone.')) {
-                return;
-            }
+            if (!confirm('Are you sure you want to cancel this submission? This action cannot be undone.')) return;
             try {
                 await db.collection('submissions').doc(submissionId).delete();
                 showAlert('Submission cancelled successfully', 'success');
@@ -2167,7 +2412,7 @@
             }
         }
 
-        // ==================== WITHDRAWALS (unchanged) ====================
+        // ==================== WITHDRAWALS ====================
         async function loadWithdrawals() { 
             currentTaskViewed = null; refreshMirror(); 
             try { 
@@ -2236,10 +2481,7 @@
 
         async function sendPetition() {
             const message = document.getElementById('petitionMessage')?.value;
-            if (!message || message.trim() === '') {
-                showAlert('Please enter your petition message.', 'error');
-                return;
-            }
+            if (!message || message.trim() === '') { showAlert('Please enter your petition message.', 'error'); return; }
             try {
                 await db.collection('petitions').add({
                     userId: currentUser.uid,
@@ -2265,18 +2507,9 @@
             const amt = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             const phone = document.getElementById('withdrawPhone').value;
-            if (!amt || amt < MIN_WITHDRAWAL) {
-                showAlert(`Minimum withdrawal is $${MIN_WITHDRAWAL.toFixed(3)}`, 'error');
-                return;
-            }
-            const pendingSnap = await db.collection('withdrawals')
-                .where('userId', '==', currentUser.uid)
-                .where('status', '==', 'pending')
-                .get();
-            if (!pendingSnap.empty) {
-                showAlert('You have a pending withdrawal request. Please wait until it is processed.', 'error');
-                return;
-            }
+            if (!amt || amt < MIN_WITHDRAWAL) { showAlert(`Minimum withdrawal is $${MIN_WITHDRAWAL.toFixed(3)}`, 'error'); return; }
+            const pendingSnap = await db.collection('withdrawals').where('userId', '==', currentUser.uid).where('status', '==', 'pending').get();
+            if (!pendingSnap.empty) { showAlert('You have a pending withdrawal request. Please wait until it is processed.', 'error'); return; }
             try {
                 await db.runTransaction(async (transaction) => {
                     const userRef = db.collection('users').doc(currentUser.uid);
@@ -2308,7 +2541,7 @@
             }
         }
 
-        // ==================== MEMBERSHIP OPTIONS (with dynamic paymentUrl) ====================
+        // ==================== MEMBERSHIP OPTIONS ====================
         function showMembershipOptions() {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
             showModal(`<div class="modal-content" style="text-align:center;">
@@ -2374,16 +2607,8 @@
             const txCode = document.getElementById('transactionCode')?.value;
             const amount = parseFloat(document.getElementById('paymentAmount')?.value);
             const notes = document.getElementById('paymentNotes')?.value || '';
-
-            if (!txCode) {
-                showAlert('Please enter transaction code', 'error');
-                return;
-            }
-            if (!amount || amount <= 0) {
-                showAlert('Please enter a valid amount', 'error');
-                return;
-            }
-
+            if (!txCode) { showAlert('Please enter transaction code', 'error'); return; }
+            if (!amount || amount <= 0) { showAlert('Please enter a valid amount', 'error'); return; }
             try {
                 showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`);
                 await db.collection('membershipPayments').add({
@@ -2396,19 +2621,14 @@
                     status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                showModal(`<div class="modal-content" style="text-align:center;">
-                    <div class="success-check"><i class="fas fa-check"></i></div>
-                    <h3 style="color:#10b981;">Thank You!</h3>
-                    <p>Payment verification submitted.<br>You'll be notified once approved.</p>
-                    <button class="btn btn-primary" onclick="closeModal()">OK</button>
-                </div>`);
+                showModal(`<div class="modal-content" style="text-align:center;"><div class="success-check"><i class="fas fa-check"></i></div><h3 style="color:#10b981;">Thank You!</h3><p>Payment verification submitted.<br>You'll be notified once approved.</p><button class="btn btn-primary" onclick="closeModal()">OK</button></div>`);
             } catch (e) {
                 console.error('Error submitting payment:', e);
                 showAlert('Error submitting payment', 'error');
             }
         }
 
-        // ==================== TRAINING CENTER (unchanged) ====================
+        // ==================== TRAINING CENTER ====================
         async function loadTrainings() { 
             currentTaskViewed = null; refreshMirror(); 
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>'; 
@@ -2474,15 +2694,9 @@
         async function applyForTraining(trainingId, type) { 
             try { 
                 const existing = await db.collection('trainingApplications').where('userId','==',currentUser.uid).where('trainingId','==',trainingId).get(); 
-                if (!existing.empty) { 
-                    showAlert('You have already applied for this training.', 'error'); 
-                    return; 
-                } 
+                if (!existing.empty) { showAlert('You have already applied for this training.', 'error'); return; } 
                 const trainingDoc = await db.collection('trainings').doc(trainingId).get(); 
-                if (!trainingDoc.exists) { 
-                    showAlert('Training not found', 'error'); 
-                    return; 
-                } 
+                if (!trainingDoc.exists) { showAlert('Training not found', 'error'); return; } 
                 const training = trainingDoc.data(); 
                 await db.collection('trainingApplications').add({ 
                     userId: currentUser.uid, 
@@ -2536,7 +2750,7 @@
             }
         }
 
-        // ==================== MESSAGES (unchanged) ====================
+        // ==================== MESSAGES ====================
         async function loadMessages() { 
             currentTaskViewed = null; refreshMirror(); 
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>'; 
@@ -2643,10 +2857,7 @@
         async function viewMessageThread(threadId) { 
             try { 
                 const snap = await db.collection('messages').where('parentMessageId', '==', threadId).orderBy('createdAt').get(); 
-                if (snap.empty) { 
-                    showAlert('Thread not found','error'); 
-                    return; 
-                } 
+                if (snap.empty) { showAlert('Thread not found','error'); return; } 
                 const messages = []; 
                 snap.forEach(d => messages.push({ id: d.id, ...d.data() })); 
                 let threadHtml = `<div class="modal-content thread-modal"><h3>${escapeHtml(messages[0].subject || 'Conversation')}</h3><div class="thread-messages" id="messageThread">`; 
@@ -2657,16 +2868,11 @@
                 }); 
                 threadHtml += `</div><div class="compose-area"><textarea id="replyMessage" class="message-input" placeholder="Type your reply..."></textarea><button class="btn btn-success" onclick="sendReply('${threadId}')">Send Reply</button></div></div>`; 
                 showModal(threadHtml); 
-                setTimeout(() => { 
-                    const thread = document.getElementById('messageThread'); 
-                    if (thread) thread.scrollTop = thread.scrollHeight; 
-                }, 100); 
-            } catch (e) { 
-                showAlert('Error loading thread','error'); 
-            } 
+                setTimeout(() => { const thread = document.getElementById('messageThread'); if (thread) thread.scrollTop = thread.scrollHeight; }, 100); 
+            } catch (e) { showAlert('Error loading thread','error'); } 
         }
 
-        // ==================== NOTIFICATIONS (unchanged) ====================
+        // ==================== NOTIFICATIONS ====================
         function toggleNotificationsPanel() { 
             const panel = document.getElementById('notificationsPanel'); 
             notificationsPanelVisible = !notificationsPanelVisible; 
@@ -2686,33 +2892,21 @@
         }
         function renderNotificationsPanel(snapshot) { 
             const list = document.getElementById('notificationsList'); 
-            if (!snapshot || snapshot.empty) { 
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-bell-slash"></i><p>No notifications</p></div>'; 
-                return; 
-            } 
+            if (!snapshot || snapshot.empty) { list.innerHTML = '<div class="empty-state"><i class="fas fa-bell-slash"></i><p>No notifications</p></div>'; return; } 
             let html = ''; 
             snapshot.forEach(doc => { 
                 const n = doc.data(); 
                 const uc = n.read ? '' : 'unread'; 
                 const time = n.createdAt ? formatRelativeTime(n.createdAt.toDate()) : ''; 
                 let icon = 'fa-bell', color = ''; 
-                if (n.type === 'message') { 
-                    icon = 'fa-envelope'; color = 'success'; 
-                } else if (n.type === 'task') { 
-                    icon = 'fa-tasks'; color = 'primary'; 
-                } else if (n.type === 'submission') { 
-                    icon = 'fa-file-alt'; color = 'warning'; 
-                } else if (n.type === 'withdrawal') { 
-                    icon = 'fa-money-bill-wave'; color = 'success'; 
-                } else if (n.type === 'referral') { 
-                    icon = 'fa-users'; color = 'primary'; 
-                } else if (n.type === 'announcement') { 
-                    icon = 'fa-bullhorn'; color = 'warning'; 
-                } else if (n.type === 'petition_response') { 
-                    icon = 'fa-paper-plane'; color = 'info'; 
-                } else if (n.type === 'training') { 
-                    icon = 'fa-graduation-cap'; color = 'info'; 
-                } 
+                if (n.type === 'message') { icon = 'fa-envelope'; color = 'success'; } 
+                else if (n.type === 'task') { icon = 'fa-tasks'; color = 'primary'; } 
+                else if (n.type === 'submission') { icon = 'fa-file-alt'; color = 'warning'; } 
+                else if (n.type === 'withdrawal') { icon = 'fa-money-bill-wave'; color = 'success'; } 
+                else if (n.type === 'referral') { icon = 'fa-users'; color = 'primary'; } 
+                else if (n.type === 'announcement') { icon = 'fa-bullhorn'; color = 'warning'; } 
+                else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; } 
+                else if (n.type === 'training') { icon = 'fa-graduation-cap'; color = 'info'; } 
                 html += `<div class="notification-item ${uc}" onclick="handleNotificationClick('${doc.id}','${n.link||''}')"><div class="notification-icon ${color}"><i class="fas ${icon}"></i></div><div class="notification-content"><div class="notification-title">${escapeHtml(n.title||'Notification')}<span class="notification-badge-type">${n.type||'info'}</span></div><div class="notification-message">${escapeHtml(n.message||'')}</div><div class="notification-time"><i class="far fa-clock"></i> ${time}</div></div></div>`; 
             }); 
             list.innerHTML = html; 
@@ -2727,42 +2921,25 @@
             return date.toLocaleDateString(); 
         }
         async function handleNotificationClick(id, link) { 
-            try { 
-                await db.collection('notifications').doc(id).update({ read: true }); 
-            } catch (e) { 
-                console.error(e); 
-            } 
+            try { await db.collection('notifications').doc(id).update({ read: true }); } catch (e) { console.error(e); } 
             if (link) { 
-                if (link.startsWith('task:')) { 
-                    const tid = link.replace('task:',''); 
-                    closeModal(); 
-                    switchTab('tasks'); 
-                    setTimeout(() => viewTaskDetails(tid),300); 
-                } else if (link.startsWith('message:')) { 
-                    const mid = link.replace('message:',''); 
-                    switchTab('messages'); 
-                    setTimeout(() => viewMessageThread(mid),300); 
-                } else if (link.startsWith('submission:')) switchTab('submissions'); 
+                if (link.startsWith('task:')) { const tid = link.replace('task:',''); closeModal(); switchTab('tasks'); setTimeout(() => viewTaskDetails(tid),300); } 
+                else if (link.startsWith('message:')) { const mid = link.replace('message:',''); switchTab('messages'); setTimeout(() => viewMessageThread(mid),300); } 
+                else if (link.startsWith('submission:')) switchTab('submissions'); 
                 else if (link.startsWith('withdrawal:')) switchTab('withdrawals'); 
                 else if (link.startsWith('training:')) switchTab('training'); 
             } 
-            document.getElementById('notificationsPanel').classList.remove('active'); 
-            notificationsPanelVisible = false; 
+            document.getElementById('notificationsPanel').classList.remove('active'); notificationsPanelVisible = false; 
         }
         async function markAllAsRead() { 
             try { 
                 const snap = await db.collection('notifications').where('userId','==',currentUser.uid).where('read','==',false).get(); 
-                if (snap.empty) { 
-                    showAlert('No unread notifications','success'); 
-                    return; 
-                } 
+                if (snap.empty) { showAlert('No unread notifications','success'); return; } 
                 const batch = db.batch(); 
                 snap.forEach(d => batch.update(d.ref, { read: true })); 
                 await batch.commit(); 
                 showAlert('All marked read','success'); 
-            } catch (e) { 
-                showAlert('Error marking read','error'); 
-            } 
+            } catch (e) { showAlert('Error marking read','error'); } 
         }
         async function loadNotificationsPage() { 
             currentTaskViewed = null; refreshMirror(); 
@@ -2777,12 +2954,7 @@
                     snap.forEach(d => { 
                         const n = { id: d.id, ...d.data() }; 
                         const dte = n.createdAt?.toDate(); 
-                        if (dte) { 
-                            const ds = dte.toDateString(); 
-                            if (ds === todayStr) today.push(n); 
-                            else if (ds === yestStr) yesterday.push(n); 
-                            else older.push(n); 
-                        } else older.push(n); 
+                        if (dte) { const ds = dte.toDateString(); if (ds === todayStr) today.push(n); else if (ds === yestStr) yesterday.push(n); else older.push(n); } else older.push(n); 
                     }); 
                     const renderGroup = (arr, title) => { 
                         if (!arr.length) return ''; 
@@ -2791,23 +2963,14 @@
                             const uc = n.read ? '' : 'unread'; 
                             const time = n.createdAt ? formatRelativeTime(n.createdAt.toDate()) : ''; 
                             let icon = 'fa-bell', color = ''; 
-                            if (n.type === 'message') { 
-                                icon = 'fa-envelope'; color = 'success'; 
-                            } else if (n.type === 'task') { 
-                                icon = 'fa-tasks'; color = 'primary'; 
-                            } else if (n.type === 'submission') { 
-                                icon = 'fa-file-alt'; color = 'warning'; 
-                            } else if (n.type === 'withdrawal') { 
-                                icon = 'fa-money-bill-wave'; color = 'success'; 
-                            } else if (n.type === 'referral') { 
-                                icon = 'fa-users'; color = 'primary'; 
-                            } else if (n.type === 'announcement') { 
-                                icon = 'fa-bullhorn'; color = 'warning'; 
-                            } else if (n.type === 'petition_response') { 
-                                icon = 'fa-paper-plane'; color = 'info'; 
-                            } else if (n.type === 'training') { 
-                                icon = 'fa-graduation-cap'; color = 'info'; 
-                            } 
+                            if (n.type === 'message') { icon = 'fa-envelope'; color = 'success'; } 
+                            else if (n.type === 'task') { icon = 'fa-tasks'; color = 'primary'; } 
+                            else if (n.type === 'submission') { icon = 'fa-file-alt'; color = 'warning'; } 
+                            else if (n.type === 'withdrawal') { icon = 'fa-money-bill-wave'; color = 'success'; } 
+                            else if (n.type === 'referral') { icon = 'fa-users'; color = 'primary'; } 
+                            else if (n.type === 'announcement') { icon = 'fa-bullhorn'; color = 'warning'; } 
+                            else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; } 
+                            else if (n.type === 'training') { icon = 'fa-graduation-cap'; color = 'info'; } 
                             g += `<div class="message-thread-card ${uc}" onclick="handleNotificationClick('${n.id}','${n.link||''}')"><div style="display:flex; gap:1rem;"><div class="notification-icon ${color}"><i class="fas ${icon}"></i></div><div><div style="display:flex; justify-content:space-between;"><span style="font-weight:700;">${escapeHtml(n.title||'Notification')}</span><span class="message-badge">${n.type||'info'}</span></div><p>${escapeHtml(n.message||'')}</p><div style="display:flex; gap:1rem; font-size:0.7rem; color:#94a3b8;"><span><i class="far fa-clock"></i> ${time}</span>${!n.read ? '<span style="color:#6366f1;">● Unread</span>' : ''}</div></div></div></div>`; 
                         }); 
                         return g; 
@@ -2823,7 +2986,7 @@
         function viewAllNotifications() { switchTab('notifications'); }
         document.addEventListener('click', (e) => { const panel = document.getElementById('notificationsPanel'); const bell = document.querySelector('.notification-bell'); if (notificationsPanelVisible && panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) { panel.classList.remove('active'); notificationsPanelVisible = false; } });
 
-        // ==================== PROFILE (unchanged) ====================
+        // ==================== PROFILE ====================
         function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p></div>`; }
         async function updateProfile() { const name = document.getElementById('profileName').value; const phone = document.getElementById('profilePhone').value; if (!name) { showAlert('Name is required','error'); return; } await db.collection('users').doc(currentUser.uid).update({ displayName: name, phone: phone||'' }); userData.displayName = name; document.getElementById('userName').textContent = name; showAlert('Profile updated!','success'); refreshMirror(); }
 
@@ -2834,16 +2997,12 @@
         function getWelcomeBonus(type) { return (type === MEMBERSHIP_TYPES.ELITE) ? (getPackageByType(type).welcomeBonus || 10) : 0; }
         function generateReferralCode(uid) { return uid.substring(0,8).toUpperCase(); }
 
-        // ==================== TRANSACTIONS (unchanged) ====================
+        // ==================== TRANSACTIONS ====================
         async function loadTransactions() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading transactions...</p></div>';
             try {
-                const snap = await db.collection('transactions')
-                    .where('userId', '==', currentUser.uid)
-                    .orderBy('createdAt', 'desc')
-                    .get();
-
+                const snap = await db.collection('transactions').where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc').get();
                 let html = '<h3>💸 Transaction History</h3>';
                 if (snap.empty) {
                     html += '<div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No transactions yet.</p></div>';
@@ -2857,12 +3016,7 @@
                         const amount = tx.amount || 0;
                         const amountClass = amount >= 0 ? 'positive' : 'negative';
                         const amountStr = (amount >= 0 ? '+' : '') + formatBoth(amount);
-                        html += `<tr>
-                            <td>${date}</td>
-                            <td><span class="badge primary">${type.replace(/_/g, ' ')}</span></td>
-                            <td>${escapeHtml(description)}</td>
-                            <td class="tx-amount ${amountClass}">${amountStr}</td>
-                        </tr>`;
+                        html += `<tr><td>${date}</td><td><span class="badge primary">${type.replace(/_/g, ' ')}</span></td><td>${escapeHtml(description)}</td><td class="tx-amount ${amountClass}">${amountStr}</td></tr>`;
                     });
                     html += '</table>';
                 }
@@ -2887,10 +3041,7 @@
                 const leaderboardSnap = await db.collection('leaderboard').orderBy('rank', 'asc').get();
                 if (!leaderboardSnap.empty) {
                     let html = '<h3>🏆 Leaderboard (Admin curated)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th></tr>';
-                    leaderboardSnap.forEach(doc => {
-                        const entry = doc.data();
-                        html += `<tr><td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td></tr>`;
-                    });
+                    leaderboardSnap.forEach(doc => { const entry = doc.data(); html += `<tr><td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td></tr>`; });
                     html += '</table>';
                     document.getElementById('content').innerHTML = html;
                 } else {
@@ -2904,9 +3055,7 @@
                     }
                     leaderboard.sort((a,b) => b.points - a.points);
                     let html = '<h3>🏆 Leaderboard (by earnings & approvals)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th><th>Wallet</th></tr>';
-                    leaderboard.slice(0, 20).forEach((u, idx) => {
-                        html += `<tr><td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td></tr>`;
-                    });
+                    leaderboard.slice(0, 20).forEach((u, idx) => { html += `<tr><td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td></tr>`; });
                     html += '</table>';
                     document.getElementById('content').innerHTML = html;
                 }
@@ -2920,15 +3069,9 @@
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading FAQ...</p></div>';
             try {
                 const snap = await db.collection('faqs').orderBy('order', 'asc').get();
-                if (snap.empty) {
-                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-question-circle"></i><h4>No FAQs yet</h4></div>';
-                    return;
-                }
+                if (snap.empty) { document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-question-circle"></i><h4>No FAQs yet</h4></div>'; return; }
                 let html = '<h3>❓ Frequently Asked Questions</h3>';
-                snap.forEach(doc => {
-                    const faq = doc.data();
-                    html += `<div class="faq-item" onclick="this.classList.toggle('active')"><div class="faq-question">${escapeHtml(faq.question)}</div><div class="faq-answer">${escapeHtml(faq.answer)}</div></div>`;
-                });
+                snap.forEach(doc => { const faq = doc.data(); html += `<div class="faq-item" onclick="this.classList.toggle('active')"><div class="faq-question">${escapeHtml(faq.question)}</div><div class="faq-answer">${escapeHtml(faq.answer)}</div></div>`; });
                 document.getElementById('content').innerHTML = html;
             } catch (e) {
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
@@ -2940,16 +3083,9 @@
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading client feedback...</p></div>';
             try {
                 const snap = await db.collection('clientFeedback').orderBy('createdAt', 'desc').get();
-                if (snap.empty) {
-                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-star"></i><h4>No feedback yet</h4></div>';
-                    return;
-                }
+                if (snap.empty) { document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-star"></i><h4>No feedback yet</h4></div>'; return; }
                 let html = '<h3>⭐ What Our Clients Say</h3>';
-                snap.forEach(doc => {
-                    const fb = doc.data();
-                    const date = fb.createdAt?.seconds ? new Date(fb.createdAt.seconds*1000).toLocaleDateString() : '';
-                    html += `<div class="feedback-card"><p><i class="fas fa-quote-left"></i> ${escapeHtml(fb.message)}</p><div style="display:flex; justify-content:space-between; margin-top:0.3rem;"><span>— ${escapeHtml(fb.clientName || 'Anonymous')}</span><span style="color:#94a3b8; font-size:0.7rem;">${date}</span></div></div>`;
-                });
+                snap.forEach(doc => { const fb = doc.data(); const date = fb.createdAt?.seconds ? new Date(fb.createdAt.seconds*1000).toLocaleDateString() : ''; html += `<div class="feedback-card"><p><i class="fas fa-quote-left"></i> ${escapeHtml(fb.message)}</p><div style="display:flex; justify-content:space-between; margin-top:0.3rem;"><span>— ${escapeHtml(fb.clientName || 'Anonymous')}</span><span style="color:#94a3b8; font-size:0.7rem;">${date}</span></div></div>`; });
                 document.getElementById('content').innerHTML = html;
             } catch (e) {
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
@@ -2962,65 +3098,17 @@
             try {
                 const submissionsSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','approved').get();
                 const withdrawalsSnap = await db.collection('withdrawals').where('userId','==',currentUser.uid).where('status','==','paid').get();
-
                 const earningsByDate = new Map();
                 const today = new Date();
-                for (let i = 29; i >= 0; i--) {
-                    const d = new Date(today);
-                    d.setDate(d.getDate() - i);
-                    const key = d.toISOString().split('T')[0];
-                    earningsByDate.set(key, 0);
-                }
-
-                submissionsSnap.forEach(doc => {
-                    const sub = doc.data();
-                    if (sub.submittedAt && sub.earned) {
-                        const date = sub.submittedAt.toDate().toISOString().split('T')[0];
-                        if (earningsByDate.has(date)) {
-                            earningsByDate.set(date, earningsByDate.get(date) + sub.earned);
-                        }
-                    }
-                });
-
-                withdrawalsSnap.forEach(doc => {
-                    const wd = doc.data();
-                    if (wd.requestedAt && wd.amount) {
-                        const date = wd.requestedAt.toDate().toISOString().split('T')[0];
-                        if (earningsByDate.has(date)) {
-                            earningsByDate.set(date, earningsByDate.get(date) - wd.amount);
-                        }
-                    }
-                });
-
+                for (let i = 29; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); const key = d.toISOString().split('T')[0]; earningsByDate.set(key, 0); }
+                submissionsSnap.forEach(doc => { const sub = doc.data(); if (sub.submittedAt && sub.earned) { const date = sub.submittedAt.toDate().toISOString().split('T')[0]; if (earningsByDate.has(date)) earningsByDate.set(date, earningsByDate.get(date) + sub.earned); } });
+                withdrawalsSnap.forEach(doc => { const wd = doc.data(); if (wd.requestedAt && wd.amount) { const date = wd.requestedAt.toDate().toISOString().split('T')[0]; if (earningsByDate.has(date)) earningsByDate.set(date, earningsByDate.get(date) - wd.amount); } });
                 const labels = Array.from(earningsByDate.keys());
                 const data = Array.from(earningsByDate.values());
-
-                document.getElementById('content').innerHTML = `
-                    <h3>📈 Earnings (Last 30 days)</h3>
-                    <div class="graph-container"><canvas id="earningsChart"></canvas></div>
-                `;
+                document.getElementById('content').innerHTML = `<h3>📈 Earnings (Last 30 days)</h3><div class="graph-container"><canvas id="earningsChart"></canvas></div>`;
                 setTimeout(() => {
                     const ctx = document.getElementById('earningsChart').getContext('2d');
-                    new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: 'Net Earnings ($)',
-                                data: data,
-                                borderColor: '#10b981',
-                                backgroundColor: 'rgba(16,185,129,0.1)',
-                                fill: true,
-                                tension: 0.4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: { y: { beginAtZero: true,
-                                         ticks: { callback: (value) => formatBoth(value) } } }
-                        }
-                    });
+                    new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'Net Earnings ($)', data: data, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: (value) => formatBoth(value) } } } } });
                 }, 100);
             } catch (e) {
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
@@ -3041,10 +3129,7 @@
                     if (referralCode) {
                         const usersSnapshot = await db.collection('users').get();
                         for (const u of usersSnapshot.docs) {
-                            if (generateReferralCode(u.id) === referralCode) {
-                                referredBy = u.id;
-                                break;
-                            }
+                            if (generateReferralCode(u.id) === referralCode) { referredBy = u.id; break; }
                         }
                     }
                     await db.collection('users').doc(user.uid).set({
@@ -3080,16 +3165,10 @@
                     userData = { id: user.uid, ...newDoc.data() };
                 } else {
                     userData = { id: user.uid, ...doc.data() };
-                    if (userData.frozen === undefined) {
-                        await db.collection('users').doc(user.uid).update({ frozen: false });
-                        userData.frozen = false;
-                    }
+                    if (userData.frozen === undefined) { await db.collection('users').doc(user.uid).update({ frozen: false }); userData.frozen = false; }
                     const welcomeBonus = getWelcomeBonus(MEMBERSHIP_TYPES.ELITE);
                     if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
-                        await db.collection('users').doc(user.uid).update({
-                            wallet: firebase.firestore.FieldValue.increment(welcomeBonus),
-                            eliteBonusApplied: true
-                        });
+                        await db.collection('users').doc(user.uid).update({ wallet: firebase.firestore.FieldValue.increment(welcomeBonus), eliteBonusApplied: true });
                         userData.wallet = (userData.wallet || 0) + welcomeBonus;
                     }
                 }
@@ -3098,21 +3177,14 @@
                 document.getElementById('userName').textContent = userData.displayName;
                 updateWalletDisplay();
 
-                try {
-                    await db.collection('userLogins').add({
-                        userId: currentUser.uid,
-                        userName: userData.displayName,
-                        userEmail: userData.email,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        ip: null
-                    });
-                } catch (loginError) { console.warn('Failed to record login:', loginError); }
+                try { await db.collection('userLogins').add({ userId: currentUser.uid, userName: userData.displayName, userEmail: userData.email, timestamp: firebase.firestore.FieldValue.serverTimestamp(), ip: null }); } catch (loginError) { console.warn('Failed to record login:', loginError); }
 
                 await loadConversionRate();
                 await loadFeeSettings(); 
                 await loadMembershipPackages();
                 await loadWithdrawalSettings();
                 await loadPaymentSettings();
+                setupTicker(); // start ticker
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
                 setupAcceptedTasksListener();
                 loadDashboard();
@@ -3123,9 +3195,7 @@
             }
         });
 
-        function updateWalletDisplay() {
-            document.getElementById('walletDisplay').textContent = formatBoth(userData?.wallet || 0);
-        }
+        function updateWalletDisplay() { document.getElementById('walletDisplay').textContent = formatBoth(userData?.wallet || 0); }
 
         function setupMessageCounter() { if (messagesListener) messagesListener(); messagesListener = db.collection('messages').where('recipientId','==',currentUser.uid).where('fromAdmin','==',true).where('read','==',false).onSnapshot(snap => { const cnt = snap.size; ['unreadMessagesBadge','mobileMessagesBadge','bottomMessagesBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = cnt; el.style.display = cnt ? 'inline' : 'none'; } }); db.collection('users').doc(currentUser.uid).update({ unreadMessages: cnt }).catch(console.log); refreshMirror(); }, err => { console.error('Message counter error:', err); setTimeout(setupMessageCounter,5000); }); }
         function setupWalletListener() { db.collection('users').doc(currentUser.uid).onSnapshot(doc => { if (doc.exists) { userData.wallet = doc.data().wallet || 0; updateWalletDisplay(); refreshMirror(); } }, console.error); }
@@ -3134,13 +3204,7 @@
             if (acceptedTasksListener) acceptedTasksListener();
             acceptedTasksListener = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').onSnapshot(snap => {
                 const count = snap.size;
-                ['desktopSubmitBadge', 'mobileSubmitBadge', 'bottomSubmitBadge'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.textContent = count;
-                        el.style.display = count ? 'inline' : 'none';
-                    }
-                });
+                ['desktopSubmitBadge', 'mobileSubmitBadge', 'bottomSubmitBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = count; el.style.display = count ? 'inline' : 'none'; } });
                 refreshMirror();
             }, console.error);
         }
@@ -3152,17 +3216,12 @@
                 const pendingSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','pending').get();
                 const approvedSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','approved').get();
                 const rejectedSnap = await db.collection('submissions').where('userId','==',currentUser.uid).where('status','==','rejected').get();
-
                 const totalSubmissions = pendingSnap.size + approvedSnap.size + rejectedSnap.size;
                 let activityRate = '0%';
-                if (totalSubmissions > 0) {
-                    activityRate = Math.round((approvedSnap.size / totalSubmissions) * 100) + '%';
-                }
+                if (totalSubmissions > 0) activityRate = Math.round((approvedSnap.size / totalSubmissions) * 100) + '%';
                 userData.activityRate = activityRate;
-
                 const productivityScore = (approvedSnap.size * 10) + (userData.wallet * 2) - (rejectedSnap.size * 5);
                 userData.productivityScore = Math.max(0, Math.round(productivityScore));
-
                 document.getElementById('statsGrid').innerHTML = `
                     <div class="stat-card"><i class="fas fa-wallet"></i><div class="stat-value">${formatBoth(userData.wallet)}</div><div class="stat-label">Balance</div></div>
                     <div class="stat-card"><i class="fas fa-clock"></i><div class="stat-value">${pendingSnap.size}</div><div class="stat-label">Pending</div></div>
