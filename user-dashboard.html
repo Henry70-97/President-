@@ -1098,33 +1098,22 @@
             db.collection('tickers').where('active', '==', true).orderBy('order', 'asc').onSnapshot(snapshot => {
                 if (snapshot.empty) {
                     tickerContainer.style.display = 'none';
-                    // Also hide stat ticker if it exists
                     const statTicker = document.getElementById('tickerStatContent');
-                    if (statTicker) {
-                        statTicker.innerHTML = '<span>📢 No announcements</span>';
-                    }
+                    if (statTicker) statTicker.innerHTML = '<span>📢 No announcements</span>';
                     return;
                 }
                 let messages = [];
                 snapshot.forEach(doc => messages.push(doc.data().message));
-                if (messages.length === 0) {
-                    tickerContainer.style.display = 'none';
-                    const statTicker = document.getElementById('tickerStatContent');
-                    if (statTicker) {
-                        statTicker.innerHTML = '<span>📢 No announcements</span>';
-                    }
-                    return;
-                }
                 tickerContainer.style.display = 'block';
                 let fullText = '';
-                for (let i = 0; i < 3; i++) { // repeat to make animation smooth
+                for (let i = 0; i < 3; i++) {
                     messages.forEach(msg => {
                         fullText += `<span><i class="fas fa-bullhorn"></i> ${escapeHtml(msg)}</span>`;
                     });
                 }
                 tickerContent.innerHTML = fullText;
 
-                // Update stat ticker if it exists
+                // Update stat ticker
                 const statTicker = document.getElementById('tickerStatContent');
                 if (statTicker) {
                     let statFullText = '';
@@ -1139,9 +1128,7 @@
                 console.error('Ticker error:', error);
                 tickerContainer.style.display = 'none';
                 const statTicker = document.getElementById('tickerStatContent');
-                if (statTicker) {
-                    statTicker.innerHTML = '<span>⚠️ Ticker unavailable</span>';
-                }
+                if (statTicker) statTicker.innerHTML = '<span>⚠️ Ticker unavailable</span>';
             });
         }
 
