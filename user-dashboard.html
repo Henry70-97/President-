@@ -81,6 +81,22 @@
         .whatsapp-group-btn:hover { background: #128C7E; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3); }
         .whatsapp-group-btn i { font-size: 1rem; }
         .desktop-only { display: inline; }
+        .live-clock {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1e293b;
+            background: #f1f5f9;
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .live-clock i {
+            color: #10b981;
+            font-size: 0.8rem;
+        }
 
         /* Bottom Navigation Bar */
         .bottom-nav {
@@ -211,7 +227,7 @@
         .filter-tag { background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 40px; font-size: 0.65rem; display: flex; align-items: center; gap: 0.2rem; }
         .filter-tag i { cursor: pointer; color: #ef4444; margin-left: 0.2rem; }
 
-        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+        .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
         .task-card:nth-child(odd) { background: #f8fafc; border-left: 4px solid #6366f1; }
         .task-card:nth-child(even) { background: #eef2ff; border-left: 4px solid #10b981; }
         .task-card { border-radius: 1.2rem; padding: 1.2rem; border: 1px solid #e2e8f0; transition: transform 0.2s; }
@@ -232,6 +248,7 @@
         .badge.success { background: #10b98120; color: #10b981; }
         .badge.warning { background: #f59e0b20; color: #f59e0b; }
         .badge.danger { background: #ef444420; color: #ef4444; }
+        .badge.info { background: #8b5cf620; color: #8b5cf6; }
 
         .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.3px; cursor: pointer; transition: all 0.3s; }
         .btn-primary { background: #6366f1; color: white; }
@@ -539,7 +556,44 @@
             width: 100%;
             flex: 1;
             border: none;
-            min-height: 500px; /* ensures iframe has height even when flex is not fully supported */
+            min-height: 500px;
+        }
+
+        /* Accepted users list */
+        .accepted-users-list {
+            margin-top: 0.8rem;
+            padding: 0.5rem;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 0.5rem;
+            font-size: 0.7rem;
+        }
+        .accepted-users-list .title {
+            font-weight: 600;
+            color: #6366f1;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .accepted-users-list .user-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.2rem 0.3rem;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .accepted-users-list .user-item:last-child {
+            border-bottom: none;
+        }
+        .accepted-users-list .user-name {
+            font-weight: 500;
+            color: #0f172a;
+        }
+        .accepted-users-list .user-score {
+            background: #10b98120;
+            color: #10b981;
+            padding: 0.1rem 0.4rem;
+            border-radius: 40px;
+            font-weight: 700;
         }
 
         @media (max-width: 768px) {
@@ -567,6 +621,9 @@
             }
             .ai-modal iframe {
                 min-height: 600px;
+            }
+            .live-clock {
+                display: none; /* hide on mobile to save space */
             }
         }
 
@@ -804,13 +861,17 @@
             </div>
         </div>
 
-        <!-- Header with logo image -->
+        <!-- Header with logo image and live clock -->
         <div class="header">
             <div class="hamburger-menu" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></div>
             <div class="logo">
                 <img src="logo.jpg" alt="NextGen Hub Logo">
             </div>
             <div class="header-actions">
+                <div class="live-clock" id="liveClock">
+                    <i class="fas fa-clock"></i>
+                    <span id="clockDisplay"></span>
+                </div>
                 <button class="whatsapp-group-btn" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t', '_blank')">
                     <i class="fab fa-whatsapp"></i><span class="desktop-only">Join WhatsApp Group</span>
                 </button>
@@ -897,6 +958,15 @@
             document.getElementById('aiModalBackdrop').classList.remove('active');
         }
 
+        // ==================== LIVE CLOCK ====================
+        function updateClock() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            document.getElementById('clockDisplay').textContent = now.toLocaleDateString('en-US', options);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
         // ==================== FIREBASE CONFIG ====================
         const firebaseConfig = {
             apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
@@ -951,6 +1021,8 @@
         let currentTab = 'tasks';
         let adminId = null;
         let acceptedTasksListener = null;
+        // Cache for user data to avoid repeated Firestore reads
+        const userCache = new Map();
 
         // ==================== FETCH ADMIN ID ====================
         async function getAdminId() {
@@ -1269,9 +1341,26 @@
                     if (t.acceptedCount === undefined) t.acceptedCount = 0;
                     const acceptSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').where('userId', '==', currentUser.uid).get();
                     t.userAccepted = !acceptSnap.empty;
-                    if (t.collaborable) {
-                        const teamSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').get();
-                        t.team = teamSnap.docs.map(d => d.data().userName || d.data().userEmail || 'User');
+                    // Fetch all accepted users for this task
+                    const allAcceptsSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').get();
+                    t.acceptedUsers = [];
+                    for (const doc of allAcceptsSnap.docs) {
+                        const data = doc.data();
+                        // Get user details from cache or fetch
+                        let user = userCache.get(data.userId);
+                        if (!user) {
+                            const userDoc = await db.collection('users').doc(data.userId).get();
+                            if (userDoc.exists) {
+                                user = { id: data.userId, ...userDoc.data() };
+                                userCache.set(data.userId, user);
+                            }
+                        }
+                        if (user) {
+                            t.acceptedUsers.push({
+                                name: user.displayName || user.email,
+                                score: user.productivityScore || 0
+                            });
+                        }
                     }
                 }));
                 filteredTasks = [...allTasks];
@@ -1314,9 +1403,26 @@
                     if (t.acceptedCount === undefined) t.acceptedCount = 0;
                     const acceptSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').where('userId', '==', currentUser.uid).get();
                     t.userAccepted = !acceptSnap.empty;
-                    if (t.collaborable) {
-                        const teamSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').get();
-                        t.team = teamSnap.docs.map(d => d.data().userName || d.data().userEmail || 'User');
+                    // Fetch all accepted users for this task
+                    const allAcceptsSnap = await db.collection('tasks').doc(t.id).collection('taskAccepts').get();
+                    t.acceptedUsers = [];
+                    for (const doc of allAcceptsSnap.docs) {
+                        const data = doc.data();
+                        // Get user details from cache or fetch
+                        let user = userCache.get(data.userId);
+                        if (!user) {
+                            const userDoc = await db.collection('users').doc(data.userId).get();
+                            if (userDoc.exists) {
+                                user = { id: data.userId, ...userDoc.data() };
+                                userCache.set(data.userId, user);
+                            }
+                        }
+                        if (user) {
+                            t.acceptedUsers.push({
+                                name: user.displayName || user.email,
+                                score: user.productivityScore || 0
+                            });
+                        }
                     }
                 }));
                 filteredTasks = [...allTasks];
@@ -1331,7 +1437,7 @@
             return d.toISOString().slice(0,10).replace(/-/g,'-') + ' ' + d.toTimeString().slice(0,8);
         }
 
-        // Render tasks (with transcription card)
+        // Render tasks (with transcription card and accepted users)
         async function renderTasks() {
             let html = '<h3>Available Tasks</h3>' + filterBarHTML();
             if (filteredTasks.length === 0) html += '<div class="empty-state"><i class="fas fa-filter"></i><p>No tasks match filters.</p></div>';
@@ -1353,6 +1459,16 @@
                         acceptButton = '<button class="btn btn-success" disabled>Accepted</button>';
                     } else {
                         acceptButton = `<button class="btn btn-accept" onclick="acceptTask('${t.id}')">Accept (${t.acceptedCount}/${maxCollab})</button>`;
+                    }
+
+                    // Build accepted users HTML
+                    let acceptedUsersHtml = '';
+                    if (t.acceptedUsers && t.acceptedUsers.length > 0) {
+                        acceptedUsersHtml = '<div class="accepted-users-list"><div class="title"><i class="fas fa-users"></i> Accepted by:</div>';
+                        t.acceptedUsers.forEach(user => {
+                            acceptedUsersHtml += `<div class="user-item"><span class="user-name">${escapeHtml(user.name)}</span><span class="user-score">${user.score}</span></div>`;
+                        });
+                        acceptedUsersHtml += '</div>';
                     }
 
                     if (t.category === 'transcription') {
@@ -1382,6 +1498,7 @@
                                     <span><i class="fas fa-database"></i> ${size}</span>
                                 </div>
                                 <div class="task-amount" style="font-size:1rem;">${amount}</div>
+                                ${acceptedUsersHtml}
                                 <div style="display:flex; gap:0.5rem; margin-top:0.8rem;">
                                     <button class="btn btn-secondary" onclick="viewTaskDetails('${t.id}')" style="flex:1;">View Task</button>
                                     ${acceptButton}
@@ -1422,6 +1539,7 @@
                                 ${expired && !submitted ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
                                 ${t.collaborable && t.team && t.team.length ? `<div class="team-list"><i class="fas fa-users"></i> Team: ${t.team.join(', ')}</div>` : ''}
                                 ${audioHtml}
+                                ${acceptedUsersHtml}
                                 <div style="display:flex; gap:0.5rem;">
                                     <button class="btn btn-secondary" onclick="viewTaskDetails('${t.id}')" style="flex:1;">Details</button>
                                     ${acceptButton}
