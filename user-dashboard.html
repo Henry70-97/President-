@@ -205,7 +205,7 @@
 
         /* ==================== STATS GRID ==================== */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-        .stat-card { border-radius: 1.2rem; padding: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .stat-card { border-radius: 1.2rem; padding: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column; }
         .stat-card:hover { transform: translateY(-3px); }
         .stat-card i { font-size: 1.5rem; color: #6366f1; margin-bottom: 0.3rem; }
         .stat-value { font-size: 1.4rem; font-weight: 800; color: #0f172a; line-height: 1.2; letter-spacing: -0.5px; }
@@ -218,6 +218,29 @@
         .stats-grid .stat-card:nth-child(6n+4) { background-color: #ffe0b2; }
         .stats-grid .stat-card:nth-child(6n+5) { background-color: #e6ccff; }
         .stats-grid .stat-card:nth-child(6n+6) { background-color: #ffe0f0; }
+
+        /* Ticker stat card specific */
+        .ticker-stat-content {
+            white-space: nowrap;
+            overflow: hidden;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #0f172a;
+            background: rgba(255,255,255,0.5);
+            border-radius: 40px;
+            padding: 0.2rem 0.5rem;
+            margin-top: 0.3rem;
+            display: inline-block;
+            width: 100%;
+        }
+        .ticker-stat-content span {
+            display: inline-block;
+            animation: tickerStatMove 12s linear infinite;
+        }
+        @keyframes tickerStatMove {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
 
         /* ==================== DESKTOP TABS ==================== */
         .tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 1rem; }
@@ -1075,12 +1098,21 @@
             db.collection('tickers').where('active', '==', true).orderBy('order', 'asc').onSnapshot(snapshot => {
                 if (snapshot.empty) {
                     tickerContainer.style.display = 'none';
+                    // Also hide stat ticker if it exists
+                    const statTicker = document.getElementById('tickerStatContent');
+                    if (statTicker) {
+                        statTicker.innerHTML = '<span>📢 No announcements</span>';
+                    }
                     return;
                 }
                 let messages = [];
                 snapshot.forEach(doc => messages.push(doc.data().message));
                 if (messages.length === 0) {
                     tickerContainer.style.display = 'none';
+                    const statTicker = document.getElementById('tickerStatContent');
+                    if (statTicker) {
+                        statTicker.innerHTML = '<span>📢 No announcements</span>';
+                    }
                     return;
                 }
                 tickerContainer.style.display = 'block';
@@ -1091,9 +1123,25 @@
                     });
                 }
                 tickerContent.innerHTML = fullText;
+
+                // Update stat ticker if it exists
+                const statTicker = document.getElementById('tickerStatContent');
+                if (statTicker) {
+                    let statFullText = '';
+                    for (let i = 0; i < 3; i++) {
+                        messages.forEach(msg => {
+                            statFullText += `<span>${escapeHtml(msg)} </span>`;
+                        });
+                    }
+                    statTicker.innerHTML = `<span>${statFullText}</span>`;
+                }
             }, error => {
                 console.error('Ticker error:', error);
                 tickerContainer.style.display = 'none';
+                const statTicker = document.getElementById('tickerStatContent');
+                if (statTicker) {
+                    statTicker.innerHTML = '<span>⚠️ Ticker unavailable</span>';
+                }
             });
         }
 
@@ -3152,7 +3200,15 @@
                     <div class="stat-card"><i class="fas fa-check-circle"></i><div class="stat-value">${approvedSnap.size}</div><div class="stat-label">Approved</div></div>
                     <div class="stat-card"><i class="fas fa-chart-line"></i><div class="stat-value">${activityRate}</div><div class="stat-label">Activity Rate</div></div>
                     <div class="stat-card"><i class="fas fa-star"></i><div class="stat-value">${userData.productivityScore}</div><div class="stat-label">Productivity</div></div>
+                    <div class="stat-card" id="tickerStatCard">
+                        <i class="fas fa-bullhorn"></i>
+                        <div class="stat-label">Live Announcements</div>
+                        <div class="ticker-stat-content" id="tickerStatContent">
+                            <span>Loading announcements...</span>
+                        </div>
+                    </div>
                 `;
+                // tickerStatContent will be updated by setupTicker
                 switchTab('tasks');
             } catch (e) { console.error('Dashboard error:', e); switchTab('tasks'); }
         }
