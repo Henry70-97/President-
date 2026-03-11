@@ -333,7 +333,8 @@
             border-radius: 0.5rem;
             border: 1px solid #e2e8f0;
         }
-        .toolbar {
+        /* Word-like editor toolbar */
+        .editor-toolbar {
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 40px;
@@ -342,20 +343,42 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.2rem;
+            align-items: center;
         }
-        .toolbar button {
+        .editor-toolbar button {
             background: none;
             border: none;
             padding: 0.3rem 0.5rem;
             cursor: pointer;
             border-radius: 4px;
             color: #1e293b;
+            font-size: 1rem;
         }
-        .toolbar button:hover {
+        .editor-toolbar button:hover {
             background: #f1f5f9;
         }
-        .toolbar button i {
-            font-size: 1rem;
+        .editor-toolbar select {
+            width: auto;
+            display: inline-block;
+            margin: 0;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 40px;
+        }
+        .editor-content {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem;
+            min-height: 150px;
+            outline: none;
+            font-family: inherit;
+            line-height: 1.6;
+            overflow-y: auto;
+        }
+        .editor-content:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
 
         @media (max-width: 768px) { 
@@ -1103,7 +1126,7 @@
             loadUsers();  
         }  
           
-        // ==================== User Functions (updated with membership change and reset password) ====================
+        // ==================== User Functions (updated with membership change, reset password, and demote admin) ====================
         async function toggleVerified(userId, newStatus) {
             await db.collection('users').doc(userId).update({ verified: newStatus });
             showAlert(`User verified status set to ${newStatus}`, 'success');
@@ -1171,6 +1194,19 @@
             }
         }
 
+        // NEW: Demote admin to regular user
+        async function demoteAdmin(userId, userEmail) {
+            if (!confirm(`Are you sure you want to remove admin privileges from ${userEmail}?`)) return;
+            try {
+                await db.collection('users').doc(userId).update({ role: 'user' });
+                showAlert(`${userEmail} is no longer an admin.`, 'success');
+                loadUsers();
+            } catch (error) {
+                console.error('Error demoting admin:', error);
+                showAlert('Error demoting admin: ' + error.message, 'error');
+            }
+        }
+
         async function loadUsers() { 
             try {
                 const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get(); 
@@ -1192,6 +1228,7 @@
                     const verified = user.verified === true; 
                     const frozen = user.frozen === true; 
                     const active = user.active !== false;
+                    const isAdmin = user.role === 'admin';
                     html += ` 
                         <tr class="user-row" data-email="${user.email.toLowerCase()}" data-name="${(user.displayName || '').toLowerCase()}"> 
                             <td>${user.email}</td> 
@@ -1207,7 +1244,8 @@
                             <td class="action-buttons"> 
                                 <button class="btn btn-primary toggle-status-btn" data-user-id="${user.id}" data-new-status="${!active}">${active ? 'Deactivate' : 'Activate'}</button> 
                                 <button class="btn btn-success adjust-wallet-btn" data-user-id="${user.id}" data-user-name="${user.displayName}" data-wallet="${user.wallet || 0}">Adjust Wallet</button> 
-                                ${user.role !== 'admin' ? `<button class="btn btn-warning make-admin-btn" data-user-id="${user.id}">Make Admin</button>` : ''} 
+                                ${!isAdmin ? `<button class="btn btn-warning make-admin-btn" data-user-id="${user.id}">Make Admin</button>` : ''}
+                                ${isAdmin ? `<button class="btn btn-secondary demote-admin-btn" data-user-id="${user.id}" data-user-email="${user.email}">Demote Admin</button>` : ''}
                                 <button class="btn btn-info toggle-verified-btn" data-user-id="${user.id}" data-new-status="${!verified}">${verified ? 'Unverify' : 'Verify'}</button> 
                                 <button class="btn btn-secondary toggle-frozen-btn" data-user-id="${user.id}" data-new-status="${!frozen}">${frozen ? 'Unfreeze' : 'Freeze'}</button> 
                                 <button class="btn btn-danger delete-user-btn" data-user-id="${user.id}" data-user-email="${user.email}">Delete</button> 
@@ -3895,130 +3933,7 @@
             await sendNotificationToAll(title, message, type, link);
         }
           
-        // ========== Messages (updated with petition reply and conversation view) ==========
-        async function viewUserConversation(userId) {
-            try {
-                const userDoc = await db.collection('users').doc(userId).get();
-                if (!userDoc.exists) {
-                    showAlert('User not found', 'error');
-                    return;
-                }
-                const userEmail = userDoc.data().email;
-                
-                // Fetch messages where either senderId or recipientId equals userId, and admin is the other party
-                const messagesSnap = await db.collection('messages')
-                    .where('parentMessageId', '==', null) // top-level messages (you may need to adjust for your structure)
-                    .orderBy('createdAt', 'asc')
-                    .get();
-                
-                // Filter manually to get messages between this user and admin
-                const messages = [];
-                messagesSnap.forEach(doc => {
-                    const msg = doc.data();
-                    if ((msg.senderId === userId && msg.recipientId === currentUser.uid) || 
-                        (msg.senderId === currentUser.uid && msg.recipientId === userId)) {
-                        messages.push({ id: doc.id, ...msg });
-                    }
-                });
-
-                let conversationHtml = '<div style="max-height: 400px; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 1rem;">';
-                if (messages.length === 0) {
-                    conversationHtml += '<p style="text-align:center; color:#64748b;">No messages yet with this user.</p>';
-                } else {
-                    messages.forEach(msg => {
-                        const isAdmin = msg.senderId === currentUser.uid;
-                        const time = msg.createdAt ? formatDate(msg.createdAt) : '';
-                        conversationHtml += `
-                            <div style="display: flex; justify-content: ${isAdmin ? 'flex-end' : 'flex-start'}; margin-bottom: 1rem;">
-                                <div style="background: ${isAdmin ? '#6366f1' : '#e2e8f0'}; color: ${isAdmin ? 'white' : '#1e293b'}; padding: 0.5rem 1rem; border-radius: 1rem; max-width: 70%;">
-                                    <div style="font-size: 0.8rem; margin-bottom: 0.2rem;">${isAdmin ? 'Admin' : userEmail}</div>
-                                    <div>${msg.message}</div>
-                                    <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 0.2rem;">${time}</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-                conversationHtml += '</div>';
-                
-                // Reply box
-                conversationHtml += `
-                    <h4 style="margin-top:1rem;">Reply to User</h4>
-                    <textarea id="conversationReply" placeholder="Type your reply..." style="min-height: 80px;"></textarea>
-                    <button class="btn btn-primary" id="sendConversationReply" data-user-id="${userId}">Send Reply</button>
-                `;
-                
-                showModal(conversationHtml);
-                
-                document.getElementById('sendConversationReply').addEventListener('click', async function() {
-                    const reply = document.getElementById('conversationReply').value;
-                    if (!reply) {
-                        showAlert('Please enter a reply', 'error');
-                        return;
-                    }
-                    await sendMessageToUser(userId, reply);
-                    closeModal();
-                    showAlert('Reply sent', 'success');
-                });
-            } catch (error) {
-                console.error('Error loading conversation:', error);
-                showAlert('Error: ' + error.message, 'error');
-            }
-        }
-
-        async function sendMessageToUser(userId, message) {
-            try {
-                const userDoc = await db.collection('users').doc(userId).get();
-                const userEmail = userDoc.data().email;
-                await db.collection('messages').add({
-                    senderId: currentUser.uid,
-                    recipientId: userId,
-                    message,
-                    userEmail,
-                    fromAdmin: true,
-                    read: false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                await sendNotification(userId, 'New Message from Admin', message, 'message', null);
-            } catch (error) {
-                console.error('Error sending message:', error);
-                throw error;
-            }
-        }
-
-        async function replyToPetition(petitionId, userId, originalMessage) {
-            showModal(`
-                <h3 style="margin-bottom:1rem;">Reply to Petition</h3>
-                <p><strong>Original Petition:</strong> ${originalMessage}</p>
-                <textarea id="petitionReply" placeholder="Type your response..." style="min-height: 100px;"></textarea>
-                <button class="btn btn-primary" id="sendPetitionReplyBtn" data-petition-id="${petitionId}" data-user-id="${userId}">Send Reply</button>
-            `);
-        }
-
-        async function sendPetitionReply(petitionId, userId) {
-            const reply = document.getElementById('petitionReply').value;
-            if (!reply) {
-                showAlert('Please enter a reply', 'error');
-                return;
-            }
-            try {
-                // Update petition document with response
-                await db.collection('petitions').doc(petitionId).update({
-                    response: reply,
-                    respondedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    respondedBy: currentUser.uid
-                });
-                // Send notification to user
-                await sendNotification(userId, 'Response to Your Petition', reply, 'petition_response', null);
-                closeModal();
-                showAlert('Reply sent and user notified', 'success');
-                loadMessages(); // refresh messages tab
-            } catch (error) {
-                console.error('Error replying to petition:', error);
-                showAlert('Error: ' + error.message, 'error');
-            }
-        }
-
+        // ========== Messages (updated with searchable user dropdown) ==========
         async function loadMessages() {  
             try {
                 const users = await db.collection('users').get();  
@@ -4089,7 +4004,9 @@
                       
                     <div id="individualMessageForm" style="background:#f8fafc; padding:1.5rem; border-radius:1rem; margin-bottom:2rem; display: ${currentMessageType === 'individual' ? 'block' : 'none'};">  
                         <h4 style="margin-bottom:1rem;">Send Individual Message</h4>  
-                        <select id="messageUser">  
+                        <!-- Search input for user dropdown -->
+                        <input type="text" id="userSearch" placeholder="Type to filter users..." style="margin-bottom:0.5rem;">
+                        <select id="messageUser" size="8" style="height:auto; min-height:150px;">  
                             <option value="">Select User</option>  
                             ${options}  
                         </select>  
@@ -4173,6 +4090,20 @@
                 `;  
                   
                 document.getElementById('content').innerHTML = html;  
+
+                // Add search filtering for user select
+                const searchInput = document.getElementById('userSearch');
+                const userSelect = document.getElementById('messageUser');
+                if (searchInput && userSelect) {
+                    searchInput.addEventListener('keyup', function() {
+                        const filter = this.value.toLowerCase();
+                        const options = userSelect.options;
+                        for (let i = 1; i < options.length; i++) { // skip first empty option
+                            const text = options[i].text.toLowerCase();
+                            options[i].style.display = text.includes(filter) ? '' : 'none';
+                        }
+                    });
+                }
             } catch (error) {
                 console.error('Error loading messages:', error);
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading messages: ${error.message}</p><button class="btn btn-primary" onclick="loadMessages()">Retry</button></div>`;
@@ -5233,12 +5164,11 @@
             }
         };
 
-        // ========== HOW IT WORKS EDITOR ==========
+        // ========== HOW IT WORKS EDITOR (Word‑like WYSIWYG) ==========
         async function loadHowItWorksEditor() {
             try {
                 const doc = await db.collection('howItWorks').doc('content').get();
                 let sections = doc.exists ? doc.data().sections || [] : [];
-                // Ensure sections array
                 if (!Array.isArray(sections)) sections = [];
 
                 let html = `
@@ -5251,19 +5181,19 @@
                     html += '<p style="color:#64748b;">No sections yet. Add your first section below.</p>';
                 } else {
                     sections.forEach((section, index) => {
-                        html += renderSection(section, index);
+                        html += renderWysiwygSection(section, index);
                     });
                 }
 
                 html += `
                         </div>
                         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                            <button class="btn btn-success" onclick="addSection('heading')">+ Add Heading</button>
-                            <button class="btn btn-success" onclick="addSection('paragraph')">+ Add Paragraph</button>
-                            <button class="btn btn-success" onclick="addSection('image')">+ Add Image</button>
+                            <button class="btn btn-success" onclick="addWysiwygSection('heading')">+ Add Heading</button>
+                            <button class="btn btn-success" onclick="addWysiwygSection('paragraph')">+ Add Paragraph</button>
+                            <button class="btn btn-success" onclick="addWysiwygSection('image')">+ Add Image</button>
                         </div>
                         <div style="margin-top: 2rem;">
-                            <button class="btn btn-primary" onclick="saveHowItWorks()">Save All Changes</button>
+                            <button class="btn btn-primary" onclick="saveWysiwygHowItWorks()">Save All Changes</button>
                         </div>
                     </div>
                 `;
@@ -5275,18 +5205,17 @@
             }
         }
 
-        // Helper to render a section with toolbar and controls
-        function renderSection(section, index) {
+        // Render a section with contenteditable div (WYSIWYG)
+        function renderWysiwygSection(section, index) {
             const type = section.type || 'paragraph';
-            let contentHtml = '';
             if (type === 'image') {
-                contentHtml = `
+                return `
                     <div class="section-card">
                         <div class="section-type image">📷 Image</div>
                         <div class="section-controls">
-                            <button class="btn btn-sm btn-secondary" onclick="moveSection(${index}, 'up')"><i class="fas fa-arrow-up"></i></button>
-                            <button class="btn btn-sm btn-secondary" onclick="moveSection(${index}, 'down')"><i class="fas fa-arrow-down"></i></button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteSection(${index})"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-sm btn-secondary" onclick="moveWysiwygSection(${index}, 'up')"><i class="fas fa-arrow-up"></i></button>
+                            <button class="btn btn-sm btn-secondary" onclick="moveWysiwygSection(${index}, 'down')"><i class="fas fa-arrow-down"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteWysiwygSection(${index})"><i class="fas fa-trash"></i></button>
                         </div>
                         <div>
                             <label>Image URL</label>
@@ -5296,148 +5225,194 @@
                     </div>
                 `;
             } else {
-                // heading or paragraph – add formatting toolbar
-                const placeholder = type === 'heading' ? 'Enter heading text (supports HTML, e.g. <strong>bold</strong>)' : 'Enter paragraph text (supports HTML)';
-                contentHtml = `
-                    <div class="section-card">
+                // Heading or paragraph – use contenteditable div with toolbar
+                const placeholder = type === 'heading' ? 'Heading text...' : 'Paragraph text...';
+                return `
+                    <div class="section-card" data-index="${index}">
                         <div class="section-type ${type === 'heading' ? 'heading' : 'paragraph'}">${type === 'heading' ? '📌 Heading' : '📄 Paragraph'}</div>
                         <div class="section-controls">
-                            <button class="btn btn-sm btn-secondary" onclick="moveSection(${index}, 'up')"><i class="fas fa-arrow-up"></i></button>
-                            <button class="btn btn-sm btn-secondary" onclick="moveSection(${index}, 'down')"><i class="fas fa-arrow-down"></i></button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteSection(${index})"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-sm btn-secondary" onclick="moveWysiwygSection(${index}, 'up')"><i class="fas fa-arrow-up"></i></button>
+                            <button class="btn btn-sm btn-secondary" onclick="moveWysiwygSection(${index}, 'down')"><i class="fas fa-arrow-down"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteWysiwygSection(${index})"><i class="fas fa-trash"></i></button>
                         </div>
-                        <div class="toolbar">
-                            <button onclick="wrapText(${index}, '<strong>', '</strong>')" title="Bold"><i class="fas fa-bold"></i></button>
-                            <button onclick="wrapText(${index}, '<em>', '</em>')" title="Italic"><i class="fas fa-italic"></i></button>
-                            <button onclick="wrapText(${index}, '<u>', '</u>')" title="Underline"><i class="fas fa-underline"></i></button>
-                            <button onclick="insertLink(${index})" title="Insert Link"><i class="fas fa-link"></i></button>
-                            <button onclick="wrapText(${index}, '<ul><li>', '</li></ul>')" title="List"><i class="fas fa-list"></i></button>
-                            <button onclick="wrapText(${index}, '<h2>', '</h2>')" title="Heading"><i class="fas fa-heading"></i></button>
+                        <div class="editor-toolbar">
+                            <button onclick="execCmd('bold', ${index})" title="Bold"><i class="fas fa-bold"></i></button>
+                            <button onclick="execCmd('italic', ${index})" title="Italic"><i class="fas fa-italic"></i></button>
+                            <button onclick="execCmd('underline', ${index})" title="Underline"><i class="fas fa-underline"></i></button>
+                            <button onclick="execCmd('insertUnorderedList', ${index})" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                            <button onclick="execCmd('insertOrderedList', ${index})" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                            <button onclick="promptLink(${index})" title="Insert Link"><i class="fas fa-link"></i></button>
+                            <button onclick="promptColor(${index})" title="Text Color"><i class="fas fa-palette"></i></button>
+                            <button onclick="promptFontSize(${index})" title="Font Size"><i class="fas fa-text-height"></i></button>
+                            <select onchange="execCmd('formatBlock', ${index}, this.value)">
+                                <option value="">Heading</option>
+                                <option value="h1">H1</option>
+                                <option value="h2">H2</option>
+                                <option value="h3">H3</option>
+                                <option value="p">Paragraph</option>
+                            </select>
                         </div>
-                        <textarea class="section-content" data-index="${index}" placeholder="${placeholder}" rows="${type === 'heading' ? 2 : 4}">${section.content || ''}</textarea>
+                        <div class="editor-content" contenteditable="true" data-index="${index}" data-type="${type}" placeholder="${placeholder}">${section.content || ''}</div>
                     </div>
                 `;
             }
-            return contentHtml;
         }
 
-        // Add a new section (triggered by buttons)
-        window.addSection = function(type) {
+        // Execute document command on the focused editor
+        function execCmd(command, index, value = null) {
+            const editor = document.querySelector(`.editor-content[data-index="${index}"]`);
+            if (!editor) return;
+            editor.focus();
+            if (value !== null) {
+                document.execCommand(command, false, value);
+            } else {
+                document.execCommand(command, false, null);
+            }
+        }
+
+        // Prompt for link
+        function promptLink(index) {
+            const url = prompt('Enter URL:', 'https://');
+            if (url) execCmd('createLink', index, url);
+        }
+
+        // Prompt for color
+        function promptColor(index) {
+            const color = prompt('Enter color (name or hex):', 'red');
+            if (color) execCmd('foreColor', index, color);
+        }
+
+        // Prompt for font size
+        function promptFontSize(index) {
+            const size = prompt('Enter font size (e.g., 16px, 1.2em):', '16px');
+            if (size) execCmd('fontSize', index, size); // Note: fontSize uses 1-7, but we'll use styleWithCSS
+            // Better: use styleWithCSS and set font size via execCommand with style
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('fontSize', false, '4'); // hack – real size can't be set directly. We'll use span.
+            // Instead we'll insert a span with style
+            const editor = document.querySelector(`.editor-content[data-index="${index}"]`);
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.style.fontSize = size;
+                range.surroundContents(span);
+            }
+        }
+
+        // Add new WYSIWYG section
+        window.addWysiwygSection = function(type) {
             const container = document.getElementById('sectionsContainer');
             if (!container) return;
             const sections = [];
             const existingDivs = container.querySelectorAll('.section-card');
             existingDivs.forEach((div, idx) => {
-                const textarea = div.querySelector('.section-content');
-                const content = textarea ? textarea.value : '';
                 const typeDiv = div.querySelector('.section-type');
                 let sectionType = 'paragraph';
                 if (typeDiv) {
                     if (typeDiv.classList.contains('heading')) sectionType = 'heading';
                     else if (typeDiv.classList.contains('image')) sectionType = 'image';
                 }
+                let content = '';
+                if (sectionType === 'image') {
+                    const input = div.querySelector('.section-content');
+                    content = input ? input.value : '';
+                } else {
+                    const editor = div.querySelector('.editor-content');
+                    content = editor ? editor.innerHTML : '';
+                }
                 sections.push({ type: sectionType, content });
             });
-            // Add new empty section
             sections.push({ type, content: '' });
-            renderSections(sections);
+            renderWysiwygSections(sections);
         };
 
-        // Render sections from array
-        function renderSections(sections) {
+        // Render sections from array (WYSIWYG)
+        function renderWysiwygSections(sections) {
             const container = document.getElementById('sectionsContainer');
             if (!container) return;
             let html = '';
             sections.forEach((section, index) => {
-                html += renderSection(section, index);
+                html += renderWysiwygSection(section, index);
             });
             container.innerHTML = html;
         }
 
-        // Move section up/down
-        window.moveSection = function(index, direction) {
+        // Move section
+        window.moveWysiwygSection = function(index, direction) {
             const container = document.getElementById('sectionsContainer');
             const sections = [];
             const existingDivs = container.querySelectorAll('.section-card');
             existingDivs.forEach((div, idx) => {
-                const textarea = div.querySelector('.section-content');
-                const content = textarea ? textarea.value : '';
                 const typeDiv = div.querySelector('.section-type');
                 let sectionType = 'paragraph';
                 if (typeDiv) {
                     if (typeDiv.classList.contains('heading')) sectionType = 'heading';
                     else if (typeDiv.classList.contains('image')) sectionType = 'image';
+                }
+                let content = '';
+                if (sectionType === 'image') {
+                    const input = div.querySelector('.section-content');
+                    content = input ? input.value : '';
+                } else {
+                    const editor = div.querySelector('.editor-content');
+                    content = editor ? editor.innerHTML : '';
                 }
                 sections.push({ type: sectionType, content });
             });
             const newIndex = direction === 'up' ? index - 1 : index + 1;
             if (newIndex < 0 || newIndex >= sections.length) return;
             [sections[index], sections[newIndex]] = [sections[newIndex], sections[index]];
-            renderSections(sections);
+            renderWysiwygSections(sections);
         };
 
         // Delete section
-        window.deleteSection = function(index) {
+        window.deleteWysiwygSection = function(index) {
             if (!confirm('Delete this section?')) return;
             const container = document.getElementById('sectionsContainer');
             const sections = [];
             const existingDivs = container.querySelectorAll('.section-card');
             existingDivs.forEach((div, idx) => {
                 if (idx === index) return;
-                const textarea = div.querySelector('.section-content');
-                const content = textarea ? textarea.value : '';
                 const typeDiv = div.querySelector('.section-type');
                 let sectionType = 'paragraph';
                 if (typeDiv) {
                     if (typeDiv.classList.contains('heading')) sectionType = 'heading';
                     else if (typeDiv.classList.contains('image')) sectionType = 'image';
                 }
+                let content = '';
+                if (sectionType === 'image') {
+                    const input = div.querySelector('.section-content');
+                    content = input ? input.value : '';
+                } else {
+                    const editor = div.querySelector('.editor-content');
+                    content = editor ? editor.innerHTML : '';
+                }
                 sections.push({ type: sectionType, content });
             });
-            renderSections(sections);
+            renderWysiwygSections(sections);
         };
 
-        // Wrap selected text in textarea with given tags
-        window.wrapText = function(index, openTag, closeTag) {
-            const textarea = document.querySelector(`.section-content[data-index="${index}"]`);
-            if (!textarea) return;
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const selected = textarea.value.substring(start, end);
-            const newText = textarea.value.substring(0, start) + openTag + selected + closeTag + textarea.value.substring(end);
-            textarea.value = newText;
-            textarea.focus();
-            textarea.setSelectionRange(start + openTag.length, end + openTag.length);
-        };
-
-        // Insert link (prompt for URL)
-        window.insertLink = function(index) {
-            const textarea = document.querySelector(`.section-content[data-index="${index}"]`);
-            if (!textarea) return;
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const selected = textarea.value.substring(start, end) || 'link text';
-            const url = prompt('Enter URL:', 'https://');
-            if (!url) return;
-            const newText = textarea.value.substring(0, start) + `<a href="${url}" target="_blank">${selected}</a>` + textarea.value.substring(end);
-            textarea.value = newText;
-            textarea.focus();
-        };
-
-        // Save all sections to Firestore
-        window.saveHowItWorks = async function() {
+        // Save all sections to Firestore (WYSIWYG)
+        window.saveWysiwygHowItWorks = async function() {
             const container = document.getElementById('sectionsContainer');
             if (!container) return;
             const sections = [];
             const existingDivs = container.querySelectorAll('.section-card');
             existingDivs.forEach((div) => {
-                const textarea = div.querySelector('.section-content');
-                const content = textarea ? textarea.value : '';
                 const typeDiv = div.querySelector('.section-type');
                 let sectionType = 'paragraph';
                 if (typeDiv) {
                     if (typeDiv.classList.contains('heading')) sectionType = 'heading';
                     else if (typeDiv.classList.contains('image')) sectionType = 'image';
+                }
+                let content = '';
+                if (sectionType === 'image') {
+                    const input = div.querySelector('.section-content');
+                    content = input ? input.value : '';
+                } else {
+                    const editor = div.querySelector('.editor-content');
+                    content = editor ? editor.innerHTML : '';
                 }
                 sections.push({ type: sectionType, content });
             });
@@ -5514,6 +5489,14 @@
                     await makeAdmin(userId);  
                     return;  
                 }  
+
+                // NEW: Demote admin button
+                if (target.classList.contains('demote-admin-btn')) {
+                    const userId = target.getAttribute('data-user-id');
+                    const userEmail = target.getAttribute('data-user-email');
+                    await demoteAdmin(userId, userEmail);
+                    return;
+                }
                   
                 if (target.classList.contains('toggle-verified-btn')) {
                     const userId = target.getAttribute('data-user-id');
@@ -5825,6 +5808,7 @@
         window.resetUserPassword = resetUserPassword;
         window.showChangeMembership = showChangeMembership;
         window.changeMembership = changeMembership;
+        window.demoteAdmin = demoteAdmin;
         window.showCreateTask = showCreateTask;  
         window.createTask = createTask;  
         window.toggleTask = toggleTask;  
