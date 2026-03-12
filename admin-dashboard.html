@@ -38,6 +38,7 @@
         .badge.danger { background: #ef444420; color: #ef4444; border: 1px solid #ef4444; }
         .badge.primary { background: #6366f120; color: #6366f1; border: 1px solid #6366f1; }
         .badge.info { background: #3b82f620; color: #3b82f6; border: 1px solid #3b82f6; }
+        .badge.suspended { background: #6b728020; color: #6b7280; border: 1px solid #6b7280; }
         .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; margin: 0.2rem; pointer-events: auto; }
         .btn-primary { background: #6366f1; color: white; }
         .btn-success { background: #10b981; color: white; }
@@ -191,6 +192,13 @@
         .resource-item { background: #f1f5f9; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
         .resource-item input, .resource-item select { margin-bottom: 0; flex: 1; }
         .resource-controls { display: flex; gap: 0.3rem; }
+
+        /* Deadline specific styles */
+        .deadline-badge-overdue { background: #ef4444; color: white; }
+        .deadline-badge-warning { background: #f59e0b; color: white; }
+        .deadline-badge-success { background: #10b981; color: white; }
+        .deadline-cell { white-space: nowrap; }
+        .submission-user-card { border-left: 4px solid #6366f1; margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 0.5rem; }
 
         /* Bottom Navigation for Mobile */
         .bottom-nav {
@@ -443,6 +451,8 @@
         <div class="mobile-menu-item" onclick="switchTab('howitworks'); toggleMobileMenu()">📘 How It Works</div>
         <!-- NEW Tickers tab -->
         <div class="mobile-menu-item" onclick="switchTab('tickers'); toggleMobileMenu()">📢 Tickers</div>
+        <!-- NEW Deadline Tracker tab -->
+        <div class="mobile-menu-item" onclick="switchTab('deadlineTracker'); toggleMobileMenu()">⏰ Deadline Tracker</div>
         <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
     </div>
 
@@ -492,6 +502,8 @@
             <button class="tab" data-tab="howitworks">📘 How It Works</button>  
             <!-- NEW TICKERS TAB -->
             <button class="tab" data-tab="tickers">📢 Tickers</button>  
+            <!-- NEW DEADLINE TRACKER TAB -->
+            <button class="tab" data-tab="deadlineTracker">⏰ Deadline Tracker</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
         </div>  
       
@@ -862,7 +874,7 @@
         }
         
         // Save fee settings to Firestore
-        async function saveFeeSettings(settings) {
+        async function saveFeeSettingsToFirestore(settings) {
             try {
                 await db.collection('settings').doc('feeSettings').set(settings);
                 feeSettings = settings;
@@ -1036,7 +1048,7 @@
             menu.classList.toggle('active');
         }
           
-        // Tab switching function (added tickers tab)
+        // Tab switching function (added tickers and deadlineTracker)
         function switchTab(tab) {  
             currentTab = tab;  
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));  
@@ -1073,6 +1085,7 @@
                 case 'feedback': loadFeedbackManager(); break;  
                 case 'howitworks': loadHowItWorksEditor(); break;  
                 case 'tickers': loadTickers(); break;   // NEW TICKERS TAB
+                case 'deadlineTracker': loadDeadlineTracker(); break; // NEW DEADLINE TRACKER
                 case 'settings': loadSettings(); break;  
             }  
         }  
@@ -1145,7 +1158,7 @@
                     </div>
                 `;
                 html += '<table class="data-table" id="usersTable">'; 
-                html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Status</th><th>Actions</th></tr>'; 
+                html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Active</th><th>Suspended</th><th>Actions</th></tr>'; 
                 
                 users.forEach(user => { 
                     const membershipClass = user.membershipType === 'elite' ? 'warning' : user.membershipType === 'premium' ? 'primary' : 'info'; 
@@ -1153,6 +1166,11 @@
                     const frozen = user.frozen === true; 
                     const active = user.active !== false;
                     const isAdmin = user.role === 'admin';
+                    const suspended = user.suspended === true;
+                    const suspendedStatus = suspended ? 
+                        `<span class="badge suspended" title="${user.suspendedReason || ''}">Suspended</span>` : 
+                        `<span class="badge success">Not Suspended</span>`;
+                    
                     html += ` 
                         <tr class="user-row" data-email="${user.email.toLowerCase()}" data-name="${(user.displayName || '').toLowerCase()}"> 
                             <td>${user.email}</td> 
@@ -1165,6 +1183,7 @@
                             <td><span class="badge ${frozen ? 'danger' : 'success'}">${frozen ? 'Frozen' : 'Active'}</span></td> 
                             <td>${user.role}</td> 
                             <td><span class="badge ${active ? 'success' : 'danger'}">${active ? 'Active' : 'Inactive'}</span></td> 
+                            <td>${suspendedStatus}</td> 
                             <td class="action-buttons"> 
                                 <button class="btn btn-primary toggle-status-btn" data-user-id="${user.id}" data-new-status="${!active}">${active ? 'Deactivate' : 'Activate'}</button> 
                                 <button class="btn btn-success adjust-wallet-btn" data-user-id="${user.id}" data-user-name="${user.displayName}" data-wallet="${user.wallet || 0}">Adjust Wallet</button> 
@@ -1175,6 +1194,9 @@
                                 <button class="btn btn-danger delete-user-btn" data-user-id="${user.id}" data-user-email="${user.email}">Delete</button> 
                                 <button class="btn btn-primary change-membership-btn" data-user-id="${user.id}" data-current-type="${user.membershipType || 'basic'}">Change Membership</button>
                                 <button class="btn btn-warning reset-password-btn" data-user-id="${user.id}" data-user-email="${user.email}">Reset Password</button>
+                                <button class="btn ${suspended ? 'btn-success' : 'btn-warning'}" onclick="toggleSuspendUser('${user.id}', ${suspended})">
+                                    ${suspended ? 'Unsuspend' : 'Suspend'}
+                                </button>
                             </td> 
                         </tr> 
                     `; 
@@ -1361,6 +1383,61 @@
             }  
         }  
 
+        // ==================== SUSPENSION FUNCTIONS ====================
+        window.toggleSuspendUser = function(userId, currentlySuspended) {
+            if (currentlySuspended) {
+                // Unsuspend
+                showModal(`
+                    <h3 style="margin-bottom:1rem;">Unsuspend User</h3>
+                    <p>Are you sure you want to remove suspension for this user?</p>
+                    <button class="btn btn-success" onclick="unsuspendUser('${userId}')">Yes, Unsuspend</button>
+                    <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                `);
+            } else {
+                // Suspend - ask for reason
+                showModal(`
+                    <h3 style="margin-bottom:1rem;">Suspend User</h3>
+                    <textarea id="suspendReason" placeholder="Reason for suspension (required)"></textarea>
+                    <button class="btn btn-warning" onclick="suspendUserTemporarily('${userId}')">Suspend</button>
+                `);
+            }
+        };
+
+        window.suspendUserTemporarily = async function(userId) {
+            const reason = document.getElementById('suspendReason')?.value;
+            if (!reason) {
+                showAlert('Please provide a reason', 'error');
+                return;
+            }
+            try {
+                await db.collection('users').doc(userId).update({
+                    suspended: true,
+                    suspendedReason: reason,
+                    suspendedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert('User suspended', 'success');
+                loadUsers();
+            } catch (error) {
+                showAlert('Error suspending user: ' + error.message, 'error');
+            }
+        };
+
+        window.unsuspendUser = async function(userId) {
+            try {
+                await db.collection('users').doc(userId).update({
+                    suspended: false,
+                    suspendedReason: firebase.firestore.FieldValue.delete(),
+                    suspendedAt: firebase.firestore.FieldValue.delete()
+                });
+                closeModal();
+                showAlert('User unsuspended', 'success');
+                loadUsers();
+            } catch (error) {
+                showAlert('Error unsuspending user: ' + error.message, 'error');
+            }
+        };
+
         // ==================== Tasks Functions ====================
         async function loadTasks() { 
             try {
@@ -1423,7 +1500,7 @@
                             <td>${task.title}</td> 
                             <td><span class="client-badge">${task.clientName || 'NextGen'}</span></td> 
                             <td>$${task.reward}</td> 
-                            <td> 
+                            <td class="deadline-cell"> 
                                 <span class="deadline-badge">${deadlineDisplay}</span> 
                                 ${deadlineStatus ? `<br><small class="badge ${deadlineStatus.class}">${deadlineStatus.text}</small>` : ''} 
                             </td> 
@@ -1437,6 +1514,7 @@
                                 <button class="btn btn-primary edit-task-btn" data-task-id="${task.id}">Edit</button> 
                                 <button class="btn btn-info view-requirements-btn" data-task-id="${task.id}">View Details</button> 
                                 <button class="btn btn-warning toggle-task-btn" data-task-id="${task.id}" data-new-status="${!task.active}">${task.active ? 'Deactivate' : 'Activate'}</button> 
+                                <button class="btn btn-secondary" onclick="showTaskSubmissions('${task.id}')">View Subs</button>
                             </td> 
                         </tr> 
                     `; 
@@ -1473,7 +1551,7 @@
                 <textarea id="taskInstructions" placeholder="Step-by-step instructions on how to complete this task..." style="min-height: 120px;" required></textarea>  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Deadline & Reward</h4>  
-                <input type="date" id="taskDeadline" required>  
+                <input type="datetime-local" id="taskDeadline" required>  
                 <input type="number" id="taskReward" placeholder="Reward (USD)" step="0.01" min="0" required>  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Task Details</h4>  
@@ -1558,7 +1636,6 @@
             }  
               
             const deadlineDate = new Date(deadline);  
-            deadlineDate.setHours(23, 59, 59, 999);  
               
             try {  
                 const taskRef = await db.collection('tasks').add({  
@@ -1634,7 +1711,9 @@
                 const year = deadline.getFullYear();  
                 const month = String(deadline.getMonth() + 1).padStart(2, '0');  
                 const day = String(deadline.getDate()).padStart(2, '0');  
-                deadlineValue = `${year}-${month}-${day}`;  
+                const hours = String(deadline.getHours()).padStart(2, '0');  
+                const minutes = String(deadline.getMinutes()).padStart(2, '0');  
+                deadlineValue = `${year}-${month}-${day}T${hours}:${minutes}`;  
             }  
             
             const usersSnapshot = await db.collection('users').orderBy('email').get();  
@@ -1662,7 +1741,7 @@
                 <textarea id="editInstructions" style="min-height: 120px;" required>${data.instructions || ''}</textarea>  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Deadline & Reward</h4>  
-                <input type="date" id="editDeadline" value="${deadlineValue}" required>  
+                <input type="datetime-local" id="editDeadline" value="${deadlineValue}" required>  
                 <input type="number" id="editReward" value="${data.reward}" step="0.01" min="0" required>  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Task Details</h4>  
@@ -1747,7 +1826,6 @@
             }  
               
             const deadlineDate = new Date(deadline);  
-            deadlineDate.setHours(23, 59, 59, 999);  
               
             await db.collection('tasks').doc(taskId).update({  
                 title,  
@@ -5420,7 +5498,7 @@
             }
         };
 
-        // ==================== TICKERS MANAGEMENT (NEW) ====================
+        // ==================== TICKERS MANAGEMENT ====================
         async function loadTickers() {
             try {
                 const snapshot = await db.collection('tickers').orderBy('order', 'asc').get();
@@ -5582,6 +5660,127 @@
                 loadTickers();
             } catch (error) {
                 showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // ==================== DEADLINE TRACKER FUNCTIONS ====================
+        async function loadDeadlineTracker() {
+            try {
+                const tasksSnap = await db.collection('tasks').orderBy('deadline', 'asc').get();
+                let html = '<h3 style="margin-bottom:1.5rem;">⏰ Deadline Tracker</h3>';
+                if (tasksSnap.empty) {
+                    html += '<p>No tasks found.</p>';
+                } else {
+                    const now = new Date();
+                    tasksSnap.forEach(doc => {
+                        const task = doc.data();
+                        task.id = doc.id;
+                        if (!task.deadline) return; // skip tasks without deadline
+                        const deadline = task.deadline.toDate();
+                        const isOverdue = deadline < now;
+                        const deadlineClass = isOverdue ? 'danger' : (deadline - now < 86400000 ? 'warning' : 'success');
+                        const deadlineText = isOverdue ? 'Overdue' : formatDate(deadline);
+                        html += `
+                            <div class="submission-card" style="border-left: 5px solid ${isOverdue ? '#ef4444' : (deadline - now < 86400000 ? '#f59e0b' : '#10b981')}; margin-bottom:1rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <h4 style="margin:0;">${task.title}</h4>
+                                    <span class="badge ${deadlineClass}">${deadlineText}</span>
+                                </div>
+                                <p><strong>Deadline:</strong> ${formatDate(deadline)}</p>
+                                <p><strong>Reward:</strong> $${task.reward}</p>
+                                <button class="btn btn-primary" onclick="showTaskSubmissions('${task.id}')">View Submissions</button>
+                            </div>
+                        `;
+                    });
+                }
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading deadline tracker:', error);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading deadline tracker: ${error.message}</p><button class="btn btn-primary" onclick="loadDeadlineTracker()">Retry</button></div>`;
+            }
+        }
+
+        window.showTaskSubmissions = async function(taskId) {
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                if (!taskDoc.exists) {
+                    showAlert('Task not found', 'error');
+                    return;
+                }
+                const task = taskDoc.data();
+
+                // Get all users who accepted this task (from taskAccepts subcollection)
+                const acceptsSnap = await db.collection('tasks').doc(taskId).collection('taskAccepts').get();
+                const acceptedUserIds = new Set();
+                acceptsSnap.forEach(doc => acceptedUserIds.add(doc.id));
+
+                // Get all submissions for this task
+                const submissionsSnap = await db.collection('submissions').where('taskId', '==', taskId).get();
+                const submittedUserIds = new Set();
+                submissionsSnap.forEach(doc => submittedUserIds.add(doc.data().userId));
+
+                // Get user details for all accepted users
+                const userPromises = Array.from(acceptedUserIds).map(async uid => {
+                    const userDoc = await db.collection('users').doc(uid).get();
+                    return { id: uid, ...userDoc.data() };
+                });
+                const users = await Promise.all(userPromises);
+
+                // Separate submitted and not submitted
+                const submittedUsers = users.filter(u => submittedUserIds.has(u.id));
+                const notSubmittedUsers = users.filter(u => !submittedUserIds.has(u.id));
+
+                let modalHtml = `<h3 style="margin-bottom:1rem;">Submissions for: ${task.title}</h3>`;
+
+                modalHtml += '<h4 style="margin-top:1.5rem;">✅ Submitted</h4>';
+                if (submittedUsers.length === 0) {
+                    modalHtml += '<p>None</p>';
+                } else {
+                    submittedUsers.forEach(u => {
+                        modalHtml += `
+                            <div class="submission-user-card">
+                                <p><strong>${u.displayName || u.email}</strong> (${u.email})</p>
+                                <div class="action-buttons">
+                                    <button class="btn btn-warning" onclick="sendWarning('${u.id}', '${task.title.replace(/'/g, "\\'")}')">Send Warning</button>
+                                    <button class="btn btn-warning" onclick="toggleSuspendUser('${u.id}', ${!!u.suspended})">${u.suspended ? 'Unsuspend' : 'Suspend'}</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                modalHtml += '<h4 style="margin-top:1.5rem;">❌ Not Submitted</h4>';
+                if (notSubmittedUsers.length === 0) {
+                    modalHtml += '<p>None</p>';
+                } else {
+                    notSubmittedUsers.forEach(u => {
+                        modalHtml += `
+                            <div class="submission-user-card">
+                                <p><strong>${u.displayName || u.email}</strong> (${u.email})</p>
+                                <div class="action-buttons">
+                                    <button class="btn btn-warning" onclick="sendWarning('${u.id}', '${task.title.replace(/'/g, "\\'")}')">Send Warning</button>
+                                    <button class="btn btn-warning" onclick="toggleSuspendUser('${u.id}', ${!!u.suspended})">${u.suspended ? 'Unsuspend' : 'Suspend'}</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                showModal(modalHtml);
+            } catch (error) {
+                console.error('Error showing task submissions:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.sendWarning = async function(userId, taskTitle) {
+            const message = `Warning: You have not submitted work for task "${taskTitle}" by the deadline. Please take immediate action.`;
+            try {
+                await sendNotification(userId, 'Warning: Task Submission', message, 'warning', null);
+                showAlert('Warning sent', 'success');
+                closeModal();
+            } catch (error) {
+                showAlert('Error sending warning: ' + error.message, 'error');
             }
         };
 
@@ -5856,27 +6055,6 @@
                     return;
                 }
 
-                // Leaderboard
-                if (target.id === 'saveLeaderboardBtn') {
-                    // handled by its own listener
-                }
-                if (target.id === 'updateLeaderboardBtn') {
-                    // handled by its own listener
-                }
-
-                // FAQ
-                if (target.id === 'saveFaqBtn') {
-                    // handled by its own listener
-                }
-                if (target.id === 'updateFaqBtn') {
-                    // handled by its own listener
-                }
-
-                // Feedback
-                if (target.id === 'saveFeedbackBtn') {
-                    // handled by its own listener
-                }
-
                 // Petitions
                 if (target.id === 'sendPetitionReplyBtn') {
                     const petitionId = target.getAttribute('data-petition-id');
@@ -5885,7 +6063,6 @@
                     return;
                 }
 
-                // Tickers (buttons inside modal are handled by their own listeners)
             } catch (error) {
                 console.error('Error in click handler:', error);
                 showAlert('An error occurred: ' + error.message, 'error');
@@ -5947,6 +6124,13 @@
         window.loadSampleFeedback = loadSampleFeedback;
         // Ticker functions are already attached via window.*
         window.toggleMobileMenu = toggleMobileMenu;
+        // New functions
+        window.toggleSuspendUser = toggleSuspendUser;
+        window.suspendUserTemporarily = suspendUserTemporarily;
+        window.unsuspendUser = unsuspendUser;
+        window.loadDeadlineTracker = loadDeadlineTracker;
+        window.showTaskSubmissions = showTaskSubmissions;
+        window.sendWarning = sendWarning;
     </script>  
 </body>  
 </html>
