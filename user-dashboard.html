@@ -1094,6 +1094,12 @@
         const userCache = new Map();
         // Track shown warning IDs to avoid duplicate popups
         let shownWarningIds = new Set();
+        // Track shown payment approval modals
+        let shownPaymentApprovalIds = new Set();
+        // Pending payments listener
+        let membershipPaymentsListener = null;
+        // Pending balance (sum of pending payments)
+        let pendingBalance = 0;
 
         // ==================== TICKER ====================
         function setupTicker() {
@@ -1349,11 +1355,30 @@
             }, 5000);
         }
 
+        // NEW: Payment approved popup
+        function showPaymentApprovedPopup(amount, bonus) {
+            const dlg = document.getElementById('alertDialog');
+            const overlay = document.getElementById('overlay');
+            const icon = document.getElementById('alertIcon');
+            const title = document.getElementById('alertTitle');
+            const msg = document.getElementById('alertMessage');
+            const btn = document.querySelector('#alertDialog button');
+            
+            dlg.className = 'alert-dialog success';
+            icon.className = 'fas fa-check-circle';
+            title.textContent = 'Payment Approved!';
+            msg.textContent = `Your payment of $${amount} has been approved and credited to your wallet with a $${bonus} (10%) bonus! Total added: $${(amount + bonus).toFixed(2)}.`;
+            btn.onclick = hideAlert;
+            
+            overlay.classList.add('show');
+            dlg.classList.add('show');
+        }
+
         function showModal(html) { document.getElementById('modalContent').innerHTML = html; document.getElementById('modal').classList.add('active'); document.getElementById('modalBackdrop').classList.add('active'); }
         function closeModal() { document.getElementById('modal').classList.remove('active'); document.getElementById('modalBackdrop').classList.remove('active'); if (currentTaskViewed) { currentTaskViewed = null; refreshMirror(); } }
 
         // ==================== LOGOUT ====================
-        function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); auth.signOut(); window.location.href = 'index.html'; }
+        function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); if (membershipPaymentsListener) membershipPaymentsListener(); auth.signOut(); window.location.href = 'index.html'; }
 
         // ==================== TAB SWITCHING ====================
         function switchTab(tab) {
@@ -1394,7 +1419,7 @@
                     showCheckingQualification('projects');
                     break;
                 case 'howitworks':
-                    showHowItWorksComingSoon();  // <-- NEW: show coming soon with AI link
+                    showHowItWorksComingSoon();
                     break;
                 case 'training':
                     loadTrainings();
@@ -1437,7 +1462,7 @@
             }
         }
 
-        // ==================== HOW IT WORKS (NEW) ====================
+        // ==================== HOW IT WORKS ====================
         function showHowItWorksComingSoon() {
             currentTaskViewed = null;
             refreshMirror();
@@ -2617,7 +2642,7 @@
                     status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                showModal(`<div class="modal-content" style="text-align:center;"><div class="success-check"><i class="fas fa-check"></i></div><h3 style="color:#10b981;">Thank You!</h3><p>Payment verification submitted.<br>You'll be notified once approved.</p><button class="btn btn-primary" onclick="closeModal()">OK</button></div>`);
+                showModal(`<div class="modal-content" style="text-align:center;"><div class="success-check"><i class="fas fa-check"></i></div><h3 style="color:#10b981;">Thank You!</h3><p>Payment verification submitted.<br>You'll be notified once approved. The amount (plus 10% bonus) will be added to your wallet.</p><button class="btn btn-primary" onclick="closeModal()">OK</button></div>`);
             } catch (e) {
                 console.error('Error submitting payment:', e);
                 showAlert('Error submitting payment', 'error');
@@ -2985,7 +3010,7 @@
         document.addEventListener('click', (e) => { const panel = document.getElementById('notificationsPanel'); const bell = document.querySelector('.notification-bell'); if (notificationsPanelVisible && panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) { panel.classList.remove('active'); notificationsPanelVisible = false; } });
 
         // ==================== PROFILE ====================
-        function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p></div>`; }
+        function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Pending Balance (upgrade):</strong> ${formatBoth(pendingBalance)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p></div>`; }
         async function updateProfile() { const name = document.getElementById('profileName').value; const phone = document.getElementById('profilePhone').value; if (!name) { showAlert('Name is required','error'); return; } await db.collection('users').doc(currentUser.uid).update({ displayName: name, phone: phone||'' }); userData.displayName = name; document.getElementById('userName').textContent = name; showAlert('Profile updated!','success'); refreshMirror(); }
 
         // ==================== LOAD FEE & MEMBERSHIP ====================
@@ -3113,6 +3138,51 @@
             }
         }
 
+        // ==================== MEMBERSHIP PAYMENTS LISTENER (NEW) ====================
+        function setupMembershipPaymentsListener() {
+            if (membershipPaymentsListener) membershipPaymentsListener();
+            membershipPaymentsListener = db.collection('membershipPayments')
+                .where('userId', '==', currentUser.uid)
+                .onSnapshot(snapshot => {
+                    let newPendingBalance = 0;
+                    snapshot.docChanges().forEach(change => {
+                        const payment = change.doc.data();
+                        if (change.type === 'added' && payment.status === 'pending') {
+                            newPendingBalance += payment.amount || 0;
+                        } else if (change.type === 'modified') {
+                            const oldData = change.doc.metadata.hasPendingWrites ? null : change.doc.data(); // can't easily get old, but we can check if status changed
+                            // We'll rely on the fact that when status changes from pending to approved, we want to show modal
+                            if (payment.status === 'approved' && !shownPaymentApprovalIds.has(change.doc.id)) {
+                                shownPaymentApprovalIds.add(change.doc.id);
+                                const bonus = (payment.amount || 0) * 0.1;
+                                showPaymentApprovedPopup(payment.amount || 0, bonus);
+                                // Update pending balance after approval
+                                newPendingBalance -= (payment.amount || 0);
+                            } else if (payment.status === 'pending') {
+                                newPendingBalance += (payment.amount || 0);
+                            }
+                        } else if (change.type === 'removed') {
+                            // if removed, subtract from pending
+                            newPendingBalance -= (payment.amount || 0);
+                        }
+                    });
+                    // Also recompute pending balance from all pending docs (to be safe)
+                    snapshot.docs.forEach(doc => {
+                        const p = doc.data();
+                        if (p.status === 'pending') {
+                            newPendingBalance += p.amount || 0;
+                        }
+                    });
+                    pendingBalance = newPendingBalance;
+                    // Update stats card if exists
+                    const pendingStat = document.getElementById('pendingBalanceStat');
+                    if (pendingStat) {
+                        pendingStat.textContent = formatBoth(pendingBalance);
+                    }
+                    refreshMirror();
+                }, console.error);
+        }
+
         // ==================== AUTH STATE LISTENER ====================
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
@@ -3189,6 +3259,7 @@
                 setupTicker(); // start ticker
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
                 setupAcceptedTasksListener();
+                setupMembershipPaymentsListener(); // NEW
                 loadDashboard();
                 refreshMirror();
             } catch (error) {
@@ -3242,6 +3313,11 @@
                     <div class="stat-card"><i class="fas fa-check-circle"></i><div class="stat-value">${approvedSnap.size}</div><div class="stat-label">Approved</div></div>
                     <div class="stat-card"><i class="fas fa-chart-line"></i><div class="stat-value">${activityRate}</div><div class="stat-label">Activity Rate</div></div>
                     <div class="stat-card"><i class="fas fa-star"></i><div class="stat-value">${userData.productivityScore}</div><div class="stat-label">Productivity</div></div>
+                    <div class="stat-card" id="pendingBalanceStatCard">
+                        <i class="fas fa-hourglass-half"></i>
+                        <div class="stat-value" id="pendingBalanceStat">${formatBoth(pendingBalance)}</div>
+                        <div class="stat-label">Pending Upgrade</div>
+                    </div>
                     <div class="stat-card" id="tickerStatCard">
                         <i class="fas fa-bullhorn"></i>
                         <div class="stat-label">Live Announcements</div>
