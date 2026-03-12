@@ -2866,6 +2866,7 @@
             }
         }  
 
+        // ==================== UPDATED approveMembership with auto‑credit ====================
         async function approveMembership(userId, paymentId) {
             try {
                 const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
@@ -2875,148 +2876,128 @@
                 }
                 const payment = paymentDoc.data();
                 const membershipType = payment.membershipType || payment.packageType || 'premium';
-                
+        
+                // Check if already credited
+                if (payment.credited) {
+                    showAlert('This payment has already been credited', 'warning');
+                    return;
+                }
+        
                 const pkg = getPackageByType(membershipType);
-
-                const userUpdate = {
-                    membershipType: membershipType,
-                    membershipPaid: true,
-                    membershipStatus: 'active',
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus) {
-                    userUpdate.wallet = firebase.firestore.FieldValue.increment(pkg.welcomeBonus);
-                    userUpdate.eliteBonusApplied = true;
-                }
-
-                if (membershipType === MEMBERSHIP_TYPES.PREMIUM && pkg.duration === 'annual') {
-                    const expiryDate = new Date();
-                    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-                    userUpdate.membershipExpiry = expiryDate;
-                }
-
-                await db.collection('users').doc(userId).update(userUpdate);
-
-                await db.collection('membershipPayments').doc(paymentId).update({
-                    status: 'approved',
-                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                const amountPaid = payment.amount || 0;
+                const bonus = amountPaid * 0.1; // 10% bonus
+                const totalCredit = amountPaid + bonus;
+        
+                // Use transaction to ensure consistency
+                await db.runTransaction(async (transaction) => {
+                    const userRef = db.collection('users').doc(userId);
+                    const userDoc = await transaction.get(userRef);
+                    if (!userDoc.exists) throw new Error('User not found');
+        
+                    // Update user: increment wallet, set membership type, etc.
+                    const userUpdate = {
+                        wallet: firebase.firestore.FieldValue.increment(totalCredit),
+                        membershipType: membershipType,
+                        membershipPaid: true,
+                        membershipStatus: 'active',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+        
+                    // If elite, add welcome bonus (if not already applied)
+                    if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus && !userDoc.data().eliteBonusApplied) {
+                        userUpdate.wallet = firebase.firestore.FieldValue.increment(pkg.welcomeBonus); // add welcome bonus on top
+                        userUpdate.eliteBonusApplied = true;
+                    }
+        
+                    // If premium with annual, set expiry
+                    if (membershipType === MEMBERSHIP_TYPES.PREMIUM && pkg.duration === 'annual') {
+                        const expiryDate = new Date();
+                        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                        userUpdate.membershipExpiry = expiryDate;
+                    }
+        
+                    transaction.update(userRef, userUpdate);
+        
+                    // Update payment record to approved and credited
+                    transaction.update(db.collection('membershipPayments').doc(paymentId), {
+                        status: 'approved',
+                        approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        credited: true,
+                        creditedAmount: totalCredit,
+                        bonus: bonus
+                    });
                 });
-
+        
+                // Record transaction(s) for transparency
                 await db.collection('transactions').add({
                     userId,
                     userEmail: payment.userEmail,
-                    amount: -payment.amount,
-                    type: 'membership_payment',
-                    description: `Membership purchase: ${membershipType}`,
+                    amount: totalCredit,
+                    type: 'membership_credit',
+                    description: `Membership upgrade to ${membershipType} (payment $${amountPaid} + 10% bonus $${bonus})`,
                     relatedId: paymentId,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
-                if (membershipType === MEMBERSHIP_TYPES.ELITE && pkg.welcomeBonus) {
-                    await db.collection('transactions').add({
-                        userId,
-                        userEmail: payment.userEmail,
-                        amount: pkg.welcomeBonus,
-                        type: 'welcome_bonus',
-                        description: 'Welcome bonus for Elite membership',
-                        relatedId: paymentId,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    await sendNotification(
-                        userId,
-                        'Welcome to Elite!',
-                        `Your Elite membership is active! You've received a $${pkg.welcomeBonus} welcome bonus.`,
-                        'membership',
-                        null
-                    );
-                }
-
+        
+                // Send notification
+                await sendNotification(
+                    userId,
+                    'Membership Approved & Credited!',
+                    `Your ${membershipType.toUpperCase()} payment of $${amountPaid} has been approved. You have been credited $${totalCredit.toFixed(2)} (including 10% bonus).`,
+                    'membership',
+                    null
+                );
+        
+                // Handle referral bonuses as before
                 const userDoc = await db.collection('users').doc(userId).get();
                 const userData = userDoc.data();
-                
                 if (userData.referredBy && membershipType === MEMBERSHIP_TYPES.PREMIUM) {
                     const referrerId = userData.referredBy;
-                    
                     const existingBonus = await db.collection('referralBonuses')
                         .where('referredId', '==', userId)
                         .where('type', '==', 'referrer')
                         .get();
-                    
                     if (existingBonus.empty) {
                         await db.runTransaction(async (transaction) => {
                             const referrerRef = db.collection('users').doc(referrerId);
                             const referrerSnap = await transaction.get(referrerRef);
-                            
                             transaction.update(referrerRef, {
                                 wallet: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRER),
                                 referralEarnings: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRER),
                                 totalReferrals: firebase.firestore.FieldValue.increment(1)
                             });
-
                             const referredRef = db.collection('users').doc(userId);
                             transaction.update(referredRef, {
                                 wallet: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED),
                                 referralEarnings: firebase.firestore.FieldValue.increment(REFERRAL_BONUS_REFERRED)
                             });
-
-                            const bonus1Ref = db.collection('referralBonuses').doc();
-                            transaction.set(bonus1Ref, {
-                                referrerId: referrerId,
-                                referredId: userId,
-                                referredEmail: userData.email,
-                                amount: REFERRAL_BONUS_REFERRER,
-                                type: 'referrer',
-                                creditedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                creditedBy: currentUser.email
+                            transaction.set(db.collection('referralBonuses').doc(), {
+                                referrerId, referredId: userId, referredEmail: userData.email,
+                                amount: REFERRAL_BONUS_REFERRER, type: 'referrer', creditedAt: firebase.firestore.FieldValue.serverTimestamp(), creditedBy: currentUser.email
                             });
-
-                            const bonus2Ref = db.collection('referralBonuses').doc();
-                            transaction.set(bonus2Ref, {
-                                referrerId: referrerId,
-                                referredId: userId,
-                                referredEmail: userData.email,
-                                amount: REFERRAL_BONUS_REFERRED,
-                                type: 'referred',
-                                creditedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                creditedBy: currentUser.email
+                            transaction.set(db.collection('referralBonuses').doc(), {
+                                referrerId, referredId: userId, referredEmail: userData.email,
+                                amount: REFERRAL_BONUS_REFERRED, type: 'referred', creditedAt: firebase.firestore.FieldValue.serverTimestamp(), creditedBy: currentUser.email
                             });
-
                             const referralQuery = await db.collection('referrals')
                                 .where('referrerId', '==', referrerId)
                                 .where('referredId', '==', userId)
                                 .get();
-                            
                             if (!referralQuery.empty) {
-                                const referralRef = referralQuery.docs[0].ref;
-                                transaction.update(referralRef, {
+                                transaction.update(referralQuery.docs[0].ref, {
                                     status: 'completed',
                                     completedAt: firebase.firestore.FieldValue.serverTimestamp()
                                 });
                             }
                         });
-
-                        await sendNotification(
-                            referrerId,
-                            'Referral Bonus!',
-                            `Your referral just upgraded to Premium! You earned $${REFERRAL_BONUS_REFERRER}.`,
-                            'referral',
-                            null
-                        );
-                        await sendNotification(
-                            userId,
-                            'Referral Bonus!',
-                            `You earned $${REFERRAL_BONUS_REFERRED} for upgrading!`,
-                            'referral',
-                            null
-                        );
+                        await sendNotification(referrerId, 'Referral Bonus!', `Your referral just upgraded to Premium! You earned $${REFERRAL_BONUS_REFERRER}.`, 'referral', null);
+                        await sendNotification(userId, 'Referral Bonus!', `You earned $${REFERRAL_BONUS_REFERRED} for upgrading!`, 'referral', null);
                     }
                 }
-
-                showAlert(`Membership upgraded to ${pkg.name}!`, 'success');
+        
+                showAlert(`Membership upgraded to ${pkg.name}! Wallet credited with $${totalCredit.toFixed(2)}.`, 'success');
                 loadMemberships();
-
+        
             } catch (error) {
                 console.error('Error approving membership:', error);
                 showAlert('Error: ' + error.message, 'error');
