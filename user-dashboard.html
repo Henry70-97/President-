@@ -549,9 +549,11 @@
         .alert-dialog.show { display: block; }
         .alert-dialog.error { border-top: 4px solid #dc2626; }
         .alert-dialog.success { border-top: 4px solid #10b981; }
+        .alert-dialog.warning { border-top: 4px solid #f59e0b; }
         .alert-dialog i { font-size: 2rem; margin-bottom: 0.5rem; }
         .alert-dialog.error i { color: #dc2626; }
         .alert-dialog.success i { color: #10b981; }
+        .alert-dialog.warning i { color: #f59e0b; }
         .alert-dialog h3 { margin-bottom: 0.3rem; font-size: 1rem; }
         .alert-dialog p { color: #64748b; margin-bottom: 1rem; font-size: 0.85rem; }
         .alert-dialog button { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 0.3rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
@@ -1090,6 +1092,8 @@
         let adminId = null;
         let acceptedTasksListener = null;
         const userCache = new Map();
+        // Track shown warning IDs to avoid duplicate popups
+        let shownWarningIds = new Set();
 
         // ==================== TICKER ====================
         function setupTicker() {
@@ -1318,6 +1322,33 @@
         // ==================== ALERT & MODAL ====================
         function showAlert(message, type = 'error') { const dlg = document.getElementById('alertDialog'); document.getElementById('overlay').classList.add('show'); dlg.className = 'alert-dialog ' + type; document.getElementById('alertIcon').className = 'fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'); document.getElementById('alertTitle').textContent = type === 'error' ? 'Error!' : 'Success!'; document.getElementById('alertMessage').textContent = message; dlg.classList.add('show'); if (type === 'success') setTimeout(hideAlert, 3000); }
         function hideAlert() { document.getElementById('alertDialog').classList.remove('show'); document.getElementById('overlay').classList.remove('show'); }
+        
+        // NEW: Warning popup (auto‑hides after 5 seconds, can be closed early with OK)
+        function showWarningPopup(message) {
+            const dlg = document.getElementById('alertDialog');
+            const overlay = document.getElementById('overlay');
+            const icon = document.getElementById('alertIcon');
+            const title = document.getElementById('alertTitle');
+            const msg = document.getElementById('alertMessage');
+            const btn = document.querySelector('#alertDialog button');
+            
+            dlg.className = 'alert-dialog warning';
+            icon.className = 'fas fa-exclamation-triangle';
+            title.textContent = 'Warning';
+            msg.textContent = message;
+            btn.onclick = hideAlert;
+            
+            overlay.classList.add('show');
+            dlg.classList.add('show');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (dlg.classList.contains('show')) {
+                    hideAlert();
+                }
+            }, 5000);
+        }
+
         function showModal(html) { document.getElementById('modalContent').innerHTML = html; document.getElementById('modal').classList.add('active'); document.getElementById('modalBackdrop').classList.add('active'); }
         function closeModal() { document.getElementById('modal').classList.remove('active'); document.getElementById('modalBackdrop').classList.remove('active'); if (currentTaskViewed) { currentTaskViewed = null; refreshMirror(); } }
 
@@ -1685,8 +1716,14 @@
 
         async function hasUserSubmitted(taskId) { const snap = await db.collection('submissions').where('userId','==',currentUser.uid).where('taskId','==',taskId).get(); return !snap.empty; }
 
-        // ==================== ACCEPT TASK ====================
+        // ==================== ACCEPT TASK (with suspension check) ====================
         async function acceptTask(taskId) {
+            // Check if account is suspended
+            if (userData.suspended) {
+                showWarningPopup(`Your account is suspended. Reason: ${userData.suspendedReason || 'No reason provided.'} You cannot accept tasks.`);
+                return;
+            }
+
             try {
                 const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
                 const acceptDoc = await acceptRef.get();
@@ -2866,6 +2903,7 @@
                 else if (n.type === 'announcement') { icon = 'fa-bullhorn'; color = 'warning'; } 
                 else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; } 
                 else if (n.type === 'training') { icon = 'fa-graduation-cap'; color = 'info'; } 
+                else if (n.type === 'warning') { icon = 'fa-exclamation-triangle'; color = 'warning'; } 
                 html += `<div class="notification-item ${uc}" onclick="handleNotificationClick('${doc.id}','${n.link||''}')"><div class="notification-icon ${color}"><i class="fas ${icon}"></i></div><div class="notification-content"><div class="notification-title">${escapeHtml(n.title||'Notification')}<span class="notification-badge-type">${n.type||'info'}</span></div><div class="notification-message">${escapeHtml(n.message||'')}</div><div class="notification-time"><i class="far fa-clock"></i> ${time}</div></div></div>`; 
             }); 
             list.innerHTML = html; 
@@ -2930,6 +2968,7 @@
                             else if (n.type === 'announcement') { icon = 'fa-bullhorn'; color = 'warning'; } 
                             else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; } 
                             else if (n.type === 'training') { icon = 'fa-graduation-cap'; color = 'info'; } 
+                            else if (n.type === 'warning') { icon = 'fa-exclamation-triangle'; color = 'warning'; } 
                             g += `<div class="message-thread-card ${uc}" onclick="handleNotificationClick('${n.id}','${n.link||''}')"><div style="display:flex; gap:1rem;"><div class="notification-icon ${color}"><i class="fas ${icon}"></i></div><div><div style="display:flex; justify-content:space-between;"><span style="font-weight:700;">${escapeHtml(n.title||'Notification')}</span><span class="message-badge">${n.type||'info'}</span></div><p>${escapeHtml(n.message||'')}</p><div style="display:flex; gap:1rem; font-size:0.7rem; color:#94a3b8;"><span><i class="far fa-clock"></i> ${time}</span>${!n.read ? '<span style="color:#6366f1;">● Unread</span>' : ''}</div></div></div></div>`; 
                         }); 
                         return g; 
@@ -3100,6 +3139,8 @@
                         active: true,
                         verified: user.emailVerified || isGoogle,
                         frozen: false,
+                        suspended: false,
+                        suspendedReason: '',
                         membershipType: MEMBERSHIP_TYPES.BASIC,
                         membershipPaid: false,
                         membershipStatus: 'active',
@@ -3125,6 +3166,8 @@
                 } else {
                     userData = { id: user.uid, ...doc.data() };
                     if (userData.frozen === undefined) { await db.collection('users').doc(user.uid).update({ frozen: false }); userData.frozen = false; }
+                    if (userData.suspended === undefined) { await db.collection('users').doc(user.uid).update({ suspended: false }); userData.suspended = false; }
+                    if (userData.suspendedReason === undefined) { await db.collection('users').doc(user.uid).update({ suspendedReason: '' }); userData.suspendedReason = ''; }
                     const welcomeBonus = getWelcomeBonus(MEMBERSHIP_TYPES.ELITE);
                     if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
                         await db.collection('users').doc(user.uid).update({ wallet: firebase.firestore.FieldValue.increment(welcomeBonus), eliteBonusApplied: true });
@@ -3157,8 +3200,20 @@
         function updateWalletDisplay() { document.getElementById('walletDisplay').textContent = formatBoth(userData?.wallet || 0); }
 
         function setupMessageCounter() { if (messagesListener) messagesListener(); messagesListener = db.collection('messages').where('recipientId','==',currentUser.uid).where('fromAdmin','==',true).where('read','==',false).onSnapshot(snap => { const cnt = snap.size; ['unreadMessagesBadge','mobileMessagesBadge','bottomMessagesBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = cnt; el.style.display = cnt ? 'inline' : 'none'; } }); db.collection('users').doc(currentUser.uid).update({ unreadMessages: cnt }).catch(console.log); refreshMirror(); }, err => { console.error('Message counter error:', err); setTimeout(setupMessageCounter,5000); }); }
-        function setupWalletListener() { db.collection('users').doc(currentUser.uid).onSnapshot(doc => { if (doc.exists) { userData.wallet = doc.data().wallet || 0; updateWalletDisplay(); refreshMirror(); } }, console.error); }
-        function setupNotificationsListener() { if (notificationsListener) notificationsListener(); notificationsListener = db.collection('notifications').where('userId','==',currentUser.uid).onSnapshot(snap => { const unread = snap.docs.filter(d => !d.data().read).length; ['notificationBadge','unreadNotifBadge','mobileNotifBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = unread; el.style.display = unread ? 'inline' : 'none'; } }); if (notificationsPanelVisible) { const recent = snap.docs.slice(0,20); renderNotificationsPanel(recent); } refreshMirror(); }, console.error); }
+        function setupWalletListener() { db.collection('users').doc(currentUser.uid).onSnapshot(doc => { if (doc.exists) { userData.wallet = doc.data().wallet || 0; userData.suspended = doc.data().suspended || false; userData.suspendedReason = doc.data().suspendedReason || ''; updateWalletDisplay(); refreshMirror(); } }, console.error); }
+        function setupNotificationsListener() { if (notificationsListener) notificationsListener(); notificationsListener = db.collection('notifications').where('userId','==',currentUser.uid).onSnapshot(snap => { 
+            const unread = snap.docs.filter(d => !d.data().read).length;
+            ['notificationBadge','unreadNotifBadge','mobileNotifBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = unread; el.style.display = unread ? 'inline' : 'none'; } });
+            if (notificationsPanelVisible) { const recent = snap.docs.slice(0,20); renderNotificationsPanel(recent); }
+            // Check for newly added warning notifications
+            snap.docChanges().forEach(change => {
+                if (change.type === 'added' && change.doc.data().type === 'warning' && !shownWarningIds.has(change.doc.id)) {
+                    shownWarningIds.add(change.doc.id);
+                    showWarningPopup(change.doc.data().message || 'You have received a warning from admin.');
+                }
+            });
+            refreshMirror(); 
+        }, console.error); }
         function setupAcceptedTasksListener() {
             if (acceptedTasksListener) acceptedTasksListener();
             acceptedTasksListener = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').onSnapshot(snap => {
