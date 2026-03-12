@@ -2287,12 +2287,14 @@
                     </div>
                 `);
 
+                // Save submission with both workText and details fields
                 await db.collection('submissions').add({
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     taskId: taskId,
                     taskTitle: task.title || 'Untitled',
-                    workText: work,
+                    workText: work,          // existing field
+                    details: work,            // NEW: explicit details field so admin sees it
                     designLink: designLink,
                     status: 'pending',
                     wordCount: wc,
@@ -2624,12 +2626,30 @@
             </div>`);
         }
 
+        // Updated submitPaymentVerification with duplicate pending check
         async function submitPaymentVerification() {
             const txCode = document.getElementById('transactionCode')?.value;
             const amount = parseFloat(document.getElementById('paymentAmount')?.value);
             const notes = document.getElementById('paymentNotes')?.value || '';
             if (!txCode) { showAlert('Please enter transaction code', 'error'); return; }
             if (!amount || amount <= 0) { showAlert('Please enter a valid amount', 'error'); return; }
+
+            // Check for existing pending payment
+            try {
+                const pendingSnap = await db.collection('membershipPayments')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', '==', 'pending')
+                    .get();
+                if (!pendingSnap.empty) {
+                    showAlert('You already have a pending payment verification. Please wait until it is approved.', 'error');
+                    return;
+                }
+            } catch (e) {
+                console.error('Error checking pending payments:', e);
+                showAlert('Error checking existing requests. Please try again.', 'error');
+                return;
+            }
+
             try {
                 showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`);
                 await db.collection('membershipPayments').add({
