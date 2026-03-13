@@ -1277,7 +1277,7 @@
                         <button class="btn btn-primary" id="createTaskBtn">+ New Task</button> 
                     </div> 
                     <table class="data-table"> 
-                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Audio</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th></tr> 
+                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Audio</th><th>AI Annotation</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th></tr> 
                 `; 
                 
                 for (let i = 0; i < tasks.length; i++) { 
@@ -1315,6 +1315,17 @@
                             audioDisplay += `<br><small>Size: ${task.audioSize}</small>`;
                         }
                     }
+
+                    let annotationDisplay = '—';
+                    if (task.category === 'ai_annotation') {
+                        annotationDisplay = `${task.annotationSubcategory || 'N/A'}`;
+                        if (task.imageUrl) {
+                            annotationDisplay += `<br><a href="${task.imageUrl}" target="_blank">🔗 Image</a>`;
+                        }
+                        if (task.videoUrl) {
+                            annotationDisplay += `<br><a href="${task.videoUrl}" target="_blank">🎥 Video</a>`;
+                        }
+                    }
                     
                     // Get counts for acceptances
                     const acceptCount = task.acceptedCount || 0;
@@ -1330,6 +1341,7 @@
                             </td> 
                             <td>${task.category}</td> 
                             <td>${audioDisplay}</td>
+                            <td>${annotationDisplay}</td>
                             <td>${task.collaborable ? '✅' : '❌'}</td> 
                             <td><span class="badge info">${assignedDisplay}</span></td> 
                             <td><span class="badge primary">${subCount}</span></td> 
@@ -1387,6 +1399,7 @@
                     <option value="marketing">Marketing</option>  
                     <option value="project">Project</option>  
                     <option value="transcription">Transcription</option>  
+                    <option value="ai_annotation">AI Annotation</option>  
                     <option value="other">Other</option>  
                 </select>  
                 <select id="taskDifficulty">  
@@ -1403,6 +1416,22 @@
                     <input type="text" id="taskSource" placeholder="Source (e.g., aws)">
                     <input type="text" id="taskAudioFormat" placeholder="Format (e.g., mp3)">
                     <input type="text" id="taskAudioSize" placeholder="Size (e.g., 14.39 MB)">
+                </div>
+
+                <!-- NEW: AI Annotation Fields -->
+                <div id="aiAnnotationFields" style="display:none; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
+                    <h4 style="margin-bottom:0.5rem;">AI Annotation Details</h4>
+                    <select id="taskAnnotationSubcategory">
+                        <option value="image_caption">Image Caption Clarification</option>
+                        <option value="action_recognition">Action Recognition</option>
+                    </select>
+                    <div id="imageCaptionField" style="margin-top:1rem;">
+                        <input type="url" id="taskImageUrl" placeholder="Image URL">
+                        <button type="button" class="btn btn-secondary" onclick="window.open('https://s.ci.co.ke/I/', '_blank')">🔗 Get Link</button>
+                    </div>
+                    <div id="actionRecognitionField" style="margin-top:1rem; display:none;">
+                        <input type="url" id="taskVideoUrl" placeholder="Video URL">
+                    </div>
                 </div>
 
                 <h4 style="margin: 1rem 0 0.5rem;">Collaboration</h4>  
@@ -1427,7 +1456,22 @@
 
             document.getElementById('taskCategory').addEventListener('change', function(e) {
                 const transcriptionDiv = document.getElementById('transcriptionFields');
-                transcriptionDiv.style.display = e.target.value === 'transcription' ? 'block' : 'none';
+                const aiDiv = document.getElementById('aiAnnotationFields');
+                const selected = e.target.value;
+                transcriptionDiv.style.display = selected === 'transcription' ? 'block' : 'none';
+                aiDiv.style.display = selected === 'ai_annotation' ? 'block' : 'none';
+                if (selected === 'ai_annotation') {
+                    // show appropriate subfield based on current selection
+                    const subcat = document.getElementById('taskAnnotationSubcategory').value;
+                    document.getElementById('imageCaptionField').style.display = subcat === 'image_caption' ? 'block' : 'none';
+                    document.getElementById('actionRecognitionField').style.display = subcat === 'action_recognition' ? 'block' : 'none';
+                }
+            });
+
+            document.getElementById('taskAnnotationSubcategory')?.addEventListener('change', function(e) {
+                const val = e.target.value;
+                document.getElementById('imageCaptionField').style.display = val === 'image_caption' ? 'block' : 'none';
+                document.getElementById('actionRecognitionField').style.display = val === 'action_recognition' ? 'block' : 'none';
             });
         }  
           
@@ -1453,6 +1497,17 @@
                 source = document.getElementById('taskSource').value || null;
                 audioFormat = document.getElementById('taskAudioFormat').value || null;
                 audioSize = document.getElementById('taskAudioSize').value || null;
+            }
+
+            // AI Annotation fields
+            let annotationSubcategory = null, imageUrl = null, videoUrl = null;
+            if (category === 'ai_annotation') {
+                annotationSubcategory = document.getElementById('taskAnnotationSubcategory').value;
+                if (annotationSubcategory === 'image_caption') {
+                    imageUrl = document.getElementById('taskImageUrl').value || null;
+                } else if (annotationSubcategory === 'action_recognition') {
+                    videoUrl = document.getElementById('taskVideoUrl').value || null;
+                }
             }
               
             if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
@@ -1483,6 +1538,10 @@
                     source,
                     audioFormat,
                     audioSize,
+                    // AI Annotation
+                    annotationSubcategory,
+                    imageUrl,
+                    videoUrl,
                     acceptedCount: 0,  
                     active: true,  
                     submissionsCount: 0,  
@@ -1550,6 +1609,9 @@
             });  
               
             const showTranscription = data.category === 'transcription' ? 'block' : 'none';
+            const showAI = data.category === 'ai_annotation' ? 'block' : 'none';
+            const imageDisplay = (data.annotationSubcategory === 'image_caption') ? 'block' : 'none';
+            const videoDisplay = (data.annotationSubcategory === 'action_recognition') ? 'block' : 'none';
             
             showModal(`  
                 <h3 style="margin-bottom:1rem;">Edit Task</h3>  
@@ -1577,6 +1639,7 @@
                     <option value="marketing" ${data.category === 'marketing' ? 'selected' : ''}>Marketing</option>  
                     <option value="project" ${data.category === 'project' ? 'selected' : ''}>Project</option>  
                     <option value="transcription" ${data.category === 'transcription' ? 'selected' : ''}>Transcription</option>  
+                    <option value="ai_annotation" ${data.category === 'ai_annotation' ? 'selected' : ''}>AI Annotation</option>  
                     <option value="other" ${data.category === 'other' ? 'selected' : ''}>Other</option>  
                 </select>  
                 <select id="editDifficulty">  
@@ -1593,6 +1656,22 @@
                     <input type="text" id="editSource" placeholder="Source" value="${data.source || ''}">
                     <input type="text" id="editAudioFormat" placeholder="Format" value="${data.audioFormat || ''}">
                     <input type="text" id="editAudioSize" placeholder="Size" value="${data.audioSize || ''}">
+                </div>
+
+                <!-- AI Annotation Edit Fields -->
+                <div id="editAiAnnotationFields" style="display:${showAI}; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
+                    <h4 style="margin-bottom:0.5rem;">AI Annotation Details</h4>
+                    <select id="editAnnotationSubcategory">
+                        <option value="image_caption" ${data.annotationSubcategory === 'image_caption' ? 'selected' : ''}>Image Caption Clarification</option>
+                        <option value="action_recognition" ${data.annotationSubcategory === 'action_recognition' ? 'selected' : ''}>Action Recognition</option>
+                    </select>
+                    <div id="editImageCaptionField" style="margin-top:1rem; display:${imageDisplay}">
+                        <input type="url" id="editImageUrl" placeholder="Image URL" value="${data.imageUrl || ''}">
+                        <button type="button" class="btn btn-secondary" onclick="window.open('https://s.ci.co.ke/I/', '_blank')">🔗 Get Link</button>
+                    </div>
+                    <div id="editActionRecognitionField" style="margin-top:1rem; display:${videoDisplay}">
+                        <input type="url" id="editVideoUrl" placeholder="Video URL" value="${data.videoUrl || ''}">
+                    </div>
                 </div>
 
                 <h4 style="margin: 1rem 0 0.5rem;">Collaboration</h4>  
@@ -1617,7 +1696,21 @@
 
             document.getElementById('editCategory').addEventListener('change', function(e) {
                 const transcriptionDiv = document.getElementById('editTranscriptionFields');
-                transcriptionDiv.style.display = e.target.value === 'transcription' ? 'block' : 'none';
+                const aiDiv = document.getElementById('editAiAnnotationFields');
+                const selected = e.target.value;
+                transcriptionDiv.style.display = selected === 'transcription' ? 'block' : 'none';
+                aiDiv.style.display = selected === 'ai_annotation' ? 'block' : 'none';
+                if (selected === 'ai_annotation') {
+                    const subcat = document.getElementById('editAnnotationSubcategory').value;
+                    document.getElementById('editImageCaptionField').style.display = subcat === 'image_caption' ? 'block' : 'none';
+                    document.getElementById('editActionRecognitionField').style.display = subcat === 'action_recognition' ? 'block' : 'none';
+                }
+            });
+
+            document.getElementById('editAnnotationSubcategory')?.addEventListener('change', function(e) {
+                const val = e.target.value;
+                document.getElementById('editImageCaptionField').style.display = val === 'image_caption' ? 'block' : 'none';
+                document.getElementById('editActionRecognitionField').style.display = val === 'action_recognition' ? 'block' : 'none';
             });
         }  
           
@@ -1643,6 +1736,16 @@
                 source = document.getElementById('editSource').value || null;
                 audioFormat = document.getElementById('editAudioFormat').value || null;
                 audioSize = document.getElementById('editAudioSize').value || null;
+            }
+
+            let annotationSubcategory = null, imageUrl = null, videoUrl = null;
+            if (category === 'ai_annotation') {
+                annotationSubcategory = document.getElementById('editAnnotationSubcategory').value;
+                if (annotationSubcategory === 'image_caption') {
+                    imageUrl = document.getElementById('editImageUrl').value || null;
+                } else if (annotationSubcategory === 'action_recognition') {
+                    videoUrl = document.getElementById('editVideoUrl').value || null;
+                }
             }
               
             if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
@@ -1671,7 +1774,10 @@
                 language,
                 source,
                 audioFormat,
-                audioSize
+                audioSize,
+                annotationSubcategory,
+                imageUrl,
+                videoUrl
             });  
               
             closeModal();  
@@ -1698,6 +1804,25 @@
                         ${data.audioSize ? `<br><strong>Size:</strong> ${data.audioSize}` : ''}
                     </div>
                 `;
+            }
+
+            let aiHtml = '';
+            if (data.category === 'ai_annotation') {
+                if (data.annotationSubcategory === 'image_caption') {
+                    aiHtml = `
+                        <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                            <strong>🖼️ Image Caption Clarification</strong>
+                            ${data.imageUrl ? `<br><a href="${data.imageUrl}" target="_blank">${data.imageUrl}</a>` : ''}
+                        </div>
+                    `;
+                } else if (data.annotationSubcategory === 'action_recognition') {
+                    aiHtml = `
+                        <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                            <strong>🎥 Action Recognition</strong>
+                            ${data.videoUrl ? `<br><a href="${data.videoUrl}" target="_blank">${data.videoUrl}</a>` : ''}
+                        </div>
+                    `;
+                }
             }
               
             showModal(`  
@@ -1730,6 +1855,7 @@
                 </div>  
 
                 ${audioHtml}
+                ${aiHtml}
             `);  
         }  
 

@@ -890,6 +890,7 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('transcription')"><i class="fas fa-microphone"></i><span>Transcription Tasks</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('design')"><i class="fas fa-pencil-ruler"></i><span>Design Tasks</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('projects')"><i class="fas fa-project-diagram"></i><span>Projects</span></div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('data-annotations')"><i class="fas fa-images"></i><span>Data Annotations</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('howitworks')"><i class="fas fa-info-circle"></i><span>How It Works</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('submissions')"><i class="fas fa-file-alt"></i><span>My Submissions</span></div>
@@ -977,6 +978,7 @@
             <button class="tab" onclick="switchTab('transcription')">🎤 Transcription</button>
             <button class="tab" onclick="switchTab('design')">✏️ Design Tasks</button>
             <button class="tab" onclick="switchTab('projects')">📊 Projects</button>
+            <button class="tab" onclick="switchTab('data-annotations')">🖼️ Data Annotations</button>
             <button class="tab" onclick="switchTab('howitworks')">📘 How It Works</button>
             <button class="tab" onclick="switchTab('training')">🎓 Training Center</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
@@ -1303,6 +1305,9 @@
                 case 'howitworks':
                     html = `<div class="mirror-tab-header">📘 How It Works</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Learn how to use the platform</span></div></div>`;
                     break;
+                case 'data-annotations':
+                    html = `<div class="mirror-tab-header">🖼️ Data Annotations</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Your AI annotation tasks</span></div></div>`;
+                    break;
                 default:
                     html = `<div class="mirror-stats"><div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value">${formatBoth(userData?.wallet || 0)}</div></div></div>`;
             }
@@ -1392,11 +1397,11 @@
             refreshMirror();
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             for (let t of document.querySelectorAll('.tab')) {
-                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works'))) { t.classList.add('active'); break; }
+                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations'))) { t.classList.add('active'); break; }
             }
             document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('.mobile-nav-item').forEach(i => {
-                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works'))) i.classList.add('active');
+                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations'))) i.classList.add('active');
             });
             document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
             document.querySelectorAll('.bottom-nav-item').forEach(item => {
@@ -1422,6 +1427,9 @@
                     break;
                 case 'projects':
                     showCheckingQualification('projects');
+                    break;
+                case 'data-annotations':
+                    loadDataAnnotations();
                     break;
                 case 'howitworks':
                     showHowItWorksComingSoon();
@@ -1464,6 +1472,86 @@
                     break;
                 default:
                     loadTasks();
+            }
+        }
+
+        // ==================== DATA ANNOTATIONS ====================
+        async function loadDataAnnotations() {
+            currentTaskViewed = null;
+            refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading your annotation tasks...</p></div>';
+            try {
+                // Get all accepted tasks (from the user's subcollection)
+                const acceptedSnap = await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').get();
+                if (acceptedSnap.empty) {
+                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><h4>No annotation tasks accepted yet</h4><p>Accept an AI Annotation task from the Tasks tab to see it here.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse Tasks</button></div>';
+                    return;
+                }
+
+                // For each accepted task, fetch the full task details to get image/video URLs
+                const tasks = [];
+                for (const doc of acceptedSnap.docs) {
+                    const taskId = doc.id; // document ID is the taskId
+                    const taskDoc = await db.collection('tasks').doc(taskId).get();
+                    if (taskDoc.exists) {
+                        const task = taskDoc.data();
+                        // Only include AI annotation tasks
+                        if (task.category === 'ai_annotation') {
+                            tasks.push({ id: taskId, ...task });
+                        }
+                    }
+                }
+
+                if (tasks.length === 0) {
+                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><h4>No AI Annotation tasks</h4><p>You haven’t accepted any AI Annotation tasks yet.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse AI Tasks</button></div>';
+                    return;
+                }
+
+                // Render tasks in a grid
+                let html = '<h3>🖼️ Data Annotations</h3><div class="task-grid">';
+                tasks.forEach(task => {
+                    const deadlineClass = task.deadline ? getDeadlineClass(task.deadline) : '';
+                    const deadlineText = task.deadline ? formatDeadline(task.deadline) : 'No deadline';
+                    const expired = isDeadlinePassed(task.deadline);
+
+                    // Media HTML
+                    let mediaHtml = '';
+                    if (task.annotationSubcategory === 'image_caption' && task.imageUrl) {
+                        mediaHtml = `<img src="${task.imageUrl}" alt="Annotation image" style="max-width:100%; max-height:300px; object-fit:contain; margin-bottom:0.5rem; border-radius:0.5rem; border:1px solid #e2e8f0;">`;
+                    } else if (task.annotationSubcategory === 'action_recognition' && task.videoUrl) {
+                        mediaHtml = `
+                            <video controls style="width:100%; max-height:300px; margin-bottom:0.5rem; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                                <source src="${task.videoUrl}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        `;
+                    } else {
+                        mediaHtml = '<p style="color:#94a3b8; font-size:0.8rem;">No media available</p>';
+                    }
+
+                    // Subcategory display
+                    const subcatDisplay = task.annotationSubcategory === 'image_caption' ? 'Image Caption' : 'Action Recognition';
+
+                    html += `
+                        <div class="task-card">
+                            <h4 class="task-title">${escapeHtml(task.title || 'Untitled')}</h4>
+                            <div class="client-info"><i class="fas fa-tag"></i> ${subcatDisplay}</div>
+                            ${task.deadline ? `<div class="deadline-badge ${deadlineClass}"><i class="fas fa-calendar-alt"></i> ${deadlineText}</div>` : ''}
+                            ${mediaHtml}
+                            <div class="task-amount">${formatBoth(parseFloat(task.reward) || 0)}</div>
+                            ${expired ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
+                            <div style="display:flex; gap:0.5rem; margin-top:0.8rem;">
+                                <button class="btn btn-success" onclick="showSubmitForm('${task.id}')" ${expired ? 'disabled' : ''} style="flex:1;">Submit Work</button>
+                                <button class="btn btn-secondary" onclick="viewTaskDetails('${task.id}')" style="flex:1;">Details</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                document.getElementById('content').innerHTML = html;
+            } catch (e) {
+                console.error('Error loading data annotations:', e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadDataAnnotations()">Retry</button></div>`;
             }
         }
 
