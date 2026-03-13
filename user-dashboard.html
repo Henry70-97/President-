@@ -1109,6 +1109,33 @@
         let withdrawalCooldownInterval = null;
         let nextAllowedWithdrawalTime = null;
 
+        // ==================== YOUTUBE EMBED HELPER ====================
+        function getYouTubeEmbedUrl(url) {
+            if (!url) return null;
+            
+            // Regular expressions for different YouTube URL formats
+            const patterns = [
+                /youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,  // Standard watch URL
+                /youtu\.be\/([a-zA-Z0-9_-]+)/,               // Short youtu.be URL
+                /youtube\.com\/embed\/([a-zA-Z0-9_-]+)/,     // Already embed URL
+                /youtube\.com\/v\/([a-zA-Z0-9_-]+)/,         // Old /v/ URL
+                /youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/      // YouTube Shorts
+            ];
+            
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return `https://www.youtube.com/embed/${match[1]}`;
+                }
+            }
+            
+            return null; // Not a valid YouTube URL
+        }
+
+        function isYouTubeUrl(url) {
+            return getYouTubeEmbedUrl(url) !== null;
+        }
+
         // ==================== TICKER ====================
         function setupTicker() {
             const tickerContainer = document.getElementById('tickerContainer');
@@ -1476,7 +1503,7 @@
             }
         }
 
-        // ==================== DATA ANNOTATIONS (UPDATED WITH DEBUGGING) ====================
+        // ==================== DATA ANNOTATIONS (UPDATED WITH YOUTUBE EMBED) ====================
         async function loadDataAnnotations() {
             currentTaskViewed = null;
             refreshMirror();
@@ -1544,7 +1571,8 @@
                         hasImage: !!task.imageUrl,
                         hasVideo: !!task.videoUrl,
                         imageUrl: task.imageUrl,
-                        videoUrl: task.videoUrl
+                        videoUrl: task.videoUrl,
+                        isYouTube: task.videoUrl ? isYouTubeUrl(task.videoUrl) : false
                     });
                 });
 
@@ -1588,14 +1616,35 @@
                             </div>
                         `;
                     } else if (task.annotationSubcategory === 'action_recognition' && task.videoUrl) {
-                        mediaHtml = `
-                            <div style="margin-bottom:0.5rem;">
-                                <video controls style="width:100%; max-height:200px; border-radius:0.5rem; border:1px solid #e2e8f0;">
-                                    <source src="${task.videoUrl}" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
-                        `;
+                        // Check if it's a YouTube URL
+                        const youtubeEmbedUrl = getYouTubeEmbedUrl(task.videoUrl);
+                        if (youtubeEmbedUrl) {
+                            // YouTube embed
+                            mediaHtml = `
+                                <div style="margin-bottom:0.5rem; position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                                    <iframe 
+                                        src="${youtubeEmbedUrl}" 
+                                        style="position:absolute; top:0; left:0; width:100%; height:100%;" 
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <div style="font-size:0.7rem; color:#ff0000; margin-top:0.2rem; text-align:center;">
+                                    <i class="fab fa-youtube"></i> YouTube Video
+                                </div>
+                            `;
+                        } else {
+                            // Regular video file
+                            mediaHtml = `
+                                <div style="margin-bottom:0.5rem;">
+                                    <video controls style="width:100%; max-height:200px; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                                        <source src="${task.videoUrl}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            `;
+                        }
                     } else {
                         // If media is missing but subcategory is set, show a message
                         if (task.annotationSubcategory) {
@@ -1652,11 +1701,37 @@
             }
         }
 
-        // Add function to open media in modal
+        // Add function to open media in modal with YouTube support
         function openMediaModal(url, type) {
-            const content = type === 'image' 
-                ? `<img src="${url}" style="max-width:100%; max-height:80vh; object-fit:contain;">`
-                : `<video controls style="max-width:100%; max-height:80vh;"><source src="${url}" type="video/mp4"></video>`;
+            let content = '';
+            
+            if (type === 'image') {
+                content = `<img src="${url}" style="max-width:100%; max-height:80vh; object-fit:contain;">`;
+            } else if (type === 'video') {
+                const youtubeEmbedUrl = getYouTubeEmbedUrl(url);
+                if (youtubeEmbedUrl) {
+                    // YouTube embed in modal
+                    content = `
+                        <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:0.5rem;">
+                            <iframe 
+                                src="${youtubeEmbedUrl}" 
+                                style="position:absolute; top:0; left:0; width:100%; height:100%;" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                    `;
+                } else {
+                    // Regular video file
+                    content = `
+                        <video controls style="max-width:100%; max-height:80vh;">
+                            <source src="${url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+                }
+            }
             
             showModal(`
                 <div style="text-align:center;">
@@ -2245,6 +2320,41 @@
                         </div>
                     `;
                 }
+
+                // Add video section for AI annotation tasks
+                let videoHtml = '';
+                if (task.category === 'ai_annotation' && task.annotationSubcategory === 'action_recognition' && task.videoUrl) {
+                    const youtubeEmbedUrl = getYouTubeEmbedUrl(task.videoUrl);
+                    if (youtubeEmbedUrl) {
+                        videoHtml = `
+                            <div style="margin-bottom:1rem; background:#f0f9ff; padding:1rem; border-radius:0.5rem; border-left:4px solid #ff0000;">
+                                <h4 style="font-size:0.9rem; margin-bottom:0.5rem;"><i class="fab fa-youtube" style="color:#ff0000;"></i> YouTube Video to Annotate</h4>
+                                <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                                    <iframe 
+                                        src="${youtubeEmbedUrl}" 
+                                        style="position:absolute; top:0; left:0; width:100%; height:100%;" 
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${task.videoUrl}')" style="margin-top:0.3rem;"><i class="fas fa-copy"></i> Copy Video Link</button>
+                            </div>
+                        `;
+                    } else {
+                        videoHtml = `
+                            <div style="margin-bottom:1rem; background:#f0f9ff; padding:1rem; border-radius:0.5rem; border-left:4px solid #0284c7;">
+                                <h4 style="font-size:0.9rem; margin-bottom:0.5rem;"><i class="fas fa-video"></i> Video to Annotate</h4>
+                                <video controls style="width:100%; max-height:300px; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                                    <source src="${task.videoUrl}" type="video/mp4">
+                                    Your browser does not support the video element.
+                                </video>
+                                <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${task.videoUrl}')" style="margin-top:0.3rem;"><i class="fas fa-copy"></i> Copy Video Link</button>
+                            </div>
+                        `;
+                    }
+                }
+
                 showModal(`
                     <div class="pdf-document">
                         <div class="pdf-header">
@@ -2276,6 +2386,7 @@
                                 </div>
                             </div>
                             ${audioHtml}
+                            ${videoHtml}
                             <div class="pdf-section">
                                 <div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div>
                                 <div class="pdf-section-content">${escapeHtml(task.description || 'No description')}</div>
