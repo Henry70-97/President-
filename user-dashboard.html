@@ -1475,78 +1475,114 @@
             }
         }
 
-        // ==================== DATA ANNOTATIONS ====================
+        // ==================== DATA ANNOTATIONS (UPDATED) ====================
         async function loadDataAnnotations() {
             currentTaskViewed = null;
             refreshMirror();
-            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading your annotation tasks...</p></div>';
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading annotation tasks...</p></div>';
             try {
-                // Get all accepted tasks (from the user's subcollection)
+                // Query all active AI annotation tasks
+                const tasksSnap = await db.collection('tasks')
+                    .where('category', '==', 'ai_annotation')
+                    .where('active', '==', true)
+                    .get();
+
+                if (tasksSnap.empty) {
+                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><h4>No AI Annotation Tasks Available</h4><p>Check back later for new tasks.</p></div>';
+                    return;
+                }
+
+                // Fetch user's accepted tasks to mark them
                 const acceptedSnap = await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').get();
-                if (acceptedSnap.empty) {
-                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><h4>No annotation tasks accepted yet</h4><p>Accept an AI Annotation task from the Tasks tab to see it here.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse Tasks</button></div>';
-                    return;
-                }
+                const acceptedTaskIds = new Set();
+                acceptedSnap.forEach(doc => acceptedTaskIds.add(doc.id));
 
-                // For each accepted task, fetch the full task details to get image/video URLs
+                // Build tasks array with extra info
                 const tasks = [];
-                for (const doc of acceptedSnap.docs) {
-                    const taskId = doc.id; // document ID is the taskId
-                    const taskDoc = await db.collection('tasks').doc(taskId).get();
-                    if (taskDoc.exists) {
-                        const task = taskDoc.data();
-                        // Only include AI annotation tasks
-                        if (task.category === 'ai_annotation') {
-                            tasks.push({ id: taskId, ...task });
-                        }
-                    }
-                }
+                tasksSnap.forEach(doc => {
+                    const task = { id: doc.id, ...doc.data() };
+                    task.accepted = acceptedTaskIds.has(task.id);
+                    tasks.push(task);
+                });
 
-                if (tasks.length === 0) {
-                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-images"></i><h4>No AI Annotation tasks</h4><p>You haven’t accepted any AI Annotation tasks yet.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse AI Tasks</button></div>';
-                    return;
-                }
+                // Render filter bar and tasks
+                let html = `
+                    <h3>🖼️ Data Annotations</h3>
+                    <div class="filter-bar">
+                        <div class="filter-title"><i class="fas fa-sliders-h"></i> Filter by type</div>
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label>Subcategory</label>
+                                <select id="subcatFilter" class="filter-select" onchange="applyAnnotationFilter()">
+                                    <option value="all">All</option>
+                                    <option value="image_caption">Image Caption</option>
+                                    <option value="action_recognition">Action Recognition</option>
+                                </select>
+                            </div>
+                            <div class="filter-actions">
+                                <button class="filter-btn reset" onclick="resetAnnotationFilter()"><i class="fas fa-redo-alt"></i> Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="task-grid" id="annotationGrid">
+                `;
 
-                // Render tasks in a grid
-                let html = '<h3>🖼️ Data Annotations</h3><div class="task-grid">';
                 tasks.forEach(task => {
                     const deadlineClass = task.deadline ? getDeadlineClass(task.deadline) : '';
                     const deadlineText = task.deadline ? formatDeadline(task.deadline) : 'No deadline';
                     const expired = isDeadlinePassed(task.deadline);
+                    const maxCollab = task.collaborable ? (task.maxCollaborators || 5) : 2;
+                    const currentAccepted = task.acceptedCount || 0;
+                    const full = currentAccepted >= maxCollab;
 
-                    // Media HTML
+                    // Media display
                     let mediaHtml = '';
                     if (task.annotationSubcategory === 'image_caption' && task.imageUrl) {
-                        mediaHtml = `<img src="${task.imageUrl}" alt="Annotation image" style="max-width:100%; max-height:300px; object-fit:contain; margin-bottom:0.5rem; border-radius:0.5rem; border:1px solid #e2e8f0;">`;
+                        mediaHtml = `<img src="${task.imageUrl}" alt="Annotation image" style="max-width:100%; max-height:200px; object-fit:contain; margin-bottom:0.5rem; border-radius:0.5rem; border:1px solid #e2e8f0;">`;
                     } else if (task.annotationSubcategory === 'action_recognition' && task.videoUrl) {
                         mediaHtml = `
-                            <video controls style="width:100%; max-height:300px; margin-bottom:0.5rem; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                            <video controls style="width:100%; max-height:200px; margin-bottom:0.5rem; border-radius:0.5rem; border:1px solid #e2e8f0;">
                                 <source src="${task.videoUrl}" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
                         `;
                     } else {
-                        mediaHtml = '<p style="color:#94a3b8; font-size:0.8rem;">No media available</p>';
+                        mediaHtml = '<p style="color:#94a3b8; font-size:0.8rem;">No media provided</p>';
                     }
 
                     // Subcategory display
                     const subcatDisplay = task.annotationSubcategory === 'image_caption' ? 'Image Caption' : 'Action Recognition';
 
+                    // Determine button
+                    let actionButton = '';
+                    if (expired) {
+                        actionButton = '<button class="btn btn-disabled" disabled>Expired</button>';
+                    } else if (full && !task.accepted) {
+                        actionButton = `<button class="btn btn-disabled" disabled>Full (${currentAccepted}/${maxCollab})</button>`;
+                    } else if (task.accepted) {
+                        actionButton = `
+                            <button class="btn btn-success" onclick="showSubmitForm('${task.id}')" style="flex:1;">Submit Work</button>
+                            <button class="btn btn-danger" onclick="cancelAcceptedTask('${task.id}')" style="flex:1;">Cancel</button>
+                        `;
+                    } else {
+                        actionButton = `<button class="btn btn-accept" onclick="acceptTask('${task.id}')" style="flex:1;">Accept (${currentAccepted}/${maxCollab})</button>`;
+                    }
+
                     html += `
-                        <div class="task-card">
+                        <div class="task-card" data-subcat="${task.annotationSubcategory}">
                             <h4 class="task-title">${escapeHtml(task.title || 'Untitled')}</h4>
                             <div class="client-info"><i class="fas fa-tag"></i> ${subcatDisplay}</div>
                             ${task.deadline ? `<div class="deadline-badge ${deadlineClass}"><i class="fas fa-calendar-alt"></i> ${deadlineText}</div>` : ''}
                             ${mediaHtml}
                             <div class="task-amount">${formatBoth(parseFloat(task.reward) || 0)}</div>
-                            ${expired ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
                             <div style="display:flex; gap:0.5rem; margin-top:0.8rem;">
-                                <button class="btn btn-success" onclick="showSubmitForm('${task.id}')" ${expired ? 'disabled' : ''} style="flex:1;">Submit Work</button>
+                                ${actionButton}
                                 <button class="btn btn-secondary" onclick="viewTaskDetails('${task.id}')" style="flex:1;">Details</button>
                             </div>
                         </div>
                     `;
                 });
+
                 html += '</div>';
                 document.getElementById('content').innerHTML = html;
             } catch (e) {
@@ -1554,6 +1590,24 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadDataAnnotations()">Retry</button></div>`;
             }
         }
+
+        window.applyAnnotationFilter = function() {
+            const filter = document.getElementById('subcatFilter').value;
+            const cards = document.querySelectorAll('.task-card');
+            cards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = '';
+                } else {
+                    const subcat = card.getAttribute('data-subcat');
+                    card.style.display = subcat === filter ? '' : 'none';
+                }
+            });
+        };
+
+        window.resetAnnotationFilter = function() {
+            document.getElementById('subcatFilter').value = 'all';
+            applyAnnotationFilter();
+        };
 
         // ==================== HOW IT WORKS ====================
         function showHowItWorksComingSoon() {
@@ -1926,6 +1980,8 @@
                     else if (currentTab === 'projects') loadTasksByCategory('projects');
                     else if (currentTab === 'transcription') loadTasksByCategory('transcription');
                     else loadTasks();
+                } else if (currentTab === 'data-annotations') {
+                    loadDataAnnotations(); // refresh the tab
                 } else if (currentTab === 'submit') {
                     loadPendingSubmissions();
                 }
@@ -1984,6 +2040,8 @@
                     else if (currentTab === 'projects') loadTasksByCategory('projects');
                     else if (currentTab === 'transcription') loadTasksByCategory('transcription');
                     else loadTasks();
+                } else if (currentTab === 'data-annotations') {
+                    loadDataAnnotations();
                 }
             } catch (error) {
                 console.error('Cancel acceptance error:', error);
