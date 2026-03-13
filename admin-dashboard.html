@@ -819,331 +819,6 @@
             loadDashboard();  
         });  
         
-        // Load membership packages from Firestore
-        async function loadMembershipPackages() {
-            try {
-                const doc = await db.collection('settings').doc('membershipPackages').get();
-                
-                if (doc.exists) {
-                    membershipPackages = doc.data();
-                    console.log('Loaded membership packages from Firestore:', membershipPackages);
-                } else {
-                    membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
-                    await db.collection('settings').doc('membershipPackages').set(DEFAULT_MEMBERSHIP_PACKAGES);
-                    console.log('Created default membership packages in Firestore');
-                }
-            } catch (error) {
-                console.error('Error loading membership packages:', error);
-                membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
-            }
-            
-            return membershipPackages;
-        }
-        
-        async function saveMembershipPackages(packages) {
-            try {
-                await db.collection('settings').doc('membershipPackages').set(packages);
-                membershipPackages = packages;
-                showAlert('Membership packages updated successfully!', 'success');
-                return true;
-            } catch (error) {
-                console.error('Error saving membership packages:', error);
-                showAlert('Error saving packages: ' + error.message, 'error');
-                return false;
-            }
-        }
-        
-        // Load fee settings from Firestore
-        async function loadFeeSettings() {
-            try {
-                const doc = await db.collection('settings').doc('feeSettings').get();
-                
-                if (doc.exists) {
-                    feeSettings = doc.data();
-                    console.log('Loaded fee settings from Firestore:', feeSettings);
-                } else {
-                    feeSettings = DEFAULT_FEE_SETTINGS;
-                    await db.collection('settings').doc('feeSettings').set(DEFAULT_FEE_SETTINGS);
-                    console.log('Created default fee settings in Firestore');
-                }
-            } catch (error) {
-                console.error('Error loading fee settings:', error);
-                feeSettings = DEFAULT_FEE_SETTINGS;
-            }
-            
-            return feeSettings;
-        }
-        
-        // Save fee settings to Firestore
-        async function saveFeeSettingsToFirestore(settings) {
-            try {
-                await db.collection('settings').doc('feeSettings').set(settings);
-                feeSettings = settings;
-                showAlert('Fee settings updated successfully!', 'success');
-                return true;
-            } catch (error) {
-                console.error('Error saving fee settings:', error);
-                showAlert('Error saving settings: ' + error.message, 'error');
-                return false;
-            }
-        }
-        
-        // Load payment URL from Firestore
-        async function loadPaymentSettings() {
-            try {
-                const doc = await db.collection('settings').doc('payment').get();
-                if (doc.exists && doc.data().url) {
-                    paymentUrl = doc.data().url;
-                } else {
-                    paymentUrl = 'https://lipwa.com'; // default
-                }
-            } catch (error) {
-                console.error('Error loading payment settings:', error);
-                paymentUrl = 'https://lipwa.com';
-            }
-        }
-        
-        // Save payment URL
-        async function savePaymentSettings(url) {
-            try {
-                await db.collection('settings').doc('payment').set({ url: url.trim() });
-                paymentUrl = url.trim();
-                showAlert('Payment URL updated successfully!', 'success');
-                return true;
-            } catch (error) {
-                console.error('Error saving payment settings:', error);
-                showAlert('Error saving payment URL: ' + error.message, 'error');
-                return false;
-            }
-        }
-        
-        function getPackageByType(type) {
-            if (!membershipPackages) return DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
-            return membershipPackages[type] || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
-        }
-        
-        function getWelcomeBonus(type) {
-            if (type !== MEMBERSHIP_TYPES.ELITE) return 0;
-            const pkg = getPackageByType(type);
-            return pkg.welcomeBonus || ELITE_BONUS;
-        }
-          
-        // Alert Modal Function  
-        function showAlert(message, type = 'success', title = '') {  
-            const alertModal = document.getElementById('alertModal');  
-            const alertBackdrop = document.getElementById('alertBackdrop');  
-            const alertIcon = document.getElementById('alertIcon');  
-            const alertTitle = document.getElementById('alertTitle');  
-            const alertMessage = document.getElementById('alertMessage');  
-            const alertButton = document.getElementById('alertButton');  
-            
-            let iconHtml = '';
-            let buttonClass = 'success';
-            let defaultTitle = '';
-            
-            switch(type) {
-                case 'success':
-                    iconHtml = '<i class="fas fa-check-circle"></i>';
-                    defaultTitle = 'Success';
-                    buttonClass = 'success';
-                    break;
-                case 'error':
-                    iconHtml = '<i class="fas fa-exclamation-circle"></i>';
-                    defaultTitle = 'Error';
-                    buttonClass = 'error';
-                    break;
-                case 'warning':
-                    iconHtml = '<i class="fas fa-exclamation-triangle"></i>';
-                    defaultTitle = 'Warning';
-                    buttonClass = 'warning';
-                    break;
-                case 'info':
-                    iconHtml = '<i class="fas fa-info-circle"></i>';
-                    defaultTitle = 'Information';
-                    buttonClass = 'info';
-                    break;
-                default:
-                    iconHtml = '<i class="fas fa-check-circle"></i>';
-                    defaultTitle = 'Success';
-                    buttonClass = 'success';
-            }
-            
-            alertIcon.className = `alert-icon ${type}`;
-            alertIcon.innerHTML = iconHtml;
-            alertTitle.textContent = title || defaultTitle;
-            alertMessage.textContent = message;
-            alertButton.className = `alert-button ${buttonClass}`;
-            alertButton.textContent = 'OK';
-            
-            alertModal.classList.add('active');
-            alertBackdrop.classList.add('active');
-            
-            alertButton.onclick = () => {
-                alertModal.classList.remove('active');
-                alertBackdrop.classList.remove('active');
-            };
-            
-            alertBackdrop.onclick = () => {
-                alertModal.classList.remove('active');
-                alertBackdrop.classList.remove('active');
-            };
-        }
-        
-        // Modal functions  
-        function showModal(html) {  
-            document.getElementById('modalContent').innerHTML = html;  
-            document.getElementById('modal').classList.add('active');  
-            document.getElementById('modalBackdrop').classList.add('active');  
-        }  
-          
-        function closeModal() {  
-            document.getElementById('modal').classList.remove('active');  
-            document.getElementById('modalBackdrop').classList.remove('active');  
-        }  
-          
-        // Format date for display  
-        function formatDate(date) {  
-            if (!date) return 'N/A';  
-            if (date.toDate) date = date.toDate();  
-            return new Date(date).toLocaleDateString('en-US', {  
-                year: 'numeric',  
-                month: 'short',  
-                day: 'numeric',  
-                hour: '2-digit',  
-                minute: '2-digit'  
-            });  
-        }  
-          
-        // Format currency  
-        function formatCurrency(amount) {  
-            return new Intl.NumberFormat('en-US', {  
-                style: 'currency',  
-                currency: 'USD',  
-                minimumFractionDigits: 2  
-            }).format(amount || 0);  
-        }  
-          
-        // Check if deadline is approaching  
-        function getDeadlineStatus(deadline) {  
-            if (!deadline) return null;  
-            const deadlineDate = deadline.toDate ? deadline.toDate() : new Date(deadline);  
-            const now = new Date();  
-            const daysLeft = Math.ceil((deadlineDate - now) / (1000 * 60 * 60 * 24));  
-              
-            if (daysLeft < 0) return { class: 'danger', text: 'Overdue' };  
-            if (daysLeft <= 2) return { class: 'warning', text: `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` };  
-            return { class: 'success', text: `${daysLeft} days left` };  
-        }  
-          
-        // Logout function  
-        function logout() {  
-            auth.signOut();  
-            window.location.href = 'index.html';  
-        }  
-          
-        // Mobile menu toggle
-        function toggleMobileMenu() {
-            const overlay = document.getElementById('mobileMenuOverlay');
-            const menu = document.getElementById('mobileMenu');
-            overlay.classList.toggle('active');
-            menu.classList.toggle('active');
-        }
-          
-        // Tab switching function (added tickers and deadlineTracker)
-        function switchTab(tab) {  
-            currentTab = tab;  
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));  
-            const activeTab = document.querySelector(`[data-tab="${tab}"]`);  
-            if (activeTab) activeTab.classList.add('active');  
-            
-            // Update bottom nav active state
-            document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
-            const bottomMap = {
-                'users': 0, 'tasks': 1, 'submissions': 2, 'withdrawals': 3
-            };
-            if (bottomMap[tab] !== undefined) {
-                document.querySelectorAll('.bottom-nav-item')[bottomMap[tab]].classList.add('active');
-            }
-            
-            // Show loading indicator
-            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>';
-            
-            switch(tab) {  
-                case 'users': loadUsers(); break;  
-                case 'tasks': loadTasks(); break;  
-                case 'teams': loadTeamApprovals(); break;  
-                case 'submissions': loadSubmissions(); break;  
-                case 'withdrawals': loadWithdrawals(); break;  
-                case 'memberships': loadMemberships(); break;  
-                case 'referrals': loadReferrals(); break;  
-                case 'messages': loadMessages(); break;  
-                case 'transactions': loadTransactions(); break;  
-                case 'training': loadTrainingCenter(); break;  
-                case 'logins': loadLoginLogs(); break;  
-                case 'petitions': loadPetitions(); break;  
-                case 'leaderboard': loadLeaderboardManager(); break;  
-                case 'faq': loadFaqManager(); break;  
-                case 'feedback': loadFeedbackManager(); break;  
-                case 'howitworks': loadHowItWorksEditor(); break;  
-                case 'tickers': loadTickers(); break;   // NEW TICKERS TAB
-                case 'deadlineTracker': loadDeadlineTracker(); break; // NEW DEADLINE TRACKER
-                case 'settings': loadSettings(); break;  
-            }  
-        }  
-          
-        // Load Dashboard Stats  
-        async function loadDashboard() {  
-            const usersSnapshot = await db.collection('users').get();  
-            const tasksSnapshot = await db.collection('tasks').get();  
-              
-            const pendingSubs = await db.collection('submissions')  
-                .where('status', '==', 'pending')  
-                .get();  
-              
-            const pendingWithdrawals = await db.collection('withdrawals')  
-                .where('status', '==', 'pending')  
-                .get();  
-                
-            let pendingReferrals = { size: 0 };  
-            try {  
-                pendingReferrals = await db.collection('referrals')  
-                    .where('status', '==', 'pending')  
-                    .get();  
-            } catch (error) {  
-                console.warn('Could not fetch pending referrals:', error);  
-            }  
-              
-            document.getElementById('statsGrid').innerHTML = `  
-                <div class="stat-card">  
-                    <i class="fas fa-users"></i>  
-                    <div class="stat-value">${usersSnapshot.size}</div>  
-                    <div class="stat-label">Total Users</div>  
-                </div>  
-                <div class="stat-card">  
-                    <i class="fas fa-tasks"></i>  
-                    <div class="stat-value">${tasksSnapshot.size}</div>  
-                    <div class="stat-label">Tasks</div>  
-                </div>  
-                <div class="stat-card">  
-                    <i class="fas fa-clock"></i>  
-                    <div class="stat-value">${pendingSubs.size}</div>  
-                    <div class="stat-label">Pending Reviews</div>  
-                </div>  
-                <div class="stat-card">  
-                    <i class="fas fa-money-bill"></i>  
-                    <div class="stat-value">${pendingWithdrawals.size}</div>  
-                    <div class="stat-label">Pending Withdrawals</div>  
-                </div>  
-                <div class="stat-card">  
-                    <i class="fas fa-users"></i>  
-                    <div class="stat-value">${pendingReferrals.size}</div>  
-                    <div class="stat-label">Pending Referrals</div>  
-                </div>  
-            `;  
-              
-            loadUsers();  
-        }  
-
         // ==================== AUTO TICKERS ====================
         // Listen for new positive events and add them as tickers
         function setupAutoTickers() {
@@ -1215,6 +890,79 @@
                 console.error('Error adding auto ticker:', e);
             }
         }
+
+        // Load tickers (updated to show both manual and auto)
+        async function loadTickers() {
+            try {
+                const snapshot = await db.collection('tickers').orderBy('order', 'asc').get();
+                let html = `
+                    <h3 style="margin-bottom:1.5rem;">📢 Live Tickers Management</h3>
+                    <p style="margin-bottom:1rem;">Tickers are scrolling messages that appear to users. Active tickers are shown in order. Auto-generated tickers have type "auto".</p>
+                    <div style="margin-bottom:1rem;">
+                        <button class="btn btn-success" onclick="showAddTicker()">+ Add Manual Ticker</button>
+                        <button class="btn btn-warning" onclick="clearAutoTickers()">🗑️ Clear All Auto Tickers</button>
+                    </div>
+                    <table class="data-table">
+                        <tr><th>Order</th><th>Message</th><th>Type</th><th>Status</th><th>Actions</th></tr>
+                `;
+                if (snapshot.empty) {
+                    html += '<tr><td colspan="5" style="text-align:center;">No tickers. Add one or wait for auto events.</td></tr>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const t = doc.data();
+                        const statusClass = t.active ? 'success' : 'secondary';
+                        const statusText = t.active ? 'Active' : 'Inactive';
+                        const typeBadge = t.type === 'auto' ? '<span class="badge info">auto</span>' : '<span class="badge primary">manual</span>';
+                        html += `
+                            <tr>
+                                <td>${t.order || 0}</td>
+                                <td>${t.message}</td>
+                                <td>${typeBadge}</td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editTicker('${doc.id}', '${t.message}', ${t.order}, ${t.active})">Edit</button>
+                                    <button class="btn btn-sm btn-warning" onclick="toggleTickerStatus('${doc.id}', ${!t.active})">${t.active ? 'Deactivate' : 'Activate'}</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteTicker('${doc.id}')">Delete</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'up')"><i class="fas fa-arrow-up"></i></button>
+                                    <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'down')"><i class="fas fa-arrow-down"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                html += '</table>';
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading tickers:', error);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading tickers: ${error.message}</p><button class="btn btn-primary" onclick="loadTickers()">Retry</button></div>`;
+            }
+        }
+
+        window.clearAutoTickers = async function() {
+            if (!confirm('Delete all auto-generated tickers? Manual tickers will remain.')) return;
+            try {
+                const auto = await db.collection('tickers').where('type', '==', 'auto').get();
+                const batch = db.batch();
+                auto.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                showAlert('Auto tickers cleared', 'success');
+                loadTickers();
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error');
+            }
+        };
+
+        // ==================== UNSEND WARNING ====================
+        window.unsendWarning = async function(notificationId) {
+            if (!confirm('Delete this warning? The user will no longer see it.')) return;
+            try {
+                await db.collection('notifications').doc(notificationId).delete();
+                showAlert('Warning removed', 'success');
+                loadMessages(); // refresh the messages tab
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error');
+            }
+        };
 
         // ==================== User Functions ====================
         async function loadUsers() {
@@ -1529,7 +1277,7 @@
                         <button class="btn btn-primary" id="createTaskBtn">+ New Task</button> 
                     </div> 
                     <table class="data-table"> 
-                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Audio</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Status</th><th>Actions</th></tr> 
+                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Audio</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th></tr> 
                 `; 
                 
                 for (let i = 0; i < tasks.length; i++) { 
@@ -1568,6 +1316,9 @@
                         }
                     }
                     
+                    // Get counts for acceptances
+                    const acceptCount = task.acceptedCount || 0;
+                    
                     html += ` 
                         <tr> 
                             <td>${task.title}</td> 
@@ -1582,12 +1333,13 @@
                             <td>${task.collaborable ? '✅' : '❌'}</td> 
                             <td><span class="badge info">${assignedDisplay}</span></td> 
                             <td><span class="badge primary">${subCount}</span></td> 
+                            <td><span class="badge warning">${acceptCount}</span></td> 
                             <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td> 
                             <td class="action-buttons"> 
                                 <button class="btn btn-primary edit-task-btn" data-task-id="${task.id}">Edit</button> 
                                 <button class="btn btn-info view-requirements-btn" data-task-id="${task.id}">View Details</button> 
                                 <button class="btn btn-warning toggle-task-btn" data-task-id="${task.id}" data-new-status="${!task.active}">${task.active ? 'Deactivate' : 'Activate'}</button> 
-                                <button class="btn btn-secondary" onclick="showTaskSubmissions('${task.id}')">View Subs</button>
+                                <button class="btn btn-secondary" onclick="showTaskSubmissions('${task.id}')">View Acceptees</button>
                             </td> 
                         </tr> 
                     `; 
@@ -2072,16 +1824,19 @@
         };
 
         // ==================== Submissions ====================
-        async function loadSubmissions() {  
+        async function loadSubmissions(showAll = false) {  
             try {
-                const snapshot = await db.collection('submissions')  
-                    .where('status', '==', 'pending')  
-                    .get();  
+                let query = db.collection('submissions');
+                if (!showAll) {
+                    query = query.where('status', '==', 'pending');
+                }
+                const snapshot = await query.orderBy('submittedAt', 'desc').get();  
                   
-                let html = '<h3 style="margin-bottom:1.5rem;">Pending Submissions</h3>';  
+                let html = '<h3 style="margin-bottom:1.5rem;">' + (showAll ? 'All Submissions' : 'Pending Submissions') + '</h3>';  
+                html += `<button class="btn btn-info" onclick="loadSubmissions(${!showAll})">${showAll ? 'Show Pending' : 'Show All'}</button><br><br>`;
                   
                 if (snapshot.empty) {  
-                    html += '<p>No pending submissions.</p>';  
+                    html += '<p>No submissions found.</p>';  
                 } else {  
                     for (const doc of snapshot.docs) {  
                         const sub = doc.data();  
@@ -2104,6 +1859,7 @@
                         }  
                           
                         const submittedAt = sub.submittedAt ? formatDate(sub.submittedAt) : 'N/A';  
+                        const statusClass = sub.status === 'approved' ? 'success' : (sub.status === 'rejected' ? 'danger' : 'warning');
                           
                         html += `  
                             <div class="submission-card" data-sub-id="${doc.id}">  
@@ -2113,6 +1869,7 @@
                                 </div>  
                                   
                                 <p><strong>User:</strong> ${sub.userEmail}</p>  
+                                <p><strong>Status:</strong> <span class="badge ${statusClass}">${sub.status}</span></p>  
                                 <p><strong>Submitted:</strong> ${submittedAt}</p>  
                                   
                                 <div style="margin: 1rem 0;">  
@@ -2148,14 +1905,18 @@
                                     </div>  
                                 ` : ''}
                                   
-                                <div class="flex-row" style="margin:1rem 0;">  
-                                    <input type="number" class="submission-score" placeholder="Score (10-100)" min="10" max="100" style="width:120px;">  
-                                    <textarea class="submission-review" placeholder="Feedback (required)" style="flex:1;"></textarea>  
-                                </div>  
-                                <div class="flex-row">  
-                                    <button class="btn btn-success approve-submission" data-sub-id="${doc.id}">Approve</button>  
-                                    <button class="btn btn-danger reject-submission" data-sub-id="${doc.id}">Reject</button>  
-                                </div>  
+                                ${sub.review ? `<div style="background:#f1f5f9; padding:0.8rem; border-radius:0.5rem; margin-top:0.5rem;"><strong>Feedback:</strong> ${sub.review}</div>` : ''}
+                                  
+                                ${sub.status === 'pending' ? `  
+                                    <div class="flex-row" style="margin:1rem 0;">  
+                                        <input type="number" class="submission-score" placeholder="Score (10-100)" min="10" max="100" style="width:120px;">  
+                                        <textarea class="submission-review" placeholder="Feedback (required)" style="flex:1;"></textarea>  
+                                    </div>  
+                                    <div class="flex-row">  
+                                        <button class="btn btn-success approve-submission" data-sub-id="${doc.id}">Approve</button>  
+                                        <button class="btn btn-danger reject-submission" data-sub-id="${doc.id}">Reject</button>  
+                                    </div>  
+                                ` : ''}
                             </div>  
                         `;  
                     }  
@@ -2164,7 +1925,7 @@
                 document.getElementById('content').innerHTML = html;  
             } catch (error) {
                 console.error('Error loading submissions:', error);
-                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading submissions: ${error.message}</p><button class="btn btn-primary" onclick="loadSubmissions()">Retry</button></div>`;
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading submissions: ${error.message}</p><button class="btn btn-primary" onclick="loadSubmissions(${showAll})">Retry</button></div>`;
             }
         }  
           
@@ -2255,16 +2016,19 @@
         }  
 
         // ==================== Withdrawals ====================
-        async function loadWithdrawals() { 
+        async function loadWithdrawals(showAll = false) { 
             try {
-                const snapshot = await db.collection('withdrawals') 
-                    .where('status', '==', 'pending') 
-                    .get(); 
+                let query = db.collection('withdrawals');
+                if (!showAll) {
+                    query = query.where('status', '==', 'pending');
+                }
+                const snapshot = await query.orderBy('requestedAt', 'desc').get(); 
                  
-                let html = '<h3 style="margin-bottom:1.5rem;">Pending Withdrawals</h3>'; 
+                let html = '<h3 style="margin-bottom:1.5rem;">' + (showAll ? 'All Withdrawals' : 'Pending Withdrawals') + '</h3>'; 
+                html += `<button class="btn btn-info" onclick="loadWithdrawals(${!showAll})">${showAll ? 'Show Pending' : 'Show All'}</button><br><br>`;
                  
                 if (snapshot.empty) { 
-                    html += '<p>No pending withdrawals.</p>'; 
+                    html += '<p>No withdrawals found.</p>'; 
                 } else { 
                     const withdrawals = [];
                     snapshot.forEach(doc => withdrawals.push({ id: doc.id, ...doc.data() }));
@@ -2275,16 +2039,22 @@
                     
                     withdrawals.forEach((w, index) => {
                         const isFrozen = userStatuses[index];
+                        const statusClass = w.status === 'paid' ? 'success' : (w.status === 'rejected' ? 'danger' : 'warning');
                         html += ` 
                             <div class="submission-card"> 
                                 <p><strong>User:</strong> ${w.userEmail} ${isFrozen ? '<span class="badge danger">FROZEN</span>' : ''}</p> 
                                 <p><strong>Amount:</strong> $${w.amount}</p> 
                                 <p><strong>Method:</strong> ${w.method} - ${w.phone}</p> 
+                                <p><strong>Status:</strong> <span class="badge ${statusClass}">${w.status}</span></p> 
                                 <p><strong>Requested:</strong> ${w.requestedAt?.toDate().toLocaleString()}</p> 
-                                <div class="flex-row"> 
-                                    <button class="btn btn-success process-withdrawal" data-withdrawal-id="${w.id}">Mark as Paid</button> 
-                                    <button class="btn btn-danger reject-withdrawal" data-withdrawal-id="${w.id}">Reject</button> 
-                                </div> 
+                                ${w.paidAt ? `<p><strong>Paid:</strong> ${formatDate(w.paidAt)}</p>` : ''}
+                                ${w.rejectedAt ? `<p><strong>Rejected:</strong> ${formatDate(w.rejectedAt)}</p>` : ''}
+                                ${w.status === 'pending' ? ` 
+                                    <div class="flex-row"> 
+                                        <button class="btn btn-success process-withdrawal" data-withdrawal-id="${w.id}">Mark as Paid</button> 
+                                        <button class="btn btn-danger reject-withdrawal" data-withdrawal-id="${w.id}">Reject</button> 
+                                    </div> 
+                                ` : ''}
                             </div> 
                         `; 
                     });
@@ -2293,7 +2063,7 @@
                 document.getElementById('content').innerHTML = html; 
             } catch (error) {
                 console.error('Error loading withdrawals:', error);
-                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading withdrawals: ${error.message}</p><button class="btn btn-primary" onclick="loadWithdrawals()">Retry</button></div>`;
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading withdrawals: ${error.message}</p><button class="btn btn-primary" onclick="loadWithdrawals(${showAll})">Retry</button></div>`;
             }
         }
           
@@ -2852,11 +2622,13 @@
         }
 
         // ==================== Memberships ====================
-        async function loadMemberships() {  
+        async function loadMemberships(showAll = false) {  
             try {
-                const snapshot = await db.collection('membershipPayments')  
-                    .where('status', '==', 'pending')  
-                    .get();  
+                let query = db.collection('membershipPayments');
+                if (!showAll) {
+                    query = query.where('status', '==', 'pending');
+                }
+                const snapshot = await query.orderBy('submittedAt', 'desc').get();  
                 
                 let html = `  
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">  
@@ -2906,21 +2678,23 @@
                 
                 html += '</div>';  
                 
-                html += '<h4 style="margin: 2rem 0 1rem 0;">Pending Membership Payments</h4>';  
+                html += '<h4 style="margin: 2rem 0 1rem 0;">' + (showAll ? 'All Membership Payments' : 'Pending Membership Payments') + '</h4>';  
+                html += `<button class="btn btn-info" onclick="loadMemberships(${!showAll})">${showAll ? 'Show Pending' : 'Show All'}</button><br><br>`;
                   
                 if (snapshot.empty) {  
-                    html += '<p>No pending memberships.</p>';  
+                    html += '<p>No memberships found.</p>';  
                 } else {  
                     snapshot.forEach(doc => {  
                         const p = doc.data();  
                         const membershipType = p.membershipType || p.packageType || 'premium';
                         const pkg = getPackageByType(membershipType);  
+                        const statusClass = p.status === 'approved' ? 'success' : (p.status === 'rejected' ? 'danger' : 'warning');
                         
                         html += `  
                             <div class="submission-card">  
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">  
                                     <h4 style="margin:0;">${pkg.name} Upgrade Request</h4>  
-                                    <span class="badge warning">PENDING</span>  
+                                    <span class="badge ${statusClass}">${p.status}</span>  
                                 </div>  
                                 <p><strong>User:</strong> ${p.userEmail}</p>  
                                 <p><strong>Membership:</strong> ${pkg.name}</p>  
@@ -2928,10 +2702,14 @@
                                 <p><strong>Amount:</strong> $${p.amount}</p>  
                                 ${p.notes ? `<p><strong>Notes:</strong> ${p.notes}</p>` : ''}  
                                 <p><strong>Submitted:</strong> ${p.submittedAt?.toDate().toLocaleString()}</p>  
-                                <div class="flex-row">  
-                                    <button class="btn btn-success approve-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Approve</button>  
-                                    <button class="btn btn-danger reject-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Reject</button>  
-                                </div>  
+                                ${p.approvedAt ? `<p><strong>Approved:</strong> ${formatDate(p.approvedAt)}</p>` : ''}
+                                ${p.rejectedAt ? `<p><strong>Rejected:</strong> ${formatDate(p.rejectedAt)}</p>` : ''}
+                                ${p.status === 'pending' ? `  
+                                    <div class="flex-row">  
+                                        <button class="btn btn-success approve-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Approve</button>  
+                                        <button class="btn btn-danger reject-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Reject</button>  
+                                    </div>  
+                                ` : ''}
                             </div>  
                         `;  
                     });  
@@ -2940,7 +2718,7 @@
                 document.getElementById('content').innerHTML = html;  
             } catch (error) {
                 console.error('Error loading memberships:', error);
-                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading memberships: ${error.message}</p><button class="btn btn-primary" onclick="loadMemberships()">Retry</button></div>`;
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading memberships: ${error.message}</p><button class="btn btn-primary" onclick="loadMemberships(${showAll})">Retry</button></div>`;
             }
         }  
 
@@ -3916,18 +3694,6 @@
         }  
 
         // ==================== Messages & Notifications ====================
-        // UNSEND WARNING function
-        window.unsendWarning = async function(notificationId) {
-            if (!confirm('Delete this warning? The user will no longer see it.')) return;
-            try {
-                await db.collection('notifications').doc(notificationId).delete();
-                showAlert('Warning removed', 'success');
-                loadMessages(); // refresh the messages tab
-            } catch (e) {
-                showAlert('Error: ' + e.message, 'error');
-            }
-        };
-
         async function sendNotification(userId, title, message, type = 'info', link = null) {
             try {
                 if (!userId) throw new Error('No user ID');
@@ -5596,189 +5362,6 @@
             }
         };
 
-        // ==================== TICKERS MANAGEMENT (updated) ====================
-        async function loadTickers() {
-            try {
-                const snapshot = await db.collection('tickers').orderBy('order', 'asc').get();
-                let html = `
-                    <h3 style="margin-bottom:1.5rem;">📢 Live Tickers Management</h3>
-                    <p style="margin-bottom:1rem;">Tickers are scrolling messages that appear to users. Active tickers are shown in order. Auto-generated tickers have type "auto".</p>
-                    <div style="margin-bottom:1rem;">
-                        <button class="btn btn-success" onclick="showAddTicker()">+ Add Manual Ticker</button>
-                        <button class="btn btn-warning" onclick="clearAutoTickers()">🗑️ Clear All Auto Tickers</button>
-                    </div>
-                    <table class="data-table">
-                        <tr><th>Order</th><th>Message</th><th>Type</th><th>Status</th><th>Actions</th></tr>
-                `;
-                if (snapshot.empty) {
-                    html += '<tr><td colspan="5" style="text-align:center;">No tickers. Add one or wait for auto events.</td></tr>';
-                } else {
-                    snapshot.forEach(doc => {
-                        const t = doc.data();
-                        const statusClass = t.active ? 'success' : 'secondary';
-                        const statusText = t.active ? 'Active' : 'Inactive';
-                        const typeBadge = t.type === 'auto' ? '<span class="badge info">auto</span>' : '<span class="badge primary">manual</span>';
-                        html += `
-                            <tr>
-                                <td>${t.order || 0}</td>
-                                <td>${t.message}</td>
-                                <td>${typeBadge}</td>
-                                <td><span class="badge ${statusClass}">${statusText}</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="editTicker('${doc.id}', '${t.message}', ${t.order}, ${t.active})">Edit</button>
-                                    <button class="btn btn-sm btn-warning" onclick="toggleTickerStatus('${doc.id}', ${!t.active})">${t.active ? 'Deactivate' : 'Activate'}</button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteTicker('${doc.id}')">Delete</button>
-                                    <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'up')"><i class="fas fa-arrow-up"></i></button>
-                                    <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'down')"><i class="fas fa-arrow-down"></i></button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-                html += '</table>';
-                document.getElementById('content').innerHTML = html;
-            } catch (error) {
-                console.error('Error loading tickers:', error);
-                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading tickers: ${error.message}</p><button class="btn btn-primary" onclick="loadTickers()">Retry</button></div>`;
-            }
-        }
-
-        window.clearAutoTickers = async function() {
-            if (!confirm('Delete all auto-generated tickers? Manual tickers will remain.')) return;
-            try {
-                const auto = await db.collection('tickers').where('type', '==', 'auto').get();
-                const batch = db.batch();
-                auto.forEach(doc => batch.delete(doc.ref));
-                await batch.commit();
-                showAlert('Auto tickers cleared', 'success');
-                loadTickers();
-            } catch (e) {
-                showAlert('Error: ' + e.message, 'error');
-            }
-        };
-
-        window.showAddTicker = function() {
-            showModal(`
-                <h3 style="margin-bottom:1rem;">Add New Ticker</h3>
-                <input type="text" id="tickerMessage" placeholder="Ticker message" required>
-                <input type="number" id="tickerOrder" placeholder="Order (e.g., 1,2,3)" value="1" min="0">
-                <div style="margin-bottom:1rem;">
-                    <label><input type="checkbox" id="tickerActive" checked> Active</label>
-                </div>
-                <button class="btn btn-success" id="saveTickerBtn">Save Ticker</button>
-            `);
-            document.getElementById('saveTickerBtn').addEventListener('click', async function() {
-                const message = document.getElementById('tickerMessage').value.trim();
-                const order = parseInt(document.getElementById('tickerOrder').value) || 0;
-                const active = document.getElementById('tickerActive').checked;
-                if (!message) {
-                    showAlert('Message is required', 'error');
-                    return;
-                }
-                try {
-                    await db.collection('tickers').add({
-                        message,
-                        order,
-                        active,
-                        type: 'manual',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    closeModal();
-                    showAlert('Ticker added successfully', 'success');
-                    loadTickers();
-                } catch (error) {
-                    showAlert('Error: ' + error.message, 'error');
-                }
-            });
-        };
-
-        window.editTicker = function(id, message, order, active) {
-            showModal(`
-                <h3 style="margin-bottom:1rem;">Edit Ticker</h3>
-                <input type="text" id="tickerMessage" value="${message}" required>
-                <input type="number" id="tickerOrder" value="${order}" min="0">
-                <div style="margin-bottom:1rem;">
-                    <label><input type="checkbox" id="tickerActive" ${active ? 'checked' : ''}> Active</label>
-                </div>
-                <button class="btn btn-success" id="updateTickerBtn">Update Ticker</button>
-            `);
-            document.getElementById('updateTickerBtn').addEventListener('click', async function() {
-                const newMessage = document.getElementById('tickerMessage').value.trim();
-                const newOrder = parseInt(document.getElementById('tickerOrder').value) || 0;
-                const newActive = document.getElementById('tickerActive').checked;
-                if (!newMessage) {
-                    showAlert('Message is required', 'error');
-                    return;
-                }
-                try {
-                    await db.collection('tickers').doc(id).update({
-                        message: newMessage,
-                        order: newOrder,
-                        active: newActive
-                    });
-                    closeModal();
-                    showAlert('Ticker updated', 'success');
-                    loadTickers();
-                } catch (error) {
-                    showAlert('Error: ' + error.message, 'error');
-                }
-            });
-        };
-
-        window.toggleTickerStatus = async function(id, newStatus) {
-            try {
-                await db.collection('tickers').doc(id).update({ active: newStatus });
-                showAlert(`Ticker ${newStatus ? 'activated' : 'deactivated'}`, 'success');
-                loadTickers();
-            } catch (error) {
-                showAlert('Error: ' + error.message, 'error');
-            }
-        };
-
-        window.deleteTicker = async function(id) {
-            if (!confirm('Delete this ticker?')) return;
-            try {
-                await db.collection('tickers').doc(id).delete();
-                showAlert('Ticker deleted', 'success');
-                loadTickers();
-            } catch (error) {
-                showAlert('Error: ' + error.message, 'error');
-            }
-        };
-
-        window.moveTicker = async function(id, direction) {
-            try {
-                const snapshot = await db.collection('tickers').orderBy('order', 'asc').get();
-                const tickers = [];
-                snapshot.forEach(doc => tickers.push({ id: doc.id, ...doc.data() }));
-                const index = tickers.findIndex(t => t.id === id);
-                if (index === -1) return;
-                if (direction === 'up' && index > 0) {
-                    const temp = tickers[index].order;
-                    tickers[index].order = tickers[index-1].order;
-                    tickers[index-1].order = temp;
-                } else if (direction === 'down' && index < tickers.length-1) {
-                    const temp = tickers[index].order;
-                    tickers[index].order = tickers[index+1].order;
-                    tickers[index+1].order = temp;
-                } else {
-                    return;
-                }
-                const batch = db.batch();
-                batch.update(db.collection('tickers').doc(tickers[index].id), { order: tickers[index].order });
-                if (direction === 'up') {
-                    batch.update(db.collection('tickers').doc(tickers[index-1].id), { order: tickers[index-1].order });
-                } else {
-                    batch.update(db.collection('tickers').doc(tickers[index+1].id), { order: tickers[index+1].order });
-                }
-                await batch.commit();
-                showAlert('Order updated', 'success');
-                loadTickers();
-            } catch (error) {
-                showAlert('Error: ' + error.message, 'error');
-            }
-        };
-
         // ==================== DEADLINE TRACKER FUNCTIONS ====================
         async function loadDeadlineTracker() {
             try {
@@ -5804,7 +5387,7 @@
                                 </div>
                                 <p><strong>Deadline:</strong> ${formatDate(deadline)}</p>
                                 <p><strong>Reward:</strong> $${task.reward}</p>
-                                <button class="btn btn-primary" onclick="showTaskSubmissions('${task.id}')">View Submissions</button>
+                                <button class="btn btn-primary" onclick="showTaskSubmissions('${task.id}')">View Acceptees</button>
                             </div>
                         `;
                     });
@@ -5846,16 +5429,20 @@
                 const submittedUsers = users.filter(u => submittedUserIds.has(u.id));
                 const notSubmittedUsers = users.filter(u => !submittedUserIds.has(u.id));
 
-                let modalHtml = `<h3 style="margin-bottom:1rem;">Submissions for: ${task.title}</h3>`;
+                let modalHtml = `<h3 style="margin-bottom:1rem;">Acceptees for: ${task.title}</h3>`;
 
                 modalHtml += '<h4 style="margin-top:1.5rem;">✅ Submitted</h4>';
                 if (submittedUsers.length === 0) {
                     modalHtml += '<p>None</p>';
                 } else {
                     submittedUsers.forEach(u => {
+                        // get submission info
+                        const subData = submissionsSnap.docs.find(d => d.data().userId === u.id)?.data();
+                        const submittedAt = subData?.submittedAt ? formatDate(subData.submittedAt) : 'N/A';
                         modalHtml += `
                             <div class="submission-user-card">
                                 <p><strong>${u.displayName || u.email}</strong> (${u.email})</p>
+                                <p>Submitted: ${submittedAt}</p>
                                 <div class="action-buttons">
                                     <button class="btn btn-warning" onclick="sendWarning('${u.id}', '${task.title.replace(/'/g, "\\'")}')">Send Warning</button>
                                     <button class="btn btn-warning" onclick="toggleSuspendUser('${u.id}', ${!!u.suspended})">${u.suspended ? 'Unsuspend' : 'Suspend'}</button>
@@ -6185,6 +5772,441 @@
             }
         });  
           
+        // ==================== MISSING CRITICAL FUNCTIONS ADDED ====================
+        window.toggleMobileMenu = function() {
+            const overlay = document.getElementById('mobileMenuOverlay');
+            const menu = document.getElementById('mobileMenu');
+            if (overlay && menu) {
+                overlay.classList.toggle('active');
+                menu.classList.toggle('active');
+            }
+        };
+
+        window.switchTab = function(tabName) {
+            currentTab = tabName;
+            loadDashboard();
+            
+            // Update active tab classes for desktop tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                if (tab.getAttribute('data-tab') === tabName) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update bottom nav active state
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                const onclickAttr = item.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(tabName)) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        };
+
+        window.logout = function() {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            }).catch(error => {
+                console.error('Logout error:', error);
+                showAlert('Error logging out: ' + error.message, 'error');
+            });
+        };
+
+        window.showModal = function(content) {
+            const modal = document.getElementById('modal');
+            const backdrop = document.getElementById('modalBackdrop');
+            const modalContent = document.getElementById('modalContent');
+            if (modal && backdrop && modalContent) {
+                modalContent.innerHTML = content;
+                modal.classList.add('active');
+                backdrop.classList.add('active');
+            }
+        };
+
+        window.closeModal = function() {
+            const modal = document.getElementById('modal');
+            const backdrop = document.getElementById('modalBackdrop');
+            if (modal && backdrop) {
+                modal.classList.remove('active');
+                backdrop.classList.remove('active');
+            }
+        };
+
+        window.showAlert = function(message, type = 'info') {
+            const alertModal = document.getElementById('alertModal');
+            const alertBackdrop = document.getElementById('alertBackdrop');
+            const alertIcon = document.getElementById('alertIcon');
+            const alertTitle = document.getElementById('alertTitle');
+            const alertMessage = document.getElementById('alertMessage');
+            const alertButton = document.getElementById('alertButton');
+            
+            if (!alertModal || !alertBackdrop) return;
+            
+            // Set icon and title based on type
+            let iconClass = 'info';
+            let title = 'Info';
+            
+            if (type === 'success') {
+                iconClass = 'success';
+                title = 'Success';
+            } else if (type === 'error') {
+                iconClass = 'error';
+                title = 'Error';
+            } else if (type === 'warning') {
+                iconClass = 'warning';
+                title = 'Warning';
+            } else {
+                iconClass = 'info';
+                title = 'Info';
+            }
+            
+            alertIcon.className = `alert-icon ${iconClass}`;
+            alertIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : 
+                                 type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : 
+                                 type === 'warning' ? '<i class="fas fa-exclamation-triangle"></i>' : 
+                                 '<i class="fas fa-info-circle"></i>';
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertButton.className = `alert-button ${iconClass}`;
+            
+            alertModal.classList.add('active');
+            alertBackdrop.classList.add('active');
+            
+            // Auto close after 3 seconds for success/info, longer for errors
+            const timeout = type === 'error' ? 5000 : 3000;
+            setTimeout(() => {
+                alertModal.classList.remove('active');
+                alertBackdrop.classList.remove('active');
+            }, timeout);
+        };
+
+        // Initialize alert button click
+        document.getElementById('alertButton')?.addEventListener('click', function() {
+            document.getElementById('alertModal').classList.remove('active');
+            document.getElementById('alertBackdrop').classList.remove('active');
+        });
+
+        // ==================== Helper Functions ====================
+        function formatDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        function formatCurrency(amount) {
+            return '$' + (amount || 0).toFixed(2);
+        }
+
+        function getDeadlineStatus(deadline) {
+            if (!deadline) return null;
+            const now = new Date();
+            const deadlineDate = deadline.seconds ? new Date(deadline.seconds * 1000) : new Date(deadline);
+            const diff = deadlineDate - now;
+            if (diff < 0) return { class: 'danger', text: 'Overdue' };
+            if (diff < 24 * 60 * 60 * 1000) return { class: 'warning', text: 'Due soon' };
+            return { class: 'success', text: 'On track' };
+        }
+
+        function getPackageByType(type) {
+            return membershipPackages?.[type] || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
+        }
+
+        // ==================== LOAD DASHBOARD ====================
+        async function loadDashboard() {
+            try {
+                // Load stats
+                const stats = await loadStats();
+                
+                // Load content based on current tab
+                switch (currentTab) {
+                    case 'users':
+                        await loadUsers();
+                        break;
+                    case 'tasks':
+                        await loadTasks();
+                        break;
+                    case 'teams':
+                        await loadTeamApprovals();
+                        break;
+                    case 'submissions':
+                        await loadSubmissions();
+                        break;
+                    case 'withdrawals':
+                        await loadWithdrawals();
+                        break;
+                    case 'memberships':
+                        await loadMemberships();
+                        break;
+                    case 'referrals':
+                        await loadReferrals();
+                        break;
+                    case 'messages':
+                        await loadMessages();
+                        break;
+                    case 'transactions':
+                        await loadTransactions();
+                        break;
+                    case 'training':
+                        loadTrainingCenter();
+                        break;
+                    case 'logins':
+                        await loadLoginLogs();
+                        break;
+                    case 'petitions':
+                        await loadPetitions();
+                        break;
+                    case 'leaderboard':
+                        await loadLeaderboardManager();
+                        break;
+                    case 'faq':
+                        await loadFaqManager();
+                        break;
+                    case 'feedback':
+                        await loadFeedbackManager();
+                        break;
+                    case 'howitworks':
+                        await loadHowItWorksEditor();
+                        break;
+                    case 'tickers':
+                        await loadTickers();
+                        break;
+                    case 'deadlineTracker':
+                        await loadDeadlineTracker();
+                        break;
+                    case 'settings':
+                        await loadSettings();
+                        break;
+                    default:
+                        await loadUsers();
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showAlert('Error loading dashboard: ' + error.message, 'error');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const [users, tasks, submissions, withdrawals, memberships] = await Promise.all([
+                    db.collection('users').get(),
+                    db.collection('tasks').where('active', '==', true).get(),
+                    db.collection('submissions').where('status', '==', 'pending').get(),
+                    db.collection('withdrawals').where('status', '==', 'pending').get(),
+                    db.collection('membershipPayments').where('status', '==', 'pending').get()
+                ]);
+                
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-value">${users.size}</div>
+                        <div>Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-tasks"></i>
+                        <div class="stat-value">${tasks.size}</div>
+                        <div>Active Tasks</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock"></i>
+                        <div class="stat-value">${submissions.size}</div>
+                        <div>Pending Submissions</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <div class="stat-value">${withdrawals.size}</div>
+                        <div>Pending Withdrawals</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-crown"></i>
+                        <div class="stat-value">${memberships.size}</div>
+                        <div>Membership Requests</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // ==================== LOAD SETTINGS FUNCTIONS ====================
+        async function loadMembershipPackages() {
+            try {
+                const doc = await db.collection('settings').doc('membershipPackages').get();
+                if (doc.exists) {
+                    membershipPackages = doc.data();
+                } else {
+                    membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
+                    await db.collection('settings').doc('membershipPackages').set(DEFAULT_MEMBERSHIP_PACKAGES);
+                }
+            } catch (error) {
+                console.error('Error loading membership packages:', error);
+                membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES;
+            }
+        }
+
+        async function saveMembershipPackages(packages) {
+            try {
+                await db.collection('settings').doc('membershipPackages').set(packages);
+                membershipPackages = packages;
+                showAlert('Membership packages saved successfully!', 'success');
+                return true;
+            } catch (error) {
+                console.error('Error saving membership packages:', error);
+                showAlert('Error saving packages: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        async function loadFeeSettings() {
+            try {
+                const doc = await db.collection('settings').doc('feeSettings').get();
+                if (doc.exists) {
+                    feeSettings = doc.data();
+                } else {
+                    feeSettings = DEFAULT_FEE_SETTINGS;
+                    await db.collection('settings').doc('feeSettings').set(DEFAULT_FEE_SETTINGS);
+                }
+            } catch (error) {
+                console.error('Error loading fee settings:', error);
+                feeSettings = DEFAULT_FEE_SETTINGS;
+            }
+        }
+
+        async function loadPaymentSettings() {
+            try {
+                const doc = await db.collection('settings').doc('paymentSettings').get();
+                if (doc.exists) {
+                    paymentUrl = doc.data().paymentUrl || '';
+                }
+            } catch (error) {
+                console.error('Error loading payment settings:', error);
+                paymentUrl = '';
+            }
+        }
+
+        async function savePaymentSettings(url) {
+            try {
+                await db.collection('settings').doc('paymentSettings').set({
+                    paymentUrl: url,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                paymentUrl = url;
+                showAlert('Payment URL saved successfully!', 'success');
+                loadSettings();
+            } catch (error) {
+                console.error('Error saving payment URL:', error);
+                showAlert('Error saving payment URL: ' + error.message, 'error');
+            }
+        }
+
+        // ==================== TICKER FUNCTIONS ====================
+        window.showAddTicker = function() {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Add Manual Ticker</h3>
+                <input type="text" id="tickerMessage" placeholder="Ticker message" required>
+                <input type="number" id="tickerOrder" placeholder="Order (e.g., 1,2,3)" min="0" value="0">
+                <button class="btn btn-success" id="saveTickerBtn">Add Ticker</button>
+            `);
+            document.getElementById('saveTickerBtn').addEventListener('click', async function() {
+                const message = document.getElementById('tickerMessage').value.trim();
+                const order = parseInt(document.getElementById('tickerOrder').value) || 0;
+                if (!message) {
+                    showAlert('Message required', 'error');
+                    return;
+                }
+                try {
+                    await db.collection('tickers').add({
+                        message,
+                        order,
+                        active: true,
+                        type: 'manual',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    closeModal();
+                    showAlert('Ticker added', 'success');
+                    loadTickers();
+                } catch (e) {
+                    showAlert('Error: ' + e.message, 'error');
+                }
+            });
+        };
+
+        window.editTicker = function(id, message, order, active) {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Edit Ticker</h3>
+                <input type="text" id="editTickerMessage" value="${message}" required>
+                <input type="number" id="editTickerOrder" value="${order}" min="0">
+                <button class="btn btn-success" id="updateTickerBtn">Update Ticker</button>
+            `);
+            document.getElementById('updateTickerBtn').addEventListener('click', async function() {
+                const newMessage = document.getElementById('editTickerMessage').value.trim();
+                const newOrder = parseInt(document.getElementById('editTickerOrder').value) || 0;
+                if (!newMessage) {
+                    showAlert('Message required', 'error');
+                    return;
+                }
+                try {
+                    await db.collection('tickers').doc(id).update({
+                        message: newMessage,
+                        order: newOrder
+                    });
+                    closeModal();
+                    showAlert('Ticker updated', 'success');
+                    loadTickers();
+                } catch (e) {
+                    showAlert('Error: ' + e.message, 'error');
+                }
+            });
+        };
+
+        window.toggleTickerStatus = async function(id, newStatus) {
+            try {
+                await db.collection('tickers').doc(id).update({ active: newStatus });
+                showAlert(`Ticker ${newStatus ? 'activated' : 'deactivated'}`, 'success');
+                loadTickers();
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error');
+            }
+        };
+
+        window.deleteTicker = async function(id) {
+            if (!confirm('Delete this ticker?')) return;
+            try {
+                await db.collection('tickers').doc(id).delete();
+                showAlert('Ticker deleted', 'success');
+                loadTickers();
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error');
+            }
+        };
+
+        window.moveTicker = async function(id, direction) {
+            try {
+                const snapshot = await db.collection('tickers').orderBy('order', 'asc').get();
+                const tickers = [];
+                snapshot.forEach(doc => tickers.push({ id: doc.id, ...doc.data() }));
+                
+                const index = tickers.findIndex(t => t.id === id);
+                if (index === -1) return;
+                
+                const newIndex = direction === 'up' ? index - 1 : index + 1;
+                if (newIndex < 0 || newIndex >= tickers.length) return;
+                
+                const tempOrder = tickers[index].order;
+                const batch = db.batch();
+                batch.update(db.collection('tickers').doc(tickers[index].id), { order: tickers[newIndex].order });
+                batch.update(db.collection('tickers').doc(tickers[newIndex].id), { order: tempOrder });
+                await batch.commit();
+                
+                loadTickers();
+            } catch (e) {
+                showAlert('Error moving ticker: ' + e.message, 'error');
+            }
+        };
+
         // Expose functions globally
         window.showAlert = showAlert;  
         window.showModal = showModal;  
@@ -6238,9 +6260,7 @@
         window.filterUsersTable = filterUsersTable;
         window.loadDefaultFaqs = loadDefaultFaqs;
         window.loadSampleFeedback = loadSampleFeedback;
-        // Ticker functions
         window.toggleMobileMenu = toggleMobileMenu;
-        // New functions
         window.toggleSuspendUser = toggleSuspendUser;
         window.suspendUserTemporarily = suspendUserTemporarily;
         window.unsuspendUser = unsuspendUser;
@@ -6249,6 +6269,42 @@
         window.sendWarning = sendWarning;
         window.unsendWarning = unsendWarning;
         window.clearAutoTickers = clearAutoTickers;
+        window.addWysiwygSection = addWysiwygSection;
+        window.moveWysiwygSection = moveWysiwygSection;
+        window.deleteWysiwygSection = deleteWysiwygSection;
+        window.saveWysiwygHowItWorks = saveWysiwygHowItWorks;
+        window.execCmd = execCmd;
+        window.promptLink = promptLink;
+        window.promptColor = promptColor;
+        window.promptFontSize = promptFontSize;
+        window.showAddTicker = showAddTicker;
+        window.editTicker = editTicker;
+        window.toggleTickerStatus = toggleTickerStatus;
+        window.deleteTicker = deleteTicker;
+        window.moveTicker = moveTicker;
+        window.setTrainingSubTab = setTrainingSubTab;
+        window.showCreateTraining = showCreateTraining;
+        window.addResourceField = addResourceField;
+        window.createTraining = createTraining;
+        window.editTraining = editTraining;
+        window.addEditResourceField = addEditResourceField;
+        window.updateTraining = updateTraining;
+        window.deleteTraining = deleteTraining;
+        window.approveTrainingApplication = approveTrainingApplication;
+        window.rejectTrainingApplication = rejectTrainingApplication;
+        window.showAddLeaderboardEntry = showAddLeaderboardEntry;
+        window.editLeaderboardEntry = editLeaderboardEntry;
+        window.deleteLeaderboardEntry = deleteLeaderboardEntry;
+        window.generateLeaderboardFromUsers = generateLeaderboardFromUsers;
+        window.showAddFaq = showAddFaq;
+        window.editFaq = editFaq;
+        window.deleteFaq = deleteFaq;
+        window.showAddFeedback = showAddFeedback;
+        window.deleteFeedback = deleteFeedback;
+        window.savePaymentUrl = savePaymentUrl;
+        window.viewPetition = viewPetition;
+        window.replyToPetition = replyToPetition;
+        window.sendPetitionReply = sendPetitionReply;
     </script>  
 </body>  
 </html>
