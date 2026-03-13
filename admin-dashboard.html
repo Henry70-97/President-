@@ -808,6 +808,7 @@
                 await loadMembershipPackages();
                 await loadFeeSettings();
                 await loadPaymentSettings(); // load payment URL
+                await setupAutoTickers();   // NEW: start listening for auto events
             } catch (e) {
                 console.error('Error loading settings:', e);
                 showAlert('Error loading settings. Some features may not work.', 'error');
@@ -1142,6 +1143,78 @@
               
             loadUsers();  
         }  
+
+        // ==================== AUTO TICKERS ====================
+        // Listen for new positive events and add them as tickers
+        function setupAutoTickers() {
+            // Submissions
+            db.collection('submissions').where('status', '==', 'pending').onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const sub = change.doc.data();
+                        addAutoTicker(`📝 New submission: ${sub.taskTitle} by ${sub.userEmail}`, 'submission');
+                    }
+                });
+            });
+            // Withdrawals
+            db.collection('withdrawals').where('status', '==', 'pending').onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const w = change.doc.data();
+                        addAutoTicker(`💰 New withdrawal request: $${w.amount} by ${w.userEmail}`, 'withdrawal');
+                    }
+                });
+            });
+            // Membership payments
+            db.collection('membershipPayments').where('status', '==', 'pending').onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const m = change.doc.data();
+                        addAutoTicker(`👑 New membership payment: $${m.amount} by ${m.userEmail}`, 'membership');
+                    }
+                });
+            });
+            // Task accepts
+            db.collectionGroup('taskAccepts').onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const accept = change.doc.data();
+                        addAutoTicker(`✅ Task accepted: ${accept.userName || accept.userEmail} accepted a task`, 'accept');
+                    }
+                });
+            });
+            // Team approvals (when a user is approved to join a task)
+            db.collectionGroup('taskInvites').where('status', '==', 'approved').onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const invite = change.doc.data();
+                        addAutoTicker(`👥 Team approval: ${invite.userEmail} approved for task`, 'team');
+                    }
+                });
+            });
+        }
+
+        async function addAutoTicker(message, type) {
+            try {
+                // Check if a similar ticker already exists very recently (within last hour) to avoid spam
+                const oneHourAgo = new Date(Date.now() - 60*60*1000);
+                const existing = await db.collection('tickers')
+                    .where('message', '==', message)
+                    .where('createdAt', '>=', oneHourAgo)
+                    .get();
+                if (!existing.empty) return; // already added recently
+
+                await db.collection('tickers').add({
+                    message,
+                    order: Date.now(), // simple order by time
+                    active: true,      // auto tickers are active by default
+                    type: 'auto',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) {
+                console.error('Error adding auto ticker:', e);
+            }
+        }
 
         // ==================== User Functions ====================
         async function loadUsers() {
@@ -2030,6 +2103,8 @@
                             console.error('Error fetching task:', e);  
                         }  
                           
+                        const submittedAt = sub.submittedAt ? formatDate(sub.submittedAt) : 'N/A';  
+                          
                         html += `  
                             <div class="submission-card" data-sub-id="${doc.id}">  
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">  
@@ -2038,6 +2113,7 @@
                                 </div>  
                                   
                                 <p><strong>User:</strong> ${sub.userEmail}</p>  
+                                <p><strong>Submitted:</strong> ${submittedAt}</p>  
                                   
                                 <div style="margin: 1rem 0;">  
                                     <details>  
@@ -2775,6 +2851,7 @@
             }
         }
 
+        // ==================== Memberships ====================
         async function loadMemberships() {  
             try {
                 const snapshot = await db.collection('membershipPayments')  
@@ -2847,8 +2924,9 @@
                                 </div>  
                                 <p><strong>User:</strong> ${p.userEmail}</p>  
                                 <p><strong>Membership:</strong> ${pkg.name}</p>  
-                                <p><strong>Transaction ID:</strong> ${p.paymentMessage}</p>  
+                                <p><strong>Transaction ID:</strong> ${p.paymentMessage || p.transactionCode || 'N/A'}</p>  
                                 <p><strong>Amount:</strong> $${p.amount}</p>  
+                                ${p.notes ? `<p><strong>Notes:</strong> ${p.notes}</p>` : ''}  
                                 <p><strong>Submitted:</strong> ${p.submittedAt?.toDate().toLocaleString()}</p>  
                                 <div class="flex-row">  
                                     <button class="btn btn-success approve-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Approve</button>  
@@ -3838,6 +3916,18 @@
         }  
 
         // ==================== Messages & Notifications ====================
+        // UNSEND WARNING function
+        window.unsendWarning = async function(notificationId) {
+            if (!confirm('Delete this warning? The user will no longer see it.')) return;
+            try {
+                await db.collection('notifications').doc(notificationId).delete();
+                showAlert('Warning removed', 'success');
+                loadMessages(); // refresh the messages tab
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error');
+            }
+        };
+
         async function sendNotification(userId, title, message, type = 'info', link = null) {
             try {
                 if (!userId) throw new Error('No user ID');
@@ -4005,6 +4095,28 @@
                     `;  
                 });  
                   
+                // Fetch warnings (notifications of type 'warning')
+                const warningsSnap = await db.collection('notifications')
+                    .where('type', '==', 'warning')
+                    .orderBy('createdAt', 'desc')
+                    .limit(20)
+                    .get();
+                let warningsHtml = '';
+                warningsSnap.forEach(doc => {
+                    const w = doc.data();
+                    const time = w.createdAt ? formatDate(w.createdAt) : 'N/A';
+                    warningsHtml += `
+                        <div class="submission-card" style="border-left: 4px solid #f59e0b;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <strong>⚠️ Warning to ${w.userEmail || w.userId}</strong>
+                                <small>${time}</small>
+                            </div>
+                            <p>${w.message}</p>
+                            <button class="btn btn-sm btn-danger" onclick="unsendWarning('${doc.id}')">Delete Warning</button>
+                        </div>
+                    `;
+                });
+                  
                 let petitionsHtml = '';
                 try {
                     const petitionsSnap = await db.collection('petitions').orderBy('createdAt', 'desc').limit(10).get();
@@ -4115,6 +4227,11 @@
                         <span class="badge primary">${messages.size} messages</span>  
                     </h4>  
                     ${messagesHtml || '<p style="text-align: center; padding: 2rem; background: #f8fafc; border-radius: 1rem;">No messages yet</p>'}  
+                    
+                    ${warningsHtml ? `
+                        <h4 style="margin: 2rem 0 1rem 0; color: #f59e0b;">Sent Warnings</h4>
+                        ${warningsHtml}
+                    ` : ''}
                     
                     ${petitionsHtml ? `
                         <h4 style="margin: 2rem 0 1rem 0; color: #f59e0b;">Petitions from Users</h4>
@@ -5479,30 +5596,33 @@
             }
         };
 
-        // ==================== TICKERS MANAGEMENT ====================
+        // ==================== TICKERS MANAGEMENT (updated) ====================
         async function loadTickers() {
             try {
                 const snapshot = await db.collection('tickers').orderBy('order', 'asc').get();
                 let html = `
                     <h3 style="margin-bottom:1.5rem;">📢 Live Tickers Management</h3>
-                    <p style="margin-bottom:1rem;">Tickers are scrolling messages that appear to users. Active tickers are shown in order.</p>
+                    <p style="margin-bottom:1rem;">Tickers are scrolling messages that appear to users. Active tickers are shown in order. Auto-generated tickers have type "auto".</p>
                     <div style="margin-bottom:1rem;">
-                        <button class="btn btn-success" onclick="showAddTicker()">+ Add New Ticker</button>
+                        <button class="btn btn-success" onclick="showAddTicker()">+ Add Manual Ticker</button>
+                        <button class="btn btn-warning" onclick="clearAutoTickers()">🗑️ Clear All Auto Tickers</button>
                     </div>
                     <table class="data-table">
-                        <tr><th>Order</th><th>Message</th><th>Status</th><th>Actions</th></tr>
+                        <tr><th>Order</th><th>Message</th><th>Type</th><th>Status</th><th>Actions</th></tr>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="4" style="text-align:center;">No tickers. Add one.</td></tr>';
+                    html += '<tr><td colspan="5" style="text-align:center;">No tickers. Add one or wait for auto events.</td></tr>';
                 } else {
                     snapshot.forEach(doc => {
                         const t = doc.data();
                         const statusClass = t.active ? 'success' : 'secondary';
                         const statusText = t.active ? 'Active' : 'Inactive';
+                        const typeBadge = t.type === 'auto' ? '<span class="badge info">auto</span>' : '<span class="badge primary">manual</span>';
                         html += `
                             <tr>
                                 <td>${t.order || 0}</td>
                                 <td>${t.message}</td>
+                                <td>${typeBadge}</td>
                                 <td><span class="badge ${statusClass}">${statusText}</span></td>
                                 <td>
                                     <button class="btn btn-sm btn-primary" onclick="editTicker('${doc.id}', '${t.message}', ${t.order}, ${t.active})">Edit</button>
@@ -5522,6 +5642,20 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading tickers: ${error.message}</p><button class="btn btn-primary" onclick="loadTickers()">Retry</button></div>`;
             }
         }
+
+        window.clearAutoTickers = async function() {
+            if (!confirm('Delete all auto-generated tickers? Manual tickers will remain.')) return;
+            try {
+                const auto = await db.collection('tickers').where('type', '==', 'auto').get();
+                const batch = db.batch();
+                auto.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                showAlert('Auto tickers cleared', 'success');
+                loadTickers();
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error');
+            }
+        };
 
         window.showAddTicker = function() {
             showModal(`
@@ -5546,6 +5680,7 @@
                         message,
                         order,
                         active,
+                        type: 'manual',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     closeModal();
@@ -6103,7 +6238,7 @@
         window.filterUsersTable = filterUsersTable;
         window.loadDefaultFaqs = loadDefaultFaqs;
         window.loadSampleFeedback = loadSampleFeedback;
-        // Ticker functions are already attached via window.*
+        // Ticker functions
         window.toggleMobileMenu = toggleMobileMenu;
         // New functions
         window.toggleSuspendUser = toggleSuspendUser;
@@ -6112,6 +6247,8 @@
         window.loadDeadlineTracker = loadDeadlineTracker;
         window.showTaskSubmissions = showTaskSubmissions;
         window.sendWarning = sendWarning;
+        window.unsendWarning = unsendWarning;
+        window.clearAutoTickers = clearAutoTickers;
     </script>  
 </body>  
 </html>
