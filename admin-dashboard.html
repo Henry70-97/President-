@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -389,6 +390,21 @@
             box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
 
+        /* Wallet Adjustment Batch Styles */
+        .batch-adjust-card {
+            background: linear-gradient(135deg, #6366f110, #8b5cf610);
+            border: 2px solid #6366f1;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .batch-adjust-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #6366f1;
+            margin-bottom: 1rem;
+        }
+
         @media (max-width: 768px) { 
             .header { flex-direction: column; gap: 1rem; text-align: center; }
             .user-info-grid { grid-template-columns: 1fr; }
@@ -449,9 +465,7 @@
         <div class="mobile-menu-item" onclick="switchTab('faq'); toggleMobileMenu()">❓ FAQ</div>
         <div class="mobile-menu-item" onclick="switchTab('feedback'); toggleMobileMenu()">⭐ Client Feedback</div>
         <div class="mobile-menu-item" onclick="switchTab('howitworks'); toggleMobileMenu()">📘 How It Works</div>
-        <!-- NEW Tickers tab -->
         <div class="mobile-menu-item" onclick="switchTab('tickers'); toggleMobileMenu()">📢 Tickers</div>
-        <!-- NEW Deadline Tracker tab -->
         <div class="mobile-menu-item" onclick="switchTab('deadlineTracker'); toggleMobileMenu()">⏰ Deadline Tracker</div>
         <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
     </div>
@@ -500,9 +514,7 @@
             <button class="tab" data-tab="faq">❓ FAQ</button>  
             <button class="tab" data-tab="feedback">⭐ Client Feedback</button>  
             <button class="tab" data-tab="howitworks">📘 How It Works</button>  
-            <!-- NEW TICKERS TAB -->
             <button class="tab" data-tab="tickers">📢 Tickers</button>  
-            <!-- NEW DEADLINE TRACKER TAB -->
             <button class="tab" data-tab="deadlineTracker">⏰ Deadline Tracker</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
         </div>  
@@ -972,6 +984,24 @@
                 snapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
                 
                 let html = '<h3 style="margin-bottom:1.5rem;">User Management</h3>'; 
+                
+                // Batch Wallet Adjustment Card
+                html += `
+                    <div class="batch-adjust-card">
+                        <div class="batch-adjust-title">💰 Batch Wallet Adjustment</div>
+                        <p style="margin-bottom: 1rem;">Adjust wallet balance for ALL users at once and send notification</p>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <input type="number" id="batchWalletAmount" placeholder="Amount" step="0.01" min="0" style="flex: 1;">
+                            <select id="batchWalletType" style="width: 120px;">
+                                <option value="add">Add Funds</option>
+                                <option value="subtract">Subtract Funds</option>
+                            </select>
+                            <textarea id="batchWalletReason" placeholder="Reason for adjustment" style="flex: 2; min-height: 60px;"></textarea>
+                            <button class="btn btn-primary" onclick="showBatchWalletConfirmation()">Apply to All Users</button>
+                        </div>
+                    </div>
+                `;
+                
                 html += `
                     <div class="search-box">
                         <input type="text" id="userSearchInput" placeholder="Search by email or name..." onkeyup="filterUsersTable()">
@@ -1030,6 +1060,110 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading users: ${error.message}</p><button class="btn btn-primary" onclick="loadUsers()">Retry</button></div>`;
             }
         }
+
+        window.showBatchWalletConfirmation = function() {
+            const amount = parseFloat(document.getElementById('batchWalletAmount')?.value);
+            const type = document.getElementById('batchWalletType')?.value;
+            const reason = document.getElementById('batchWalletReason')?.value;
+            
+            if (!amount || amount <= 0) {
+                showAlert('Please enter a valid amount greater than 0', 'error');
+                return;
+            }
+            
+            if (!reason || reason.trim() === '') {
+                showAlert('Please enter a reason for the adjustment', 'error');
+                return;
+            }
+            
+            const action = type === 'add' ? 'ADD' : 'SUBTRACT';
+            const amountDisplay = type === 'add' ? `+$${amount.toFixed(2)}` : `-$${amount.toFixed(2)}`;
+            
+            showModal(`
+                <h3 style="margin-bottom:1rem; color: #f59e0b;">⚠️ Confirm Batch Wallet Adjustment</h3>
+                <div style="background: #f59e0b20; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <p><strong>You are about to ${action} $${amount.toFixed(2)} to/from ALL users' wallets.</strong></p>
+                    <p>This action cannot be undone. Please review:</p>
+                </div>
+                <p><strong>Amount:</strong> ${amountDisplay}</p>
+                <p><strong>Reason:</strong> ${reason}</p>
+                <p><strong>Notification:</strong> Users will receive a notification about this adjustment.</p>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button class="btn btn-success" id="confirmBatchWalletBtn">Yes, Apply to All Users</button>
+                    <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                </div>
+            `);
+            
+            document.getElementById('confirmBatchWalletBtn').addEventListener('click', async function() {
+                closeModal();
+                await applyBatchWalletAdjustment();
+            });
+        };
+
+        window.applyBatchWalletAdjustment = async function() {
+            const amount = parseFloat(document.getElementById('batchWalletAmount')?.value);
+            const type = document.getElementById('batchWalletType')?.value;
+            const reason = document.getElementById('batchWalletReason')?.value;
+            
+            if (!amount || amount <= 0 || !reason) return;
+            
+            const adjustment = type === 'add' ? amount : -amount;
+            
+            showAlert(`Processing batch adjustment for all users...`, 'info', 'Please wait');
+            
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                const BATCH_SIZE = 400;
+                let batch = db.batch();
+                let count = 0;
+                const userList = [];
+                
+                for (const userDoc of usersSnapshot.docs) {
+                    batch.update(userDoc.ref, {
+                        wallet: firebase.firestore.FieldValue.increment(adjustment)
+                    });
+                    
+                    userList.push({
+                        id: userDoc.id,
+                        email: userDoc.data().email || 'unknown'
+                    });
+                    
+                    count++;
+                    if (count % BATCH_SIZE === 0) {
+                        await batch.commit();
+                        batch = db.batch();
+                    }
+                }
+                if (count % BATCH_SIZE !== 0) {
+                    await batch.commit();
+                }
+                
+                // Record the batch adjustment
+                await db.collection('walletAdjustments').add({
+                    isBatch: true,
+                    adjustedBy: currentUser.uid,
+                    amount: adjustment,
+                    reason: reason.trim(),
+                    userCount: usersSnapshot.size,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Send notifications to all users
+                const notifTitle = type === 'add' ? 'Funds Added to Your Wallet' : 'Funds Deducted from Your Wallet';
+                const notifMessage = type === 'add' 
+                    ? `$${amount.toFixed(2)} has been added to your wallet. Reason: ${reason}`
+                    : `$${amount.toFixed(2)} has been deducted from your wallet. Reason: ${reason}`;
+                
+                await sendNotificationToAll(notifTitle, notifMessage, type === 'add' ? 'success' : 'warning');
+                
+                showAlert(`Batch adjustment applied to ${usersSnapshot.size} users successfully!`, 'success');
+                loadUsers();
+                
+            } catch (error) {
+                console.error('Error applying batch adjustment:', error);
+                showAlert('Error applying batch adjustment: ' + error.message, 'error');
+            }
+        };
 
         window.filterUsersTable = function() {
             const input = document.getElementById('userSearchInput');
@@ -1194,9 +1328,17 @@
                     relatedId: null,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                
+                // Send notification to user
+                const notifTitle = type === 'add' ? 'Funds Added to Your Wallet' : 'Funds Deducted from Your Wallet';
+                const notifMessage = type === 'add' 
+                    ? `$${amount.toFixed(2)} has been added to your wallet. Reason: ${reason}`
+                    : `$${amount.toFixed(2)} has been deducted from your wallet. Reason: ${reason}`;
+                
+                await sendNotification(userId, notifTitle, notifMessage, type === 'add' ? 'success' : 'warning');
                   
                 closeModal();  
-                showAlert(`Wallet adjusted by $${amount.toFixed(2)}`, 'success');  
+                showAlert(`Wallet adjusted by $${amount.toFixed(2)} and user notified`, 'success');  
                 loadUsers();  
             } catch (error) {  
                 console.error('Error adjusting wallet:', error);  
@@ -1236,8 +1378,10 @@
                     suspendedReason: reason,
                     suspendedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                // Send notification
+                await sendNotification(userId, 'Account Suspended', `Your account has been suspended. Reason: ${reason}`, 'error');
                 closeModal();
-                showAlert('User suspended', 'success');
+                showAlert('User suspended and notified', 'success');
                 loadUsers();
             } catch (error) {
                 showAlert('Error suspending user: ' + error.message, 'error');
@@ -1251,8 +1395,9 @@
                     suspendedReason: firebase.firestore.FieldValue.delete(),
                     suspendedAt: firebase.firestore.FieldValue.delete()
                 });
+                await sendNotification(userId, 'Account Unsuspended', 'Your account has been unsuspended. You can now access the platform normally.', 'success');
                 closeModal();
-                showAlert('User unsuspended', 'success');
+                showAlert('User unsuspended and notified', 'success');
                 loadUsers();
             } catch (error) {
                 showAlert('Error unsuspending user: ' + error.message, 'error');
@@ -1320,7 +1465,7 @@
                     if (task.category === 'ai_annotation') {
                         annotationDisplay = `${task.annotationSubcategory || 'N/A'}`;
                         if (task.imageUrl) {
-                            annotationDisplay += `<br><a href="${task.imageUrl}" target="_blank">🔗 Image</a>`;
+                            annotationDisplay += `<br><a href="#" onclick="window.open('${task.imageUrl}', '_self')" style="color: #6366f1; text-decoration: underline;">🔗 Image Link (opens in same tab)</a>`;
                         }
                         if (task.videoUrl) {
                             annotationDisplay += `<br><a href="${task.videoUrl}" target="_blank">🎥 Video</a>`;
@@ -1381,15 +1526,22 @@
                 <h4 style="margin: 1rem 0 0.5rem;">Client Information</h4>  
                 <input type="text" id="taskClientName" placeholder="Client Name (e.g., NextGen, Client ABC)" value="NextGen">  
                   
-                <h4 style="margin: 1rem 0 0.5rem;">Task Requirements</h4>  
-                <textarea id="taskRequirements" placeholder="Detailed requirements for this task..." style="min-height: 120px;" required></textarea>  
+                <h4 style="margin: 1rem 0 0.5rem;">Task Requirements (Optional)</h4>  
+                <textarea id="taskRequirements" placeholder="Detailed requirements for this task... (Leave empty for default)" style="min-height: 80px;"></textarea>  
                   
-                <h4 style="margin: 1rem 0 0.5rem;">Instructions for Users</h4>  
-                <textarea id="taskInstructions" placeholder="Step-by-step instructions on how to complete this task..." style="min-height: 120px;" required></textarea>  
+                <h4 style="margin: 1rem 0 0.5rem;">Instructions for Users (Optional)</h4>  
+                <textarea id="taskInstructions" placeholder="Step-by-step instructions... (Leave empty for default)" style="min-height: 80px;"></textarea>  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Deadline & Reward</h4>  
                 <input type="datetime-local" id="taskDeadline" required>  
                 <input type="number" id="taskReward" placeholder="Reward (USD)" step="0.01" min="0" required>  
+                
+                <!-- NEW: Writing pages field -->
+                <div id="writingPagesField" style="margin: 1rem 0; display: none;">
+                    <h4 style="margin-bottom:0.5rem;">Writing Details</h4>
+                    <input type="number" id="taskPages" placeholder="Number of pages" min="1" step="1">
+                    <p class="settings-label" style="margin-top: 0.3rem;">Reward will auto-calculate: 1 page = $2</p>
+                </div>
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Task Details</h4>  
                 <select id="taskCategory">  
@@ -1427,7 +1579,7 @@
                     </select>
                     <div id="imageCaptionField" style="margin-top:1rem;">
                         <input type="url" id="taskImageUrl" placeholder="Image URL">
-                        <button type="button" class="btn btn-secondary" onclick="window.open('https://s.ci.co.ke/i/', '_blank')">🔗 Get Link</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.open('https://s.ci.co.ke/i/', '_self')">🔗 Get Link</button>
                     </div>
                     <div id="actionRecognitionField" style="margin-top:1rem; display:none;">
                         <input type="url" id="taskVideoUrl" placeholder="Video URL">
@@ -1457,9 +1609,13 @@
             document.getElementById('taskCategory').addEventListener('change', function(e) {
                 const transcriptionDiv = document.getElementById('transcriptionFields');
                 const aiDiv = document.getElementById('aiAnnotationFields');
+                const writingDiv = document.getElementById('writingPagesField');
                 const selected = e.target.value;
+                
                 transcriptionDiv.style.display = selected === 'transcription' ? 'block' : 'none';
                 aiDiv.style.display = selected === 'ai_annotation' ? 'block' : 'none';
+                writingDiv.style.display = selected === 'writing' ? 'block' : 'none';
+                
                 if (selected === 'ai_annotation') {
                     // show appropriate subfield based on current selection
                     const subcat = document.getElementById('taskAnnotationSubcategory').value;
@@ -1473,14 +1629,21 @@
                 document.getElementById('imageCaptionField').style.display = val === 'image_caption' ? 'block' : 'none';
                 document.getElementById('actionRecognitionField').style.display = val === 'action_recognition' ? 'block' : 'none';
             });
+
+            // Auto-calculate reward for writing based on pages
+            document.getElementById('taskPages')?.addEventListener('input', function(e) {
+                const pages = parseInt(e.target.value) || 0;
+                const reward = pages * 2;
+                document.getElementById('taskReward').value = reward.toFixed(2);
+            });
         }  
           
         async function createTask() {  
             const title = document.getElementById('taskTitle').value;  
             const description = document.getElementById('taskDescription').value;  
             const clientName = document.getElementById('taskClientName').value;  
-            const requirements = document.getElementById('taskRequirements').value;  
-            const instructions = document.getElementById('taskInstructions').value;  
+            const requirements = document.getElementById('taskRequirements').value || "As specified in task description.";  
+            const instructions = document.getElementById('taskInstructions').value || "As specified in task description.";  
             const deadline = document.getElementById('taskDeadline').value;  
             const reward = parseFloat(document.getElementById('taskReward').value);  
             const category = document.getElementById('taskCategory').value;  
@@ -1510,7 +1673,7 @@
                 }
             }
               
-            if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
+            if (!title || !description || !deadline || !reward) {  
                 showAlert('Please fill all required fields', 'error');  
                 return;  
             }  
@@ -1610,6 +1773,7 @@
               
             const showTranscription = data.category === 'transcription' ? 'block' : 'none';
             const showAI = data.category === 'ai_annotation' ? 'block' : 'none';
+            const showWriting = data.category === 'writing' ? 'block' : 'none';
             const imageDisplay = (data.annotationSubcategory === 'image_caption') ? 'block' : 'none';
             const videoDisplay = (data.annotationSubcategory === 'action_recognition') ? 'block' : 'none';
             
@@ -1622,14 +1786,21 @@
                 <input type="text" id="editClientName" value="${data.clientName || 'NextGen'}">  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Task Requirements</h4>  
-                <textarea id="editRequirements" style="min-height: 120px;" required>${data.requirements || ''}</textarea>  
+                <textarea id="editRequirements" style="min-height: 120px;">${data.requirements || ''}</textarea>  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Instructions for Users</h4>  
-                <textarea id="editInstructions" style="min-height: 120px;" required>${data.instructions || ''}</textarea>  
+                <textarea id="editInstructions" style="min-height: 120px;">${data.instructions || ''}</textarea>  
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Deadline & Reward</h4>  
                 <input type="datetime-local" id="editDeadline" value="${deadlineValue}" required>  
                 <input type="number" id="editReward" value="${data.reward}" step="0.01" min="0" required>  
+                  
+                <!-- Writing pages field for editing -->
+                <div id="editWritingPagesField" style="margin: 1rem 0; display: ${showWriting};">
+                    <h4 style="margin-bottom:0.5rem;">Writing Details</h4>
+                    <input type="number" id="editTaskPages" placeholder="Number of pages" min="1" step="1" value="${Math.round(data.reward / 2)}">
+                    <p class="settings-label" style="margin-top: 0.3rem;">Reward auto-calculates: 1 page = $2</p>
+                </div>
                   
                 <h4 style="margin: 1rem 0 0.5rem;">Task Details</h4>  
                 <select id="editCategory">  
@@ -1667,7 +1838,7 @@
                     </select>
                     <div id="editImageCaptionField" style="margin-top:1rem; display:${imageDisplay}">
                         <input type="url" id="editImageUrl" placeholder="Image URL" value="${data.imageUrl || ''}">
-                        <button type="button" class="btn btn-secondary" onclick="window.open('https://s.ci.co.ke/i/', '_blank')">🔗 Get Link</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.open('https://s.ci.co.ke/i/', '_self')">🔗 Get Link</button>
                     </div>
                     <div id="editActionRecognitionField" style="margin-top:1rem; display:${videoDisplay}">
                         <input type="url" id="editVideoUrl" placeholder="Video URL" value="${data.videoUrl || ''}">
@@ -1697,9 +1868,13 @@
             document.getElementById('editCategory').addEventListener('change', function(e) {
                 const transcriptionDiv = document.getElementById('editTranscriptionFields');
                 const aiDiv = document.getElementById('editAiAnnotationFields');
+                const writingDiv = document.getElementById('editWritingPagesField');
                 const selected = e.target.value;
+                
                 transcriptionDiv.style.display = selected === 'transcription' ? 'block' : 'none';
                 aiDiv.style.display = selected === 'ai_annotation' ? 'block' : 'none';
+                writingDiv.style.display = selected === 'writing' ? 'block' : 'none';
+                
                 if (selected === 'ai_annotation') {
                     const subcat = document.getElementById('editAnnotationSubcategory').value;
                     document.getElementById('editImageCaptionField').style.display = subcat === 'image_caption' ? 'block' : 'none';
@@ -1711,6 +1886,13 @@
                 const val = e.target.value;
                 document.getElementById('editImageCaptionField').style.display = val === 'image_caption' ? 'block' : 'none';
                 document.getElementById('editActionRecognitionField').style.display = val === 'action_recognition' ? 'block' : 'none';
+            });
+
+            // Auto-calculate reward for writing
+            document.getElementById('editTaskPages')?.addEventListener('input', function(e) {
+                const pages = parseInt(e.target.value) || 0;
+                const reward = pages * 2;
+                document.getElementById('editReward').value = reward.toFixed(2);
             });
         }  
           
@@ -1748,7 +1930,7 @@
                 }
             }
               
-            if (!title || !description || !requirements || !instructions || !deadline || !reward) {  
+            if (!title || !description || !deadline || !reward) {  
                 showAlert('Please fill all required fields', 'error');  
                 return;  
             }  
@@ -1812,7 +1994,7 @@
                     aiHtml = `
                         <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
                             <strong>🖼️ Image Caption Clarification</strong>
-                            ${data.imageUrl ? `<br><a href="${data.imageUrl}" target="_blank">${data.imageUrl}</a>` : ''}
+                            ${data.imageUrl ? `<br><a href="#" onclick="window.open('${data.imageUrl}', '_self')" style="color: #6366f1; text-decoration: underline;">${data.imageUrl}</a>` : ''}
                         </div>
                     `;
                 } else if (data.annotationSubcategory === 'action_recognition') {
@@ -2211,6 +2393,9 @@
                 relatedId: withdrawalId,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
+            
+            // Send notification
+            await sendNotification(withdrawal.userId, 'Withdrawal Processed', `Your withdrawal of $${withdrawal.amount} has been processed and paid.`, 'success');
               
             showAlert('Withdrawal marked as paid', 'success');  
             loadWithdrawals();  
@@ -3924,9 +4109,9 @@
             }
             
             showModal(`
-                <h3 style="margin-bottom:1rem; color: #f59e0b;">Confirm Broadcast Notification</h3>
+                <h3 style="margin-bottom:1rem; color: #f59e0b;">⚠️ Confirm Broadcast Notification</h3>
                 <div style="background: #f59e0b20; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                    <p><strong>⚠️ You are about to send a notification to ALL users</strong></p>
+                    <p><strong>You are about to send a notification to ALL users</strong></p>
                     <p>Please review your notification:</p>
                 </div>
                 <p><strong>Title:</strong> ${title}</p>
@@ -6434,3 +6619,4 @@
     </script>  
 </body>  
 </html>
+```
