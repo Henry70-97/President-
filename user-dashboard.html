@@ -622,6 +622,8 @@
         .withdrawal-section .fee-breakdown { background: #f1f5f9; border-radius: 1rem; padding: 0.8rem; margin: 0.8rem 0; border-left: 4px solid #6366f1; font-size: 0.8rem; }
         .withdrawal-section .withdrawal-warning { color: #ef4444; font-size: 0.7rem; margin-top: 0.3rem; display: none; }
         .withdrawal-section .btn { width: 100%; padding: 0.8rem; font-size: 0.9rem; border-radius: 60px; margin-top: 0.5rem; }
+        .cooldown-badge { background: #f59e0b20; color: #f59e0b; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin-bottom: 1rem; }
+        .cooldown-timer { font-size: 1.2rem; font-weight: 700; color: #f59e0b; }
         .petition-section { background: #fef3c7; border-radius: 1.5rem; padding: 1.2rem; border-left: 4px solid #f59e0b; margin-top: 1rem; }
         .petition-section h4 { color: #92400e; font-size: 1rem; }
         .petition-section .btn { background: #f59e0b; color: white; }
@@ -1100,6 +1102,9 @@
         let membershipPaymentsListener = null;
         // Pending balance (sum of pending payments)
         let pendingBalance = 0;
+        // Withdrawal cooldown timer
+        let withdrawalCooldownInterval = null;
+        let nextAllowedWithdrawalTime = null;
 
         // ==================== TICKER ====================
         function setupTicker() {
@@ -1378,7 +1383,7 @@
         function closeModal() { document.getElementById('modal').classList.remove('active'); document.getElementById('modalBackdrop').classList.remove('active'); if (currentTaskViewed) { currentTaskViewed = null; refreshMirror(); } }
 
         // ==================== LOGOUT ====================
-        function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); if (membershipPaymentsListener) membershipPaymentsListener(); auth.signOut(); window.location.href = 'index.html'; }
+        function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); if (membershipPaymentsListener) membershipPaymentsListener(); if (withdrawalCooldownInterval) clearInterval(withdrawalCooldownInterval); auth.signOut(); window.location.href = 'index.html'; }
 
         // ==================== TAB SWITCHING ====================
         function switchTab(tab) {
@@ -2446,13 +2451,68 @@
                 updateWalletDisplay(); 
                 const canWithdraw = (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE) && !userData.frozen; 
                 let ws = ''; 
+
+                // Check cooldown (3 hours between paid withdrawals)
+                let cooldownHtml = '';
+                let cooldownActive = false;
+                nextAllowedWithdrawalTime = null;
+
+                if (withdrawalCooldownInterval) clearInterval(withdrawalCooldownInterval);
+
+                if (canWithdraw) {
+                    // Get the most recent paid withdrawal
+                    const paidWithdrawals = await db.collection('withdrawals')
+                        .where('userId', '==', currentUser.uid)
+                        .where('status', '==', 'paid')
+                        .orderBy('requestedAt', 'desc')
+                        .limit(1)
+                        .get();
+                    if (!paidWithdrawals.empty) {
+                        const lastPaid = paidWithdrawals.docs[0].data();
+                        const lastTime = lastPaid.requestedAt.toDate();
+                        const nextAllowed = new Date(lastTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours
+                        const now = new Date();
+                        if (nextAllowed > now) {
+                            cooldownActive = true;
+                            nextAllowedWithdrawalTime = nextAllowed;
+                            const diffMs = nextAllowed - now;
+                            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                            cooldownHtml = `
+                                <div class="cooldown-badge">
+                                    ⏳ Next withdrawal available in <span id="cooldownTimer" class="cooldown-timer">${hours}h ${minutes}m ${seconds}s</span>
+                                </div>
+                            `;
+                            // Start countdown
+                            withdrawalCooldownInterval = setInterval(() => {
+                                const now2 = new Date();
+                                const diff2 = nextAllowedWithdrawalTime - now2;
+                                if (diff2 <= 0) {
+                                    clearInterval(withdrawalCooldownInterval);
+                                    // Reload the tab to show the form again
+                                    loadWithdrawals();
+                                    return;
+                                }
+                                const h = Math.floor(diff2 / (1000 * 60 * 60));
+                                const m = Math.floor((diff2 % (1000 * 60 * 60)) / (1000 * 60));
+                                const s = Math.floor((diff2 % (1000 * 60)) / 1000);
+                                const timerSpan = document.getElementById('cooldownTimer');
+                                if (timerSpan) timerSpan.textContent = `${h}h ${m}m ${s}s`;
+                            }, 1000);
+                        }
+                    }
+                }
+
                 if (userData.frozen) { 
                     ws = `<div class="petition-section"><h4><i class="fas fa-exclamation-triangle"></i> Account Frozen</h4><p>Your account is currently frozen. You cannot withdraw funds. If you believe this is a mistake, please send a petition to the admin.</p><textarea id="petitionMessage" class="smart-textarea" placeholder="Explain your situation..."></textarea><button class="btn" onclick="sendPetition()"><i class="fas fa-paper-plane"></i> Send Petition</button></div>`; 
                 } else if (!canWithdraw) { 
                     ws = `<div class="withdrawal-section"><p>You need a premium membership to withdraw.</p><button class="btn btn-primary" onclick="simulateWithdrawalAttempt()">Initiate Withdrawal</button></div>`; 
                 } else { 
+                    // Build withdrawal form with conditional fields
                     ws = `<div class="withdrawal-section">
                         <h4><i class="fas fa-money-bill-wave"></i> Withdraw Funds</h4>
+                        ${cooldownHtml}
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                             <span style="font-size:0.9rem; font-weight:600;">Available Balance:</span>
                             <span class="balance-highlight">${formatBoth(bal)}</span>
@@ -2460,25 +2520,54 @@
                         <div class="input-group">
                             <label for="withdrawAmount">Amount (USD) - Minimum $${MIN_WITHDRAWAL.toFixed(3)}</label>
                             <i class="fas fa-dollar-sign input-icon"></i>
-                            <input type="number" id="withdrawAmount" placeholder="0.00" min="${MIN_WITHDRAWAL}" max="${bal}" step="0.001" oninput="updateFeeBreakdown(${bal})">
+                            <input type="number" id="withdrawAmount" placeholder="0.00" min="${MIN_WITHDRAWAL}" max="${bal}" step="0.001" oninput="updateFeeBreakdown(${bal})" ${cooldownActive ? 'disabled' : ''}>
                         </div>
                         <div id="feeBreakdown" class="fee-breakdown" style="display:none;"></div>
                         <div class="withdrawal-warning" id="withdrawWarning">Amount exceeds available balance!</div>
                         <div class="input-group">
                             <label for="withdrawMethod">Withdrawal Method</label>
                             <i class="fas fa-credit-card input-icon"></i>
-                            <select id="withdrawMethod">
+                            <select id="withdrawMethod" onchange="toggleWithdrawalFields()" ${cooldownActive ? 'disabled' : ''}>
                                 <option value="M-Pesa">M-Pesa</option>
                                 <option value="Airtel Money">Airtel Money</option>
                                 <option value="Bank Transfer">Bank Transfer</option>
                             </select>
                         </div>
-                        <div class="input-group">
-                            <label for="withdrawPhone">Account / Phone Number</label>
-                            <i class="fas fa-phone-alt input-icon"></i>
-                            <input type="tel" id="withdrawPhone" placeholder="Enter your account number or phone">
+                        
+                        <!-- Mobile fields -->
+                        <div id="mobileFields" style="display: block;">
+                            <div class="input-group">
+                                <label for="mobileAccountName">Account Name</label>
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="mobileAccountName" placeholder="Full name on account" ${cooldownActive ? 'disabled' : ''}>
+                            </div>
+                            <div class="input-group">
+                                <label for="mobilePhone">Phone Number</label>
+                                <i class="fas fa-phone-alt input-icon"></i>
+                                <input type="tel" id="mobilePhone" placeholder="07XX XXX XXX" ${cooldownActive ? 'disabled' : ''}>
+                            </div>
                         </div>
-                        <button class="btn btn-primary" onclick="requestWithdrawal()">Request Withdrawal</button>
+                        
+                        <!-- Bank fields -->
+                        <div id="bankFields" style="display: none;">
+                            <div class="input-group">
+                                <label for="bankName">Bank Name</label>
+                                <i class="fas fa-university input-icon"></i>
+                                <input type="text" id="bankName" placeholder="e.g., KCB, Equity" ${cooldownActive ? 'disabled' : ''}>
+                            </div>
+                            <div class="input-group">
+                                <label for="bankAccountName">Account Name</label>
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="bankAccountName" placeholder="Full name on account" ${cooldownActive ? 'disabled' : ''}>
+                            </div>
+                            <div class="input-group">
+                                <label for="bankAccountNumber">Account Number</label>
+                                <i class="fas fa-hashtag input-icon"></i>
+                                <input type="text" id="bankAccountNumber" placeholder="Account number" ${cooldownActive ? 'disabled' : ''}>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="requestWithdrawal()" ${cooldownActive ? 'disabled' : ''}>Request Withdrawal</button>
                     </div>`; 
                 } 
                 const histSnap = await db.collection('withdrawals').where('userId','==',currentUser.uid).get(); 
@@ -2492,14 +2581,34 @@
                     wds.forEach(w => { 
                         const date = w.requestedAt?.seconds ? new Date(w.requestedAt.seconds*1000).toLocaleDateString() : 'N/A'; 
                         const sc = w.status === 'paid' ? 'success' : w.status === 'rejected' ? 'danger' : 'warning'; 
-                        hist += `<div class="submission-card"><div style="display:flex; justify-content:space-between;"><strong>${formatBoth(w.amount)}</strong><span class="badge ${sc}">${w.status}</span></div><p style="font-size:0.7rem;">${w.phone||'No account'} • ${date}</p></div>`; 
+                        let details = '';
+                        if (w.method === 'M-Pesa' || w.method === 'Airtel Money') {
+                            details = `${w.accountName || ''} ${w.phone || ''}`.trim();
+                        } else if (w.method === 'Bank Transfer') {
+                            details = `${w.bankName || ''} ${w.accountName || ''} ${w.accountNumber || ''}`.trim();
+                        }
+                        hist += `<div class="submission-card"><div style="display:flex; justify-content:space-between;"><strong>${formatBoth(w.amount)}</strong><span class="badge ${sc}">${w.status}</span></div><p style="font-size:0.7rem;">${w.method}<br>${details}<br>${date}</p></div>`; 
                     }); 
                     hist += '</div>'; 
                 } 
                 document.getElementById('content').innerHTML = ws + hist; 
+                toggleWithdrawalFields(); // ensure correct fields are shown initially
             } catch (e) { 
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadWithdrawals()">Retry</button></div>`; 
             } 
+        }
+
+        function toggleWithdrawalFields() {
+            const method = document.getElementById('withdrawMethod')?.value;
+            const mobileDiv = document.getElementById('mobileFields');
+            const bankDiv = document.getElementById('bankFields');
+            if (method === 'Bank Transfer') {
+                mobileDiv.style.display = 'none';
+                bankDiv.style.display = 'block';
+            } else {
+                mobileDiv.style.display = 'block';
+                bankDiv.style.display = 'none';
+            }
         }
 
         async function sendPetition() {
@@ -2529,10 +2638,45 @@
         async function requestWithdrawal() {
             const amt = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
-            const phone = document.getElementById('withdrawPhone').value;
+            let accountName = '', phone = '', bankName = '', bankAccountName = '', bankAccountNumber = '';
+            if (method === 'M-Pesa' || method === 'Airtel Money') {
+                accountName = document.getElementById('mobileAccountName').value.trim();
+                phone = document.getElementById('mobilePhone').value.trim();
+                if (!accountName || !phone) {
+                    showAlert('Please enter account name and phone number', 'error');
+                    return;
+                }
+            } else if (method === 'Bank Transfer') {
+                bankName = document.getElementById('bankName').value.trim();
+                bankAccountName = document.getElementById('bankAccountName').value.trim();
+                bankAccountNumber = document.getElementById('bankAccountNumber').value.trim();
+                if (!bankName || !bankAccountName || !bankAccountNumber) {
+                    showAlert('Please fill all bank details', 'error');
+                    return;
+                }
+            }
+
             if (!amt || amt < MIN_WITHDRAWAL) { showAlert(`Minimum withdrawal is $${MIN_WITHDRAWAL.toFixed(3)}`, 'error'); return; }
             const pendingSnap = await db.collection('withdrawals').where('userId', '==', currentUser.uid).where('status', '==', 'pending').get();
             if (!pendingSnap.empty) { showAlert('You have a pending withdrawal request. Please wait until it is processed.', 'error'); return; }
+
+            // Check cooldown again (in case they bypassed disabled field)
+            const paidWithdrawals = await db.collection('withdrawals')
+                .where('userId', '==', currentUser.uid)
+                .where('status', '==', 'paid')
+                .orderBy('requestedAt', 'desc')
+                .limit(1)
+                .get();
+            if (!paidWithdrawals.empty) {
+                const lastPaid = paidWithdrawals.docs[0].data();
+                const lastTime = lastPaid.requestedAt.toDate();
+                const nextAllowed = new Date(lastTime.getTime() + 3 * 60 * 60 * 1000);
+                if (nextAllowed > new Date()) {
+                    showAlert('You must wait 3 hours between withdrawals.', 'error');
+                    return;
+                }
+            }
+
             try {
                 await db.runTransaction(async (transaction) => {
                     const userRef = db.collection('users').doc(currentUser.uid);
@@ -2543,18 +2687,26 @@
                     if (amt > bal) throw new Error('Insufficient balance');
                     transaction.update(userRef, { wallet: firebase.firestore.FieldValue.increment(-amt) });
                     const withdrawalRef = db.collection('withdrawals').doc();
-                    transaction.set(withdrawalRef, {
+                    const withdrawalData = {
                         userId: currentUser.uid,
                         userEmail: currentUser.email,
                         amount: amt,
                         method: method,
-                        phone: phone,
                         status: 'pending',
                         requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
                         transactionFee: amt * (TRANSACTION_FEE_PERCENT / 100),
                         platformFee: amt * (PLATFORM_FEE_PERCENT / 100),
                         netAmount: amt * (1 - TOTAL_FEE_PERCENT / 100)
-                    });
+                    };
+                    if (method === 'M-Pesa' || method === 'Airtel Money') {
+                        withdrawalData.accountName = accountName;
+                        withdrawalData.phone = phone;
+                    } else if (method === 'Bank Transfer') {
+                        withdrawalData.bankName = bankName;
+                        withdrawalData.accountName = bankAccountName;
+                        withdrawalData.accountNumber = bankAccountNumber;
+                    }
+                    transaction.set(withdrawalRef, withdrawalData);
                 });
                 showAlert('Withdrawal requested! Amount deducted from your wallet.', 'success');
                 loadWithdrawals();
@@ -2626,7 +2778,7 @@
             </div>`);
         }
 
-        // Updated submitPaymentVerification with duplicate pending check
+        // Updated submitPaymentVerification with duplicate pending check and full message field
         async function submitPaymentVerification() {
             const txCode = document.getElementById('transactionCode')?.value;
             const amount = parseFloat(document.getElementById('paymentAmount')?.value);
@@ -2657,6 +2809,7 @@
                     userName: userData.displayName,
                     userEmail: currentUser.email,
                     transactionCode: txCode,
+                    paymentMessage: txCode, // added so admin sees it
                     amount: amount,
                     notes: notes,
                     status: 'pending',
