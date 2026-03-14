@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -405,6 +404,39 @@
             margin-bottom: 1rem;
         }
 
+        /* Newbie Trainer specific */
+        .newbie-trainer-subtabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .newbie-subtab {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 40px;
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+        }
+        .newbie-subtab.active {
+            background: #6366f1;
+            color: white;
+        }
+        .question-item {
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #6366f1;
+        }
+        .question-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
         @media (max-width: 768px) { 
             .header { flex-direction: column; gap: 1rem; text-align: center; }
             .user-info-grid { grid-template-columns: 1fr; }
@@ -467,6 +499,7 @@
         <div class="mobile-menu-item" onclick="switchTab('howitworks'); toggleMobileMenu()">📘 How It Works</div>
         <div class="mobile-menu-item" onclick="switchTab('tickers'); toggleMobileMenu()">📢 Tickers</div>
         <div class="mobile-menu-item" onclick="switchTab('deadlineTracker'); toggleMobileMenu()">⏰ Deadline Tracker</div>
+        <div class="mobile-menu-item" onclick="switchTab('newbieTrainer'); toggleMobileMenu()">👶 Newbie Trainer</div>
         <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
     </div>
 
@@ -498,7 +531,7 @@
       
         <!-- Desktop Tabs (hidden on mobile) -->
         <div class="tabs">  
-            <button class="tab active" data-tab="users">👥 Users</button>  
+            <button class="tab" data-tab="users">👥 Users</button>  
             <button class="tab" data-tab="tasks">📋 Tasks</button>  
             <button class="tab" data-tab="teams">👥 Team Approvals</button>  
             <button class="tab" data-tab="submissions">📝 Submissions</button>  
@@ -516,6 +549,7 @@
             <button class="tab" data-tab="howitworks">📘 How It Works</button>  
             <button class="tab" data-tab="tickers">📢 Tickers</button>  
             <button class="tab" data-tab="deadlineTracker">⏰ Deadline Tracker</button>  
+            <button class="tab" data-tab="newbieTrainer">👶 Newbie Trainer</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
         </div>  
       
@@ -636,6 +670,7 @@
         let currentTab = 'users';  
         let currentMessageType = 'individual';
         let currentTrainingSubTab = 'manage'; // for training center
+        let currentNewbieSubTab = 'content'; // for newbie trainer
         let membershipPackages = null;
         let feeSettings = null;
         let paymentUrl = ''; // for training payment link
@@ -820,7 +855,7 @@
                 await loadMembershipPackages();
                 await loadFeeSettings();
                 await loadPaymentSettings(); // load payment URL
-                await setupAutoTickers();   // NEW: start listening for auto events
+                await setupAutoTickers();   // start listening for auto events
             } catch (e) {
                 console.error('Error loading settings:', e);
                 showAlert('Error loading settings. Some features may not work.', 'error');
@@ -1009,7 +1044,7 @@
                     </div>
                 `;
                 html += '<table class="data-table" id="usersTable">'; 
-                html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Active</th><th>Suspended</th><th>Actions</th></tr>'; 
+                html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Active</th><th>Suspended</th><th>Newbie Qualified</th><th>Actions</th></tr>'; 
                 
                 users.forEach(user => { 
                     const membershipClass = user.membershipType === 'elite' ? 'warning' : user.membershipType === 'premium' ? 'primary' : 'info'; 
@@ -1021,6 +1056,7 @@
                     const suspendedStatus = suspended ? 
                         `<span class="badge suspended" title="${user.suspendedReason || ''}">Suspended</span>` : 
                         `<span class="badge success">Not Suspended</span>`;
+                    const newbieQualified = user.newbieQualified ? '<span class="badge success">✅</span>' : '<span class="badge warning">❌</span>';
                     
                     html += ` 
                         <tr class="user-row" data-email="${user.email.toLowerCase()}" data-name="${(user.displayName || '').toLowerCase()}"> 
@@ -1034,7 +1070,8 @@
                             <td><span class="badge ${frozen ? 'danger' : 'success'}">${frozen ? 'Frozen' : 'Active'}</span></td> 
                             <td>${user.role}</td> 
                             <td><span class="badge ${active ? 'success' : 'danger'}">${active ? 'Active' : 'Inactive'}</span></td> 
-                            <td>${suspendedStatus}</td> 
+                            <td>${suspendedStatus}</td>
+                            <td>${newbieQualified}</td>
                             <td class="action-buttons"> 
                                 <button class="btn btn-primary toggle-status-btn" data-user-id="${user.id}" data-new-status="${!active}">${active ? 'Deactivate' : 'Activate'}</button> 
                                 <button class="btn btn-success adjust-wallet-btn" data-user-id="${user.id}" data-user-name="${user.displayName}" data-wallet="${user.wallet || 0}">Adjust Wallet</button> 
@@ -4842,6 +4879,338 @@
             }
         };
 
+        // ==================== NEWBIE TRAINER ====================
+        function loadNewbieTrainer() {
+            let html = `
+                <h3 style="margin-bottom:1.5rem;">👶 Newbie Trainer Management</h3>
+                <div class="newbie-trainer-subtabs">
+                    <button class="newbie-subtab ${currentNewbieSubTab === 'content' ? 'active' : ''}" onclick="setNewbieSubTab('content')">Manage Content</button>
+                    <button class="newbie-subtab ${currentNewbieSubTab === 'submissions' ? 'active' : ''}" onclick="setNewbieSubTab('submissions')">Review Submissions</button>
+                </div>
+                <div id="newbieTrainerContent"></div>
+            `;
+            document.getElementById('content').innerHTML = html;
+            
+            if (currentNewbieSubTab === 'content') {
+                loadNewbieContent();
+            } else {
+                loadNewbieSubmissions();
+            }
+        }
+
+        window.setNewbieSubTab = function(tab) {
+            currentNewbieSubTab = tab;
+            loadNewbieTrainer();
+        };
+
+        async function loadNewbieContent() {
+            const container = document.getElementById('newbieTrainerContent');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center;">Loading content...</p>';
+            
+            try {
+                const doc = await db.collection('newbieTrainer').doc('content').get();
+                let content = doc.exists ? doc.data() : {
+                    title: 'Newbie Training',
+                    description: 'Complete this training to qualify for writing and data annotation tasks.',
+                    materials: [],
+                    questions: [],
+                    active: true
+                };
+
+                // Build materials HTML
+                let materialsHtml = '';
+                if (content.materials && content.materials.length) {
+                    content.materials.forEach((mat, idx) => {
+                        materialsHtml += `
+                            <div class="resource-item" data-index="${idx}">
+                                <select class="mat-type" style="width:100px;">
+                                    <option value="text" ${mat.type === 'text' ? 'selected' : ''}>Text</option>
+                                    <option value="link" ${mat.type === 'link' ? 'selected' : ''}>Link</option>
+                                </select>
+                                <input type="text" class="mat-content" value="${escapeHtml(mat.content)}" placeholder="Content or URL" style="flex:1;">
+                                <div class="resource-controls">
+                                    <button class="btn btn-sm btn-danger" onclick="removeNewbieMaterial(${idx})"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    materialsHtml = '<p>No materials yet. Add some below.</p>';
+                }
+
+                // Build questions HTML
+                let questionsHtml = '';
+                if (content.questions && content.questions.length) {
+                    content.questions.forEach((q, idx) => {
+                        questionsHtml += `
+                            <div class="question-item" data-index="${idx}">
+                                <div class="question-controls">
+                                    <button class="btn btn-sm btn-danger" onclick="removeNewbieQuestion(${idx})"><i class="fas fa-times"></i></button>
+                                </div>
+                                <p><strong>Question ${idx+1}:</strong></p>
+                                <textarea class="question-text" style="margin-bottom:0;">${escapeHtml(q.questionText)}</textarea>
+                            </div>
+                        `;
+                    });
+                } else {
+                    questionsHtml = '<p>No questions yet. Add some below.</p>';
+                }
+
+                let html = `
+                    <div class="settings-card">
+                        <h4>📝 Basic Info</h4>
+                        <div class="settings-row">
+                            <span class="settings-label">Title</span>
+                            <input type="text" id="newbieTitle" value="${escapeHtml(content.title)}" style="width:300px;">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Description</span>
+                            <input type="text" id="newbieDesc" value="${escapeHtml(content.description)}" style="width:300px;">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Active</span>
+                            <input type="checkbox" id="newbieActive" ${content.active ? 'checked' : ''}>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4>📚 Training Materials</h4>
+                        <div id="materialsContainer">
+                            ${materialsHtml}
+                        </div>
+                        <button class="btn btn-sm btn-info" onclick="addNewbieMaterial()">+ Add Material</button>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4>❓ Questions</h4>
+                        <div id="questionsContainer">
+                            ${questionsHtml}
+                        </div>
+                        <button class="btn btn-sm btn-info" onclick="addNewbieQuestion()">+ Add Question</button>
+                    </div>
+
+                    <div style="margin-top:2rem;">
+                        <button class="btn btn-success" onclick="saveNewbieContent()">Save All Changes</button>
+                    </div>
+                `;
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading newbie content:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        window.addNewbieMaterial = function() {
+            const container = document.getElementById('materialsContainer');
+            const div = document.createElement('div');
+            div.className = 'resource-item';
+            div.innerHTML = `
+                <select class="mat-type" style="width:100px;">
+                    <option value="text">Text</option>
+                    <option value="link">Link</option>
+                </select>
+                <input type="text" class="mat-content" placeholder="Content or URL" style="flex:1;">
+                <div class="resource-controls">
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            container.appendChild(div);
+        };
+
+        window.addNewbieQuestion = function() {
+            const container = document.getElementById('questionsContainer');
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.innerHTML = `
+                <div class="question-controls">
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+                <p><strong>New Question:</strong></p>
+                <textarea class="question-text" style="margin-bottom:0;" placeholder="Enter question text"></textarea>
+            `;
+            container.appendChild(div);
+        };
+
+        window.removeNewbieMaterial = function(index) {
+            const container = document.getElementById('materialsContainer');
+            const items = container.querySelectorAll('.resource-item');
+            if (items[index]) items[index].remove();
+        };
+
+        window.removeNewbieQuestion = function(index) {
+            const container = document.getElementById('questionsContainer');
+            const items = container.querySelectorAll('.question-item');
+            if (items[index]) items[index].remove();
+        };
+
+        window.saveNewbieContent = async function() {
+            const title = document.getElementById('newbieTitle').value.trim();
+            const description = document.getElementById('newbieDesc').value.trim();
+            const active = document.getElementById('newbieActive').checked;
+
+            // Gather materials
+            const materials = [];
+            document.querySelectorAll('#materialsContainer .resource-item').forEach(item => {
+                const type = item.querySelector('.mat-type').value;
+                const content = item.querySelector('.mat-content').value.trim();
+                if (content) {
+                    materials.push({ type, content });
+                }
+            });
+
+            // Gather questions
+            const questions = [];
+            document.querySelectorAll('#questionsContainer .question-item').forEach(item => {
+                const qText = item.querySelector('.question-text').value.trim();
+                if (qText) {
+                    questions.push({ questionText: qText });
+                }
+            });
+
+            try {
+                await db.collection('newbieTrainer').doc('content').set({
+                    title,
+                    description,
+                    materials,
+                    questions,
+                    active,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showAlert('Newbie Trainer content saved!', 'success');
+            } catch (error) {
+                console.error('Error saving newbie content:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        async function loadNewbieSubmissions() {
+            const container = document.getElementById('newbieTrainerContent');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center;">Loading submissions...</p>';
+            
+            try {
+                const snapshot = await db.collection('newbieSubmissions')
+                    .orderBy('submittedAt', 'desc')
+                    .get();
+                let html = '<h4>Newbie Submissions</h4>';
+                if (snapshot.empty) {
+                    html += '<p>No submissions yet.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>User</th><th>Submitted</th><th>Status</th><th>Actions</th></tr>';
+                    for (const doc of snapshot.docs) {
+                        const sub = doc.data();
+                        const statusClass = sub.status === 'pending' ? 'warning' : (sub.status === 'approved' ? 'success' : 'danger');
+                        const date = sub.submittedAt ? formatDate(sub.submittedAt) : 'N/A';
+                        html += `
+                            <tr>
+                                <td>${sub.userName || sub.userEmail || sub.userId}</td>
+                                <td>${date}</td>
+                                <td><span class="badge ${statusClass}">${sub.status}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="viewNewbieSubmission('${doc.id}')">View Answers</button>
+                                    ${sub.status === 'pending' ? `
+                                        <button class="btn btn-sm btn-success" onclick="approveNewbieSubmission('${doc.id}', '${sub.userId}')">Approve</button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectNewbieSubmission('${doc.id}', '${sub.userId}')">Reject</button>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    html += '</table>';
+                }
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading newbie submissions:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        window.viewNewbieSubmission = async function(subId) {
+            const doc = await db.collection('newbieSubmissions').doc(subId).get();
+            if (!doc.exists) return;
+            const sub = doc.data();
+            
+            // Fetch the questions from trainer content to display them
+            const trainerDoc = await db.collection('newbieTrainer').doc('content').get();
+            const questions = trainerDoc.exists ? trainerDoc.data().questions || [] : [];
+            
+            let answersHtml = '';
+            sub.answers.forEach((ans, idx) => {
+                const q = questions[idx] ? questions[idx].questionText : `Question ${idx+1}`;
+                answersHtml += `
+                    <div style="background:#f1f5f9; padding:1rem; border-radius:0.5rem; margin-bottom:1rem;">
+                        <p><strong>Q${idx+1}:</strong> ${escapeHtml(q)}</p>
+                        <p><strong>A:</strong> ${escapeHtml(ans)}</p>
+                    </div>
+                `;
+            });
+
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Submission by ${sub.userName || sub.userEmail}</h3>
+                ${answersHtml}
+                ${sub.status === 'pending' ? `
+                    <div style="margin-top:1.5rem;">
+                        <textarea id="submissionFeedback" placeholder="Feedback (optional)" style="min-height:80px;"></textarea>
+                    </div>
+                    <div style="display:flex; gap:1rem;">
+                        <button class="btn btn-success" onclick="approveNewbieSubmission('${subId}', '${sub.userId}')">Approve</button>
+                        <button class="btn btn-danger" onclick="rejectNewbieSubmission('${subId}', '${sub.userId}')">Reject</button>
+                    </div>
+                ` : `
+                    <p><strong>Status:</strong> <span class="badge ${sub.status === 'approved' ? 'success' : 'danger'}">${sub.status}</span></p>
+                    ${sub.feedback ? `<p><strong>Feedback:</strong> ${sub.feedback}</p>` : ''}
+                `}
+            `);
+        };
+
+        window.approveNewbieSubmission = async function(subId, userId) {
+            const feedback = document.getElementById('submissionFeedback')?.value || '';
+            try {
+                // Update submission
+                await db.collection('newbieSubmissions').doc(subId).update({
+                    status: 'approved',
+                    reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    feedback: feedback
+                });
+                // Update user as qualified
+                await db.collection('users').doc(userId).update({
+                    newbieQualified: true
+                });
+                // Send notification
+                await sendNotification(userId, 'Newbie Training Approved', 'Congratulations! You have passed the newbie training. You can now accept writing and data annotation tasks.', 'success', 'newbie-trainer:approved');
+                closeModal();
+                showAlert('Submission approved and user qualified!', 'success');
+                loadNewbieSubmissions();
+            } catch (error) {
+                console.error('Error approving submission:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.rejectNewbieSubmission = async function(subId, userId) {
+            const feedback = document.getElementById('submissionFeedback')?.value || '';
+            if (!feedback) {
+                showAlert('Please provide feedback to the user.', 'error');
+                return;
+            }
+            try {
+                await db.collection('newbieSubmissions').doc(subId).update({
+                    status: 'rejected',
+                    reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    feedback: feedback
+                });
+                // Optionally reset attempts counter or leave as is
+                await sendNotification(userId, 'Newbie Training Not Passed', `Your newbie training answers were not approved. Feedback: ${feedback}. You can review the materials and try again.`, 'warning', 'newbie-trainer:rejected');
+                closeModal();
+                showAlert('Submission rejected and user notified.', 'success');
+                loadNewbieSubmissions();
+            } catch (error) {
+                console.error('Error rejecting submission:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
         // ==================== User Logins ====================
         async function loadLoginLogs() {
             try {
@@ -6225,6 +6594,17 @@
             return membershipPackages?.[type] || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
         }
 
+        function escapeHtml(unsafe) {
+            if (!unsafe) return unsafe;
+            return unsafe.replace(/[&<>"]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                return m;
+            });
+        }
+
         // ==================== LOAD DASHBOARD ====================
         async function loadDashboard() {
             try {
@@ -6286,6 +6666,9 @@
                         break;
                     case 'deadlineTracker':
                         await loadDeadlineTracker();
+                        break;
+                    case 'newbieTrainer':
+                        loadNewbieTrainer();
                         break;
                     case 'settings':
                         await loadSettings();
@@ -6616,7 +6999,16 @@
         window.viewPetition = viewPetition;
         window.replyToPetition = replyToPetition;
         window.sendPetitionReply = sendPetitionReply;
+        window.setNewbieSubTab = setNewbieSubTab;
+        window.loadNewbieContent = loadNewbieContent;
+        window.addNewbieMaterial = addNewbieMaterial;
+        window.addNewbieQuestion = addNewbieQuestion;
+        window.removeNewbieMaterial = removeNewbieMaterial;
+        window.removeNewbieQuestion = removeNewbieQuestion;
+        window.saveNewbieContent = saveNewbieContent;
+        window.viewNewbieSubmission = viewNewbieSubmission;
+        window.approveNewbieSubmission = approveNewbieSubmission;
+        window.rejectNewbieSubmission = rejectNewbieSubmission;
     </script>  
 </body>  
 </html>
-```

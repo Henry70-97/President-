@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +17,7 @@
     <style>
         /* ==================== BASE STYLES ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
-        body { background: linear-gradient(145deg, #f1f5f9 0%, #e6eefc 100%); min-height: 100vh; padding-bottom: 80px; }
+        body { background: #f8fafc; min-height: 100vh; padding-bottom: 80px; }
         .app-container { max-width: 1200px; margin: 0 auto; padding: 0.75rem; }
 
         .logo img { max-height: 40px; width: auto; display: block; }
@@ -206,19 +205,11 @@
 
         /* ==================== STATS GRID ==================== */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-        .stat-card { border-radius: 1.2rem; padding: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column; }
+        .stat-card { border-radius: 1.2rem; padding: 1rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column; background: white; }
         .stat-card:hover { transform: translateY(-3px); }
         .stat-card i { font-size: 1.5rem; color: #6366f1; margin-bottom: 0.3rem; }
         .stat-value { font-size: 1.4rem; font-weight: 800; color: #0f172a; line-height: 1.2; letter-spacing: -0.5px; }
         .stat-label { color: #64748b; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* Alternating colors for stats cards */
-        .stats-grid .stat-card:nth-child(6n+1) { background-color: #e6f0ff; }
-        .stats-grid .stat-card:nth-child(6n+2) { background-color: #e0ffe0; }
-        .stats-grid .stat-card:nth-child(6n+3) { background-color: #fff9c4; }
-        .stats-grid .stat-card:nth-child(6n+4) { background-color: #ffe0b2; }
-        .stats-grid .stat-card:nth-child(6n+5) { background-color: #e6ccff; }
-        .stats-grid .stat-card:nth-child(6n+6) { background-color: #ffe0f0; }
 
         /* Ticker stat card specific */
         .ticker-stat-content {
@@ -245,7 +236,7 @@
 
         /* ==================== DESKTOP TABS ==================== */
         .tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 1rem; }
-        .tab { padding: 0.5rem 1rem; border: none; border-radius: 40px; background: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; position: relative; }
+        .tab { padding: 0.5rem 1rem; border: none; border-radius: 40px; background: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .tab.active { background: #6366f1; color: white; }
         .submit-badge-tab {
             position: absolute;
@@ -260,7 +251,7 @@
         }
 
         /* ==================== MAIN CONTENT ==================== */
-        .content { background: white; border-radius: 1.5rem; padding: 1rem; min-height: 400px; }
+        .content { background: white; border-radius: 1.5rem; padding: 1rem; min-height: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 
         /* ==================== LEADERBOARD / FAQ / FEEDBACK ==================== */
         .leaderboard-table { width:100%; border-collapse: collapse; font-size: 0.8rem; }
@@ -294,26 +285,22 @@
         .filter-tag { background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 40px; font-size: 0.65rem; display: flex; align-items: center; gap: 0.2rem; }
         .filter-tag i { cursor: pointer; color: #ef4444; margin-left: 0.2rem; }
 
-        /* ==================== TASK GRID – bright alternating colors ==================== */
+        /* ==================== TASK GRID – now all cards have consistent light background ==================== */
         .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-        .task-card:nth-child(6n+1) { background-color: #e6f0ff; }
-        .task-card:nth-child(6n+2) { background-color: #e0ffe0; }
-        .task-card:nth-child(6n+3) { background-color: #fff9c4; }
-        .task-card:nth-child(6n+4) { background-color: #ffe0b2; }
-        .task-card:nth-child(6n+5) { background-color: #e6ccff; }
-        .task-card:nth-child(6n+6) { background-color: #ffe0f0; }
         .task-card { 
+            background: white; 
             border-radius: 1.2rem; 
             padding: 1.2rem; 
             border: 1px solid #e2e8f0; 
             transition: transform 0.2s, box-shadow 0.2s; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
         }
         .task-card:hover { 
             transform: translateY(-3px); 
             box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
         }
         .task-title { color: #10b981; font-weight: 800; font-size: 1.1rem; margin-bottom: 0.3rem; line-height: 1.3; }
-        .client-info { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.5rem; color: #4b5563; font-size: 0.75rem; background: rgba(255,255,255,0.5); padding: 0.2rem 0.6rem; border-radius: 40px; width: fit-content; }
+        .client-info { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.5rem; color: #4b5563; font-size: 0.75rem; background: #f8fafc; padding: 0.2rem 0.6rem; border-radius: 40px; width: fit-content; }
         .client-info i { color: #6366f1; font-size: 0.7rem; }
         .deadline-badge { display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.5rem; padding: 0.3rem 0.6rem; border-radius: 40px; font-size: 0.7rem; font-weight: 600; width: fit-content; }
         .deadline-badge.upcoming { background: #f59e0b20; color: #f59e0b; }
@@ -894,6 +881,7 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('data-annotations')"><i class="fas fa-images"></i><span>Data Annotations</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('howitworks')"><i class="fas fa-info-circle"></i><span>How It Works</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('newbie-trainer')"><i class="fas fa-child"></i><span>Newbie Trainer</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('submissions')"><i class="fas fa-file-alt"></i><span>My Submissions</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('withdrawals')"><i class="fas fa-money-bill-wave"></i><span>Withdrawals</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('submit')" style="position: relative;">
@@ -982,6 +970,7 @@
             <button class="tab" onclick="switchTab('data-annotations')">🖼️ Data Annotations</button>
             <button class="tab" onclick="switchTab('howitworks')">📘 How It Works</button>
             <button class="tab" onclick="switchTab('training')">🎓 Training Center</button>
+            <button class="tab" onclick="switchTab('newbie-trainer')">👶 Newbie Trainer</button>
             <button class="tab" onclick="switchTab('submissions')">📝 My Submissions</button>
             <button class="tab" onclick="switchTab('withdrawals')">💰 Withdrawals</button>
             <button class="tab" onclick="switchTab('submit')" style="position: relative;">
@@ -990,7 +979,6 @@
             </button>
             <button class="tab" onclick="switchTab('messages')">💬 Messages<span id="unreadMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span></button>
             <button class="tab" onclick="switchTab('notifications')">🔔 Notifications<span id="unreadNotifBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.7rem; margin-left:0.3rem;">0</span></button>
-            <!-- NEW TABS -->
             <button class="tab" onclick="switchTab('transactions')">💸 Transactions</button>
             <button class="tab" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
             <button class="tab" onclick="switchTab('faq')">❓ FAQ</button>
@@ -1336,6 +1324,9 @@
                 case 'data-annotations':
                     html = `<div class="mirror-tab-header">🖼️ Data Annotations</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Your AI annotation tasks</span></div></div>`;
                     break;
+                case 'newbie-trainer':
+                    html = `<div class="mirror-tab-header">👶 Newbie Trainer</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Complete training to qualify</span></div></div>`;
+                    break;
                 default:
                     html = `<div class="mirror-stats"><div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value">${formatBoth(userData?.wallet || 0)}</div></div></div>`;
             }
@@ -1367,7 +1358,7 @@
         function showAlert(message, type = 'error') { const dlg = document.getElementById('alertDialog'); document.getElementById('overlay').classList.add('show'); dlg.className = 'alert-dialog ' + type; document.getElementById('alertIcon').className = 'fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'); document.getElementById('alertTitle').textContent = type === 'error' ? 'Error!' : 'Success!'; document.getElementById('alertMessage').textContent = message; dlg.classList.add('show'); if (type === 'success') setTimeout(hideAlert, 3000); }
         function hideAlert() { document.getElementById('alertDialog').classList.remove('show'); document.getElementById('overlay').classList.remove('show'); }
         
-        // NEW: Warning popup (auto‑hides after 5 seconds, can be closed early with OK)
+        // Warning popup (auto‑hides after 5 seconds, can be closed early with OK)
         function showWarningPopup(message) {
             const dlg = document.getElementById('alertDialog');
             const overlay = document.getElementById('overlay');
@@ -1393,7 +1384,7 @@
             }, 5000);
         }
 
-        // NEW: Payment approved popup
+        // Payment approved popup
         function showPaymentApprovedPopup(amount, bonus) {
             const dlg = document.getElementById('alertDialog');
             const overlay = document.getElementById('overlay');
@@ -1425,11 +1416,11 @@
             refreshMirror();
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             for (let t of document.querySelectorAll('.tab')) {
-                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations'))) { t.classList.add('active'); break; }
+                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer'))) { t.classList.add('active'); break; }
             }
             document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('.mobile-nav-item').forEach(i => {
-                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations'))) i.classList.add('active');
+                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer'))) i.classList.add('active');
             });
             document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
             document.querySelectorAll('.bottom-nav-item').forEach(item => {
@@ -1464,6 +1455,9 @@
                     break;
                 case 'training':
                     loadTrainings();
+                    break;
+                case 'newbie-trainer':
+                    loadNewbieTrainer();
                     break;
                 case 'submissions':
                     loadSubmissions();
@@ -2041,7 +2035,7 @@
 
         async function hasUserSubmitted(taskId) { const snap = await db.collection('submissions').where('userId','==',currentUser.uid).where('taskId','==',taskId).get(); return !snap.empty; }
 
-        // ==================== ACCEPT TASK (with suspension check) ====================
+        // ==================== ACCEPT TASK (with suspension and newbie qualification check) ====================
         async function acceptTask(taskId) {
             // Check if account is suspended
             if (userData.suspended) {
@@ -2050,13 +2044,6 @@
             }
 
             try {
-                const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
-                const acceptDoc = await acceptRef.get();
-                if (acceptDoc.exists) {
-                    showAlert('You have already accepted this task.', 'error');
-                    return;
-                }
-
                 const taskRef = db.collection('tasks').doc(taskId);
                 const taskDoc = await taskRef.get();
                 if (!taskDoc.exists) {
@@ -2064,6 +2051,31 @@
                     return;
                 }
                 const task = taskDoc.data();
+
+                // Check if task requires newbie qualification (writing, data-annotations, ai_annotation)
+                const categoriesRequiringTraining = ['writing', 'data-annotations', 'ai_annotation'];
+                if (categoriesRequiringTraining.includes(task.category) && !userData.newbieQualified) {
+                    // Show modal asking to complete training
+                    showModal(`
+                        <div class="modal-content" style="text-align:center;">
+                            <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <h3 style="color:#f59e0b;">Training Required</h3>
+                            <p>To accept ${task.category} tasks, you must first complete the Newbie Trainer.</p>
+                            <div style="display:flex; gap:1rem; justify-content:center; margin-top:1.5rem;">
+                                <button class="btn btn-primary" onclick="switchTab('newbie-trainer'); closeModal();">Go to Newbie Trainer</button>
+                                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                            </div>
+                        </div>
+                    `);
+                    return;
+                }
+
+                const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
+                const acceptDoc = await acceptRef.get();
+                if (acceptDoc.exists) {
+                    showAlert('You have already accepted this task.', 'error');
+                    return;
+                }
 
                 if (task.category === 'design' || task.category === 'projects' || task.category === 'transcription') {
                     if (!userData || userData.membershipType !== MEMBERSHIP_TYPES.ELITE) {
@@ -3279,6 +3291,146 @@
             }
         }
 
+        // ==================== NEWBIE TRAINER ====================
+        async function loadNewbieTrainer() {
+            currentTaskViewed = null; refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading newbie trainer...</p></div>';
+            try {
+                // Fetch trainer content (assuming a single document with ID 'content')
+                const trainerDoc = await db.collection('newbieTrainer').doc('content').get();
+                if (!trainerDoc.exists) {
+                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-graduation-cap"></i><h4>No training content yet</h4><p>Please check back later.</p></div>';
+                    return;
+                }
+                const trainer = trainerDoc.data();
+                if (!trainer.active) {
+                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-pause-circle"></i><h4>Training is currently inactive</h4></div>';
+                    return;
+                }
+
+                // Fetch user's latest submission
+                const submissionsSnap = await db.collection('newbieSubmissions')
+                    .where('userId', '==', currentUser.uid)
+                    .orderBy('submittedAt', 'desc')
+                    .limit(1)
+                    .get();
+                const lastSubmission = submissionsSnap.empty ? null : { id: submissionsSnap.docs[0].id, ...submissionsSnap.docs[0].data() };
+
+                let html = `<h3>👶 Newbie Trainer</h3>`;
+
+                // Display materials
+                if (trainer.materials && trainer.materials.length) {
+                    html += `<div class="training-card free" style="margin-bottom:1rem;"><h4>Training Materials</h4>`;
+                    trainer.materials.forEach(m => {
+                        if (m.type === 'text') {
+                            html += `<p>${escapeHtml(m.content)}</p>`;
+                        } else if (m.type === 'link') {
+                            html += `<p><a href="${m.content}" target="_blank">${escapeHtml(m.content)}</a></p>`;
+                        }
+                    });
+                    html += `</div>`;
+                }
+
+                // Questions section
+                if (trainer.questions && trainer.questions.length) {
+                    if (lastSubmission) {
+                        if (lastSubmission.status === 'pending') {
+                            html += `<div class="alert-dialog" style="display:block; position:static; transform:none; margin:1rem 0; border-top-color:#f59e0b;"><i class="fas fa-hourglass-half"></i> Your answers are pending review. You will be notified once reviewed.</div>`;
+                        } else if (lastSubmission.status === 'approved') {
+                            // Mark user as qualified if not already
+                            if (!userData.newbieQualified) {
+                                await db.collection('users').doc(currentUser.uid).update({ newbieQualified: true });
+                                userData.newbieQualified = true;
+                            }
+                            html += `<div class="alert-dialog success" style="display:block; position:static; transform:none; margin:1rem 0;"><i class="fas fa-check-circle"></i> Congratulations! You have successfully completed the newbie training and are now qualified to accept writing and data annotation tasks.</div>`;
+                        } else if (lastSubmission.status === 'rejected') {
+                            html += `<div class="alert-dialog error" style="display:block; position:static; transform:none; margin:1rem 0;"><i class="fas fa-times-circle"></i> Your submission was rejected. Reason: ${escapeHtml(lastSubmission.feedback || 'No feedback provided.')} Please review the materials and try again.</div>`;
+                            // Show form for resubmission
+                            html += renderQuestionForm(trainer.questions, lastSubmission.answers);
+                        }
+                    } else {
+                        // No submission yet
+                        html += renderQuestionForm(trainer.questions, null);
+                    }
+                } else {
+                    html += `<p>No questions available at the moment.</p>`;
+                }
+
+                document.getElementById('content').innerHTML = html;
+
+                // Attach submit event if form exists
+                const form = document.getElementById('newbieForm');
+                if (form) {
+                    form.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        await submitNewbieAnswers(trainer.questions);
+                    });
+                }
+            } catch (e) {
+                console.error('Error loading newbie trainer:', e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
+            }
+        }
+
+        function renderQuestionForm(questions, previousAnswers) {
+            let html = `<form id="newbieForm" style="margin-top:1rem;">`;
+            questions.forEach((q, index) => {
+                html += `
+                    <div style="margin-bottom:1.5rem; background:#f8fafc; padding:1rem; border-radius:0.5rem;">
+                        <label style="font-weight:600; display:block; margin-bottom:0.5rem;">${index+1}. ${escapeHtml(q.questionText)}</label>
+                        <textarea name="q${index}" class="smart-textarea" placeholder="Your answer..." required>${previousAnswers ? escapeHtml(previousAnswers[index] || '') : ''}</textarea>
+                    </div>
+                `;
+            });
+            html += `
+                <div style="text-align:center;">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i> Submit Answers</button>
+                </div>
+            </form>`;
+            return html;
+        }
+
+        async function submitNewbieAnswers(questions) {
+            const answers = [];
+            for (let i = 0; i < questions.length; i++) {
+                const textarea = document.querySelector(`textarea[name="q${i}"]`);
+                if (!textarea) continue;
+                answers.push(textarea.value.trim());
+            }
+
+            // Validate all answered
+            if (answers.some(a => a === '')) {
+                showAlert('Please answer all questions.', 'error');
+                return;
+            }
+
+            try {
+                // Check for existing pending submission
+                const pendingSnap = await db.collection('newbieSubmissions')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', '==', 'pending')
+                    .get();
+                if (!pendingSnap.empty) {
+                    showAlert('You already have a pending submission. Please wait for review.', 'error');
+                    return;
+                }
+
+                await db.collection('newbieSubmissions').add({
+                    userId: currentUser.uid,
+                    userName: userData.displayName || currentUser.email,
+                    answers: answers,
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showAlert('Your answers have been submitted for review. You will be notified once approved.', 'success');
+                loadNewbieTrainer(); // refresh
+            } catch (e) {
+                console.error('Error submitting answers:', e);
+                showAlert('Failed to submit answers. Please try again.', 'error');
+            }
+        }
+
         // ==================== MESSAGES ====================
         async function loadMessages() { 
             currentTaskViewed = null; refreshMirror(); 
@@ -3437,6 +3589,8 @@
                 else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; } 
                 else if (n.type === 'training') { icon = 'fa-graduation-cap'; color = 'info'; } 
                 else if (n.type === 'warning') { icon = 'fa-exclamation-triangle'; color = 'warning'; } 
+                else if (n.type === 'newbie_approved') { icon = 'fa-graduation-cap'; color = 'success'; } 
+                else if (n.type === 'newbie_rejected') { icon = 'fa-times-circle'; color = 'danger'; } 
                 html += `<div class="notification-item ${uc}" onclick="handleNotificationClick('${doc.id}','${n.link||''}')"><div class="notification-icon ${color}"><i class="fas ${icon}"></i></div><div class="notification-content"><div class="notification-title">${escapeHtml(n.title||'Notification')}<span class="notification-badge-type">${n.type||'info'}</span></div><div class="notification-message">${escapeHtml(n.message||'')}</div><div class="notification-time"><i class="far fa-clock"></i> ${time}</div></div></div>`; 
             }); 
             list.innerHTML = html; 
@@ -3458,6 +3612,7 @@
                 else if (link.startsWith('submission:')) switchTab('submissions'); 
                 else if (link.startsWith('withdrawal:')) switchTab('withdrawals'); 
                 else if (link.startsWith('training:')) switchTab('training'); 
+                else if (link.startsWith('newbie-trainer:')) switchTab('newbie-trainer'); 
             } 
             document.getElementById('notificationsPanel').classList.remove('active'); notificationsPanelVisible = false; 
         }
@@ -3502,6 +3657,8 @@
                             else if (n.type === 'petition_response') { icon = 'fa-paper-plane'; color = 'info'; } 
                             else if (n.type === 'training') { icon = 'fa-graduation-cap'; color = 'info'; } 
                             else if (n.type === 'warning') { icon = 'fa-exclamation-triangle'; color = 'warning'; } 
+                            else if (n.type === 'newbie_approved') { icon = 'fa-graduation-cap'; color = 'success'; } 
+                            else if (n.type === 'newbie_rejected') { icon = 'fa-times-circle'; color = 'danger'; } 
                             g += `<div class="message-thread-card ${uc}" onclick="handleNotificationClick('${n.id}','${n.link||''}')"><div style="display:flex; gap:1rem;"><div class="notification-icon ${color}"><i class="fas ${icon}"></i></div><div><div style="display:flex; justify-content:space-between;"><span style="font-weight:700;">${escapeHtml(n.title||'Notification')}</span><span class="message-badge">${n.type||'info'}</span></div><p>${escapeHtml(n.message||'')}</p><div style="display:flex; gap:1rem; font-size:0.7rem; color:#94a3b8;"><span><i class="far fa-clock"></i> ${time}</span>${!n.read ? '<span style="color:#6366f1;">● Unread</span>' : ''}</div></div></div></div>`; 
                         }); 
                         return g; 
@@ -3518,7 +3675,7 @@
         document.addEventListener('click', (e) => { const panel = document.getElementById('notificationsPanel'); const bell = document.querySelector('.notification-bell'); if (notificationsPanelVisible && panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) { panel.classList.remove('active'); notificationsPanelVisible = false; } });
 
         // ==================== PROFILE ====================
-        function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Pending Balance (upgrade):</strong> ${formatBoth(pendingBalance)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p></div>`; }
+        function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Pending Balance (upgrade):</strong> ${formatBoth(pendingBalance)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p><p><strong>Newbie Qualified:</strong> ${userData.newbieQualified ? '✅ Yes' : '❌ No'}</p></div>`; }
         async function updateProfile() { const name = document.getElementById('profileName').value; const phone = document.getElementById('profilePhone').value; if (!name) { showAlert('Name is required','error'); return; } await db.collection('users').doc(currentUser.uid).update({ displayName: name, phone: phone||'' }); userData.displayName = name; document.getElementById('userName').textContent = name; showAlert('Profile updated!','success'); refreshMirror(); }
 
         // ==================== LOAD FEE & MEMBERSHIP ====================
@@ -3646,7 +3803,7 @@
             }
         }
 
-        // ==================== MEMBERSHIP PAYMENTS LISTENER (NEW) ====================
+        // ==================== MEMBERSHIP PAYMENTS LISTENER ====================
         function setupMembershipPaymentsListener() {
             if (membershipPaymentsListener) membershipPaymentsListener();
             membershipPaymentsListener = db.collection('membershipPayments')
@@ -3658,23 +3815,18 @@
                         if (change.type === 'added' && payment.status === 'pending') {
                             newPendingBalance += payment.amount || 0;
                         } else if (change.type === 'modified') {
-                            const oldData = change.doc.metadata.hasPendingWrites ? null : change.doc.data(); // can't easily get old, but we can check if status changed
-                            // We'll rely on the fact that when status changes from pending to approved, we want to show modal
                             if (payment.status === 'approved' && !shownPaymentApprovalIds.has(change.doc.id)) {
                                 shownPaymentApprovalIds.add(change.doc.id);
                                 const bonus = (payment.amount || 0) * 0.1;
                                 showPaymentApprovedPopup(payment.amount || 0, bonus);
-                                // Update pending balance after approval
                                 newPendingBalance -= (payment.amount || 0);
                             } else if (payment.status === 'pending') {
                                 newPendingBalance += (payment.amount || 0);
                             }
                         } else if (change.type === 'removed') {
-                            // if removed, subtract from pending
                             newPendingBalance -= (payment.amount || 0);
                         }
                     });
-                    // Also recompute pending balance from all pending docs (to be safe)
                     snapshot.docs.forEach(doc => {
                         const p = doc.data();
                         if (p.status === 'pending') {
@@ -3682,7 +3834,6 @@
                         }
                     });
                     pendingBalance = newPendingBalance;
-                    // Update stats card if exists
                     const pendingStat = document.getElementById('pendingBalanceStat');
                     if (pendingStat) {
                         pendingStat.textContent = formatBoth(pendingBalance);
@@ -3728,6 +3879,8 @@
                         referredBy: referredBy,
                         totalReferrals: 0,
                         referralEarnings: 0,
+                        newbieQualified: false,
+                        newbieAttempts: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     if (referredBy) {
@@ -3746,6 +3899,14 @@
                     if (userData.frozen === undefined) { await db.collection('users').doc(user.uid).update({ frozen: false }); userData.frozen = false; }
                     if (userData.suspended === undefined) { await db.collection('users').doc(user.uid).update({ suspended: false }); userData.suspended = false; }
                     if (userData.suspendedReason === undefined) { await db.collection('users').doc(user.uid).update({ suspendedReason: '' }); userData.suspendedReason = ''; }
+                    if (userData.newbieQualified === undefined) { 
+                        await db.collection('users').doc(user.uid).update({ newbieQualified: false }); 
+                        userData.newbieQualified = false; 
+                    }
+                    if (userData.newbieAttempts === undefined) { 
+                        await db.collection('users').doc(user.uid).update({ newbieAttempts: 0 }); 
+                        userData.newbieAttempts = 0; 
+                    }
                     const welcomeBonus = getWelcomeBonus(MEMBERSHIP_TYPES.ELITE);
                     if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
                         await db.collection('users').doc(user.uid).update({ wallet: firebase.firestore.FieldValue.increment(welcomeBonus), eliteBonusApplied: true });
@@ -3764,10 +3925,10 @@
                 await loadMembershipPackages();
                 await loadWithdrawalSettings();
                 await loadPaymentSettings();
-                setupTicker(); // start ticker
+                setupTicker();
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
                 setupAcceptedTasksListener();
-                setupMembershipPaymentsListener(); // NEW
+                setupMembershipPaymentsListener();
                 loadDashboard();
                 refreshMirror();
             } catch (error) {
@@ -3784,7 +3945,6 @@
             const unread = snap.docs.filter(d => !d.data().read).length;
             ['notificationBadge','unreadNotifBadge','mobileNotifBadge'].forEach(id => { const el = document.getElementById(id); if (el) { el.textContent = unread; el.style.display = unread ? 'inline' : 'none'; } });
             if (notificationsPanelVisible) { const recent = snap.docs.slice(0,20); renderNotificationsPanel(recent); }
-            // Check for newly added warning notifications
             snap.docChanges().forEach(change => {
                 if (change.type === 'added' && change.doc.data().type === 'warning' && !shownWarningIds.has(change.doc.id)) {
                     shownWarningIds.add(change.doc.id);
@@ -3834,7 +3994,6 @@
                         </div>
                     </div>
                 `;
-                // tickerStatContent will be updated by setupTicker
                 switchTab('tasks');
             } catch (e) { console.error('Dashboard error:', e); switchTab('tasks'); }
         }
@@ -3847,4 +4006,3 @@
     </script>
 </body>
 </html>
-```
