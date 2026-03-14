@@ -15,7 +15,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* ==================== BASE STYLES ==================== */
+        /* All existing styles exactly as they were */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
         body { background: #f8fafc; min-height: 100vh; padding-bottom: 80px; }
         .app-container { max-width: 1200px; margin: 0 auto; padding: 0.75rem; }
@@ -285,7 +285,7 @@
         .filter-tag { background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 40px; font-size: 0.65rem; display: flex; align-items: center; gap: 0.2rem; }
         .filter-tag i { cursor: pointer; color: #ef4444; margin-left: 0.2rem; }
 
-        /* ==================== TASK GRID – now all cards have consistent light background ==================== */
+        /* ==================== TASK GRID – all cards have consistent light background ==================== */
         .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
         .task-card { 
             background: white; 
@@ -1057,6 +1057,10 @@
         const REFERRAL_BONUS_REFERRER = 2, REFERRAL_BONUS_REFERRED = 0.5;
         let paymentUrl = "https://lipana.dev/pay/nextgen-membership";
 
+        // ==================== OFFER FEATURE ====================
+        let currentOffer = null; // active membership offer
+        const OFFER_POPUP_COOLDOWN = 5 * 60 * 1000; // 5 minutes
+
         // ==================== USD to KSH conversion ====================
         let usdToKshRate = 130; // default, can be overridden from Firestore
         async function loadConversionRate() {
@@ -1096,6 +1100,96 @@
         // Withdrawal cooldown timer
         let withdrawalCooldownInterval = null;
         let nextAllowedWithdrawalTime = null;
+
+        // ==================== LOAD ACTIVE OFFER ====================
+        async function loadActiveOffer() {
+            try {
+                const now = new Date();
+                const snap = await db.collection('membershipOffers')
+                    .where('active', '==', true)
+                    .get();
+                if (snap.empty) {
+                    currentOffer = null;
+                    return;
+                }
+                // There should be only one active offer, but we'll take the first
+                const offer = snap.docs[0].data();
+                const endDate = offer.endDateTime?.toDate();
+                if (endDate && endDate > now) {
+                    currentOffer = { id: snap.docs[0].id, ...offer };
+                } else {
+                    currentOffer = null;
+                }
+            } catch (e) {
+                console.error('Error loading active offer:', e);
+                currentOffer = null;
+            }
+        }
+
+        // ==================== OFFER POPUP (FIXED) ====================
+        function checkAndShowOfferPopup() {
+            if (!currentOffer) return;
+            // Don't show if user already has premium or elite
+            if (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || 
+                userData.membershipType === MEMBERSHIP_TYPES.ELITE) {
+                return;
+            }
+            const lastShown = localStorage.getItem('lastOfferPopupTime');
+            const now = Date.now();
+            if (lastShown && (now - parseInt(lastShown) < OFFER_POPUP_COOLDOWN)) {
+                return; // cooldown still active
+            }
+            // Show the popup
+            showOfferPopup();
+        }
+
+        function showOfferPopup() {
+            if (!currentOffer) return;
+            const pkg = membershipPackages?.[currentOffer.membershipType] || 
+                        DEFAULT_MEMBERSHIP_PACKAGES[currentOffer.membershipType];
+            const endDate = currentOffer.endDateTime?.toDate();
+            const timeLeft = endDate ? formatTimeLeft(endDate) : 'limited time';
+
+            // Determine which upgrade function to call based on offer type
+            const upgradeFunction = currentOffer.membershipType === 'premium' 
+                ? 'showMembershipOptions(true)' 
+                : 'showEliteUpgradeOptions(true)';
+
+            showModal(`
+                <div class="modal-content" style="text-align:center; background: linear-gradient(145deg, #f97316, #ea580c); color:white; border-radius:2rem; padding:2rem;">
+                    <i class="fas fa-tag" style="font-size:4rem; margin-bottom:1rem;"></i>
+                    <h2 style="font-size:2rem; margin-bottom:0.5rem;">🔥 Special Offer!</h2>
+                    <h3 style="font-size:1.5rem; margin-bottom:1rem;">${pkg.name} Membership</h3>
+                    <div style="background:white; color:#1e293b; border-radius:1rem; padding:1rem; margin:1rem 0;">
+                        <p style="text-decoration:line-through; color:#94a3b8;">$${currentOffer.originalPrice}</p>
+                        <p style="font-size:3rem; font-weight:800; color:#f97316;">$${currentOffer.newAmount.toFixed(2)}</p>
+                        <p style="font-size:1rem;">${currentOffer.savingsPercentage}% OFF</p>
+                    </div>
+                    <p style="margin-bottom:1rem;"><i class="fas fa-clock"></i> Offer ends in: <strong>${timeLeft}</strong></p>
+                    <div style="display:flex; gap:1rem; justify-content:center;">
+                        <button class="btn btn-success" onclick="dismissOfferPopup(); ${upgradeFunction};">Upgrade Now</button>
+                        <button class="btn btn-secondary" onclick="dismissOfferPopup()">Not Now</button>
+                    </div>
+                </div>
+            `);
+            localStorage.setItem('lastOfferPopupTime', Date.now());
+        }
+
+        function dismissOfferPopup() {
+            closeModal();
+        }
+
+        function formatTimeLeft(endDate) {
+            const now = new Date();
+            const diff = endDate - now;
+            if (diff <= 0) return 'expired';
+            const days = Math.floor(diff / (1000*60*60*24));
+            const hours = Math.floor((diff % (86400000)) / (3600000));
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            if (days > 0) return `${days} day${days>1?'s':''} ${hours}h`;
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            return `${minutes}m`;
+        }
 
         // ==================== YOUTUBE EMBED HELPER ====================
         function getYouTubeEmbedUrl(url) {
@@ -2939,17 +3033,24 @@
                     hist += '</div>'; 
                 } 
                 document.getElementById('content').innerHTML = ws + hist; 
-                toggleWithdrawalFields(); // ensure correct fields are shown initially
+                // Only call toggleWithdrawalFields if elements exist
+                if (document.getElementById('withdrawMethod')) {
+                    toggleWithdrawalFields(); // ensure correct fields are shown initially
+                }
             } catch (e) { 
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadWithdrawals()">Retry</button></div>`; 
             } 
         }
 
         function toggleWithdrawalFields() {
-            const method = document.getElementById('withdrawMethod')?.value;
+            const method = document.getElementById('withdrawMethod');
             const mobileDiv = document.getElementById('mobileFields');
             const bankDiv = document.getElementById('bankFields');
-            if (method === 'Bank Transfer') {
+            
+            // Add null checks to prevent "cannot read properties of null" error
+            if (!method || !mobileDiv || !bankDiv) return;
+            
+            if (method.value === 'Bank Transfer') {
                 mobileDiv.style.display = 'none';
                 bankDiv.style.display = 'block';
             } else {
@@ -3063,9 +3164,14 @@
             }
         }
 
-        // ==================== MEMBERSHIP OPTIONS ====================
-        function showMembershipOptions() {
+        // ==================== MEMBERSHIP OPTIONS (WITH OFFER SUPPORT) ====================
+        function showMembershipOptions(usingOffer = false) {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
+            const offerPrice = (usingOffer && currentOffer && currentOffer.membershipType === 'premium') 
+                ? currentOffer.newAmount : premiumPkg.price;
+            const offerId = (usingOffer && currentOffer && currentOffer.membershipType === 'premium') 
+                ? currentOffer.id : null;
+
             showModal(`<div class="modal-content" style="text-align:center;">
                 <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;">
                     <i class="fas fa-bolt" style="font-size:2rem;"></i>
@@ -3077,7 +3183,11 @@
                 <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
                     <div style="background:#f8fafc; padding:2rem; border:2px solid #6366f1; border-radius:1.5rem;">
                         <h4 style="color:#6366f1; font-size:1.8rem;">${escapeHtml(premiumPkg.name)}</h4>
-                        <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(premiumPkg.price)}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
+                        ${usingOffer && currentOffer?.membershipType === 'premium' ? `
+                            <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b;">(was ${formatBoth(premiumPkg.price)})</span></p>
+                        ` : `
+                            <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(premiumPkg.price)}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
+                        `}
                         <p style="color:#475569;">✓ Access to all tasks<br>✓ Withdrawals enabled<br>✓ Priority support</p>
                     </div>
                 </div>
@@ -3086,14 +3196,20 @@
                     <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code / ID" required>
                     <input type="number" id="paymentAmount" class="smart-input" placeholder="Amount Paid (USD)" step="0.01" required>
                     <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
+                    <input type="hidden" id="offerId" value="${offerId || ''}">
                     <button class="btn btn-success" onclick="submitPaymentVerification()">Submit for Approval</button>
                 </div>
                 <button class="btn btn-secondary" onclick="closeModal()">Close</button>
             </div>`);
         }
 
-        function showEliteUpgradeOptions() {
+        function showEliteUpgradeOptions(usingOffer = false) {
             const elitePkg = (membershipPackages && membershipPackages.elite) || DEFAULT_MEMBERSHIP_PACKAGES.elite;
+            const offerPrice = (usingOffer && currentOffer && currentOffer.membershipType === 'elite') 
+                ? currentOffer.newAmount : elitePkg.price;
+            const offerId = (usingOffer && currentOffer && currentOffer.membershipType === 'elite') 
+                ? currentOffer.id : null;
+
             showModal(`<div class="modal-content" style="text-align:center;">
                 <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#f59e0b,#d97706); padding:1.5rem; border-radius:1rem; color:white;">
                     <i class="fas fa-crown" style="font-size:2rem;"></i>
@@ -3105,7 +3221,11 @@
                 <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
                     <div style="background:#f8fafc; padding:2rem; border:2px solid #f59e0b; border-radius:1.5rem;">
                         <h4 style="color:#f59e0b; font-size:1.8rem;">${escapeHtml(elitePkg.name)}</h4>
-                        <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(elitePkg.price)}<span style="font-size:1rem; color:#64748b;">/${elitePkg.duration}</span></p>
+                        ${usingOffer && currentOffer?.membershipType === 'elite' ? `
+                            <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b;">(was ${formatBoth(elitePkg.price)})</span></p>
+                        ` : `
+                            <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(elitePkg.price)}<span style="font-size:1rem; color:#64748b;">/${elitePkg.duration}</span></p>
+                        `}
                         <p style="color:#475569;">
                             ✓ Access to all tasks including Design & Projects & Transcription<br>
                             ✓ Withdrawals enabled<br>
@@ -3119,6 +3239,7 @@
                     <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code / ID" required>
                     <input type="number" id="paymentAmount" class="smart-input" placeholder="Amount Paid (USD)" step="0.01" required>
                     <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
+                    <input type="hidden" id="offerId" value="${offerId || ''}">
                     <button class="btn btn-success" onclick="submitPaymentVerification()">Submit for Approval</button>
                 </div>
                 <button class="btn btn-secondary" onclick="closeModal()">Close</button>
@@ -3130,6 +3251,7 @@
             const txCode = document.getElementById('transactionCode')?.value;
             const amount = parseFloat(document.getElementById('paymentAmount')?.value);
             const notes = document.getElementById('paymentNotes')?.value || '';
+            const offerId = document.getElementById('offerId')?.value || null;
             if (!txCode) { showAlert('Please enter transaction code', 'error'); return; }
             if (!amount || amount <= 0) { showAlert('Please enter a valid amount', 'error'); return; }
 
@@ -3151,17 +3273,21 @@
 
             try {
                 showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`);
-                await db.collection('membershipPayments').add({
+                const paymentData = {
                     userId: currentUser.uid,
                     userName: userData.displayName,
                     userEmail: currentUser.email,
                     transactionCode: txCode,
-                    paymentMessage: txCode, // added so admin sees it
+                    paymentMessage: txCode,
                     amount: amount,
                     notes: notes,
                     status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                if (offerId) {
+                    paymentData.offerId = offerId;
+                }
+                await db.collection('membershipPayments').add(paymentData);
                 showModal(`<div class="modal-content" style="text-align:center;"><div class="success-check"><i class="fas fa-check"></i></div><h3 style="color:#10b981;">Thank You!</h3><p>Payment verification submitted.<br>You'll be notified once approved. The amount (plus 10% bonus) will be added to your wallet.</p><button class="btn btn-primary" onclick="closeModal()">OK</button></div>`);
             } catch (e) {
                 console.error('Error submitting payment:', e);
@@ -3842,7 +3968,7 @@
                 }, console.error);
         }
 
-        // ==================== AUTH STATE LISTENER ====================
+        // ==================== AUTH STATE LISTENER (updated with offer loading) ====================
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
             const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
@@ -3925,6 +4051,16 @@
                 await loadMembershipPackages();
                 await loadWithdrawalSettings();
                 await loadPaymentSettings();
+                // ===== LOAD ACTIVE OFFER =====
+                await loadActiveOffer();
+                // ===== SHOW OFFER POPUP IF APPLICABLE =====
+                checkAndShowOfferPopup();
+                // Set interval to re-check offer and popup every 5 minutes (300000 ms)
+                setInterval(() => {
+                    loadActiveOffer();
+                    checkAndShowOfferPopup();
+                }, 300000); // 5 minutes
+
                 setupTicker();
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
                 setupAcceptedTasksListener();

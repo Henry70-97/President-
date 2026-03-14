@@ -39,6 +39,8 @@
         .badge.primary { background: #6366f120; color: #6366f1; border: 1px solid #6366f1; }
         .badge.info { background: #3b82f620; color: #3b82f6; border: 1px solid #3b82f6; }
         .badge.suspended { background: #6b728020; color: #6b7280; border: 1px solid #6b7280; }
+        .badge.offer { background: #f9731620; color: #f97316; border: 1px solid #f97316; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         .btn { padding: 0.5rem 1rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; margin: 0.2rem; pointer-events: auto; }
         .btn-primary { background: #6366f1; color: white; }
         .btn-success { background: #10b981; color: white; }
@@ -46,6 +48,7 @@
         .btn-warning { background: #f59e0b; color: white; }
         .btn-info { background: #3b82f6; color: white; }
         .btn-secondary { background: #64748b; color: white; }
+        .btn-offer { background: #f97316; color: white; }
         .btn-sm { padding: 0.3rem 0.8rem; font-size: 0.8rem; }
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 2rem; padding: 2rem; max-width: 600px; width: 90%; z-index: 1000; max-height: 80vh; overflow-y: auto; }
         .modal.active { display: block; }
@@ -62,6 +65,7 @@
         .alert-icon.error { background: #ef444420; color: #ef4444; }
         .alert-icon.warning { background: #f59e0b20; color: #f59e0b; }
         .alert-icon.info { background: #3b82f620; color: #3b82f6; }
+        .alert-icon.offer { background: #f9731620; color: #f97316; }
         .alert-title { font-size: 1.25rem; font-weight: 700; color: #1f2937; }
         .alert-message { color: #4b5563; margin-bottom: 2rem; line-height: 1.5; }
         .alert-button { width: 100%; padding: 1rem; border: none; border-radius: 40px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
@@ -71,6 +75,8 @@
         .alert-button.error:hover { background: #dc2626; }
         .alert-button.info { background: #3b82f6; color: white; }
         .alert-button.info:hover { background: #2563eb; }
+        .alert-button.offer { background: #f97316; color: white; }
+        .alert-button.offer:hover { background: #ea580c; }
         
         .settings-section { background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; border-left: 4px solid #6366f1; }
         .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
@@ -82,6 +88,7 @@
         .settings-label { color: #64748b; font-weight: 500; }
         .settings-value { font-weight: 600; color: #1e293b; }
         .settings-value.highlight { color: #10b981; }
+        .settings-value.offer { color: #f97316; }
         .settings-input { width: 120px; padding: 0.5rem; border: 2px solid #e2e8f0; border-radius: 40px; text-align: right; font-size: 0.9rem; }
         .settings-input:focus { border-color: #6366f1; outline: none; }
         .currency-symbol { position: relative; }
@@ -92,7 +99,8 @@
         .fee-row:last-child { border-bottom: none; }
         .fee-total { font-weight: 700; color: #10b981; }
         .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .package-card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 2px solid #e2e8f0; position: relative; }
+        .package-card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 2px solid #e2e8f0; position: relative; transition: all 0.3s; }
+        .package-card.offer-active { border-color: #f97316; box-shadow: 0 0 0 2px #f9731620; }
         .package-card.basic { border-color: #94a3b8; }
         .package-card.premium { border-color: #6366f1; }
         .package-card.elite { border-color: #f59e0b; }
@@ -100,6 +108,9 @@
         .package-name { font-size: 1.5rem; font-weight: 700; }
         .package-price { font-size: 1.8rem; font-weight: 800; color: #6366f1; }
         .package-price small { font-size: 0.9rem; font-weight: 400; color: #64748b; }
+        .package-price.original { font-size: 1.2rem; color: #94a3b8; text-decoration: line-through; }
+        .package-price.offer { color: #f97316; }
+        .package-offer-badge { position: absolute; top: 1rem; right: 1rem; background: #f97316; color: white; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; animation: pulse 2s infinite; z-index: 2; }
         .package-features { margin: 1rem 0; padding: 0; list-style: none; }
         .package-features li { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; }
         .package-features li:last-child { border-bottom: none; }
@@ -199,6 +210,30 @@
         .deadline-badge-success { background: #10b981; color: white; }
         .deadline-cell { white-space: nowrap; }
         .submission-user-card { border-left: 4px solid #6366f1; margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 0.5rem; }
+
+        /* Offer specific styles */
+        .offers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .offer-card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 2px solid #f97316; position: relative; }
+        .offer-card.expired { opacity: 0.7; border-color: #94a3b8; }
+        .offer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .offer-title { font-size: 1.2rem; font-weight: 700; color: #f97316; }
+        .offer-price-row { display: flex; align-items: center; gap: 1rem; margin: 1rem 0; }
+        .offer-original-price { color: #94a3b8; text-decoration: line-through; font-size: 1.2rem; }
+        .offer-new-price { color: #f97316; font-size: 2rem; font-weight: 800; }
+        .offer-timer { background: #f9731610; padding: 1rem; border-radius: 0.5rem; text-align: center; margin: 1rem 0; font-size: 1.1rem; }
+        .offer-timer i { color: #f97316; margin-right: 0.5rem; }
+        .offer-progress { height: 8px; background: #e2e8f0; border-radius: 4px; margin: 1rem 0; overflow: hidden; }
+        .offer-progress-bar { height: 100%; background: #f97316; transition: width 1s linear; }
+        .offer-status-badge { display: inline-block; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
+        .offer-status-badge.active { background: #10b98120; color: #10b981; }
+        .offer-status-badge.expired { background: #ef444420; color: #ef4444; }
+        .offer-status-badge.upcoming { background: #f59e0b20; color: #f59e0b; }
+
+        /* Countdown timer */
+        .countdown { display: flex; gap: 0.5rem; justify-content: center; margin: 1rem 0; }
+        .countdown-block { background: #f97316; color: white; padding: 0.5rem; border-radius: 0.5rem; min-width: 60px; text-align: center; }
+        .countdown-block span { display: block; font-size: 1.5rem; font-weight: 700; line-height: 1; }
+        .countdown-block small { display: block; font-size: 0.7rem; opacity: 0.9; }
 
         /* Bottom Navigation for Mobile */
         .bottom-nav {
@@ -487,6 +522,7 @@
         <div class="mobile-menu-item" onclick="switchTab('submissions'); toggleMobileMenu()">📝 Submissions</div>
         <div class="mobile-menu-item" onclick="switchTab('withdrawals'); toggleMobileMenu()">💰 Withdrawals</div>
         <div class="mobile-menu-item" onclick="switchTab('memberships'); toggleMobileMenu()">👑 Memberships</div>
+        <div class="mobile-menu-item" onclick="switchTab('offers'); toggleMobileMenu()">🏷️ Membership Offers</div>
         <div class="mobile-menu-item" onclick="switchTab('referrals'); toggleMobileMenu()">🤝 Referrals</div>
         <div class="mobile-menu-item" onclick="switchTab('messages'); toggleMobileMenu()">💬 Messages</div>
         <div class="mobile-menu-item" onclick="switchTab('transactions'); toggleMobileMenu()">💸 Transactions</div>
@@ -537,6 +573,7 @@
             <button class="tab" data-tab="submissions">📝 Submissions</button>  
             <button class="tab" data-tab="withdrawals">💰 Withdrawals</button>  
             <button class="tab" data-tab="memberships">👑 Memberships</button>  
+            <button class="tab" data-tab="offers">🏷️ Membership Offers</button>  
             <button class="tab" data-tab="referrals">🤝 Referrals</button>  
             <button class="tab" data-tab="messages">💬 Messages</button>  
             <button class="tab" data-tab="transactions">💸 Transactions</button>  
@@ -2262,6 +2299,11 @@
                                         <button class="btn btn-danger reject-submission" data-sub-id="${doc.id}">Reject</button>  
                                     </div>  
                                 ` : ''}
+                                ${sub.status !== 'pending' ? `
+                                    <div style="margin-top:1rem;">
+                                        <button class="btn btn-warning revert-submission" data-sub-id="${doc.id}" data-user-id="${sub.userId}" data-amount="${sub.earned || 0}" data-task-title="${sub.taskTitle}">Revert Decision</button>
+                                    </div>
+                                ` : ''}
                             </div>  
                         `;  
                     }  
@@ -2360,6 +2402,44 @@
             loadSubmissions();  
         }  
 
+        // ==================== REVERT SUBMISSION DECISION ====================
+        window.revertSubmission = async function(subId, userId, amount, taskTitle) {
+            if (!confirm(`Revert this submission decision? This will subtract $${amount.toFixed(2)} from the user's wallet if approved, and change status back to pending.`)) return;
+            try {
+                const subDoc = await db.collection('submissions').doc(subId).get();
+                const sub = subDoc.data();
+                if (sub.status === 'approved') {
+                    // Subtract the amount from user's wallet
+                    await db.collection('users').doc(userId).update({
+                        wallet: firebase.firestore.FieldValue.increment(-amount)
+                    });
+                    // Add a reversal transaction
+                    await db.collection('transactions').add({
+                        userId,
+                        userEmail: sub.userEmail,
+                        amount: -amount,
+                        type: 'reversal',
+                        description: `Reverted approval for task: ${taskTitle}`,
+                        relatedId: subId,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                // Change status back to pending
+                await db.collection('submissions').doc(subId).update({
+                    status: 'pending',
+                    score: null,
+                    review: null,
+                    earned: null,
+                    reviewedAt: null
+                });
+                showAlert('Submission reverted to pending', 'success');
+                loadSubmissions();
+            } catch (error) {
+                console.error('Error reverting submission:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
         // ==================== Withdrawals ====================
         async function loadWithdrawals(showAll = false) { 
             try {
@@ -2399,6 +2479,11 @@
                                         <button class="btn btn-success process-withdrawal" data-withdrawal-id="${w.id}">Mark as Paid</button> 
                                         <button class="btn btn-danger reject-withdrawal" data-withdrawal-id="${w.id}">Reject</button> 
                                     </div> 
+                                ` : ''}
+                                ${w.status !== 'pending' ? `
+                                    <div style="margin-top:1rem;">
+                                        <button class="btn btn-warning revert-withdrawal" data-withdrawal-id="${w.id}" data-user-id="${w.userId}" data-amount="${w.amount}">Revert Decision</button>
+                                    </div>
                                 ` : ''}
                             </div> 
                         `; 
@@ -2455,6 +2540,58 @@
             showAlert('Withdrawal rejected and amount refunded', 'success');
             loadWithdrawals();
         }
+
+        // ==================== REVERT WITHDRAWAL DECISION ====================
+        window.revertWithdrawal = async function(withdrawalId, userId, amount) {
+            if (!confirm(`Revert this withdrawal decision? This will add $${amount.toFixed(2)} back to the user's wallet if paid, and change status back to pending.`)) return;
+            try {
+                const withdrawalDoc = await db.collection('withdrawals').doc(withdrawalId).get();
+                const withdrawal = withdrawalDoc.data();
+                if (withdrawal.status === 'paid') {
+                    // Add back to user's wallet
+                    await db.collection('users').doc(userId).update({
+                        wallet: firebase.firestore.FieldValue.increment(amount)
+                    });
+                    // Add a reversal transaction
+                    await db.collection('transactions').add({
+                        userId,
+                        userEmail: withdrawal.userEmail,
+                        amount: amount,
+                        type: 'reversal',
+                        description: `Reverted paid withdrawal`,
+                        relatedId: withdrawalId,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else if (withdrawal.status === 'rejected') {
+                    // If rejected, we need to subtract the amount that was refunded? Actually rejecting adds back, so reverting a reject means we need to subtract again? Let's just set back to pending and not adjust wallet (since reject added back, reverting should subtract again). But simpler: set back to pending and if it was rejected, we subtract again.
+                    // We'll implement a consistent approach: revert means go back to pending and undo the financial effect.
+                    // For rejected, the amount was added back, so we subtract it again.
+                    await db.collection('users').doc(userId).update({
+                        wallet: firebase.firestore.FieldValue.increment(-amount)
+                    });
+                    await db.collection('transactions').add({
+                        userId,
+                        userEmail: withdrawal.userEmail,
+                        amount: -amount,
+                        type: 'reversal',
+                        description: `Reverted rejected withdrawal`,
+                        relatedId: withdrawalId,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                // Change status back to pending
+                await db.collection('withdrawals').doc(withdrawalId).update({
+                    status: 'pending',
+                    paidAt: null,
+                    rejectedAt: null
+                });
+                showAlert('Withdrawal reverted to pending', 'success');
+                loadWithdrawals();
+            } catch (error) {
+                console.error('Error reverting withdrawal:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
 
         // ==================== Fee Settings ====================
         function showEditFeeSettings() {
@@ -2981,15 +3118,25 @@
                 let html = `  
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">  
                         <h3>Membership Management</h3>  
-                        <button class="btn btn-primary" onclick="showEditPackages()">✏️ Edit Packages</button>  
+                        <div>
+                            <button class="btn btn-primary" onclick="showEditPackages()">✏️ Edit Packages</button>
+                            <button class="btn btn-offer" onclick="switchTab('offers')">🏷️ Manage Offers</button>
+                        </div>
                     </div>  
                     
                     <h4 style="margin: 2rem 0 1rem 0;">Current Package Configuration</h4>  
                     <div class="packages-grid">  
                 `;  
                 
+                // Get active offer if any
+                const offerSnapshot = await db.collection('membershipOffers')
+                    .where('active', '==', true)
+                    .get();
+                const activeOffer = !offerSnapshot.empty ? offerSnapshot.docs[0].data() : null;
+                
                 for (const [type, pkg] of Object.entries(membershipPackages)) {  
                     const packageClass = type === 'basic' ? 'basic' : type === 'premium' ? 'premium' : 'elite';  
+                    const isOfferPackage = activeOffer && activeOffer.membershipType === type && new Date(activeOffer.endDateTime.seconds * 1000) > new Date();
                     
                     let featuresHtml = '';  
                     pkg.features.forEach(feature => {  
@@ -3008,18 +3155,31 @@
                     });  
                     
                     html += `  
-                        <div class="package-card ${packageClass}">  
+                        <div class="package-card ${packageClass} ${isOfferPackage ? 'offer-active' : ''}">  
                             ${pkg.badge ? `<div class="package-badge ${pkg.badge}">${pkg.badge.toUpperCase()}</div>` : ''}  
+                            ${isOfferPackage ? `<div class="package-offer-badge">🔥 ${activeOffer.savingsPercentage || 0}% OFF</div>` : ''}
                             <div class="package-header">  
                                 <div class="package-name">${pkg.name}</div>  
-                                <div class="package-price">  
-                                    ${pkg.price === 0 ? 'FREE' : '$' + pkg.price}   
+                                <div>
+                                    ${isOfferPackage ? `
+                                        <span class="package-price original">$${pkg.price}</span>
+                                        <span class="package-price offer">$${activeOffer.newAmount.toFixed(2)}</span>
+                                    ` : `
+                                        <div class="package-price">  
+                                            ${pkg.price === 0 ? 'FREE' : '$' + pkg.price}   
+                                        </div>
+                                    `}
                                     <small>${pkg.duration}</small>  
-                                </div>  
+                                </div>
                             </div>  
                             <ul class="package-features">  
                                 ${featuresHtml}  
                             </ul>  
+                            ${isOfferPackage ? `
+                                <div style="margin-top:1rem; padding-top:1rem; border-top:2px dashed #f97316; font-size:0.9rem; color:#f97316; text-align:center;">
+                                    <i class="fas fa-clock"></i> Offer ends: ${formatDate(activeOffer.endDateTime)}
+                                </div>
+                            ` : ''}
                         </div>  
                     `;  
                 }  
@@ -3038,10 +3198,16 @@
                         const pkg = getPackageByType(membershipType);  
                         const statusClass = p.status === 'approved' ? 'success' : (p.status === 'rejected' ? 'danger' : 'warning');
                         
+                        // Check if payment amount matches an offer
+                        let offerApplied = '';
+                        if (p.offerId) {
+                            offerApplied = '<span class="badge offer" style="margin-left:0.5rem;">Offer Applied</span>';
+                        }
+                        
                         html += `  
                             <div class="submission-card">  
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">  
-                                    <h4 style="margin:0;">${pkg.name} Upgrade Request</h4>  
+                                    <h4 style="margin:0;">${pkg.name} Upgrade Request ${offerApplied}</h4>  
                                     <span class="badge ${statusClass}">${p.status}</span>  
                                 </div>  
                                 <p><strong>User:</strong> ${p.userEmail}</p>  
@@ -3058,6 +3224,11 @@
                                         <button class="btn btn-danger reject-membership" data-user-id="${p.userId}" data-payment-id="${doc.id}">Reject</button>  
                                     </div>  
                                 ` : ''}
+                                ${p.status !== 'pending' ? `
+                                    <div style="margin-top:1rem;">
+                                        <button class="btn btn-warning revert-membership" data-payment-id="${doc.id}" data-user-id="${p.userId}" data-amount="${p.amount}" data-credited="${p.credited || false}">Revert Decision</button>
+                                    </div>
+                                ` : ''}
                             </div>  
                         `;  
                     });  
@@ -3070,7 +3241,498 @@
             }
         }  
 
-        // ==================== UPDATED approveMembership with auto‑credit ====================
+        // ==================== REVERT MEMBERSHIP DECISION ====================
+        window.revertMembership = async function(paymentId, userId, amount, credited) {
+            if (!confirm(`Revert this membership decision? This will ${credited ? 'subtract ' + amount + ' from user\'s wallet' : 'not affect wallet'}, and change status back to pending.`)) return;
+            try {
+                const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
+                const payment = paymentDoc.data();
+                if (credited) {
+                    // Subtract the amount that was credited (assuming it was added to wallet)
+                    await db.collection('users').doc(userId).update({
+                        wallet: firebase.firestore.FieldValue.increment(-amount)
+                    });
+                    // Also remove any bonus that was added? For simplicity, we just subtract the payment amount.
+                    // You might need to adjust if bonuses were given.
+                    await db.collection('transactions').add({
+                        userId,
+                        userEmail: payment.userEmail,
+                        amount: -amount,
+                        type: 'reversal',
+                        description: `Reverted membership approval`,
+                        relatedId: paymentId,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    // Reset membership type to basic or previous? We'll just set membershipPaid to false.
+                    await db.collection('users').doc(userId).update({
+                        membershipType: 'basic',
+                        membershipPaid: false
+                    });
+                } else if (payment.status === 'rejected') {
+                    // If rejected, no wallet effect, just set back to pending
+                }
+                // Change status back to pending
+                await db.collection('membershipPayments').doc(paymentId).update({
+                    status: 'pending',
+                    approvedAt: null,
+                    rejectedAt: null,
+                    credited: false,
+                    creditedAmount: null,
+                    bonus: null
+                });
+                showAlert('Membership reverted to pending', 'success');
+                loadMemberships();
+            } catch (error) {
+                console.error('Error reverting membership:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // ==================== MEMBERSHIP OFFERS ====================
+        async function loadMembershipOffers() {
+            try {
+                const snapshot = await db.collection('membershipOffers')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                let html = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <h3>🏷️ Membership Offers Management</h3>
+                        <button class="btn btn-offer" onclick="showCreateOffer()">+ Create New Offer</button>
+                    </div>
+                    <p style="margin-bottom:1rem; color:#64748b;">Create special offers for membership packages with discounted prices. Users will see a popup notification when an offer is active.</p>
+                `;
+
+                if (snapshot.empty) {
+                    html += '<p>No offers created yet. Click the button above to create your first offer.</p>';
+                } else {
+                    html += '<div class="offers-grid">';
+                    
+                    for (const doc of snapshot.docs) {
+                        const offer = doc.data();
+                        const now = new Date();
+                        const endDate = offer.endDateTime?.seconds ? new Date(offer.endDateTime.seconds * 1000) : null;
+                        const startDate = offer.startDateTime?.seconds ? new Date(offer.startDateTime.seconds * 1000) : null;
+                        
+                        let status = 'active';
+                        let statusClass = 'active';
+                        let timeRemaining = '';
+                        
+                        if (endDate && endDate < now) {
+                            status = 'expired';
+                            statusClass = 'expired';
+                        } else if (startDate && startDate > now) {
+                            status = 'upcoming';
+                            statusClass = 'upcoming';
+                        }
+                        
+                        if (endDate && status === 'active') {
+                            const diffMs = endDate - now;
+                            const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                            timeRemaining = `${diffHrs}h ${diffMins}m remaining`;
+                        }
+                        
+                        const pkg = membershipPackages?.[offer.membershipType] || { name: offer.membershipType.toUpperCase() };
+                        
+                        html += `
+                            <div class="offer-card ${status === 'expired' ? 'expired' : ''}">
+                                <div class="offer-header">
+                                    <div>
+                                        <span class="offer-title">${pkg.name} Special Offer</span>
+                                    </div>
+                                    <span class="offer-status-badge ${statusClass}">${status}</span>
+                                </div>
+                                
+                                <div class="offer-price-row">
+                                    <span class="offer-original-price">$${offer.originalPrice}</span>
+                                    <span class="offer-new-price">$${offer.newAmount.toFixed(2)}</span>
+                                </div>
+                                
+                                <div style="background: #f9731610; padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0; text-align: center;">
+                                    <span style="font-size:1.5rem; font-weight:700; color:#f97316;">${offer.savingsPercentage || 0}% OFF</span>
+                                    <span style="display:block; font-size:0.9rem; color:#64748b;">Save $${(offer.originalPrice - offer.newAmount).toFixed(2)}</span>
+                                </div>
+                                
+                                <div class="offer-timer">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Valid: ${startDate ? formatDate(startDate) : 'Now'} - ${endDate ? formatDate(endDate) : 'No end date'}</span>
+                                </div>
+                                
+                                ${timeRemaining && status === 'active' ? `
+                                    <div class="countdown" data-end="${endDate.toISOString()}">
+                                        <div class="countdown-block"><span id="days-${doc.id}">0</span><small>Days</small></div>
+                                        <div class="countdown-block"><span id="hours-${doc.id}">0</span><small>Hours</small></div>
+                                        <div class="countdown-block"><span id="minutes-${doc.id}">0</span><small>Mins</small></div>
+                                        <div class="countdown-block"><span id="seconds-${doc.id}">0</span><small>Secs</small></div>
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="offer-progress">
+                                    <div class="offer-progress-bar" style="width: ${status === 'active' ? '100%' : '0%'}"></div>
+                                </div>
+                                
+                                <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+                                    <button class="btn btn-sm btn-primary" onclick="editOffer('${doc.id}')">Edit</button>
+                                    <button class="btn btn-sm btn-warning" onclick="toggleOfferStatus('${doc.id}', ${!offer.active})">
+                                        ${offer.active ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteOffer('${doc.id}')">Delete</button>
+                                </div>
+                                <p style="margin-top:0.5rem; font-size:0.8rem; color:#64748b;">
+                                    <i class="fas fa-users"></i> Created: ${formatDate(offer.createdAt)}
+                                </p>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                }
+                
+                document.getElementById('content').innerHTML = html;
+                
+                // Start countdown timers
+                document.querySelectorAll('.countdown').forEach(el => {
+                    const endTime = new Date(el.dataset.end);
+                    const offerId = el.closest('.offer-card')?.querySelector('[data-end]')?.getAttribute('data-end');
+                    if (offerId) {
+                        startCountdown(offerId.split('-')[1], endTime);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading offers:', error);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading offers: ${error.message}</p><button class="btn btn-primary" onclick="loadMembershipOffers()">Retry</button></div>`;
+            }
+        }
+
+        function startCountdown(offerId, endTime) {
+            const timer = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = endTime.getTime() - now;
+                
+                if (distance < 0) {
+                    clearInterval(timer);
+                    document.getElementById(`days-${offerId}`).textContent = '0';
+                    document.getElementById(`hours-${offerId}`).textContent = '0';
+                    document.getElementById(`minutes-${offerId}`).textContent = '0';
+                    document.getElementById(`seconds-${offerId}`).textContent = '0';
+                    return;
+                }
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                document.getElementById(`days-${offerId}`).textContent = days;
+                document.getElementById(`hours-${offerId}`).textContent = hours;
+                document.getElementById(`minutes-${offerId}`).textContent = minutes;
+                document.getElementById(`seconds-${offerId}`).textContent = seconds;
+            }, 1000);
+        }
+
+        window.showCreateOffer = function() {
+            const packageOptions = Object.entries(membershipPackages).map(([type, pkg]) => {
+                return `<option value="${type}">${pkg.name} ($${pkg.price})</option>`;
+            }).join('');
+            
+            const now = new Date();
+            const defaultEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+            const formatDateTime = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
+            
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Create Membership Offer</h3>
+                <p style="margin-bottom:1rem; color:#64748b;">Set a discounted price for a membership package and choose when the offer ends.</p>
+                
+                <select id="offerMembershipType" style="margin-bottom:1rem;">
+                    <option value="">Select Membership Package</option>
+                    ${packageOptions}
+                </select>
+                
+                <div style="margin-bottom:1rem;">
+                    <label>Offer Period</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="datetime-local" id="offerStartDate" value="${formatDateTime(now)}" style="flex:1;">
+                        <span>to</span>
+                        <input type="datetime-local" id="offerEndDate" value="${formatDateTime(defaultEnd)}" style="flex:1;">
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:1rem;">
+                    <label>Discount</label>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <input type="number" id="offerDiscountPercent" placeholder="Discount %" min="1" max="99" step="1" style="width:100px;">
+                        <span>% off</span>
+                        <span style="color:#64748b;">or</span>
+                        <input type="number" id="offerNewAmount" placeholder="New Price $" min="0" step="0.01" style="flex:1;">
+                    </div>
+                </div>
+                
+                <div id="offerPreview" style="background:#f8fafc; padding:1rem; border-radius:0.5rem; margin:1rem 0;">
+                    <p style="margin:0;"><strong>Preview:</strong></p>
+                    <p id="previewText" style="margin:0.5rem 0 0 0;">Select a package to see preview</p>
+                </div>
+                
+                <button class="btn btn-offer" id="createOfferBtn" style="width:100%;">Create Offer</button>
+            `);
+            
+            document.getElementById('offerMembershipType').addEventListener('change', updateOfferPreview);
+            document.getElementById('offerDiscountPercent').addEventListener('input', updateOfferPreview);
+            document.getElementById('offerNewAmount').addEventListener('input', updateOfferPreview);
+            
+            function updateOfferPreview() {
+                const type = document.getElementById('offerMembershipType').value;
+                const discount = parseFloat(document.getElementById('offerDiscountPercent').value) || 0;
+                const newAmount = parseFloat(document.getElementById('offerNewAmount').value);
+                
+                if (!type || !membershipPackages[type]) {
+                    document.getElementById('previewText').textContent = 'Select a package to see preview';
+                    return;
+                }
+                
+                const pkg = membershipPackages[type];
+                const originalPrice = pkg.price;
+                
+                let displayPrice = originalPrice;
+                let savings = 0;
+                
+                if (discount > 0) {
+                    displayPrice = originalPrice * (1 - discount / 100);
+                    savings = originalPrice - displayPrice;
+                    document.getElementById('previewText').innerHTML = `
+                        ${pkg.name}: <span style="text-decoration:line-through; color:#94a3b8;">$${originalPrice.toFixed(2)}</span> 
+                        → <span style="color:#f97316; font-weight:700;">$${displayPrice.toFixed(2)}</span>
+                        <span style="color:#10b981; margin-left:0.5rem;">Save $${savings.toFixed(2)} (${discount}% off)</span>
+                    `;
+                } else if (newAmount && newAmount > 0 && newAmount < originalPrice) {
+                    displayPrice = newAmount;
+                    savings = originalPrice - newAmount;
+                    const savingsPercent = ((savings / originalPrice) * 100).toFixed(1);
+                    document.getElementById('previewText').innerHTML = `
+                        ${pkg.name}: <span style="text-decoration:line-through; color:#94a3b8;">$${originalPrice.toFixed(2)}</span> 
+                        → <span style="color:#f97316; font-weight:700;">$${displayPrice.toFixed(2)}</span>
+                        <span style="color:#10b981; margin-left:0.5rem;">Save $${savings.toFixed(2)} (${savingsPercent}% off)</span>
+                    `;
+                } else {
+                    document.getElementById('previewText').innerHTML = `Original price: $${originalPrice.toFixed(2)}`;
+                }
+            }
+        };
+
+        window.createOffer = async function() {
+            const type = document.getElementById('offerMembershipType').value;
+            const startDate = document.getElementById('offerStartDate').value;
+            const endDate = document.getElementById('offerEndDate').value;
+            const discount = parseFloat(document.getElementById('offerDiscountPercent').value) || 0;
+            const newAmount = parseFloat(document.getElementById('offerNewAmount').value);
+            
+            if (!type) {
+                showAlert('Please select a membership package', 'error');
+                return;
+            }
+            
+            if (!startDate || !endDate) {
+                showAlert('Please set start and end dates', 'error');
+                return;
+            }
+            
+            const startDateTime = new Date(startDate);
+            const endDateTime = new Date(endDate);
+            
+            if (endDateTime <= startDateTime) {
+                showAlert('End date must be after start date', 'error');
+                return;
+            }
+            
+            const pkg = membershipPackages[type];
+            const originalPrice = pkg.price;
+            
+            let finalNewAmount = newAmount;
+            let savingsPercentage = 0;
+            
+            if (discount > 0) {
+                finalNewAmount = originalPrice * (1 - discount / 100);
+                savingsPercentage = discount;
+            } else if (newAmount && newAmount > 0 && newAmount < originalPrice) {
+                finalNewAmount = newAmount;
+                savingsPercentage = ((originalPrice - newAmount) / originalPrice * 100).toFixed(1);
+            } else {
+                showAlert('Please enter a valid discount or new price', 'error');
+                return;
+            }
+            
+            try {
+                // Deactivate any existing active offers for this package
+                const existingOffers = await db.collection('membershipOffers')
+                    .where('active', '==', true)
+                    .get();
+                
+                const batch = db.batch();
+                existingOffers.forEach(doc => {
+                    batch.update(doc.ref, { active: false });
+                });
+                
+                // Create new offer
+                const offerRef = db.collection('membershipOffers').doc();
+                batch.set(offerRef, {
+                    membershipType: type,
+                    originalPrice,
+                    newAmount: finalNewAmount,
+                    savingsPercentage: parseFloat(savingsPercentage),
+                    startDateTime: firebase.firestore.Timestamp.fromDate(startDateTime),
+                    endDateTime: firebase.firestore.Timestamp.fromDate(endDateTime),
+                    active: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdBy: currentUser.uid
+                });
+                
+                await batch.commit();
+                
+                // Send notification to all users about the offer
+                await sendNotificationToAll(
+                    '🔥 Special Membership Offer!',
+                    `${pkg.name} membership is now available at $${finalNewAmount.toFixed(2)} (${savingsPercentage}% off)! Offer ends ${formatDate(endDateTime)}.`,
+                    'offer',
+                    null
+                );
+                
+                closeModal();
+                showAlert('Offer created and users notified!', 'success');
+                loadMembershipOffers();
+                
+            } catch (error) {
+                console.error('Error creating offer:', error);
+                showAlert('Error creating offer: ' + error.message, 'error');
+            }
+        };
+
+        window.editOffer = async function(offerId) {
+            const doc = await db.collection('membershipOffers').doc(offerId).get();
+            const offer = doc.data();
+            
+            const packageOptions = Object.entries(membershipPackages).map(([type, pkg]) => {
+                const selected = type === offer.membershipType ? 'selected' : '';
+                return `<option value="${type}" ${selected}>${pkg.name} ($${pkg.price})</option>`;
+            }).join('');
+            
+            const formatDateTime = (timestamp) => {
+                const date = timestamp?.seconds ? new Date(timestamp.seconds * 1000) : new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
+            
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Edit Membership Offer</h3>
+                
+                <select id="editOfferMembershipType" style="margin-bottom:1rem;">
+                    ${packageOptions}
+                </select>
+                
+                <div style="margin-bottom:1rem;">
+                    <label>Offer Period</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="datetime-local" id="editOfferStartDate" value="${formatDateTime(offer.startDateTime)}" style="flex:1;">
+                        <span>to</span>
+                        <input type="datetime-local" id="editOfferEndDate" value="${formatDateTime(offer.endDateTime)}" style="flex:1;">
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:1rem;">
+                    <label>New Price ($)</label>
+                    <input type="number" id="editOfferNewAmount" value="${offer.newAmount}" min="0" step="0.01">
+                </div>
+                
+                <div style="margin-bottom:1rem;">
+                    <label>Active</label>
+                    <input type="checkbox" id="editOfferActive" ${offer.active ? 'checked' : ''}>
+                </div>
+                
+                <button class="btn btn-offer" id="updateOfferBtn" data-id="${offerId}" style="width:100%;">Update Offer</button>
+            `);
+        };
+
+        window.updateOffer = async function(offerId) {
+            const type = document.getElementById('editOfferMembershipType').value;
+            const startDate = document.getElementById('editOfferStartDate').value;
+            const endDate = document.getElementById('editOfferEndDate').value;
+            const newAmount = parseFloat(document.getElementById('editOfferNewAmount').value);
+            const active = document.getElementById('editOfferActive').checked;
+            
+            if (!type || !startDate || !endDate || !newAmount) {
+                showAlert('Please fill all fields', 'error');
+                return;
+            }
+            
+            const startDateTime = new Date(startDate);
+            const endDateTime = new Date(endDate);
+            
+            if (endDateTime <= startDateTime) {
+                showAlert('End date must be after start date', 'error');
+                return;
+            }
+            
+            const pkg = membershipPackages[type];
+            const originalPrice = pkg.price;
+            const savingsPercentage = ((originalPrice - newAmount) / originalPrice * 100).toFixed(1);
+            
+            try {
+                await db.collection('membershipOffers').doc(offerId).update({
+                    membershipType: type,
+                    originalPrice,
+                    newAmount,
+                    savingsPercentage: parseFloat(savingsPercentage),
+                    startDateTime: firebase.firestore.Timestamp.fromDate(startDateTime),
+                    endDateTime: firebase.firestore.Timestamp.fromDate(endDateTime),
+                    active
+                });
+                
+                closeModal();
+                showAlert('Offer updated successfully!', 'success');
+                loadMembershipOffers();
+                
+            } catch (error) {
+                console.error('Error updating offer:', error);
+                showAlert('Error updating offer: ' + error.message, 'error');
+            }
+        };
+
+        window.toggleOfferStatus = async function(offerId, newStatus) {
+            try {
+                await db.collection('membershipOffers').doc(offerId).update({
+                    active: newStatus
+                });
+                showAlert(`Offer ${newStatus ? 'activated' : 'deactivated'}`, 'success');
+                loadMembershipOffers();
+            } catch (error) {
+                console.error('Error toggling offer status:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.deleteOffer = async function(offerId) {
+            if (!confirm('Are you sure you want to delete this offer?')) return;
+            try {
+                await db.collection('membershipOffers').doc(offerId).delete();
+                showAlert('Offer deleted', 'success');
+                loadMembershipOffers();
+            } catch (error) {
+                console.error('Error deleting offer:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // ==================== UPDATED approveMembership with offer handling ====================
         async function approveMembership(userId, paymentId) {
             try {
                 const paymentDoc = await db.collection('membershipPayments').doc(paymentId).get();
@@ -6309,6 +6971,14 @@
                     await reviewSubmission(subId, false);
                     return;
                 }
+                if (target.classList.contains('revert-submission')) {
+                    const subId = target.getAttribute('data-sub-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    const taskTitle = target.getAttribute('data-task-title');
+                    await revertSubmission(subId, userId, amount, taskTitle);
+                    return;
+                }
 
                 // Withdrawals
                 if (target.classList.contains('process-withdrawal')) {
@@ -6323,6 +6993,13 @@
                     }
                     return;
                 }
+                if (target.classList.contains('revert-withdrawal')) {
+                    const withdrawalId = target.getAttribute('data-withdrawal-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    await revertWithdrawal(withdrawalId, userId, amount);
+                    return;
+                }
 
                 // Memberships
                 if (target.classList.contains('approve-membership')) {
@@ -6335,6 +7012,14 @@
                     const userId = target.getAttribute('data-user-id');
                     const paymentId = target.getAttribute('data-payment-id');
                     await rejectMembership(userId, paymentId);
+                    return;
+                }
+                if (target.classList.contains('revert-membership')) {
+                    const paymentId = target.getAttribute('data-payment-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    const credited = target.getAttribute('data-credited') === 'true';
+                    await revertMembership(paymentId, userId, amount, credited);
                     return;
                 }
 
@@ -6446,6 +7131,19 @@
                     return;
                 }
 
+                // Offers
+                if (target.id === 'createOfferBtn') {
+                    e.preventDefault();
+                    await createOffer();
+                    return;
+                }
+                if (target.id === 'updateOfferBtn') {
+                    e.preventDefault();
+                    const offerId = target.getAttribute('data-id');
+                    await updateOffer(offerId);
+                    return;
+                }
+
             } catch (error) {
                 console.error('Error in click handler:', error);
                 showAlert('An error occurred: ' + error.message, 'error');
@@ -6538,6 +7236,9 @@
             } else if (type === 'warning') {
                 iconClass = 'warning';
                 title = 'Warning';
+            } else if (type === 'offer') {
+                iconClass = 'offer';
+                title = 'Special Offer';
             } else {
                 iconClass = 'info';
                 title = 'Info';
@@ -6547,6 +7248,7 @@
             alertIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : 
                                  type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : 
                                  type === 'warning' ? '<i class="fas fa-exclamation-triangle"></i>' : 
+                                 type === 'offer' ? '<i class="fas fa-tag"></i>' : 
                                  '<i class="fas fa-info-circle"></i>';
             alertTitle.textContent = title;
             alertMessage.textContent = message;
@@ -6630,6 +7332,9 @@
                         break;
                     case 'memberships':
                         await loadMemberships();
+                        break;
+                    case 'offers':
+                        await loadMembershipOffers();
                         break;
                     case 'referrals':
                         await loadReferrals();
@@ -7009,6 +7714,19 @@
         window.viewNewbieSubmission = viewNewbieSubmission;
         window.approveNewbieSubmission = approveNewbieSubmission;
         window.rejectNewbieSubmission = rejectNewbieSubmission;
+        
+        // Offer functions
+        window.showCreateOffer = showCreateOffer;
+        window.createOffer = createOffer;
+        window.editOffer = editOffer;
+        window.updateOffer = updateOffer;
+        window.toggleOfferStatus = toggleOfferStatus;
+        window.deleteOffer = deleteOffer;
+        
+        // Revert functions
+        window.revertSubmission = revertSubmission;
+        window.revertWithdrawal = revertWithdrawal;
+        window.revertMembership = revertMembership;
     </script>  
 </body>  
 </html>
