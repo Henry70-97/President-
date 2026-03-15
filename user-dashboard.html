@@ -1841,58 +1841,103 @@
 
         // ==================== CANCEL ACCEPTED TASK ====================
         async function cancelAcceptedTask(taskId) {
-            if (!confirm('Are you sure you want to cancel your acceptance of this task? This will make the task available for others.')) {
+            if (!confirm('Are you sure you want to cancel your acceptance of this task? ' + 
+                         (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE ? 
+                          'If the task has expired, 75% of the reward will be deducted from your wallet.' : ''))) {
                 return;
             }
+
             try {
+                // Check if already submitted
                 const submitted = await hasUserSubmitted(taskId);
                 if (submitted) {
                     showAlert('You have already submitted this task. Cannot cancel acceptance.', 'error');
                     return;
                 }
 
+                // Get task data
+                const taskRef = db.collection('tasks').doc(taskId);
+                const taskDoc = await taskRef.get();
+                if (!taskDoc.exists) {
+                    showAlert('Task not found', 'error');
+                    return;
+                }
+                const task = taskDoc.data();
+                const reward = parseFloat(task.reward) || 0;
+                const isExpired = isDeadlinePassed(task.deadline);
+
                 showModal(`
                     <div class="modal-content" style="text-align:center;">
                         <div class="loading-spinner"></div>
-                        <h3>Cancelling acceptance...</h3>
+                        <h3>Processing cancellation...</h3>
                     </div>
                 `);
 
-                const taskRef = db.collection('tasks').doc(taskId);
+                const userRef = db.collection('users').doc(currentUser.uid);
                 const userAcceptRef = taskRef.collection('taskAccepts').doc(currentUser.uid);
                 const userAcceptedTaskRef = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId);
 
                 await db.runTransaction(async (transaction) => {
-                    const taskDoc = await transaction.get(taskRef);
-                    if (!taskDoc.exists) throw new Error('Task not found');
-
+                    // Verify user still has accepted this task
                     const acceptDoc = await transaction.get(userAcceptRef);
-                    if (!acceptDoc.exists) throw new Error('You have not accepted this task');
+                    if (!acceptDoc.exists) {
+                        throw new Error('You have not accepted this task');
+                    }
 
+                    // Update task accepted count
                     transaction.update(taskRef, { acceptedCount: firebase.firestore.FieldValue.increment(-1) });
+
+                    // Remove acceptance records
                     transaction.delete(userAcceptRef);
                     transaction.delete(userAcceptedTaskRef);
 
                     // Decrement daily counter if today
                     const today = new Date().toDateString();
                     if (userData.lastAcceptedDate === today) {
-                        transaction.update(db.collection('users').doc(currentUser.uid), {
+                        transaction.update(userRef, {
                             acceptedToday: firebase.firestore.FieldValue.increment(-1)
                         });
                     }
+
+                    // Apply penalty if task expired
+                    if (isExpired) {
+                        const penalty = reward * 0.75; // 75%
+                        if (penalty > 0) {
+                            // Deduct from wallet (negative allowed)
+                            transaction.update(userRef, {
+                                wallet: firebase.firestore.FieldValue.increment(-penalty)
+                            });
+
+                            // Create transaction record for the penalty
+                            const txRef = db.collection('transactions').doc();
+                            transaction.set(txRef, {
+                                userId: currentUser.uid,
+                                type: 'penalty',
+                                description: `Cancellation fee for expired task: ${task.title || 'Untitled'}`,
+                                amount: -penalty,
+                                taskId: taskId,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        }
+                    }
                 });
 
-                // --- SET COOLDOWN ---
+                // Set cooldown (always apply cooldown)
                 const cooldownUntil = new Date(Date.now() + TASK_CANCEL_COOLDOWN_MINUTES * 60 * 1000);
                 await db.collection('users').doc(currentUser.uid).update({
-                    taskCancelCooldownUntil: firebase.firestore.Timestamp.fromDate(cooldownUntil)
+                    taskCancelCooldownUntil: firebase.firestore.FieldValue.fromDate(cooldownUntil)
                 });
-                // Update local userData
                 userData.taskCancelCooldownUntil = firebase.firestore.Timestamp.fromDate(cooldownUntil);
 
                 closeModal();
-                showAlert('Task acceptance cancelled successfully. You cannot accept new tasks for 30 minutes.', 'success');
 
+                if (isExpired) {
+                    showAlert(`Task cancelled. 75% of the reward (${formatBoth(reward * 0.75)}) has been deducted from your wallet.`, 'success');
+                } else {
+                    showAlert('Task acceptance cancelled successfully. You cannot accept new tasks for 30 minutes.', 'success');
+                }
+
+                // Refresh current view
                 if (currentTab === 'submit') {
                     loadPendingSubmissions();
                 } else if (currentTab === 'tasks' || currentTab === 'design' || currentTab === 'projects' || currentTab === 'transcription') {
@@ -2269,7 +2314,7 @@
                             ${expired ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
                             <div style="display:flex; gap:0.5rem; margin-top:0.8rem;">
                                 <button class="btn btn-success" onclick="showSubmitForm('${doc.id}')" ${expired ? 'disabled' : ''} style="flex:1;">Continue Work</button>
-                                <button class="btn btn-danger" onclick="cancelAcceptedTask('${doc.id}')" ${expired ? 'disabled' : ''} style="flex:1;">Cancel Acceptance</button>
+                                <button class="btn btn-danger" onclick="cancelAcceptedTask('${doc.id}')" style="flex:1;">Cancel Acceptance</button>
                             </div>
                         </div>
                     `;
@@ -2556,10 +2601,10 @@
         // ==================== MEMBERSHIP OPTIONS ====================
         function showMembershipOptions(usingOffer = false) {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
-            const offerPrice = (usingOffer && currentOffer && currentOffer.membershipType === 'premium') 
-                ? currentOffer.newAmount : premiumPkg.price;
-            const offerId = (usingOffer && currentOffer && currentOffer.membershipType === 'premium') 
-                ? currentOffer.id : null;
+            const hasOffer = currentOffer && currentOffer.membershipType === 'premium';
+            const offerPrice = hasOffer ? currentOffer.newAmount : premiumPkg.price;
+            const originalPrice = hasOffer ? currentOffer.originalPrice : premiumPkg.price;
+            const offerId = hasOffer ? currentOffer.id : null;
 
             showModal(`<div class="modal-content" style="text-align:center;">
                 <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;">
@@ -2572,8 +2617,9 @@
                 <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
                     <div style="background:#f8fafc; padding:2rem; border:2px solid #6366f1; border-radius:1.5rem;">
                         <h4 style="color:#6366f1; font-size:1.8rem;">${escapeHtml(premiumPkg.name)}</h4>
-                        ${usingOffer && currentOffer?.membershipType === 'premium' ? `
-                            <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b;">(was ${formatBoth(premiumPkg.price)})</span></p>
+                        ${hasOffer ? `
+                            <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b; text-decoration:line-through;">${formatBoth(originalPrice)}</span></p>
+                            <p style="font-size:0.9rem; color:#f97316;">${currentOffer.savingsPercentage}% OFF – Limited time!</p>
                         ` : `
                             <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(premiumPkg.price)}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
                         `}
@@ -2594,10 +2640,10 @@
 
         function showEliteUpgradeOptions(usingOffer = false) {
             const elitePkg = (membershipPackages && membershipPackages.elite) || DEFAULT_MEMBERSHIP_PACKAGES.elite;
-            const offerPrice = (usingOffer && currentOffer && currentOffer.membershipType === 'elite') 
-                ? currentOffer.newAmount : elitePkg.price;
-            const offerId = (usingOffer && currentOffer && currentOffer.membershipType === 'elite') 
-                ? currentOffer.id : null;
+            const hasOffer = currentOffer && currentOffer.membershipType === 'elite';
+            const offerPrice = hasOffer ? currentOffer.newAmount : elitePkg.price;
+            const originalPrice = hasOffer ? currentOffer.originalPrice : elitePkg.price;
+            const offerId = hasOffer ? currentOffer.id : null;
 
             showModal(`<div class="modal-content" style="text-align:center;">
                 <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#f59e0b,#d97706); padding:1.5rem; border-radius:1rem; color:white;">
@@ -2610,8 +2656,9 @@
                 <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
                     <div style="background:#f8fafc; padding:2rem; border:2px solid #f59e0b; border-radius:1.5rem;">
                         <h4 style="color:#f59e0b; font-size:1.8rem;">${escapeHtml(elitePkg.name)}</h4>
-                        ${usingOffer && currentOffer?.membershipType === 'elite' ? `
-                            <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b;">(was ${formatBoth(elitePkg.price)})</span></p>
+                        ${hasOffer ? `
+                            <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b; text-decoration:line-through;">${formatBoth(originalPrice)}</span></p>
+                            <p style="font-size:0.9rem; color:#f97316;">${currentOffer.savingsPercentage}% OFF – Limited time!</p>
                         ` : `
                             <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(elitePkg.price)}<span style="font-size:1rem; color:#64748b;">/${elitePkg.duration}</span></p>
                         `}
