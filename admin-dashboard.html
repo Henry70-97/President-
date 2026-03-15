@@ -473,6 +473,37 @@
             margin-bottom: 1rem;
         }
 
+        /* NEW: GeoPay survey question builder styles */
+        .survey-question-item {
+            background: #f1f5f9;
+            border-radius: 0.75rem;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #f97316;
+        }
+        .survey-question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        .survey-question-controls {
+            display: flex;
+            gap: 0.3rem;
+        }
+        .options-container {
+            margin-left: 1.5rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 0.5rem;
+        }
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+
         @media (max-width: 768px) { 
             .header { flex-direction: column; gap: 1rem; text-align: center; }
             .user-info-grid { grid-template-columns: 1fr; }
@@ -1497,7 +1528,7 @@
                         <button class="btn btn-primary" id="createTaskBtn">+ New Task</button> 
                     </div> 
                     <table class="data-table"> 
-                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Audio</th><th>AI Annotation</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th></tr> 
+                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Subcategory</th><th>Audio</th><th>AI Annotation</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th></tr> 
                 `; 
                 
                 for (let i = 0; i < tasks.length; i++) { 
@@ -1514,6 +1545,12 @@
                         } catch {
                             assignedDisplay = task.assignedTo;
                         }
+                    }
+                    
+                    // NEW: Show subcategory for GeoPay tasks
+                    let subcategoryDisplay = '—';
+                    if (task.category === 'GeoPay' && task.subcategory) {
+                        subcategoryDisplay = `<span class="badge info">${task.subcategory}</span>`;
                     }
                     
                     let audioDisplay = '—';
@@ -1560,6 +1597,7 @@
                                 ${deadlineStatus ? `<br><small class="badge ${deadlineStatus.class}">${deadlineStatus.text}</small>` : ''} 
                             </td> 
                             <td>${task.category}</td> 
+                            <td>${subcategoryDisplay}</td> 
                             <td>${audioDisplay}</td>
                             <td>${annotationDisplay}</td>
                             <td>${task.collaborable ? '✅' : '❌'}</td> 
@@ -1584,6 +1622,91 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading tasks: ${error.message}</p><button class="btn btn-primary" onclick="loadTasks()">Retry</button></div>`;
             }
         }
+
+        // NEW: Helper function to add a survey question field in create/edit
+        function addSurveyQuestion(containerId, questionData = null) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const index = container.children.length;
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'survey-question-item';
+            questionDiv.dataset.index = index;
+            
+            const questionText = questionData ? questionData.questionText : '';
+            const type = questionData ? questionData.type : 'text';
+            const options = questionData && questionData.options ? questionData.options : [];
+            const correctAnswer = questionData ? questionData.correctAnswer || '' : '';
+            const points = questionData ? questionData.points || 1 : 1;
+            
+            let optionsHtml = '';
+            if (type === 'multipleChoice') {
+                optionsHtml = `<div class="options-container" id="options-${index}">`;
+                if (options.length > 0) {
+                    options.forEach((opt, optIdx) => {
+                        optionsHtml += `
+                            <div class="option-row">
+                                <input type="text" class="option-input" value="${opt}" placeholder="Option ${optIdx+1}">
+                                <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                            </div>
+                        `;
+                    });
+                } else {
+                    optionsHtml += `
+                        <div class="option-row">
+                            <input type="text" class="option-input" placeholder="Option 1">
+                            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                        </div>
+                    `;
+                }
+                optionsHtml += `<button class="btn btn-sm btn-info" onclick="addOption(${index})">+ Add Option</button>`;
+                optionsHtml += '</div>';
+            }
+            
+            questionDiv.innerHTML = `
+                <div class="survey-question-header">
+                    <strong>Question ${index+1}</strong>
+                    <div class="survey-question-controls">
+                        <button class="btn btn-sm btn-danger" onclick="this.closest('.survey-question-item').remove()"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <input type="text" class="question-text" placeholder="Question text" value="${escapeHtml(questionText)}">
+                <div style="display:flex; gap:1rem; margin:0.5rem 0;">
+                    <select class="question-type" onchange="toggleQuestionOptions(this, ${index})">
+                        <option value="text" ${type === 'text' ? 'selected' : ''}>Text answer</option>
+                        <option value="multipleChoice" ${type === 'multipleChoice' ? 'selected' : ''}>Multiple choice</option>
+                    </select>
+                    <input type="number" class="question-points" placeholder="Points" min="0" step="0.5" value="${points}" style="width:80px;">
+                </div>
+                <div class="options-area" id="options-area-${index}" style="display: ${type === 'multipleChoice' ? 'block' : 'none'};">
+                    ${optionsHtml}
+                </div>
+                <div style="margin-top:0.5rem;">
+                    <input type="text" class="correct-answer" placeholder="Correct answer (optional for multiple choice)" value="${escapeHtml(correctAnswer)}">
+                </div>
+            `;
+            container.appendChild(questionDiv);
+        }
+
+        // NEW: Add option to a multiple choice question
+        window.addOption = function(questionIndex) {
+            const optionsContainer = document.getElementById(`options-${questionIndex}`);
+            if (!optionsContainer) return;
+            const optionRow = document.createElement('div');
+            optionRow.className = 'option-row';
+            optionRow.innerHTML = `
+                <input type="text" class="option-input" placeholder="New option">
+                <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            optionsContainer.insertBefore(optionRow, optionsContainer.lastElementChild); // before the "Add Option" button
+        };
+
+        // NEW: Toggle options area based on question type
+        window.toggleQuestionOptions = function(select, index) {
+            const area = document.getElementById(`options-area-${index}`);
+            if (area) {
+                area.style.display = select.value === 'multipleChoice' ? 'block' : 'none';
+            }
+        };
 
         async function showCreateTask() {  
             const usersSnapshot = await db.collection('users').orderBy('email').get();
@@ -1611,7 +1734,7 @@
                 <input type="datetime-local" id="taskDeadline" required>  
                 <input type="number" id="taskReward" placeholder="Reward (USD)" step="0.01" min="0" required>  
                 
-                <!-- NEW: Writing pages field -->
+                <!-- Writing pages field -->
                 <div id="writingPagesField" style="margin: 1rem 0; display: none;">
                     <h4 style="margin-bottom:0.5rem;">Writing Details</h4>
                     <input type="number" id="taskPages" placeholder="Number of pages" min="1" step="1">
@@ -1627,6 +1750,7 @@
                     <option value="project">Project</option>  
                     <option value="transcription">Transcription</option>  
                     <option value="ai_annotation">AI Annotation</option>  
+                    <option value="GeoPay">GeoPay</option>  <!-- NEW -->
                     <option value="other">Other</option>  
                 </select>  
                 <select id="taskDifficulty">  
@@ -1634,6 +1758,23 @@
                     <option value="medium">Medium</option>  
                     <option value="hard">Hard</option>  
                 </select>  
+
+                <!-- NEW: GeoPay subcategory and survey fields -->
+                <div id="geopayFields" style="display:none; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
+                    <h4 style="margin-bottom:0.5rem;">GeoPay Details</h4>
+                    <select id="geopaySubcategory">
+                        <option value="opinionPay">Opinion Pay (case study)</option>
+                        <option value="geosurvey">Geo Survey (timed questions)</option>
+                    </select>
+                    <div id="geosurveyFields" style="display:none; margin-top:1rem;">
+                        <label>Survey Duration (minutes)</label>
+                        <input type="number" id="surveyDuration" min="1" value="30">
+                        <h5>Questions (max 10)</h5>
+                        <div id="surveyQuestionsContainer"></div>
+                        <button class="btn btn-sm btn-info" onclick="addSurveyQuestion('surveyQuestionsContainer')">+ Add Question</button>
+                        <p class="settings-label" style="margin-top:0.5rem;">For multiple choice, add options and optionally set correct answer for auto-grading.</p>
+                    </div>
+                </div>
 
                 <div id="transcriptionFields" style="display:none; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
                     <h4 style="margin-bottom:0.5rem;">Audio Details</h4>
@@ -1645,7 +1786,7 @@
                     <input type="text" id="taskAudioSize" placeholder="Size (e.g., 14.39 MB)">
                 </div>
 
-                <!-- NEW: AI Annotation Fields -->
+                <!-- AI Annotation Fields -->
                 <div id="aiAnnotationFields" style="display:none; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
                     <h4 style="margin-bottom:0.5rem;">AI Annotation Details</h4>
                     <select id="taskAnnotationSubcategory">
@@ -1685,18 +1826,25 @@
                 const transcriptionDiv = document.getElementById('transcriptionFields');
                 const aiDiv = document.getElementById('aiAnnotationFields');
                 const writingDiv = document.getElementById('writingPagesField');
+                const geopayDiv = document.getElementById('geopayFields');
                 const selected = e.target.value;
                 
                 transcriptionDiv.style.display = selected === 'transcription' ? 'block' : 'none';
                 aiDiv.style.display = selected === 'ai_annotation' ? 'block' : 'none';
                 writingDiv.style.display = selected === 'writing' ? 'block' : 'none';
+                geopayDiv.style.display = selected === 'GeoPay' ? 'block' : 'none';
                 
                 if (selected === 'ai_annotation') {
-                    // show appropriate subfield based on current selection
                     const subcat = document.getElementById('taskAnnotationSubcategory').value;
                     document.getElementById('imageCaptionField').style.display = subcat === 'image_caption' ? 'block' : 'none';
                     document.getElementById('actionRecognitionField').style.display = subcat === 'action_recognition' ? 'block' : 'none';
                 }
+            });
+
+            // NEW: Show/hide geosurvey fields based on subcategory
+            document.getElementById('geopaySubcategory').addEventListener('change', function(e) {
+                const val = e.target.value;
+                document.getElementById('geosurveyFields').style.display = val === 'geosurvey' ? 'block' : 'none';
             });
 
             document.getElementById('taskAnnotationSubcategory')?.addEventListener('change', function(e) {
@@ -1726,6 +1874,51 @@
             const assignedTo = document.getElementById('taskAssignedTo').value;  
             const collaborable = document.getElementById('taskCollaborable').checked;  
             const maxCollaborators = collaborable ? parseInt(document.getElementById('taskMaxCollaborators').value) || 5 : 2;  
+            
+            // NEW: GeoPay fields
+            let subcategory = null;
+            let surveyDuration = null;
+            let questions = [];
+            if (category === 'GeoPay') {
+                subcategory = document.getElementById('geopaySubcategory').value;
+                if (subcategory === 'geosurvey') {
+                    surveyDuration = parseInt(document.getElementById('surveyDuration').value) || 30;
+                    // gather questions
+                    const questionItems = document.querySelectorAll('#surveyQuestionsContainer .survey-question-item');
+                    questionItems.forEach((item, idx) => {
+                        const qText = item.querySelector('.question-text').value.trim();
+                        const qType = item.querySelector('.question-type').value;
+                        const qPoints = parseFloat(item.querySelector('.question-points').value) || 1;
+                        const correctAnswer = item.querySelector('.correct-answer').value.trim();
+                        let options = [];
+                        if (qType === 'multipleChoice') {
+                            const optionInputs = item.querySelectorAll('.option-input');
+                            optionInputs.forEach(opt => {
+                                const val = opt.value.trim();
+                                if (val) options.push(val);
+                            });
+                        }
+                        if (qText) {
+                            const question = {
+                                questionText: qText,
+                                type: qType,
+                                points: qPoints
+                            };
+                            if (options.length > 0) question.options = options;
+                            if (correctAnswer) question.correctAnswer = correctAnswer;
+                            questions.push(question);
+                        }
+                    });
+                    if (questions.length === 0) {
+                        showAlert('Please add at least one question for geosurvey.', 'error');
+                        return;
+                    }
+                    if (questions.length > 10) {
+                        showAlert('Maximum 10 questions allowed.', 'error');
+                        return;
+                    }
+                }
+            }
             
             let audioUrl = null, audioDuration = null, language = null, source = null, audioFormat = null, audioSize = null;
             if (category === 'transcription') {
@@ -1770,6 +1963,11 @@
                     assignedTo: assignedTo || 'all',  
                     collaborable,  
                     maxCollaborators,  
+                    // NEW GeoPay fields
+                    subcategory,
+                    surveyDuration,
+                    questions,
+                    // Transcription
                     audioUrl,  
                     audioDuration,
                     language,
@@ -1849,8 +2047,52 @@
             const showTranscription = data.category === 'transcription' ? 'block' : 'none';
             const showAI = data.category === 'ai_annotation' ? 'block' : 'none';
             const showWriting = data.category === 'writing' ? 'block' : 'none';
+            const showGeoPay = data.category === 'GeoPay' ? 'block' : 'none';
+            const showGeosurvey = (data.category === 'GeoPay' && data.subcategory === 'geosurvey') ? 'block' : 'none';
             const imageDisplay = (data.annotationSubcategory === 'image_caption') ? 'block' : 'none';
             const videoDisplay = (data.annotationSubcategory === 'action_recognition') ? 'block' : 'none';
+            
+            // Build survey questions HTML for editing
+            let surveyQuestionsHtml = '';
+            if (data.questions && data.questions.length > 0) {
+                data.questions.forEach((q, idx) => {
+                    const optionsHtml = q.type === 'multipleChoice' && q.options ? q.options.map(opt => `
+                        <div class="option-row">
+                            <input type="text" class="option-input" value="${escapeHtml(opt)}">
+                            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                        </div>
+                    `).join('') : '';
+                    surveyQuestionsHtml += `
+                        <div class="survey-question-item" data-index="${idx}">
+                            <div class="survey-question-header">
+                                <strong>Question ${idx+1}</strong>
+                                <div class="survey-question-controls">
+                                    <button class="btn btn-sm btn-danger" onclick="this.closest('.survey-question-item').remove()"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <input type="text" class="question-text" value="${escapeHtml(q.questionText)}" placeholder="Question text">
+                            <div style="display:flex; gap:1rem; margin:0.5rem 0;">
+                                <select class="question-type" onchange="toggleQuestionOptions(this, ${idx})">
+                                    <option value="text" ${q.type === 'text' ? 'selected' : ''}>Text answer</option>
+                                    <option value="multipleChoice" ${q.type === 'multipleChoice' ? 'selected' : ''}>Multiple choice</option>
+                                </select>
+                                <input type="number" class="question-points" value="${q.points || 1}" min="0" step="0.5" style="width:80px;">
+                            </div>
+                            <div class="options-area" id="options-area-${idx}" style="display: ${q.type === 'multipleChoice' ? 'block' : 'none'};">
+                                <div class="options-container" id="options-${idx}">
+                                    ${optionsHtml}
+                                    <button class="btn btn-sm btn-info" onclick="addOption(${idx})">+ Add Option</button>
+                                </div>
+                            </div>
+                            <div style="margin-top:0.5rem;">
+                                <input type="text" class="correct-answer" value="${escapeHtml(q.correctAnswer || '')}" placeholder="Correct answer (optional)">
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                surveyQuestionsHtml = '<p>No questions yet. Add below.</p>';
+            }
             
             showModal(`  
                 <h3 style="margin-bottom:1rem;">Edit Task</h3>  
@@ -1886,6 +2128,7 @@
                     <option value="project" ${data.category === 'project' ? 'selected' : ''}>Project</option>  
                     <option value="transcription" ${data.category === 'transcription' ? 'selected' : ''}>Transcription</option>  
                     <option value="ai_annotation" ${data.category === 'ai_annotation' ? 'selected' : ''}>AI Annotation</option>  
+                    <option value="GeoPay" ${data.category === 'GeoPay' ? 'selected' : ''}>GeoPay</option>  
                     <option value="other" ${data.category === 'other' ? 'selected' : ''}>Other</option>  
                 </select>  
                 <select id="editDifficulty">  
@@ -1893,6 +2136,22 @@
                     <option value="medium" ${data.difficulty === 'medium' ? 'selected' : ''}>Medium</option>  
                     <option value="hard" ${data.difficulty === 'hard' ? 'selected' : ''}>Hard</option>  
                 </select>  
+
+                <!-- NEW: GeoPay edit fields -->
+                <div id="editGeoPayFields" style="display:${showGeoPay}; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
+                    <h4 style="margin-bottom:0.5rem;">GeoPay Details</h4>
+                    <select id="editGeopaySubcategory">
+                        <option value="opinionPay" ${data.subcategory === 'opinionPay' ? 'selected' : ''}>Opinion Pay (case study)</option>
+                        <option value="geosurvey" ${data.subcategory === 'geosurvey' ? 'selected' : ''}>Geo Survey (timed questions)</option>
+                    </select>
+                    <div id="editGeosurveyFields" style="display:${showGeosurvey}; margin-top:1rem;">
+                        <label>Survey Duration (minutes)</label>
+                        <input type="number" id="editSurveyDuration" min="1" value="${data.surveyDuration || 30}">
+                        <h5>Questions (max 10)</h5>
+                        <div id="editSurveyQuestionsContainer">${surveyQuestionsHtml}</div>
+                        <button class="btn btn-sm btn-info" onclick="addSurveyQuestion('editSurveyQuestionsContainer')">+ Add Question</button>
+                    </div>
+                </div>
 
                 <div id="editTranscriptionFields" style="display:${showTranscription}; margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:0.5rem;">
                     <h4 style="margin-bottom:0.5rem;">Audio Details</h4>
@@ -1944,17 +2203,24 @@
                 const transcriptionDiv = document.getElementById('editTranscriptionFields');
                 const aiDiv = document.getElementById('editAiAnnotationFields');
                 const writingDiv = document.getElementById('editWritingPagesField');
+                const geopayDiv = document.getElementById('editGeoPayFields');
                 const selected = e.target.value;
                 
                 transcriptionDiv.style.display = selected === 'transcription' ? 'block' : 'none';
                 aiDiv.style.display = selected === 'ai_annotation' ? 'block' : 'none';
                 writingDiv.style.display = selected === 'writing' ? 'block' : 'none';
+                geopayDiv.style.display = selected === 'GeoPay' ? 'block' : 'none';
                 
                 if (selected === 'ai_annotation') {
                     const subcat = document.getElementById('editAnnotationSubcategory').value;
                     document.getElementById('editImageCaptionField').style.display = subcat === 'image_caption' ? 'block' : 'none';
                     document.getElementById('editActionRecognitionField').style.display = subcat === 'action_recognition' ? 'block' : 'none';
                 }
+            });
+
+            document.getElementById('editGeopaySubcategory').addEventListener('change', function(e) {
+                const val = e.target.value;
+                document.getElementById('editGeosurveyFields').style.display = val === 'geosurvey' ? 'block' : 'none';
             });
 
             document.getElementById('editAnnotationSubcategory')?.addEventListener('change', function(e) {
@@ -1984,6 +2250,50 @@
             const assignedTo = document.getElementById('editAssignedTo').value;  
             const collaborable = document.getElementById('editCollaborable').checked;  
             const maxCollaborators = collaborable ? parseInt(document.getElementById('editMaxCollaborators').value) || 5 : 2;  
+            
+            // NEW: GeoPay fields
+            let subcategory = null;
+            let surveyDuration = null;
+            let questions = [];
+            if (category === 'GeoPay') {
+                subcategory = document.getElementById('editGeopaySubcategory').value;
+                if (subcategory === 'geosurvey') {
+                    surveyDuration = parseInt(document.getElementById('editSurveyDuration').value) || 30;
+                    const questionItems = document.querySelectorAll('#editSurveyQuestionsContainer .survey-question-item');
+                    questionItems.forEach((item) => {
+                        const qText = item.querySelector('.question-text').value.trim();
+                        const qType = item.querySelector('.question-type').value;
+                        const qPoints = parseFloat(item.querySelector('.question-points').value) || 1;
+                        const correctAnswer = item.querySelector('.correct-answer').value.trim();
+                        let options = [];
+                        if (qType === 'multipleChoice') {
+                            const optionInputs = item.querySelectorAll('.option-input');
+                            optionInputs.forEach(opt => {
+                                const val = opt.value.trim();
+                                if (val) options.push(val);
+                            });
+                        }
+                        if (qText) {
+                            const question = {
+                                questionText: qText,
+                                type: qType,
+                                points: qPoints
+                            };
+                            if (options.length > 0) question.options = options;
+                            if (correctAnswer) question.correctAnswer = correctAnswer;
+                            questions.push(question);
+                        }
+                    });
+                    if (questions.length === 0) {
+                        showAlert('Please add at least one question for geosurvey.', 'error');
+                        return;
+                    }
+                    if (questions.length > 10) {
+                        showAlert('Maximum 10 questions allowed.', 'error');
+                        return;
+                    }
+                }
+            }
             
             let audioUrl = null, audioDuration = null, language = null, source = null, audioFormat = null, audioSize = null;
             if (category === 'transcription') {
@@ -2026,6 +2336,11 @@
                 assignedTo: assignedTo || 'all',  
                 collaborable,  
                 maxCollaborators,  
+                // NEW GeoPay fields
+                subcategory,
+                surveyDuration,
+                questions,
+                // Transcription
                 audioUrl,  
                 audioDuration,
                 language,
@@ -2081,6 +2396,43 @@
                     `;
                 }
             }
+
+            // NEW: GeoPay survey details
+            let geopayHtml = '';
+            if (data.category === 'GeoPay') {
+                if (data.subcategory === 'opinionPay') {
+                    geopayHtml = `
+                        <div style="background: #fef3c7; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                            <strong>🗣️ Opinion Pay</strong>
+                            <p>Case study / opinion task. User will provide their opinion in the submission.</p>
+                        </div>
+                    `;
+                } else if (data.subcategory === 'geosurvey') {
+                    let questionsHtml = '';
+                    if (data.questions && data.questions.length) {
+                        questionsHtml = '<ol>';
+                        data.questions.forEach((q, idx) => {
+                            questionsHtml += `<li><strong>Q${idx+1}:</strong> ${q.questionText} (${q.points} pts, type: ${q.type})`;
+                            if (q.type === 'multipleChoice' && q.options) {
+                                questionsHtml += '<br><em>Options:</em> ' + q.options.join(', ');
+                            }
+                            if (q.correctAnswer) {
+                                questionsHtml += '<br><span class="badge success">Correct answer: ' + q.correctAnswer + '</span>';
+                            }
+                            questionsHtml += '</li>';
+                        });
+                        questionsHtml += '</ol>';
+                    }
+                    geopayHtml = `
+                        <div style="background: #dbeafe; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                            <strong>📊 Geo Survey</strong>
+                            <p><strong>Duration:</strong> ${data.surveyDuration || 30} minutes</p>
+                            <p><strong>Questions (${data.questions ? data.questions.length : 0}):</strong></p>
+                            ${questionsHtml || '<p>No questions defined.</p>'}
+                        </div>
+                    `;
+                }
+            }
               
             showModal(`  
                 <h3 style="margin-bottom:1rem;">${data.title}</h3>  
@@ -2092,7 +2444,7 @@
                         ${deadlineStatus ? `<span class="badge ${deadlineStatus.class}">${deadlineStatus.text}</span>` : ''}  
                     </div>  
                     <p><strong>Reward:</strong> $${data.reward} (KES ${data.rewardKES})</p>  
-                    <p><strong>Category:</strong> ${data.category} | <strong>Difficulty:</strong> ${data.difficulty}</p>  
+                    <p><strong>Category:</strong> ${data.category} ${data.subcategory ? `(${data.subcategory})` : ''} | <strong>Difficulty:</strong> ${data.difficulty}</p>  
                     <p><strong>Collaboration:</strong> ${data.collaborable ? `Yes (max ${data.maxCollaborators} collaborators)` : 'No'}</p>  
                 </div>  
                   
@@ -2113,6 +2465,7 @@
 
                 ${audioHtml}
                 ${aiHtml}
+                ${geopayHtml}
             `);  
         }  
 
@@ -2228,6 +2581,9 @@
                         let taskInstructions = '';  
                         let taskDeadline = '';  
                         let taskClient = '';  
+                        let taskCategory = '';
+                        let taskSubcategory = '';
+                        let taskQuestions = [];
                         try {  
                             const taskDoc = await db.collection('tasks').doc(sub.taskId).get();  
                             if (taskDoc.exists) {  
@@ -2236,6 +2592,9 @@
                                 taskInstructions = task.instructions || 'No instructions available';  
                                 taskDeadline = task.deadline ? formatDate(task.deadline) : 'No deadline';  
                                 taskClient = task.clientName || 'NextGen';  
+                                taskCategory = task.category || '';
+                                taskSubcategory = task.subcategory || '';
+                                taskQuestions = task.questions || [];
                             }  
                         } catch (e) {  
                             console.error('Error fetching task:', e);  
@@ -2243,6 +2602,18 @@
                           
                         const submittedAt = sub.submittedAt ? formatDate(sub.submittedAt) : 'N/A';  
                         const statusClass = sub.status === 'approved' ? 'success' : (sub.status === 'rejected' ? 'danger' : 'warning');
+                          
+                        // NEW: Display answers for geosurvey
+                        let answersHtml = '';
+                        if (taskCategory === 'GeoPay' && taskSubcategory === 'geosurvey' && sub.answers && sub.answers.length) {
+                            answersHtml = '<div style="background:#e0f2fe; padding:0.75rem; border-radius:0.5rem; margin:0.5rem 0;">';
+                            answersHtml += '<p><strong>User Answers:</strong></p>';
+                            sub.answers.forEach((ans, idx) => {
+                                const q = taskQuestions[idx] ? taskQuestions[idx].questionText : `Question ${idx+1}`;
+                                answersHtml += `<p><strong>Q${idx+1}:</strong> ${q}<br><strong>A:</strong> ${ans}</p>`;
+                            });
+                            answersHtml += '</div>';
+                        }
                           
                         html += `  
                             <div class="submission-card" data-sub-id="${doc.id}">  
@@ -2278,7 +2649,7 @@
                                   
                                 <div style="background: #fee2e2; padding: 0.75rem; border-radius: 0.5rem; margin: 0.5rem 0;">  
                                     <p style="margin: 0 0 0.25rem 0;"><strong>User's Submission:</strong></p>  
-                                    <p style="margin: 0;">${sub.workText}</p>  
+                                    <p style="margin: 0;">${sub.workText || 'No text provided'}</p>  
                                 </div>  
 
                                 ${sub.designLink ? `
@@ -2287,6 +2658,8 @@
                                         <p style="margin: 0;"><a href="${sub.designLink}" target="_blank" style="color: #0284c7;">${sub.designLink}</a></p>  
                                     </div>  
                                 ` : ''}
+
+                                ${answersHtml}
                                   
                                 ${sub.review ? `<div style="background:#f1f5f9; padding:0.8rem; border-radius:0.5rem; margin-top:0.5rem;"><strong>Feedback:</strong> ${sub.review}</div>` : ''}
                                   
@@ -6158,76 +6531,97 @@
         };
 
         window.generateLeaderboardFromUsers = async function() {
-            if (!confirm('This will replace all auto-generated entries. Manual entries will be preserved and re-ranked. Continue?')) return;
+            if (!confirm('This will regenerate auto entries from users. Manual entries (including pasted) will be preserved and re-ranked. Continue?')) return;
 
             showAlert('Processing users...', 'info', 'Please wait');
             try {
-                const usersSnap = await db.collection('users').get();
-                const users = [];
-                usersSnap.forEach(doc => {
-                    const data = doc.data();
-                    users.push({
-                        id: doc.id,
-                        name: data.displayName || data.email || 'Unknown User',
-                        wallet: data.wallet || 0,
-                        tasksCompleted: data.tasksCompleted || 0
-                    });
-                });
-
-                const userScores = users.map(u => ({
-                    userId: u.id,
-                    userName: u.name,
-                    points: (u.wallet * 10) + (u.tasksCompleted * 5),
-                    type: 'auto'
-                }));
-
+                // Fetch all existing leaderboard entries
                 const existingSnap = await db.collection('leaderboard').get();
-                const manualEntries = [];
+
+                // Separate preserved (type !== 'auto') and auto entries
+                const preservedMap = new Map(); // key: userId if present, otherwise 'manual_' + doc.id
+                const autoIdsToDelete = []; // store doc ids of auto entries to delete
+
                 existingSnap.forEach(doc => {
                     const data = doc.data();
-                    if (data.type === 'manual') {
-                        manualEntries.push({ 
-                            id: doc.id, 
+                    if (data.type === 'auto') {
+                        autoIdsToDelete.push(doc.id);
+                    } else {
+                        // Preserve manual/pasted entries
+                        const key = data.userId ? data.userId : `manual_${doc.id}`;
+                        preservedMap.set(key, {
                             userId: data.userId || null,
                             userName: data.userName || 'Anonymous',
                             points: data.points || 0,
-                            type: 'manual'
+                            type: data.type || 'manual',
+                            originalDocId: doc.id // keep for reference (optional)
                         });
                     }
                 });
 
-                const combinedMap = new Map();
-                userScores.forEach(u => {
-                    combinedMap.set(u.userId, { ...u });
-                });
-                manualEntries.forEach(m => {
-                    const key = m.userId || m.id;
-                    combinedMap.set(key, { ...m, type: 'manual' });
+                // Generate new auto entries from users
+                const usersSnap = await db.collection('users').get();
+                const newAutoMap = new Map(); // key: userId
+                usersSnap.forEach(doc => {
+                    const data = doc.data();
+                    const userId = doc.id;
+                    const points = (data.wallet || 0) * 10 + (data.tasksCompleted || 0) * 5;
+                    newAutoMap.set(userId, {
+                        userId,
+                        userName: data.displayName || data.email || 'Unknown User',
+                        points,
+                        type: 'auto'
+                    });
                 });
 
+                // Merge: preserved entries override auto entries with same userId
+                const combinedMap = new Map();
+
+                // First add all new auto entries
+                newAutoMap.forEach((value, key) => {
+                    combinedMap.set(key, value);
+                });
+
+                // Then override/add preserved entries
+                preservedMap.forEach((value, key) => {
+                    // If preserved entry has a userId, it might override an auto entry with same userId
+                    // The key might be userId or manual_... In either case, set it.
+                    combinedMap.set(key, value);
+                });
+
+                // Convert map to array and sort by points descending
                 let combined = Array.from(combinedMap.values());
                 combined.sort((a, b) => b.points - a.points);
+
+                // Assign ranks
                 combined = combined.map((entry, index) => ({
                     userId: entry.userId || null,
-                    userName: entry.userName || 'Anonymous',
-                    points: entry.points || 0,
+                    userName: entry.userName,
+                    points: entry.points,
                     rank: index + 1,
-                    type: entry.type || 'auto',
+                    type: entry.type,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }));
 
+                // Perform batch write: delete old auto entries, then add all combined entries
                 const batch = db.batch();
-                existingSnap.forEach(doc => {
-                    batch.delete(doc.ref);
+
+                // Delete only auto entries (preserved ones will be re-added with new IDs)
+                autoIdsToDelete.forEach(id => {
+                    batch.delete(db.collection('leaderboard').doc(id));
                 });
+
+                // Add all combined entries (preserved + new auto)
                 combined.forEach(entry => {
                     const newRef = db.collection('leaderboard').doc();
                     batch.set(newRef, entry);
                 });
+
                 await batch.commit();
 
                 showAlert(`Leaderboard updated with ${combined.length} entries!`, 'success');
                 loadLeaderboardManager();
+
             } catch (error) {
                 console.error('Error generating leaderboard:', error);
                 showAlert('Error: ' + error.message, 'error');
@@ -6273,7 +6667,7 @@
                             const rank = parseInt(rankStr, 10);
                             const userName = parts[1];
                             const points = parseFloat(parts[2]);
-                            const type = parts[3] === 'Auto' ? 'auto' : (parts[3] === 'Manual' ? 'manual' : 'manual'); // default to manual if not recognised
+                            const type = 'manual'; // always treat pasted entries as manual
 
                             if (isNaN(rank) || rank <= 0) {
                                 errors.push(`Line ${index+1}: Invalid rank "${parts[0]}"`);
@@ -6295,7 +6689,7 @@
                             const rank = parseInt(parts[0], 10);
                             const userName = parts[1];
                             const points = parseFloat(parts[2]);
-                            const type = parts[3] ? (parts[3].toLowerCase() === 'auto' ? 'auto' : 'manual') : 'manual';
+                            const type = 'manual';
                             if (!isNaN(rank) && rank > 0 && userName && !isNaN(points)) {
                                 entries.push({ rank, userName, points, type });
                             } else {
@@ -7851,6 +8245,11 @@
 
         // Paste leaderboard function
         window.showPasteLeaderboardEntries = showPasteLeaderboardEntries;
+
+        // Survey question builder functions (expose globally)
+        window.addSurveyQuestion = addSurveyQuestion;
+        window.addOption = addOption;
+        window.toggleQuestionOptions = toggleQuestionOptions;
     </script>  
 </body>  
 </html>
