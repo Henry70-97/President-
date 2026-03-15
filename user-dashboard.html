@@ -355,6 +355,35 @@
         .transactions-table tr:hover { background: #f8fafc; }
         .tx-amount.positive { color: #10b981; font-weight: 700; }
         .tx-amount.negative { color: #ef4444; font-weight: 700; }
+
+        /* NEW: GeoPay specific styles */
+        .geopay-card { background: linear-gradient(145deg, #ffffff, #f0fdf4); border-radius: 1.5rem; padding: 2rem; text-align: center; border: 2px solid #10b981; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .geopay-icon { font-size: 5rem; color: #10b981; margin-bottom: 1rem; animation: pulse 2s infinite; }
+        .geopay-title { font-size: 2rem; font-weight: 800; color: #10b981; margin-bottom: 0.5rem; }
+        .geopay-subtitle { color: #475569; margin-bottom: 2rem; }
+        .geopay-options { display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0; }
+        .geopay-option { background: white; border-radius: 1.5rem; padding: 1.5rem; flex: 1; min-width: 200px; border: 2px solid #e2e8f0; transition: all 0.3s; cursor: pointer; }
+        .geopay-option:hover { transform: translateY(-5px); border-color: #10b981; box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .geopay-option-icon { font-size: 3rem; color: #f59e0b; margin-bottom: 0.5rem; }
+        .geopay-option-title { font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.3rem; }
+        .geopay-option-desc { color: #64748b; font-size: 0.9rem; }
+        .geopay-survey-container { max-width: 700px; margin: 0 auto; }
+        .geopay-timer { background: #f59e0b; color: white; padding: 1rem; border-radius: 1rem; text-align: center; margin-bottom: 1.5rem; font-size: 1.2rem; font-weight: 700; }
+        .geopay-timer.warning { background: #ef4444; animation: pulse 1s infinite; }
+        .geopay-question { background: #f8fafc; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #10b981; }
+        .geopay-question-text { font-weight: 600; margin-bottom: 0.8rem; color: #0f172a; }
+        .geopay-options-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .geopay-option-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; }
+        .geopay-option-item:hover { background: #f1f5f9; border-color: #10b981; }
+        .geopay-option-item input[type="radio"] { width: auto; margin: 0; }
+        .geopay-textarea { width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 0.8rem; font-size: 0.9rem; line-height: 1.6; min-height: 120px; resize: vertical; }
+        .geopay-textarea:focus { outline: none; border-color: #10b981; }
+        .geopay-start-btn { background: #10b981; color: white; padding: 1rem 3rem; font-size: 1.2rem; border-radius: 60px; border: none; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 1rem; }
+        .geopay-start-btn:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16,185,129,0.3); }
+        .geopay-submit-btn { background: #6366f1; color: white; padding: 0.8rem 2rem; font-size: 1rem; border-radius: 60px; border: none; font-weight: 600; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: 1rem; }
+        .geopay-submit-btn:hover { background: #4f52e0; transform: translateY(-2px); }
+        .geopay-submit-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+
         @media (max-width: 768px) {
             .tabs { display: none; }
             .hamburger-menu { display: flex !important; }
@@ -377,6 +406,7 @@
             .ai-modal .modal-content { height: 90vh; max-height: none; }
             .ai-modal iframe { min-height: 600px; }
             .live-clock { display: none; }
+            .geopay-options { flex-direction: column; }
         }
         @media (max-width: 480px) {
             .user-menu { gap: 0.3rem; }
@@ -461,6 +491,8 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('design')"><i class="fas fa-pencil-ruler"></i><span>Design Tasks</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('projects')"><i class="fas fa-project-diagram"></i><span>Projects</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('data-annotations')"><i class="fas fa-images"></i><span>Data Annotations</span></div>
+        <!-- NEW: GeoPay menu item -->
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('geopay')"><i class="fas fa-map-marker-alt"></i><span>GeoPay</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('howitworks')"><i class="fas fa-info-circle"></i><span>How It Works</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('newbie-trainer')"><i class="fas fa-child"></i><span>Newbie Trainer</span></div>
@@ -543,13 +575,14 @@
         <!-- Stats Grid -->
         <div class="stats-grid" id="statsGrid"></div>
 
-        <!-- Desktop Tabs -->
+        <!-- Desktop Tabs (UPDATED: Added GeoPay tab) -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('transcription')">🎤 Transcription</button>
             <button class="tab" onclick="switchTab('design')">✏️ Design Tasks</button>
             <button class="tab" onclick="switchTab('projects')">📊 Projects</button>
             <button class="tab" onclick="switchTab('data-annotations')">🖼️ Data Annotations</button>
+            <button class="tab" onclick="switchTab('geopay')">📍 GeoPay</button> <!-- NEW -->
             <button class="tab" onclick="switchTab('howitworks')">📘 How It Works</button>
             <button class="tab" onclick="switchTab('training')">🎓 Training Center</button>
             <button class="tab" onclick="switchTab('newbie-trainer')">👶 Newbie Trainer</button>
@@ -1036,6 +1069,9 @@
                 case 'newbie-trainer':
                     html = `<div class="mirror-tab-header">👶 Newbie Trainer</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Complete training to qualify</span></div></div>`;
                     break;
+                case 'geopay':
+                    html = `<div class="mirror-tab-header">📍 GeoPay</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Earn by sharing opinions & taking surveys</span></div></div>`;
+                    break;
                 default:
                     html = `<div class="mirror-stats"><div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value">${formatBoth(userData?.wallet || 0)}</div></div></div>`;
             }
@@ -1115,18 +1151,18 @@
         // ==================== LOGOUT ====================
         function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); if (membershipPaymentsListener) membershipPaymentsListener(); if (withdrawalCooldownInterval) clearInterval(withdrawalCooldownInterval); auth.signOut(); window.location.href = 'index.html'; }
 
-        // ==================== TAB SWITCHING ====================
+        // ==================== TAB SWITCHING (UPDATED: added geopay) ====================
         function switchTab(tab) {
             currentTab = tab;
             currentTaskViewed = null;
             refreshMirror();
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             for (let t of document.querySelectorAll('.tab')) {
-                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer'))) { t.classList.add('active'); break; }
+                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay'))) { t.classList.add('active'); break; }
             }
             document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('.mobile-nav-item').forEach(i => {
-                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer'))) i.classList.add('active');
+                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay'))) i.classList.add('active');
             });
             document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
             document.querySelectorAll('.bottom-nav-item').forEach(item => {
@@ -1155,6 +1191,9 @@
                     break;
                 case 'data-annotations':
                     loadDataAnnotations();
+                    break;
+                case 'geopay':
+                    loadGeoPay();
                     break;
                 case 'howitworks':
                     showHowItWorksComingSoon();
@@ -3397,6 +3436,554 @@
                     }
                     refreshMirror();
                 }, console.error);
+        }
+
+        // ==================== GEOPAY SECTION (NEW) ====================
+        async function loadGeoPay() {
+            currentTaskViewed = null;
+            refreshMirror();
+            
+            // Check if user is suspended
+            if (userData.suspended) {
+                showWarningPopup(`Your account is suspended. Reason: ${userData.suspendedReason || 'No reason provided.'} You cannot access GeoPay.`);
+                return;
+            }
+
+            document.getElementById('content').innerHTML = `
+                <div class="geopay-card">
+                    <div class="geopay-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <h2 class="geopay-title">GeoPay</h2>
+                    <p class="geopay-subtitle">Earn money by sharing your opinions and completing surveys based on your location</p>
+                    
+                    <div class="geopay-options">
+                        <div class="geopay-option" onclick="showGeoPayOption('opinionPay')">
+                            <div class="geopay-option-icon"><i class="fas fa-comment-dots"></i></div>
+                            <h3 class="geopay-option-title">Opinion Pay</h3>
+                            <p class="geopay-option-desc">Share your opinion on case studies and earn</p>
+                        </div>
+                        <div class="geopay-option" onclick="showGeoPayOption('geosurvey')">
+                            <div class="geopay-option-icon"><i class="fas fa-poll"></i></div>
+                            <h3 class="geopay-option-title">Geo Survey</h3>
+                            <p class="geopay-option-desc">Complete short timed surveys and earn instantly</p>
+                        </div>
+                    </div>
+                    
+                    <p style="color: #64748b; margin-top: 2rem;">
+                        <i class="fas fa-clock"></i> Surveys are timed. Complete before the timer expires to earn.
+                    </p>
+                </div>
+            `;
+        }
+
+        async function showGeoPayOption(subcategory) {
+            // Fetch available GeoPay tasks from Firestore
+            try {
+                const snapshot = await db.collection('tasks')
+                    .where('active', '==', true)
+                    .where('category', '==', 'GeoPay')
+                    .where('subcategory', '==', subcategory)
+                    .get();
+
+                if (snapshot.empty) {
+                    showModal(`
+                        <div class="modal-content" style="text-align:center;">
+                            <i class="fas fa-exclamation-circle" style="font-size:4rem; color:#f59e0b;"></i>
+                            <h3>No ${subcategory === 'opinionPay' ? 'Opinion Pay' : 'Geo Survey'} Tasks Available</h3>
+                            <p>Please check back later for new tasks.</p>
+                            <button class="btn btn-primary" onclick="closeModal()">OK</button>
+                        </div>
+                    `);
+                    return;
+                }
+
+                // For now, just show the first task (you can enhance to show a list later)
+                const tasks = [];
+                snapshot.forEach(doc => tasks.push({ id: doc.id, ...doc.data() }));
+                const task = tasks[0];
+
+                // Show start modal
+                showGeoPayStartModal(task);
+
+            } catch (e) {
+                console.error('Error loading GeoPay tasks:', e);
+                showAlert('Error loading tasks. Please try again.', 'error');
+            }
+        }
+
+        function showGeoPayStartModal(task) {
+            const isSurvey = task.subcategory === 'geosurvey';
+            
+            showModal(`
+                <div class="modal-content" style="max-width:500px; text-align:center; padding:2rem;">
+                    <i class="fas fa-${isSurvey ? 'poll' : 'comment-dots'}" style="font-size:4rem; color:#10b981; margin-bottom:1rem;"></i>
+                    <h2 style="margin-bottom:1rem;">${escapeHtml(task.title)}</h2>
+                    <p style="margin-bottom:1.5rem;">${escapeHtml(task.description)}</p>
+                    
+                    <div style="background:#f8fafc; border-radius:1rem; padding:1rem; margin-bottom:1.5rem; text-align:left;">
+                        <p><strong><i class="fas fa-dollar-sign"></i> Reward:</strong> ${formatBoth(parseFloat(task.reward) || 0)}</p>
+                        ${isSurvey ? `<p><strong><i class="fas fa-clock"></i> Time Limit:</strong> ${task.surveyDuration || 30} minutes</p>` : ''}
+                        <p><strong><i class="fas fa-question-circle"></i> Questions:</strong> ${task.questions ? task.questions.length : (isSurvey ? 'Up to 10' : '1 case study')}</p>
+                    </div>
+                    
+                    <p style="margin-bottom:1.5rem; color:#475569;">
+                        ${isSurvey 
+                            ? 'You are about to start a timed survey. Once started, you must complete it within the time limit. If time expires, the survey will be marked as failed.'
+                            : 'You are about to start an opinion task. Take your time to read the case study and provide your thoughtful opinion.'}
+                    </p>
+                    
+                    <div style="display:flex; gap:1rem;">
+                        <button class="btn btn-success geopay-start-btn" onclick="startGeoPayTask('${task.id}', '${task.subcategory}')" style="flex:1;">
+                            <i class="fas fa-play"></i> Start Now
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeModal()" style="flex:1;">Cancel</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        async function startGeoPayTask(taskId, subcategory) {
+            closeModal();
+
+            try {
+                // Check if user has already accepted this task
+                const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
+                const acceptDoc = await acceptRef.get();
+                
+                if (acceptDoc.exists) {
+                    // Already accepted, just open the task
+                    if (subcategory === 'geosurvey') {
+                        showGeoSurvey(taskId);
+                    } else {
+                        showOpinionPay(taskId);
+                    }
+                    return;
+                }
+
+                // Accept the task
+                const taskRef = db.collection('tasks').doc(taskId);
+                const taskDoc = await taskRef.get();
+                const task = taskDoc.data();
+
+                // Check daily limit and concurrent tasks
+                if (acceptedTasksCount >= MAX_CONCURRENT_TASKS) {
+                    showAlert(`You already have an active task. Please submit or cancel it before starting a new one.`, 'error');
+                    return;
+                }
+
+                const today = new Date().toDateString();
+                if (userData.lastAcceptedDate !== today) {
+                    userData.acceptedToday = 0;
+                    userData.lastAcceptedDate = today;
+                }
+                if (userData.acceptedToday >= DAILY_TASK_LIMIT) {
+                    showAlert(`You have reached the daily limit of ${DAILY_TASK_LIMIT} tasks. Please try again tomorrow.`, 'error');
+                    return;
+                }
+
+                // Accept the task
+                await db.runTransaction(async (transaction) => {
+                    transaction.set(acceptRef, {
+                        userId: currentUser.uid,
+                        userEmail: currentUser.email,
+                        userName: userData.displayName,
+                        startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    const userAcceptedRef = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId);
+                    transaction.set(userAcceptedRef, {
+                        taskId: taskId,
+                        title: task.title,
+                        reward: task.reward,
+                        deadline: task.deadline,
+                        clientName: task.clientName,
+                        acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    const userRef = db.collection('users').doc(currentUser.uid);
+                    transaction.update(userRef, {
+                        acceptedToday: firebase.firestore.FieldValue.increment(1),
+                        lastAcceptedDate: today
+                    });
+                });
+
+                // Open the appropriate task view
+                if (subcategory === 'geosurvey') {
+                    showGeoSurvey(taskId);
+                } else {
+                    showOpinionPay(taskId);
+                }
+
+            } catch (e) {
+                console.error('Error starting GeoPay task:', e);
+                showAlert('Error starting task. Please try again.', 'error');
+            }
+        }
+
+        async function showOpinionPay(taskId) {
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                const task = taskDoc.data();
+
+                // Check if already submitted
+                if (await hasUserSubmitted(taskId)) {
+                    showAlert('You have already submitted this task.', 'error');
+                    return;
+                }
+
+                const draftKey = `geopay_opinion_${taskId}`;
+                const savedDraft = localStorage.getItem(draftKey) || '';
+
+                showModal(`
+                    <div class="modal-content" style="max-width:700px; padding:0; overflow:hidden;">
+                        <div class="smart-submission">
+                            <div class="submission-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                                <h2>Opinion Pay</h2>
+                                <p>Share your opinion on this case study</p>
+                                <div class="submission-meta">
+                                    <span class="meta-item"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName || 'Admin')}</span>
+                                    <span class="meta-item"><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward) || 0)}</span>
+                                </div>
+                            </div>
+                            <div class="submission-body">
+                                <div class="instructions-card" style="border-left-color:#f59e0b;">
+                                    <h3><i class="fas fa-book-open"></i> Case Study</h3>
+                                    <div class="instructions-content" style="max-height:none;">${escapeHtml(task.description || 'No case study provided.')}</div>
+                                </div>
+                                
+                                <div class="instructions-card">
+                                    <h3><i class="fas fa-clipboard-list"></i> Instructions</h3>
+                                    <div class="instructions-content">${escapeHtml(task.instructions || 'Please provide your opinion on the case study above.')}</div>
+                                </div>
+                                
+                                <div class="work-editor">
+                                    <div class="editor-toolbar">
+                                        <span class="editor-label"><i class="fas fa-pencil-alt"></i> Your Opinion</span>
+                                        <span class="word-counter" id="opinionWordCounter">0 / 50 words</span>
+                                    </div>
+                                    <textarea id="opinionText" class="smart-textarea" placeholder="Write your opinion here..." oninput="updateOpinionWordCount()">${escapeHtml(savedDraft)}</textarea>
+                                </div>
+                                
+                                <div class="action-buttons">
+                                    <button class="btn btn-warning" onclick="submitOpinionPay('${taskId}')" style="flex:1;">
+                                        <i class="fas fa-paper-plane"></i> Submit Opinion
+                                    </button>
+                                    <button class="btn btn-cancel" onclick="closeModal(); saveOpinionDraft('${taskId}', document.getElementById('opinionText')?.value || '')">
+                                        <i class="fas fa-save"></i> Save Draft & Exit
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                const opinionText = document.getElementById('opinionText');
+                if (opinionText) {
+                    opinionText.addEventListener('input', () => {
+                        saveOpinionDraft(taskId, opinionText.value);
+                        updateOpinionWordCount();
+                    });
+                }
+                updateOpinionWordCount();
+
+            } catch (e) {
+                console.error('Error showing opinion pay:', e);
+                showAlert('Error loading opinion task. Please try again.', 'error');
+            }
+        }
+
+        function updateOpinionWordCount() {
+            const ta = document.getElementById('opinionText');
+            if (!ta) return;
+            const wc = ta.value.trim().split(/\s+/).filter(w => w.length>0).length;
+            const counter = document.getElementById('opinionWordCounter');
+            if (counter) {
+                counter.textContent = `${wc} / 50 words`;
+                counter.className = 'word-counter' + (wc >= 50 ? ' valid' : (wc >= 30 ? ' warning' : ' danger'));
+            }
+        }
+
+        function saveOpinionDraft(taskId, text) {
+            localStorage.setItem(`geopay_opinion_${taskId}`, text);
+        }
+
+        async function submitOpinionPay(taskId) {
+            const opinion = document.getElementById('opinionText')?.value;
+            if (!opinion || opinion.trim() === '') {
+                showAlert('Please enter your opinion.', 'error');
+                return;
+            }
+
+            const wc = opinion.trim().split(/\s+/).filter(w => w.length>0).length;
+            if (wc < 50) {
+                showAlert(`Please provide at least 50 words (current: ${wc})`, 'error');
+                return;
+            }
+
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                if (!taskDoc.exists) {
+                    showAlert('Task not found', 'error');
+                    return;
+                }
+                const task = taskDoc.data();
+
+                showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting...</h3></div>`);
+
+                await db.collection('submissions').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    taskId: taskId,
+                    taskTitle: task.title || 'Opinion Task',
+                    workText: opinion,
+                    status: 'pending',
+                    wordCount: wc,
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Remove from accepted tasks
+                await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
+                localStorage.removeItem(`geopay_opinion_${taskId}`);
+
+                showModal(`
+                    <div class="modal-content" style="text-align:center;">
+                        <div class="success-check"><i class="fas fa-check"></i></div>
+                        <h3 style="color:#10b981;">Opinion Submitted!</h3>
+                        <p>Thank you for sharing your opinion. Your submission is pending review.</p>
+                        <p style="font-size:0.9rem; margin:1rem 0;">${wc} words · Expected reward: ${formatBoth(parseFloat(task.reward) || 0)}</p>
+                        <button class="btn btn-success" onclick="switchTab('submissions'); closeModal();">View My Submissions</button>
+                    </div>
+                `);
+
+            } catch (e) {
+                console.error('Error submitting opinion:', e);
+                showAlert('Error submitting. Please try again.', 'error');
+            }
+        }
+
+        async function showGeoSurvey(taskId) {
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                const task = taskDoc.data();
+
+                // Check if already submitted
+                if (await hasUserSubmitted(taskId)) {
+                    showAlert('You have already submitted this survey.', 'error');
+                    return;
+                }
+
+                // Get start time from taskAccepts
+                const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
+                const acceptDoc = await acceptRef.get();
+                
+                let startTime;
+                if (!acceptDoc.exists) {
+                    // First time - record start time
+                    startTime = new Date();
+                    await acceptRef.set({
+                        userId: currentUser.uid,
+                        userEmail: currentUser.email,
+                        userName: userData.displayName,
+                        startedAt: firebase.firestore.FieldValue.fromDate(startTime),
+                        acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    startTime = acceptDoc.data().startedAt?.toDate() || new Date();
+                }
+
+                const durationMinutes = task.surveyDuration || 30;
+                const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+                const now = new Date();
+
+                // Check if expired
+                if (now > endTime) {
+                    showModal(`
+                        <div class="modal-content" style="text-align:center;">
+                            <div class="error-icon"><i class="fas fa-clock"></i></div>
+                            <h3 style="color:#ef4444;">Survey Expired</h3>
+                            <p>The time limit for this survey has passed. You cannot continue this survey.</p>
+                            <button class="btn btn-primary" onclick="closeModal()">OK</button>
+                        </div>
+                    `);
+                    
+                    // Mark as failed
+                    await db.collection('submissions').add({
+                        userId: currentUser.uid,
+                        userEmail: currentUser.email,
+                        taskId: taskId,
+                        taskTitle: task.title || 'Geo Survey',
+                        status: 'rejected',
+                        review: 'Survey expired - time limit exceeded',
+                        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
+                    return;
+                }
+
+                // Build survey HTML
+                let questionsHtml = '';
+                if (task.questions && task.questions.length) {
+                    task.questions.forEach((q, index) => {
+                        if (q.type === 'multipleChoice' && q.options) {
+                            let optionsHtml = '';
+                            q.options.forEach((opt, optIndex) => {
+                                optionsHtml += `
+                                    <label class="geopay-option-item">
+                                        <input type="radio" name="q${index}" value="${escapeHtml(opt)}">
+                                        <span>${escapeHtml(opt)}</span>
+                                    </label>
+                                `;
+                            });
+                            questionsHtml += `
+                                <div class="geopay-question">
+                                    <div class="geopay-question-text">${index+1}. ${escapeHtml(q.questionText)} (${q.points || 1} pts)</div>
+                                    <div class="geopay-options-list">
+                                        ${optionsHtml}
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            questionsHtml += `
+                                <div class="geopay-question">
+                                    <div class="geopay-question-text">${index+1}. ${escapeHtml(q.questionText)} (${q.points || 1} pts)</div>
+                                    <textarea class="geopay-textarea" id="q${index}" placeholder="Your answer..."></textarea>
+                                </div>
+                            `;
+                        }
+                    });
+                } else {
+                    questionsHtml = '<p>No questions available for this survey.</p>';
+                }
+
+                // Calculate time remaining
+                const timeRemaining = Math.floor((endTime - now) / 1000);
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+
+                showModal(`
+                    <div class="modal-content" style="max-width:700px; padding:0; overflow:hidden;">
+                        <div class="geopay-survey-container">
+                            <div class="submission-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                                <h2>${escapeHtml(task.title)}</h2>
+                                <p>Complete the survey within the time limit</p>
+                                <div class="submission-meta">
+                                    <span class="meta-item"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName || 'Admin')}</span>
+                                    <span class="meta-item"><i class="fas fa-tag"></i> ${formatBoth(parseFloat(task.reward) || 0)}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="geopay-timer ${timeRemaining < 300 ? 'warning' : ''}" id="surveyTimer">
+                                Time Remaining: ${minutes}:${seconds.toString().padStart(2,'0')}
+                            </div>
+                            
+                            <div class="submission-body">
+                                ${questionsHtml}
+                                
+                                <div class="action-buttons" style="margin-top:1.5rem;">
+                                    <button class="geopay-submit-btn" onclick="submitGeoSurvey('${taskId}')" id="submitSurveyBtn">
+                                        <i class="fas fa-paper-plane"></i> Submit Survey
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                // Start countdown timer
+                const timerElement = document.getElementById('surveyTimer');
+                const submitBtn = document.getElementById('submitSurveyBtn');
+                
+                const timerInterval = setInterval(() => {
+                    const now = new Date();
+                    const remaining = Math.floor((endTime - now) / 1000);
+                    
+                    if (remaining <= 0) {
+                        clearInterval(timerInterval);
+                        if (timerElement) {
+                            timerElement.textContent = 'Time Expired!';
+                            timerElement.className = 'geopay-timer warning';
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.textContent = 'Survey Expired';
+                        }
+                        showAlert('Survey time expired!', 'error');
+                        closeModal();
+                    } else {
+                        const mins = Math.floor(remaining / 60);
+                        const secs = remaining % 60;
+                        timerElement.textContent = `Time Remaining: ${mins}:${secs.toString().padStart(2,'0')}`;
+                        
+                        if (remaining < 300) {
+                            timerElement.classList.add('warning');
+                        }
+                    }
+                }, 1000);
+
+            } catch (e) {
+                console.error('Error showing survey:', e);
+                showAlert('Error loading survey. Please try again.', 'error');
+            }
+        }
+
+        async function submitGeoSurvey(taskId) {
+            try {
+                const taskDoc = await db.collection('tasks').doc(taskId).get();
+                const task = taskDoc.data();
+
+                // Gather answers
+                const answers = [];
+                const questions = task.questions || [];
+
+                for (let i = 0; i < questions.length; i++) {
+                    if (questions[i].type === 'multipleChoice') {
+                        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                        if (!selected) {
+                            showAlert(`Please answer question ${i+1}`, 'error');
+                            return;
+                        }
+                        answers.push(selected.value);
+                    } else {
+                        const textarea = document.getElementById(`q${i}`);
+                        if (!textarea || !textarea.value.trim()) {
+                            showAlert(`Please answer question ${i+1}`, 'error');
+                            return;
+                        }
+                        answers.push(textarea.value.trim());
+                    }
+                }
+
+                showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting survey...</h3></div>`);
+
+                // Save submission
+                await db.collection('submissions').add({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    taskId: taskId,
+                    taskTitle: task.title || 'Geo Survey',
+                    answers: answers,
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Remove from accepted tasks
+                await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
+
+                showModal(`
+                    <div class="modal-content" style="text-align:center;">
+                        <div class="success-check"><i class="fas fa-check"></i></div>
+                        <h3 style="color:#10b981;">Survey Submitted!</h3>
+                        <p>Thank you for completing the survey. Your answers are pending review.</p>
+                        <p style="font-size:0.9rem; margin:1rem 0;">Expected reward: ${formatBoth(parseFloat(task.reward) || 0)}</p>
+                        <button class="btn btn-success" onclick="switchTab('submissions'); closeModal();">View My Submissions</button>
+                    </div>
+                `);
+
+            } catch (e) {
+                console.error('Error submitting survey:', e);
+                showAlert('Error submitting survey. Please try again.', 'error');
+            }
         }
 
         // ==================== AUTH STATE LISTENER ====================
