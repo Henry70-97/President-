@@ -644,7 +644,7 @@
         let paymentUrl = "https://lipana.dev/pay/nextgen-membership";
 
         // ==================== OFFER FEATURE ====================
-        let currentOffer = null;
+        let currentOfferMap = {};  // map from membershipType to offer data
         const OFFER_POPUP_COOLDOWN = 5 * 60 * 1000; // 5 minutes
 
         // ==================== USD to KSH conversion ====================
@@ -723,33 +723,31 @@
             throw new Error('Max retries exceeded');
         }
 
-        // ==================== LOAD ACTIVE OFFER ====================
+        // ==================== LOAD ACTIVE OFFERS ====================
         async function loadActiveOffer() {
             try {
                 const now = new Date();
                 const snap = await db.collection('membershipOffers')
                     .where('active', '==', true)
                     .get();
-                if (snap.empty) {
-                    currentOffer = null;
-                    return;
-                }
-                const offer = snap.docs[0].data();
-                const endDate = offer.endDateTime?.toDate();
-                if (endDate && endDate > now) {
-                    currentOffer = { id: snap.docs[0].id, ...offer };
-                } else {
-                    currentOffer = null;
-                }
+                const newMap = {};
+                snap.forEach(doc => {
+                    const offer = doc.data();
+                    const endDate = offer.endDateTime?.toDate();
+                    if (endDate && endDate > now) {
+                        newMap[offer.membershipType] = { id: doc.id, ...offer };
+                    }
+                });
+                currentOfferMap = newMap;
             } catch (e) {
-                console.error('Error loading active offer:', e);
-                currentOffer = null;
+                console.error('Error loading active offers:', e);
+                currentOfferMap = {};
             }
         }
 
         // ==================== OFFER POPUP ====================
         function checkAndShowOfferPopup() {
-            if (!currentOffer) return;
+            if (Object.keys(currentOfferMap).length === 0) return;
             if (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || 
                 userData.membershipType === MEMBERSHIP_TYPES.ELITE) {
                 return;
@@ -759,17 +757,21 @@
             if (lastShown && (now - parseInt(lastShown) < OFFER_POPUP_COOLDOWN)) {
                 return;
             }
-            showOfferPopup();
+            // Pick the first active offer for popup (any)
+            const firstType = Object.keys(currentOfferMap)[0];
+            const offer = currentOfferMap[firstType];
+            if (offer) {
+                showOfferPopup(offer);
+            }
         }
 
-        function showOfferPopup() {
-            if (!currentOffer) return;
-            const pkg = membershipPackages?.[currentOffer.membershipType] || 
-                        DEFAULT_MEMBERSHIP_PACKAGES[currentOffer.membershipType];
-            const endDate = currentOffer.endDateTime?.toDate();
+        function showOfferPopup(offer) {
+            const pkg = membershipPackages?.[offer.membershipType] || 
+                        DEFAULT_MEMBERSHIP_PACKAGES[offer.membershipType];
+            const endDate = offer.endDateTime?.toDate();
             const timeLeft = endDate ? formatTimeLeft(endDate) : 'limited time';
 
-            const upgradeFunction = currentOffer.membershipType === 'premium' 
+            const upgradeFunction = offer.membershipType === 'premium' 
                 ? 'showMembershipOptions(true)' 
                 : 'showEliteUpgradeOptions(true)';
 
@@ -779,9 +781,9 @@
                     <h2 style="font-size:2rem; margin-bottom:0.5rem;">🔥 Special Offer!</h2>
                     <h3 style="font-size:1.5rem; margin-bottom:1rem;">${pkg.name} Membership</h3>
                     <div style="background:white; color:#1e293b; border-radius:1rem; padding:1rem; margin:1rem 0;">
-                        <p style="text-decoration:line-through; color:#94a3b8;">$${currentOffer.originalPrice}</p>
-                        <p style="font-size:3rem; font-weight:800; color:#f97316;">$${currentOffer.newAmount.toFixed(2)}</p>
-                        <p style="font-size:1rem;">${currentOffer.savingsPercentage}% OFF</p>
+                        <p style="text-decoration:line-through; color:#94a3b8;">$${offer.originalPrice}</p>
+                        <p style="font-size:3rem; font-weight:800; color:#f97316;">$${offer.newAmount.toFixed(2)}</p>
+                        <p style="font-size:1rem;">${offer.savingsPercentage}% OFF</p>
                     </div>
                     <p style="margin-bottom:1rem;"><i class="fas fa-clock"></i> Offer ends in: <strong>${timeLeft}</strong></p>
                     <div style="display:flex; gap:1rem; justify-content:center;">
@@ -2601,10 +2603,11 @@
         // ==================== MEMBERSHIP OPTIONS ====================
         function showMembershipOptions(usingOffer = false) {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
-            const hasOffer = currentOffer && currentOffer.membershipType === 'premium';
-            const offerPrice = hasOffer ? currentOffer.newAmount : premiumPkg.price;
-            const originalPrice = hasOffer ? currentOffer.originalPrice : premiumPkg.price;
-            const offerId = hasOffer ? currentOffer.id : null;
+            const offer = currentOfferMap['premium'];  // get offer for premium if exists
+            const hasOffer = offer && new Date(offer.endDateTime.seconds * 1000) > new Date();
+            const offerPrice = hasOffer ? offer.newAmount : premiumPkg.price;
+            const originalPrice = hasOffer ? offer.originalPrice : premiumPkg.price;
+            const offerId = hasOffer ? offer.id : null;
 
             showModal(`<div class="modal-content" style="text-align:center;">
                 <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;">
@@ -2619,7 +2622,7 @@
                         <h4 style="color:#6366f1; font-size:1.8rem;">${escapeHtml(premiumPkg.name)}</h4>
                         ${hasOffer ? `
                             <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b; text-decoration:line-through;">${formatBoth(originalPrice)}</span></p>
-                            <p style="font-size:0.9rem; color:#f97316;">${currentOffer.savingsPercentage}% OFF – Limited time!</p>
+                            <p style="font-size:0.9rem; color:#f97316;">${offer.savingsPercentage}% OFF – Limited time!</p>
                         ` : `
                             <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(premiumPkg.price)}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
                         `}
@@ -2640,10 +2643,11 @@
 
         function showEliteUpgradeOptions(usingOffer = false) {
             const elitePkg = (membershipPackages && membershipPackages.elite) || DEFAULT_MEMBERSHIP_PACKAGES.elite;
-            const hasOffer = currentOffer && currentOffer.membershipType === 'elite';
-            const offerPrice = hasOffer ? currentOffer.newAmount : elitePkg.price;
-            const originalPrice = hasOffer ? currentOffer.originalPrice : elitePkg.price;
-            const offerId = hasOffer ? currentOffer.id : null;
+            const offer = currentOfferMap['elite'];  // get offer for elite if exists
+            const hasOffer = offer && new Date(offer.endDateTime.seconds * 1000) > new Date();
+            const offerPrice = hasOffer ? offer.newAmount : elitePkg.price;
+            const originalPrice = hasOffer ? offer.originalPrice : elitePkg.price;
+            const offerId = hasOffer ? offer.id : null;
 
             showModal(`<div class="modal-content" style="text-align:center;">
                 <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#f59e0b,#d97706); padding:1.5rem; border-radius:1rem; color:white;">
@@ -2658,7 +2662,7 @@
                         <h4 style="color:#f59e0b; font-size:1.8rem;">${escapeHtml(elitePkg.name)}</h4>
                         ${hasOffer ? `
                             <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b; text-decoration:line-through;">${formatBoth(originalPrice)}</span></p>
-                            <p style="font-size:0.9rem; color:#f97316;">${currentOffer.savingsPercentage}% OFF – Limited time!</p>
+                            <p style="font-size:0.9rem; color:#f97316;">${offer.savingsPercentage}% OFF – Limited time!</p>
                         ` : `
                             <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(elitePkg.price)}<span style="font-size:1rem; color:#64748b;">/${elitePkg.duration}</span></p>
                         `}
