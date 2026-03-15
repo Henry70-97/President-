@@ -2292,6 +2292,15 @@
                         const statusClass = sub.status === 'approved' ? 'success' : sub.status === 'rejected' ? 'danger' : 'warning';
                         const date = sub.submittedAt?.toDate ? sub.submittedAt.toDate().toLocaleDateString() : 'N/A';
                         const earned = sub.earned ? formatBoth(sub.earned) : '';
+                        // For GeoPay surveys, display answers
+                        let answersHtml = '';
+                        if (sub.answers && sub.answers.length) {
+                            answersHtml = `<div style="margin-top:0.5rem; background:#f1f5f9; padding:0.5rem; border-radius:0.5rem;"><small><strong>Answers:</strong></small>`;
+                            sub.answers.forEach((ans, idx) => {
+                                answersHtml += `<p><small>Q${idx+1}: ${escapeHtml(ans)}</small></p>`;
+                            });
+                            answersHtml += `</div>`;
+                        }
                         html += `
                             <div class="submission-card" style="background:white; border-radius:1rem; padding:1.2rem; border:1px solid #e2e8f0;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
@@ -2299,6 +2308,7 @@
                                     <span class="badge ${statusClass}">${sub.status}</span>
                                 </div>
                                 <p style="color:#475569; font-size:0.8rem; margin-bottom:0.5rem; line-height:1.5;">${escapeHtml((sub.workText || '').substring(0,100))}${(sub.workText||'').length>100?'...':''}</p>
+                                ${answersHtml}
                                 <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; font-size:0.7rem; color:#64748b;">
                                     <span><i class="far fa-calendar"></i> ${date}</span>
                                     ${sub.wordCount ? `<span><i class="fas fa-file-word"></i> ${sub.wordCount} words</span>` : ''}
@@ -3496,49 +3506,77 @@
                     return;
                 }
 
-                // For now, just show the first task (you can enhance to show a list later)
+                // Show list of available tasks
                 const tasks = [];
                 snapshot.forEach(doc => tasks.push({ id: doc.id, ...doc.data() }));
-                const task = tasks[0];
-
-                // Show start modal
-                showGeoPayStartModal(task);
-
+                
+                let tasksHtml = '<div style="max-height:400px; overflow-y:auto;">';
+                tasks.forEach(task => {
+                    tasksHtml += `
+                        <div style="background:#f8fafc; border-radius:1rem; padding:1rem; margin-bottom:1rem; cursor:pointer; border:2px solid #e2e8f0;" onclick="showGeoPayStartModal('${task.id}')">
+                            <h4 style="color:#10b981;">${escapeHtml(task.title)}</h4>
+                            <p>${escapeHtml(task.description.substring(0,100))}...</p>
+                            <div style="display:flex; justify-content:space-between; margin-top:0.5rem;">
+                                <span><i class="fas fa-dollar-sign"></i> ${formatBoth(parseFloat(task.reward) || 0)}</span>
+                                <span><i class="fas fa-clock"></i> ${task.surveyDuration || 30} min</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                tasksHtml += '</div>';
+                
+                showModal(`
+                    <div class="modal-content" style="max-width:500px;">
+                        <h3 style="margin-bottom:1rem;">Available ${subcategory === 'opinionPay' ? 'Opinion Pay' : 'Geo Survey'} Tasks</h3>
+                        ${tasksHtml}
+                        <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:1rem;">Close</button>
+                    </div>
+                `);
             } catch (e) {
                 console.error('Error loading GeoPay tasks:', e);
                 showAlert('Error loading tasks. Please try again.', 'error');
             }
         }
 
-        function showGeoPayStartModal(task) {
-            const isSurvey = task.subcategory === 'geosurvey';
-            
-            showModal(`
-                <div class="modal-content" style="max-width:500px; text-align:center; padding:2rem;">
-                    <i class="fas fa-${isSurvey ? 'poll' : 'comment-dots'}" style="font-size:4rem; color:#10b981; margin-bottom:1rem;"></i>
-                    <h2 style="margin-bottom:1rem;">${escapeHtml(task.title)}</h2>
-                    <p style="margin-bottom:1.5rem;">${escapeHtml(task.description)}</p>
+        function showGeoPayStartModal(taskId) {
+            closeModal();
+            setTimeout(async () => {
+                try {
+                    const taskDoc = await db.collection('tasks').doc(taskId).get();
+                    const task = taskDoc.data();
+                    const isSurvey = task.subcategory === 'geosurvey';
                     
-                    <div style="background:#f8fafc; border-radius:1rem; padding:1rem; margin-bottom:1.5rem; text-align:left;">
-                        <p><strong><i class="fas fa-dollar-sign"></i> Reward:</strong> ${formatBoth(parseFloat(task.reward) || 0)}</p>
-                        ${isSurvey ? `<p><strong><i class="fas fa-clock"></i> Time Limit:</strong> ${task.surveyDuration || 30} minutes</p>` : ''}
-                        <p><strong><i class="fas fa-question-circle"></i> Questions:</strong> ${task.questions ? task.questions.length : (isSurvey ? 'Up to 10' : '1 case study')}</p>
-                    </div>
-                    
-                    <p style="margin-bottom:1.5rem; color:#475569;">
-                        ${isSurvey 
-                            ? 'You are about to start a timed survey. Once started, you must complete it within the time limit. If time expires, the survey will be marked as failed.'
-                            : 'You are about to start an opinion task. Take your time to read the case study and provide your thoughtful opinion.'}
-                    </p>
-                    
-                    <div style="display:flex; gap:1rem;">
-                        <button class="btn btn-success geopay-start-btn" onclick="startGeoPayTask('${task.id}', '${task.subcategory}')" style="flex:1;">
-                            <i class="fas fa-play"></i> Start Now
-                        </button>
-                        <button class="btn btn-secondary" onclick="closeModal()" style="flex:1;">Cancel</button>
-                    </div>
-                </div>
-            `);
+                    showModal(`
+                        <div class="modal-content" style="max-width:500px; text-align:center; padding:2rem;">
+                            <i class="fas fa-${isSurvey ? 'poll' : 'comment-dots'}" style="font-size:4rem; color:#10b981; margin-bottom:1rem;"></i>
+                            <h2 style="margin-bottom:1rem;">${escapeHtml(task.title)}</h2>
+                            <p style="margin-bottom:1.5rem;">${escapeHtml(task.description)}</p>
+                            
+                            <div style="background:#f8fafc; border-radius:1rem; padding:1rem; margin-bottom:1.5rem; text-align:left;">
+                                <p><strong><i class="fas fa-dollar-sign"></i> Reward:</strong> ${formatBoth(parseFloat(task.reward) || 0)}</p>
+                                ${isSurvey ? `<p><strong><i class="fas fa-clock"></i> Time Limit:</strong> ${task.surveyDuration || 30} minutes</p>` : ''}
+                                <p><strong><i class="fas fa-question-circle"></i> Questions:</strong> ${task.questions ? task.questions.length : (isSurvey ? 'Up to 10' : '1 case study')}</p>
+                            </div>
+                            
+                            <p style="margin-bottom:1.5rem; color:#475569;">
+                                ${isSurvey 
+                                    ? 'You are about to start a timed survey. Once started, you must complete it within the time limit. If time expires, the survey will be marked as failed.'
+                                    : 'You are about to start an opinion task. Take your time to read the case study and provide your thoughtful opinion.'}
+                            </p>
+                            
+                            <div style="display:flex; gap:1rem;">
+                                <button class="btn btn-success geopay-start-btn" onclick="startGeoPayTask('${task.id}', '${task.subcategory}')" style="flex:1;">
+                                    <i class="fas fa-play"></i> Start Now
+                                </button>
+                                <button class="btn btn-secondary" onclick="closeModal()" style="flex:1;">Cancel</button>
+                            </div>
+                        </div>
+                    `);
+                } catch (e) {
+                    console.error('Error loading task details:', e);
+                    showAlert('Error loading task. Please try again.', 'error');
+                }
+            }, 200);
         }
 
         async function startGeoPayTask(taskId, subcategory) {
@@ -3828,10 +3866,14 @@
                         if (q.type === 'multipleChoice' && q.options) {
                             let optionsHtml = '';
                             q.options.forEach((opt, optIndex) => {
+                                // Show correct answer indicator with star if available (for info only)
+                                const isCorrect = q.correctAnswer && opt === q.correctAnswer;
+                                const correctStar = isCorrect ? ' <span style="color:#10b981; margin-left:5px;" title="Correct answer"><i class="fas fa-star"></i></span>' : '';
+                                
                                 optionsHtml += `
                                     <label class="geopay-option-item">
                                         <input type="radio" name="q${index}" value="${escapeHtml(opt)}">
-                                        <span>${escapeHtml(opt)}</span>
+                                        <span>${escapeHtml(opt)}${correctStar}</span>
                                     </label>
                                 `;
                             });
@@ -3931,50 +3973,150 @@
             try {
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 const task = taskDoc.data();
-
-                // Gather answers
-                const answers = [];
                 const questions = task.questions || [];
 
+                // Gather answers and validate
+                const answers = [];
+                let score = 0;
+                let totalPoints = 0;
+                const errors = [];
+
                 for (let i = 0; i < questions.length; i++) {
-                    if (questions[i].type === 'multipleChoice') {
+                    const q = questions[i];
+                    totalPoints += q.points || 1;
+
+                    if (q.type === 'multipleChoice') {
+                        // For multiple choice, check if an option is selected
                         const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                        
                         if (!selected) {
-                            showAlert(`Please answer question ${i+1}`, 'error');
-                            return;
+                            errors.push(`Question ${i+1}: Please select an answer`);
+                            answers.push(null);
+                            continue;
                         }
-                        answers.push(selected.value);
+                        
+                        const answer = selected.value;
+                        answers.push(answer);
+                        
+                        // Check if answer is correct (if correctAnswer exists)
+                        if (q.correctAnswer) {
+                            if (answer === q.correctAnswer) {
+                                score += q.points || 1;
+                            } else {
+                                // Wrong answer - show message but still proceed
+                                errors.push(`Question ${i+1}: Your answer "${answer}" is not correct. The correct answer is "${q.correctAnswer}". Your answer has been recorded.`);
+                            }
+                        } else {
+                            // No correct answer specified, just count participation
+                            score += q.points || 1;
+                        }
+                        
                     } else {
+                        // Text answer
                         const textarea = document.getElementById(`q${i}`);
                         if (!textarea || !textarea.value.trim()) {
-                            showAlert(`Please answer question ${i+1}`, 'error');
-                            return;
+                            errors.push(`Question ${i+1}: Please provide an answer`);
+                            answers.push(null);
+                            continue;
                         }
-                        answers.push(textarea.value.trim());
+                        
+                        const answer = textarea.value.trim();
+                        answers.push(answer);
+                        
+                        // Text answers always get points (admin will review)
+                        score += q.points || 1;
                     }
+                }
+
+                // If there are unanswered questions, show errors and return
+                const unansweredErrors = errors.filter(e => e.includes('Please select') || e.includes('Please provide'));
+                if (unansweredErrors.length > 0) {
+                    // Create a formatted error message for unanswered questions
+                    let errorHtml = '<div style="color:#ef4444; margin-bottom:1rem; text-align:center;">';
+                    errorHtml += '<i class="fas fa-exclamation-circle" style="font-size:3rem;"></i>';
+                    errorHtml += '<h3 style="color:#ef4444;">Please answer all questions</h3>';
+                    errorHtml += '<ul style="text-align:left; margin-top:1rem;">';
+                    unansweredErrors.forEach(err => {
+                        errorHtml += `<li>${err}</li>`;
+                    });
+                    errorHtml += '</ul>';
+                    errorHtml += '<button class="btn btn-primary" onclick="closeModal()">OK</button>';
+                    errorHtml += '</div>';
+                    
+                    // Replace modal content with error
+                    document.getElementById('modalContent').innerHTML = errorHtml;
+                    return;
+                }
+
+                // Check if any answers are null (shouldn't happen if validation passed)
+                if (answers.includes(null)) {
+                    showAlert('Please answer all questions before submitting.', 'error');
+                    return;
+                }
+
+                // Show warning for wrong answers but allow submission
+                const wrongAnswers = errors.filter(e => e.includes('not correct'));
+                let warningMessage = '';
+                if (wrongAnswers.length > 0) {
+                    warningMessage = '<div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:1rem; margin-bottom:1rem; text-align:left;">';
+                    warningMessage += '<p style="font-weight:600; color:#92400e;"><i class="fas fa-exclamation-triangle"></i> Note:</p>';
+                    warningMessage += '<ul style="color:#92400e;">';
+                    wrongAnswers.forEach(err => {
+                        warningMessage += `<li>${err}</li>`;
+                    });
+                    warningMessage += '</ul>';
+                    warningMessage += '<p>Your answers have been recorded and will be reviewed.</p>';
+                    warningMessage += '</div>';
                 }
 
                 showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting survey...</h3></div>`);
 
-                // Save submission
-                await db.collection('submissions').add({
+                // Calculate score percentage if there were correct answers
+                const scorePercentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : null;
+
+                // Save submission with answers and score
+                const submissionData = {
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     taskId: taskId,
                     taskTitle: task.title || 'Geo Survey',
                     answers: answers,
-                    status: 'pending',
+                    status: 'pending', // Always pending for admin review
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+
+                // If we have correct answers and calculated a score, store it
+                if (scorePercentage !== null) {
+                    submissionData.autoScore = score;
+                    submissionData.totalPoints = totalPoints;
+                    submissionData.scorePercentage = scorePercentage;
+                }
+
+                await db.collection('submissions').add(submissionData);
 
                 // Remove from accepted tasks
                 await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
+
+                // Show success message with warnings if any
+                let successMessage = '';
+                if (scorePercentage !== null) {
+                    successMessage = `
+                        <p style="font-size:1.2rem; margin:0.5rem 0;">Your score: ${score}/${totalPoints} (${scorePercentage}%)</p>
+                        ${warningMessage}
+                        <p style="font-size:0.9rem; color:#64748b;">Your submission will be reviewed by admin.</p>
+                    `;
+                } else {
+                    successMessage = `
+                        <p>Your survey has been submitted for review.</p>
+                        ${warningMessage}
+                    `;
+                }
 
                 showModal(`
                     <div class="modal-content" style="text-align:center;">
                         <div class="success-check"><i class="fas fa-check"></i></div>
                         <h3 style="color:#10b981;">Survey Submitted!</h3>
-                        <p>Thank you for completing the survey. Your answers are pending review.</p>
+                        ${successMessage}
                         <p style="font-size:0.9rem; margin:1rem 0;">Expected reward: ${formatBoth(parseFloat(task.reward) || 0)}</p>
                         <button class="btn btn-success" onclick="switchTab('submissions'); closeModal();">View My Submissions</button>
                     </div>
