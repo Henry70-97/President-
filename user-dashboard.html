@@ -3282,7 +3282,7 @@
             try {
                 const leaderboardSnap = await db.collection('leaderboard').orderBy('rank', 'asc').get();
                 if (!leaderboardSnap.empty) {
-                    let html = '<h3>🏆 Leaderboard (Admin curated)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th></tr>';
+                    let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th></tr>';
                     leaderboardSnap.forEach(doc => { const entry = doc.data(); html += `<tr><td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td></tr>`; });
                     html += '</table>';
                     document.getElementById('content').innerHTML = html;

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6045,6 +6046,7 @@
                     <div style="display: flex; gap: 1rem; margin-bottom:1rem;">
                         <button class="btn btn-success" onclick="showAddLeaderboardEntry()">+ Add Manual Entry</button>
                         <button class="btn btn-primary" onclick="generateLeaderboardFromUsers()">⚙️ Generate from Users</button>
+                        <button class="btn btn-info" onclick="showPasteLeaderboardEntries()">📋 Paste Entries</button>
                     </div>
                     <table class="data-table">
                         <tr><th>Rank</th><th>User Name</th><th>Points</th><th>Type</th><th>Actions</th></tr>
@@ -6230,6 +6232,117 @@
                 console.error('Error generating leaderboard:', error);
                 showAlert('Error: ' + error.message, 'error');
             }
+        };
+
+        // ========== NEW: PASTE LEADERBOARD ENTRIES ==========
+        window.showPasteLeaderboardEntries = function() {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Paste Leaderboard Entries</h3>
+                <p style="color:#64748b; margin-bottom:0.5rem;">
+                    Paste lines in the format:<br>
+                    <code>#Rank  UserName  Points  Type</code><br>
+                    Example:<br>
+                    <code>#1  john@example.com  1500  Auto</code>
+                </p>
+                <textarea id="pasteLeaderboardData" rows="12" style="width:100%; font-family:monospace;" placeholder="Paste your entries here..."></textarea>
+                <div style="display:flex; gap:1rem; margin-top:1rem;">
+                    <button class="btn btn-success" id="processPasteBtn">Process & Add</button>
+                    <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                </div>
+            `);
+
+            document.getElementById('processPasteBtn').addEventListener('click', async function() {
+                const rawText = document.getElementById('pasteLeaderboardData').value.trim();
+                if (!rawText) {
+                    showAlert('Please paste some data first.', 'error');
+                    return;
+                }
+
+                const lines = rawText.split('\n');
+                const entries = [];
+                const errors = [];
+
+                lines.forEach((line, index) => {
+                    line = line.trim();
+                    if (line === '' || line.startsWith('#')) {
+                        // Optionally keep rank line format: #1  name  points  type
+                        const parts = line.split(/\s+/); // split by whitespace
+                        // Expected parts: ["#1", "username", "points", "type"]
+                        if (parts.length >= 4) {
+                            const rankStr = parts[0].replace('#', '');
+                            const rank = parseInt(rankStr, 10);
+                            const userName = parts[1];
+                            const points = parseFloat(parts[2]);
+                            const type = parts[3] === 'Auto' ? 'auto' : (parts[3] === 'Manual' ? 'manual' : 'manual'); // default to manual if not recognised
+
+                            if (isNaN(rank) || rank <= 0) {
+                                errors.push(`Line ${index+1}: Invalid rank "${parts[0]}"`);
+                            } else if (!userName) {
+                                errors.push(`Line ${index+1}: Missing user name`);
+                            } else if (isNaN(points)) {
+                                errors.push(`Line ${index+1}: Invalid points "${parts[2]}"`);
+                            } else {
+                                entries.push({ rank, userName, points, type });
+                            }
+                        } else {
+                            errors.push(`Line ${index+1}: Line does not have enough parts (expected 4)`);
+                        }
+                    } else {
+                        // If line doesn't start with #, try to parse anyway (maybe they omitted #)
+                        const parts = line.split(/\s+/);
+                        if (parts.length >= 3) {
+                            // Assume rank is first, but it might not have # – try to parse as number
+                            const rank = parseInt(parts[0], 10);
+                            const userName = parts[1];
+                            const points = parseFloat(parts[2]);
+                            const type = parts[3] ? (parts[3].toLowerCase() === 'auto' ? 'auto' : 'manual') : 'manual';
+                            if (!isNaN(rank) && rank > 0 && userName && !isNaN(points)) {
+                                entries.push({ rank, userName, points, type });
+                            } else {
+                                errors.push(`Line ${index+1}: Could not parse line: "${line}"`);
+                            }
+                        } else {
+                            errors.push(`Line ${index+1}: Line has insufficient data (expected at least rank, name, points)`);
+                        }
+                    }
+                });
+
+                if (errors.length > 0) {
+                    showAlert('Parsing errors:\n' + errors.join('\n'), 'error');
+                    return;
+                }
+
+                if (entries.length === 0) {
+                    showAlert('No valid entries found to add.', 'warning');
+                    return;
+                }
+
+                // Confirm with user
+                if (!confirm(`Add ${entries.length} entries to the leaderboard?`)) return;
+
+                // Write to Firestore
+                try {
+                    const batch = db.batch();
+                    entries.forEach(entry => {
+                        const docRef = db.collection('leaderboard').doc(); // auto‑generated ID
+                        batch.set(docRef, {
+                            rank: entry.rank,
+                            userName: entry.userName,
+                            points: entry.points,
+                            type: entry.type,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                    await batch.commit();
+
+                    showAlert(`Successfully added ${entries.length} leaderboard entries!`, 'success');
+                    closeModal();
+                    loadLeaderboardManager(); // refresh the table
+                } catch (error) {
+                    console.error('Error adding pasted entries:', error);
+                    showAlert('Error saving entries: ' + error.message, 'error');
+                }
+            });
         };
 
         // ==================== FAQ ====================
@@ -7735,6 +7848,10 @@
         window.revertSubmission = revertSubmission;
         window.revertWithdrawal = revertWithdrawal;
         window.revertMembership = revertMembership;
+
+        // Paste leaderboard function
+        window.showPasteLeaderboardEntries = showPasteLeaderboardEntries;
     </script>  
 </body>  
 </html>
+```
