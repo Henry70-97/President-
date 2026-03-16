@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2923,7 +2922,7 @@
             }
         }
 
-        // ==================== NEWBIE TRAINER (TIMED, MULTIPLE ANSWERS) ====================
+        // ==================== NEWBIE TRAINER (TIMED, MULTIPLE ANSWERS) - FIXED NESTED ARRAYS ====================
         async function loadNewbieTrainer() {
             currentTaskViewed = null;
             refreshMirror();
@@ -3034,12 +3033,22 @@
 
             questions.forEach((q, index) => {
                 const savedAnswer = previousAnswers ? previousAnswers[index] : '';
+                // Prepare saved answer array for multiple choice (both old array and new string formats)
+                let savedAnswerArray = [];
+                if (savedAnswer) {
+                    if (Array.isArray(savedAnswer)) {
+                        savedAnswerArray = savedAnswer; // old format (array)
+                    } else {
+                        savedAnswerArray = savedAnswer.split(',').map(s => s.trim()); // new format (string)
+                    }
+                }
+
                 let inputHtml = '';
                 if (q.type === 'multipleChoice' && q.options) {
                     // Multiple choice: checkboxes (multiple answers allowed)
                     let optionsHtml = '';
                     q.options.forEach(opt => {
-                        const checked = savedAnswer && savedAnswer.includes(opt) ? 'checked' : '';
+                        const checked = savedAnswerArray.includes(opt) ? 'checked' : '';
                         optionsHtml += `
                             <label class="geopay-option-item">
                                 <input type="checkbox" name="q${index}" value="${escapeHtml(opt)}" ${checked}>
@@ -3052,7 +3061,10 @@
                     // Single choice: radio buttons
                     let optionsHtml = '';
                     q.options.forEach(opt => {
-                        const checked = savedAnswer && savedAnswer === opt ? 'checked' : '';
+                        // Determine checked: if savedAnswer is array, take first element; else compare directly
+                        const isChecked = savedAnswer ? 
+                            (Array.isArray(savedAnswer) ? savedAnswer[0] === opt : savedAnswer === opt) : false;
+                        const checked = isChecked ? 'checked' : '';
                         optionsHtml += `
                             <label class="geopay-option-item">
                                 <input type="radio" name="q${index}" value="${escapeHtml(opt)}" ${checked}>
@@ -3111,7 +3123,14 @@
             return formHtml + script;
         }
 
+        // ==================== UPDATED NEWBIE SUBMIT FUNCTION WITH NESTED ARRAY FIX ====================
         async function submitNewbieAnswers(questions) {
+            // Validate questions array
+            if (!questions || !Array.isArray(questions) || questions.length === 0) {
+                showAlert('No questions found. Please contact admin.', 'error');
+                return;
+            }
+
             // Gather answers
             const answers = [];
             for (let i = 0; i < questions.length; i++) {
@@ -3123,7 +3142,8 @@
                         showAlert(`Please answer question ${i+1}.`, 'error');
                         return;
                     }
-                    answers.push(selected); // store array for multiple choice
+                    // Store as comma-separated string instead of array
+                    answers.push(selected.join(', '));
                 } else if (q.type === 'singleChoice') {
                     const radio = document.querySelector(`input[name="q${i}"]:checked`);
                     if (!radio) {
@@ -3166,7 +3186,8 @@
                 loadNewbieTrainer();
             } catch (e) {
                 console.error('Error submitting answers:', e);
-                showAlert('Failed to submit answers. Please try again.', 'error');
+                // Show more specific error message
+                showAlert('Failed to submit: ' + (e.message || 'Unknown error'), 'error');
             }
         }
 
@@ -3715,6 +3736,7 @@
             }, 200);
         }
 
+        // ==================== UPDATED: BETTER ERROR LOGGING FOR GEOPAY TASK ====================
         async function startGeoPayTask(taskId, subcategory) {
             closeModal();
 
@@ -3789,8 +3811,9 @@
                 }
 
             } catch (e) {
-                console.error('Error starting GeoPay task:', e);
-                showAlert('Error starting task. Please try again.', 'error');
+                console.error('GeoPay start error:', e);
+                // Show the specific error message to the user
+                showAlert('Error starting task: ' + (e.message || 'Unknown error'), 'error');
             }
         }
 
@@ -4264,7 +4287,7 @@
             }
         }
 
-        // ==================== HOW IT WORKS (FETCH FROM FIRESTORE) ====================
+        // ==================== HOW IT WORKS (UPDATED: supports image URLs) ====================
         async function loadHowItWorks() {
             currentTaskViewed = null;
             refreshMirror();
@@ -4297,10 +4320,19 @@
 
                 if (data.sections && data.sections.length) {
                     data.sections.forEach(section => {
+                        // Process content: if it's a plain image URL, wrap in <img>
+                        let content = section.content || '';
+                        if (typeof content === 'string') {
+                            // Check if the string looks like an image URL (ends with common image extensions)
+                            const lower = content.toLowerCase();
+                            if (lower.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)(\?.*)?$/)) {
+                                content = `<img src="${escapeHtml(content)}" style="max-width:100%; border-radius:0.5rem; margin:1rem 0;">`;
+                            }
+                        }
                         html += `
                             <div class="training-card free" style="margin-bottom:1rem;">
-                                <h4 style="margin-bottom:0.5rem;">${escapeHtml(section.title)}</h4>
-                                <div>${section.content}</div>
+                                <h4 style="margin-bottom:0.5rem;">${escapeHtml(section.title || '')}</h4>
+                                <div>${content}</div>
                             </div>
                         `;
                     });
@@ -4549,4 +4581,3 @@
     </script>
 </body>
 </html>
-```
