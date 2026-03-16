@@ -473,6 +473,24 @@
             margin-bottom: 1rem;
         }
 
+        /* NEW: Multiple choice option rows */
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .option-row input {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .options-container {
+            margin-left: 1.5rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 0.5rem;
+        }
+
         /* NEW: GeoPay survey question builder styles */
         .survey-question-item {
             background: #f1f5f9;
@@ -490,18 +508,6 @@
         .survey-question-controls {
             display: flex;
             gap: 0.3rem;
-        }
-        .options-container {
-            margin-left: 1.5rem;
-            padding: 0.5rem;
-            background: white;
-            border-radius: 0.5rem;
-        }
-        .option-row {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.3rem;
         }
 
         @media (max-width: 768px) { 
@@ -1154,6 +1160,7 @@
                                 <button class="btn ${suspended ? 'btn-success' : 'btn-warning'}" onclick="toggleSuspendUser('${user.id}', ${suspended})">
                                     ${suspended ? 'Unsuspend' : 'Suspend'}
                                 </button>
+                                <button class="btn btn-sm btn-info" onclick="generateUserReport('${user.id}')">📋 Full Report</button>
                             </td> 
                         </tr> 
                     `; 
@@ -1166,6 +1173,254 @@
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading users: ${error.message}</p><button class="btn btn-primary" onclick="loadUsers()">Retry</button></div>`;
             }
         }
+
+        // ==================== NEW USER REPORT FUNCTION ====================
+        window.generateUserReport = async function(userId) {
+            showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Generating report...</h3></div>`);
+
+            try {
+                // Fetch user document
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (!userDoc.exists) throw new Error('User not found');
+                const user = userDoc.data();
+
+                // Fetch accepted tasks
+                const acceptedSnap = await db.collection('users').doc(userId).collection('acceptedTasks').get();
+                const acceptedTasks = [];
+                acceptedSnap.forEach(doc => acceptedTasks.push(doc.data()));
+
+                // Fetch submissions
+                const submissionsSnap = await db.collection('submissions').where('userId', '==', userId).get();
+                const submissions = [];
+                submissionsSnap.forEach(doc => submissions.push({ id: doc.id, ...doc.data() }));
+
+                // Fetch transactions
+                const transactionsSnap = await db.collection('transactions').where('userId', '==', userId).orderBy('createdAt', 'desc').get();
+                const transactions = [];
+                transactionsSnap.forEach(doc => transactions.push(doc.data()));
+
+                // Fetch withdrawals
+                const withdrawalsSnap = await db.collection('withdrawals').where('userId', '==', userId).orderBy('requestedAt', 'desc').get();
+                const withdrawals = [];
+                withdrawalsSnap.forEach(doc => withdrawals.push(doc.data()));
+
+                // Fetch membership payments
+                const membershipsSnap = await db.collection('membershipPayments').where('userId', '==', userId).orderBy('submittedAt', 'desc').get();
+                const memberships = [];
+                membershipsSnap.forEach(doc => memberships.push(doc.data()));
+
+                // Fetch notifications
+                const notifsSnap = await db.collection('notifications').where('userId', '==', userId).orderBy('createdAt', 'desc').limit(20).get();
+                const notifications = [];
+                notifsSnap.forEach(doc => notifications.push(doc.data()));
+
+                // Fetch referrals (as referrer)
+                const referrerSnap = await db.collection('referrals').where('referrerId', '==', userId).get();
+                const referralsAsReferrer = [];
+                referrerSnap.forEach(doc => referralsAsReferrer.push(doc.data()));
+
+                // Fetch referrals (as referred)
+                const referredSnap = await db.collection('referrals').where('referredId', '==', userId).get();
+                const referralsAsReferred = [];
+                referredSnap.forEach(doc => referralsAsReferred.push(doc.data()));
+
+                // Fetch training applications
+                const trainingAppsSnap = await db.collection('trainingApplications').where('userId', '==', userId).get();
+                const trainingApps = [];
+                trainingAppsSnap.forEach(doc => trainingApps.push(doc.data()));
+
+                // Fetch newbie submissions
+                const newbieSubsSnap = await db.collection('newbieSubmissions').where('userId', '==', userId).orderBy('submittedAt', 'desc').get();
+                const newbieSubs = [];
+                newbieSubsSnap.forEach(doc => newbieSubs.push(doc.data()));
+
+                // Build report HTML
+                let reportHtml = `
+                    <div style="max-height:70vh; overflow-y:auto; padding:1rem;">
+                        <h2 style="border-bottom:2px solid #6366f1; padding-bottom:0.5rem;">User Report: ${user.displayName || user.email}</h2>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>User ID:</strong> ${userId}</p>
+                        <p><strong>Wallet:</strong> $${(user.wallet || 0).toFixed(2)}</p>
+                        <p><strong>Membership:</strong> ${(user.membershipType || 'basic').toUpperCase()}</p>
+                        <p><strong>Joined:</strong> ${user.createdAt ? formatDate(user.createdAt) : 'N/A'}</p>
+                        <p><strong>Verified:</strong> ${user.verified ? 'Yes' : 'No'}</p>
+                        <p><strong>Frozen:</strong> ${user.frozen ? 'Yes' : 'No'}</p>
+                        <p><strong>Suspended:</strong> ${user.suspended ? 'Yes' : 'No'} ${user.suspendedReason ? `(Reason: ${user.suspendedReason})` : ''}</p>
+                        <p><strong>Newbie Qualified:</strong> ${user.newbieQualified ? 'Yes' : 'No'}</p>
+                        <p><strong>Total Referrals:</strong> ${user.totalReferrals || 0}</p>
+                        <p><strong>Referral Earnings:</strong> $${(user.referralEarnings || 0).toFixed(2)}</p>
+                        <p><strong>Productivity Score:</strong> ${user.productivityScore || 0}</p>
+                        <p><strong>Accepted Today:</strong> ${user.acceptedToday || 0}</p>
+                        <p><strong>Last Accepted:</strong> ${user.lastAcceptedDate || 'N/A'}</p>
+
+                        <h3 style="margin-top:2rem;">📋 Accepted Tasks (${acceptedTasks.length})</h3>
+                        ${acceptedTasks.length === 0 ? '<p>None</p>' : acceptedTasks.map(t => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                <strong>${t.title || 'Untitled'}</strong> – $${t.reward} – Accepted: ${t.acceptedAt ? formatDate(t.acceptedAt) : 'N/A'}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">📝 Submissions (${submissions.length})</h3>
+                        ${submissions.length === 0 ? '<p>None</p>' : submissions.map(s => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                <strong>${s.taskTitle || 'Untitled'}</strong> – Status: <span class="badge ${s.status === 'approved' ? 'success' : s.status === 'rejected' ? 'danger' : 'warning'}">${s.status}</span>
+                                ${s.earned ? ` – Earned: $${s.earned}` : ''} – Submitted: ${s.submittedAt ? formatDate(s.submittedAt) : 'N/A'}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">💸 Transactions (${transactions.length})</h3>
+                        ${transactions.length === 0 ? '<p>None</p>' : transactions.map(tx => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                <strong>${tx.type.replace('_', ' ')}</strong> – ${tx.amount >= 0 ? '+' : ''}$${tx.amount} – ${tx.description || ''} – ${tx.createdAt ? formatDate(tx.createdAt) : ''}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">💰 Withdrawals (${withdrawals.length})</h3>
+                        ${withdrawals.length === 0 ? '<p>None</p>' : withdrawals.map(w => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                $${w.amount} – ${w.method} – Status: <span class="badge ${w.status === 'paid' ? 'success' : w.status === 'rejected' ? 'danger' : 'warning'}">${w.status}</span> – ${w.requestedAt ? formatDate(w.requestedAt) : ''}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">👑 Membership Payments (${memberships.length})</h3>
+                        ${memberships.length === 0 ? '<p>None</p>' : memberships.map(m => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                $${m.amount} – Status: <span class="badge ${m.status === 'approved' ? 'success' : m.status === 'rejected' ? 'danger' : 'warning'}">${m.status}</span> – ${m.submittedAt ? formatDate(m.submittedAt) : ''}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">🔔 Recent Notifications (${notifications.length})</h3>
+                        ${notifications.length === 0 ? '<p>None</p>' : notifications.map(n => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                <strong>${n.title || 'Notification'}</strong> – ${n.message} – ${n.createdAt ? formatDate(n.createdAt) : ''}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">🤝 Referrals (as referrer: ${referralsAsReferrer.length})</h3>
+                        ${referralsAsReferrer.length === 0 ? '<p>None</p>' : referralsAsReferrer.map(r => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                Referred: ${r.referredEmail || r.referredId} – Status: ${r.status}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">🤝 Referrals (as referred: ${referralsAsReferred.length})</h3>
+                        ${referralsAsReferred.length === 0 ? '<p>None</p>' : referralsAsReferred.map(r => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                Referrer: ${r.referrerId} – Status: ${r.status}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">🎓 Training Applications (${trainingApps.length})</h3>
+                        ${trainingApps.length === 0 ? '<p>None</p>' : trainingApps.map(t => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                Training: ${t.trainingTitle || t.trainingId} – Status: ${t.status}
+                            </div>
+                        `).join('')}
+
+                        <h3 style="margin-top:2rem;">👶 Newbie Submissions (${newbieSubs.length})</h3>
+                        ${newbieSubs.length === 0 ? '<p>None</p>' : newbieSubs.map(n => `
+                            <div style="background:#f1f5f9; padding:0.5rem; margin:0.3rem 0; border-radius:0.3rem;">
+                                Submitted: ${n.submittedAt ? formatDate(n.submittedAt) : 'N/A'} – Status: ${n.status}
+                            </div>
+                        `).join('')}
+
+                        <div style="margin-top:2rem; text-align:center;">
+                            <button class="btn btn-success" onclick="downloadUserReport('${userId}')">📥 Download Report</button>
+                        </div>
+                    </div>
+                `;
+
+                // Store report data for download
+                sessionStorage.setItem('userReport', JSON.stringify({
+                    user, acceptedTasks, submissions, transactions, withdrawals, memberships,
+                    notifications, referralsAsReferrer, referralsAsReferred, trainingApps, newbieSubs
+                }));
+
+                showModal(reportHtml);
+            } catch (error) {
+                console.error('Error generating report:', error);
+                showAlert('Error: ' + error.message, 'error');
+                closeModal();
+            }
+        };
+
+        window.downloadUserReport = async function(userId) {
+            const reportData = sessionStorage.getItem('userReport');
+            if (!reportData) {
+                showAlert('No report data found. Please generate the report again.', 'error');
+                return;
+            }
+            const data = JSON.parse(reportData);
+            const user = data.user;
+
+            let text = `USER REPORT: ${user.displayName || user.email}\n`;
+            text += `Generated: ${new Date().toLocaleString()}\n`;
+            text += `User ID: ${userId}\n`;
+            text += `Email: ${user.email}\n`;
+            text += `Wallet: $${(user.wallet || 0).toFixed(2)}\n`;
+            text += `Membership: ${(user.membershipType || 'basic').toUpperCase()}\n`;
+            text += `Joined: ${user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleString() : 'N/A'}\n`;
+            text += `Verified: ${user.verified ? 'Yes' : 'No'}\n`;
+            text += `Frozen: ${user.frozen ? 'Yes' : 'No'}\n`;
+            text += `Suspended: ${user.suspended ? 'Yes' : 'No'} ${user.suspendedReason ? `(${user.suspendedReason})` : ''}\n`;
+            text += `Newbie Qualified: ${user.newbieQualified ? 'Yes' : 'No'}\n`;
+            text += `Total Referrals: ${user.totalReferrals || 0}\n`;
+            text += `Referral Earnings: $${(user.referralEarnings || 0).toFixed(2)}\n`;
+            text += `Productivity Score: ${user.productivityScore || 0}\n\n`;
+
+            // Accepted Tasks
+            text += `ACCEPTED TASKS (${data.acceptedTasks.length}):\n`;
+            data.acceptedTasks.forEach(t => {
+                text += `- ${t.title || 'Untitled'}: $${t.reward} (Accepted: ${t.acceptedAt ? new Date(t.acceptedAt.seconds * 1000).toLocaleString() : 'N/A'})\n`;
+            });
+
+            // Submissions
+            text += `\nSUBMISSIONS (${data.submissions.length}):\n`;
+            data.submissions.forEach(s => {
+                text += `- ${s.taskTitle || 'Untitled'}: Status ${s.status}${s.earned ? `, Earned $${s.earned}` : ''} (Submitted: ${s.submittedAt ? new Date(s.submittedAt.seconds * 1000).toLocaleString() : 'N/A'})\n`;
+            });
+
+            // Transactions
+            text += `\nTRANSACTIONS (${data.transactions.length}):\n`;
+            data.transactions.forEach(tx => {
+                text += `- ${tx.type}: ${tx.amount >= 0 ? '+' : ''}$${tx.amount} ${tx.description || ''} (${tx.createdAt ? new Date(tx.createdAt.seconds * 1000).toLocaleString() : ''})\n`;
+            });
+
+            // Withdrawals
+            text += `\nWITHDRAWALS (${data.withdrawals.length}):\n`;
+            data.withdrawals.forEach(w => {
+                text += `- $${w.amount} via ${w.method}: ${w.status} (${w.requestedAt ? new Date(w.requestedAt.seconds * 1000).toLocaleString() : ''})\n`;
+            });
+
+            // Membership Payments
+            text += `\nMEMBERSHIP PAYMENTS (${data.memberships.length}):\n`;
+            data.memberships.forEach(m => {
+                text += `- $${m.amount}: ${m.status} (${m.submittedAt ? new Date(m.submittedAt.seconds * 1000).toLocaleString() : ''})\n`;
+            });
+
+            // Referrals
+            text += `\nREFERRALS (as referrer: ${data.referralsAsReferrer.length}, as referred: ${data.referralsAsReferred.length})\n`;
+
+            // Training Applications
+            text += `\nTRAINING APPLICATIONS (${data.trainingApps.length}):\n`;
+            data.trainingApps.forEach(t => {
+                text += `- ${t.trainingTitle || t.trainingId}: ${t.status}\n`;
+            });
+
+            // Newbie Submissions
+            text += `\nNEWBIE SUBMISSIONS (${data.newbieSubs.length}):\n`;
+            data.newbieSubs.forEach(n => {
+                text += `- Submitted: ${n.submittedAt ? new Date(n.submittedAt.seconds * 1000).toLocaleString() : 'N/A'}, Status: ${n.status}\n`;
+            });
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `user_${userId}_report.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
 
         window.showBatchWalletConfirmation = function() {
             const amount = parseFloat(document.getElementById('batchWalletAmount')?.value);
@@ -1624,6 +1879,7 @@
         }
 
         // NEW: Helper function to add a survey question field in create/edit
+        // MODIFIED: Default to multipleChoice and show options immediately
         function addSurveyQuestion(containerId, questionData = null) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -1633,7 +1889,8 @@
             questionDiv.dataset.index = index;
             
             const questionText = questionData ? questionData.questionText : '';
-            const type = questionData ? questionData.type : 'text';
+            // Default to multipleChoice for new questions so options area is visible immediately
+            const type = questionData ? questionData.type : 'multipleChoice';
             const options = questionData && questionData.options ? questionData.options : [];
             const correctAnswer = questionData ? questionData.correctAnswer || '' : '';
             const points = questionData ? questionData.points || 1 : 1;
@@ -5951,7 +6208,7 @@
             const container = document.getElementById('newbieTrainerContent');
             if (!container) return;
             container.innerHTML = '<p style="text-align:center;">Loading content...</p>';
-            
+
             try {
                 const doc = await db.collection('newbieTrainer').doc('content').get();
                 let content = doc.exists ? doc.data() : {
@@ -5983,19 +6240,11 @@
                     materialsHtml = '<p>No materials yet. Add some below.</p>';
                 }
 
-                // Build questions HTML
+                // Build questions HTML with type and options
                 let questionsHtml = '';
                 if (content.questions && content.questions.length) {
                     content.questions.forEach((q, idx) => {
-                        questionsHtml += `
-                            <div class="question-item" data-index="${idx}">
-                                <div class="question-controls">
-                                    <button class="btn btn-sm btn-danger" onclick="removeNewbieQuestion(${idx})"><i class="fas fa-times"></i></button>
-                                </div>
-                                <p><strong>Question ${idx+1}:</strong></p>
-                                <textarea class="question-text" style="margin-bottom:0;">${escapeHtml(q.questionText)}</textarea>
-                            </div>
-                        `;
+                        questionsHtml += renderQuestionEditor(q, idx);
                     });
                 } else {
                     questionsHtml = '<p>No questions yet. Add some below.</p>';
@@ -6045,6 +6294,67 @@
             }
         }
 
+        function renderQuestionEditor(q, idx) {
+            let optionsHtml = '';
+            if (q.type === 'multipleChoice' && q.options && q.options.length) {
+                q.options.forEach((opt, optIdx) => {
+                    optionsHtml += `
+                        <div class="option-row">
+                            <input type="text" class="option-input" value="${escapeHtml(opt)}" placeholder="Option ${optIdx+1}">
+                            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                        </div>
+                    `;
+                });
+            } else {
+                optionsHtml = '<p class="settings-label">No options yet.</p>';
+            }
+
+            return `
+                <div class="question-item" data-index="${idx}">
+                    <div class="question-controls">
+                        <button class="btn btn-sm btn-danger" onclick="removeNewbieQuestion(${idx})"><i class="fas fa-times"></i></button>
+                    </div>
+                    <p><strong>Question ${idx+1}:</strong></p>
+                    <input type="text" class="question-text" value="${escapeHtml(q.questionText || '')}" placeholder="Question text" style="width:100%; margin-bottom:0.5rem;">
+                    <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                        <select class="question-type" onchange="toggleQuestionOptions(this, ${idx})">
+                            <option value="text" ${q.type === 'text' ? 'selected' : ''}>Text answer</option>
+                            <option value="multipleChoice" ${q.type === 'multipleChoice' ? 'selected' : ''}>Multiple choice</option>
+                        </select>
+                        <input type="number" class="question-points" value="${q.points || 1}" min="0" step="0.5" style="width:80px;" placeholder="Points">
+                    </div>
+                    <div class="options-area" id="options-area-${idx}" style="display:${q.type === 'multipleChoice' ? 'block' : 'none'};">
+                        <div class="options-container" id="options-${idx}">
+                            ${optionsHtml}
+                        </div>
+                        <button class="btn btn-sm btn-info" onclick="addOptionToQuestion(${idx})">+ Add Option</button>
+                    </div>
+                    <div style="margin-top:0.5rem;">
+                        <input type="text" class="correct-answer" value="${escapeHtml(q.correctAnswer || '')}" placeholder="Correct answer (optional)">
+                    </div>
+                </div>
+            `;
+        }
+
+        window.toggleQuestionOptions = function(select, index) {
+            const area = document.getElementById(`options-area-${index}`);
+            if (area) {
+                area.style.display = select.value === 'multipleChoice' ? 'block' : 'none';
+            }
+        };
+
+        window.addOptionToQuestion = function(index) {
+            const optionsContainer = document.getElementById(`options-${index}`);
+            if (!optionsContainer) return;
+            const optionRow = document.createElement('div');
+            optionRow.className = 'option-row';
+            optionRow.innerHTML = `
+                <input type="text" class="option-input" placeholder="New option">
+                <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+            `;
+            optionsContainer.appendChild(optionRow);
+        };
+
         window.addNewbieMaterial = function() {
             const container = document.getElementById('materialsContainer');
             const div = document.createElement('div');
@@ -6064,14 +6374,30 @@
 
         window.addNewbieQuestion = function() {
             const container = document.getElementById('questionsContainer');
+            const idx = container.children.length;
             const div = document.createElement('div');
             div.className = 'question-item';
+            div.setAttribute('data-index', idx);
             div.innerHTML = `
                 <div class="question-controls">
                     <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button>
                 </div>
                 <p><strong>New Question:</strong></p>
-                <textarea class="question-text" style="margin-bottom:0;" placeholder="Enter question text"></textarea>
+                <input type="text" class="question-text" placeholder="Question text" style="width:100%; margin-bottom:0.5rem;">
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                    <select class="question-type" onchange="toggleQuestionOptions(this, ${idx})">
+                        <option value="text" selected>Text answer</option>
+                        <option value="multipleChoice">Multiple choice</option>
+                    </select>
+                    <input type="number" class="question-points" value="1" min="0" step="0.5" style="width:80px;" placeholder="Points">
+                </div>
+                <div class="options-area" id="options-area-${idx}" style="display:none;">
+                    <div class="options-container" id="options-${idx}"></div>
+                    <button class="btn btn-sm btn-info" onclick="addOptionToQuestion(${idx})">+ Add Option</button>
+                </div>
+                <div style="margin-top:0.5rem;">
+                    <input type="text" class="correct-answer" placeholder="Correct answer (optional)">
+                </div>
             `;
             container.appendChild(div);
         };
@@ -6107,8 +6433,26 @@
             const questions = [];
             document.querySelectorAll('#questionsContainer .question-item').forEach(item => {
                 const qText = item.querySelector('.question-text').value.trim();
+                const qType = item.querySelector('.question-type').value;
+                const qPoints = parseFloat(item.querySelector('.question-points').value) || 1;
+                const correctAnswer = item.querySelector('.correct-answer').value.trim() || null;
+                let options = [];
+                if (qType === 'multipleChoice') {
+                    const optionInputs = item.querySelectorAll('.option-input');
+                    optionInputs.forEach(opt => {
+                        const val = opt.value.trim();
+                        if (val) options.push(val);
+                    });
+                }
                 if (qText) {
-                    questions.push({ questionText: qText });
+                    const question = {
+                        questionText: qText,
+                        type: qType,
+                        points: qPoints
+                    };
+                    if (options.length > 0) question.options = options;
+                    if (correctAnswer) question.correctAnswer = correctAnswer;
+                    questions.push(question);
                 }
             });
 
