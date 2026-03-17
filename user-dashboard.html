@@ -3736,11 +3736,22 @@
             }, 200);
         }
 
-        // ==================== UPDATED: BETTER ERROR LOGGING FOR GEOPAY TASK ====================
+        // ==================== UPDATED: BETTER ERROR LOGGING AND TASK EXISTENCE CHECK ====================
         async function startGeoPayTask(taskId, subcategory) {
             closeModal();
 
             try {
+                // Fetch the task document first to ensure it exists
+                const taskRef = db.collection('tasks').doc(taskId);
+                const taskDoc = await taskRef.get();
+
+                if (!taskDoc.exists) {
+                    showAlert('Task not found. It may have been deleted.', 'error');
+                    return;
+                }
+
+                const task = taskDoc.data();
+
                 // Check if user has already accepted this task
                 const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
                 const acceptDoc = await acceptRef.get();
@@ -3754,11 +3765,6 @@
                     }
                     return;
                 }
-
-                // Accept the task
-                const taskRef = db.collection('tasks').doc(taskId);
-                const taskDoc = await taskRef.get();
-                const task = taskDoc.data();
 
                 // Check daily limit and concurrent tasks
                 if (acceptedTasksCount >= MAX_CONCURRENT_TASKS) {
@@ -4287,7 +4293,7 @@
             }
         }
 
-        // ==================== HOW IT WORKS (UPDATED: supports image URLs) ====================
+        // ==================== HOW IT WORKS (UPDATED: supports any URL as clickable link + image detection) ====================
         async function loadHowItWorks() {
             currentTaskViewed = null;
             refreshMirror();
@@ -4320,13 +4326,20 @@
 
                 if (data.sections && data.sections.length) {
                     data.sections.forEach(section => {
-                        // Process content: if it's a plain image URL, wrap in <img>
+                        // Process content: if it's a plain string, try to detect if it's an image URL or a generic URL
                         let content = section.content || '';
                         if (typeof content === 'string') {
-                            // Check if the string looks like an image URL (ends with common image extensions)
-                            const lower = content.toLowerCase();
-                            if (lower.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)(\?.*)?$/)) {
-                                content = `<img src="${escapeHtml(content)}" style="max-width:100%; border-radius:0.5rem; margin:1rem 0;">`;
+                            const trimmed = content.trim();
+                            // Simple URL detection (http/https)
+                            const urlPattern = /^(https?:\/\/[^\s]+)$/i;
+                            if (urlPattern.test(trimmed)) {
+                                // If it's an image URL, wrap in <img>, otherwise wrap in <a>
+                                const lower = trimmed.toLowerCase();
+                                if (lower.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)(\?.*)?$/)) {
+                                    content = `<img src="${escapeHtml(trimmed)}" style="max-width:100%; border-radius:0.5rem; margin:1rem 0;">`;
+                                } else {
+                                    content = `<a href="${escapeHtml(trimmed)}" target="_blank" rel="noopener noreferrer">${escapeHtml(trimmed)}</a>`;
+                                }
                             }
                         }
                         html += `
