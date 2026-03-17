@@ -3488,8 +3488,21 @@
             try {
                 const leaderboardSnap = await db.collection('leaderboard').orderBy('rank', 'asc').get();
                 if (!leaderboardSnap.empty) {
+                    // Group by userName to avoid duplicates
+                    const leaderboardMap = new Map();
+                    leaderboardSnap.forEach(doc => {
+                        const entry = doc.data();
+                        const key = entry.userName; // group by user name
+                        if (!leaderboardMap.has(key) || leaderboardMap.get(key).points < entry.points) {
+                            leaderboardMap.set(key, entry);
+                        }
+                    });
+                    const uniqueEntries = Array.from(leaderboardMap.values()).sort((a, b) => a.rank - b.rank);
+                    
                     let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th></tr>';
-                    leaderboardSnap.forEach(doc => { const entry = doc.data(); html += `<tr><td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td></tr>`; });
+                    uniqueEntries.forEach(entry => {
+                        html += `<tr><td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td></tr>`;
+                    });
                     html += '</table>';
                     document.getElementById('content').innerHTML = html;
                 } else {
@@ -3738,6 +3751,7 @@
 
         // ==================== UPDATED: BETTER ERROR LOGGING AND TASK EXISTENCE CHECK ====================
         async function startGeoPayTask(taskId, subcategory) {
+            console.log('Attempting to start GeoPay task with ID:', taskId); // ADDED
             closeModal();
 
             try {
@@ -3746,7 +3760,8 @@
                 const taskDoc = await taskRef.get();
 
                 if (!taskDoc.exists) {
-                    showAlert('Task not found. It may have been deleted.', 'error');
+                    console.error('Task not found in Firestore. Task ID:', taskId); // ADDED
+                    showAlert(`Task not found (ID: ${taskId}). It may have been deleted.`, 'error');
                     return;
                 }
 
@@ -4293,7 +4308,7 @@
             }
         }
 
-        // ==================== HOW IT WORKS (UPDATED: supports any URL as clickable link + image detection) ====================
+        // ==================== HOW IT WORKS (UPDATED: supports image type and preserves HTML) ====================
         async function loadHowItWorks() {
             currentTaskViewed = null;
             refreshMirror();
@@ -4326,28 +4341,20 @@
 
                 if (data.sections && data.sections.length) {
                     data.sections.forEach(section => {
-                        // Process content: if it's a plain string, try to detect if it's an image URL or a generic URL
-                        let content = section.content || '';
-                        if (typeof content === 'string') {
-                            const trimmed = content.trim();
-                            // Simple URL detection (http/https)
-                            const urlPattern = /^(https?:\/\/[^\s]+)$/i;
-                            if (urlPattern.test(trimmed)) {
-                                // If it's an image URL, wrap in <img>, otherwise wrap in <a>
-                                const lower = trimmed.toLowerCase();
-                                if (lower.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)(\?.*)?$/)) {
-                                    content = `<img src="${escapeHtml(trimmed)}" style="max-width:100%; border-radius:0.5rem; margin:1rem 0;">`;
-                                } else {
-                                    content = `<a href="${escapeHtml(trimmed)}" target="_blank" rel="noopener noreferrer">${escapeHtml(trimmed)}</a>`;
-                                }
-                            }
+                        if (section.type === 'image') {
+                            // Image section – always render an <img> tag, no escaping needed
+                            html += `<div class="training-card free" style="margin-bottom:1rem;">
+                                        <h4 style="margin-bottom:0.5rem;">${escapeHtml(section.title || '')}</h4>
+                                        <img src="${escapeHtml(section.content)}" style="max-width:100%; border-radius:0.5rem; margin:1rem 0;">
+                                     </div>`;
+                        } else {
+                            // Heading or paragraph – render the raw HTML from the editor (trusted admin content)
+                            // Do NOT escape – we want bold, lists, links, etc. to appear.
+                            html += `<div class="training-card free" style="margin-bottom:1rem;">
+                                        <h4 style="margin-bottom:0.5rem;">${escapeHtml(section.title || '')}</h4>
+                                        <div>${section.content}</div>
+                                     </div>`;
                         }
-                        html += `
-                            <div class="training-card free" style="margin-bottom:1rem;">
-                                <h4 style="margin-bottom:0.5rem;">${escapeHtml(section.title || '')}</h4>
-                                <div>${content}</div>
-                            </div>
-                        `;
                     });
                 } else {
                     html += '<p>No content available.</p>';
