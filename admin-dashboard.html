@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* All existing styles remain exactly as they were */
+        /* All existing styles remain exactly as they were (unchanged) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding-bottom: 80px; }
         .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
@@ -509,6 +509,38 @@
             gap: 0.3rem;
         }
 
+        /* NEW: Investor management styles */
+        .investor-subtabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+        .investor-subtab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 40px;
+        }
+        .investor-subtab.active {
+            background: #6366f1;
+            color: white;
+        }
+        .rate-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .rate-input-group input {
+            width: 80px;
+            margin-bottom: 0;
+        }
+
         @media (max-width: 768px) { 
             .header { flex-direction: column; gap: 1rem; text-align: center; }
             .user-info-grid { grid-template-columns: 1fr; }
@@ -574,8 +606,12 @@
         <div class="mobile-menu-item" onclick="switchTab('deadlineTracker'); toggleMobileMenu()">⏰ Deadline Tracker</div>
         <div class="mobile-menu-item" onclick="switchTab('newbieTrainer'); toggleMobileMenu()">👶 Newbie Trainer</div>
         <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
-        <!-- NEW: Announcements menu item -->
         <div class="mobile-menu-item" onclick="switchTab('announcements'); toggleMobileMenu()">📢 Announcements</div>
+        <!-- NEW: Investor management tabs -->
+        <div class="mobile-menu-item" onclick="switchTab('investorOverview'); toggleMobileMenu()">💰 Investor Overview</div>
+        <div class="mobile-menu-item" onclick="switchTab('investorDeposits'); toggleMobileMenu()">💳 Investor Deposits</div>
+        <div class="mobile-menu-item" onclick="switchTab('investorWithdrawals'); toggleMobileMenu()">💸 Investor Withdrawals</div>
+        <div class="mobile-menu-item" onclick="switchTab('investorSettings'); toggleMobileMenu()">⚙️ Investor Settings</div>
     </div>
 
     <div class="app-container">  
@@ -627,8 +663,12 @@
             <button class="tab" data-tab="deadlineTracker">⏰ Deadline Tracker</button>  
             <button class="tab" data-tab="newbieTrainer">👶 Newbie Trainer</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
-            <!-- NEW: Announcements tab -->
-            <button class="tab" data-tab="announcements">📢 Announcements</button>
+            <button class="tab" data-tab="announcements">📢 Announcements</button>  
+            <!-- NEW: Investor management tabs -->
+            <button class="tab" data-tab="investorOverview">💰 Investor Overview</button>
+            <button class="tab" data-tab="investorDeposits">💳 Investor Deposits</button>
+            <button class="tab" data-tab="investorWithdrawals">💸 Investor Withdrawals</button>
+            <button class="tab" data-tab="investorSettings">⚙️ Investor Settings</button>
         </div>  
       
         <div class="content" id="content"></div>  
@@ -749,6 +789,8 @@
         let currentMessageType = 'individual';
         let currentTrainingSubTab = 'manage'; // for training center
         let currentNewbieSubTab = 'content'; // for newbie trainer
+        // NEW: investor subtab
+        let currentInvestorSubTab = 'overview';
         let membershipPackages = null;
         let feeSettings = null;
         let paymentUrl = ''; // for training payment link
@@ -943,7 +985,59 @@
               
             loadDashboard();  
         });  
-        
+
+        // ========== FIX: Make desktop tabs clickable and update active state ==========
+        // Add click listeners to all desktop tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    if (tabName) switchTab(tabName);
+                });
+            });
+        });
+
+        // Function to update active class on tabs and bottom nav items
+        function updateActiveTab() {
+            // Desktop tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                const tabName = tab.getAttribute('data-tab');
+                if (tabName === currentTab) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Bottom navigation items (mobile)
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                const onclickAttr = item.getAttribute('onclick');
+                if (onclickAttr) {
+                    const match = onclickAttr.match(/switchTab\('(.+?)'\)/);
+                    if (match) {
+                        const tabName = match[1];
+                        if (tabName === currentTab) {
+                            item.classList.add('active');
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    }
+                }
+            });
+        }
+
+        // Modify switchTab to call updateActiveTab after loading content
+        const originalSwitchTab = window.switchTab; // preserve if any
+        window.switchTab = function(tabName) {
+            currentTab = tabName;
+            loadDashboard().then(() => updateActiveTab());
+        };
+
+        // Also ensure that the inline onclick calls in bottom nav and mobile menu work with the updated switchTab
+        // (they already call window.switchTab, which now points to our new function)
+
+        // =================================================================================
+
         // ==================== AUTO TICKERS ====================
         // Listen for new positive events and add them as tickers
         function setupAutoTickers() {
@@ -7857,520 +7951,6 @@
             }
         };
 
-        // ==================== EVENT DELEGATION ====================
-        document.addEventListener('click', async (e) => {  
-            try {  
-                const target = e.target;  
-            
-                if (target.classList.contains('referral-card') && !target.closest('button')) {
-                    return;
-                }
-
-                if (target.closest('#notificationBell')) {
-                    const dropdown = document.getElementById('notificationDropdown');
-                    dropdown.classList.toggle('active');
-                    return;
-                }
-                  
-                if (target.id === 'logoutBtn' || target.closest('#logoutBtn')) {  
-                    logout();  
-                    return;  
-                }  
-                  
-                if (target.classList.contains('tab') || target.closest('.tab')) {  
-                    const tab = target.closest('.tab') || target;  
-                    const tabName = tab.getAttribute('data-tab');  
-                    if (tabName) {  
-                        switchTab(tabName);  
-                    }  
-                    return;  
-                }  
-                  
-                if (target.id === 'closeModalBtn' || target.closest('#closeModalBtn') || target.classList.contains('modal-backdrop')) {  
-                    closeModal();  
-                    return;  
-                }  
-                  
-                // User management buttons
-                if (target.classList.contains('toggle-status-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const newStatus = target.getAttribute('data-new-status') === 'true';
-                    await toggleUserStatus(userId, newStatus);
-                    return;
-                }
-                if (target.classList.contains('make-admin-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    await makeAdmin(userId);
-                    return;
-                }
-                if (target.classList.contains('demote-admin-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const userEmail = target.getAttribute('data-user-email');
-                    await demoteAdmin(userId, userEmail);
-                    return;
-                }
-                if (target.classList.contains('toggle-verified-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const newStatus = target.getAttribute('data-new-status') === 'true';
-                    await toggleVerified(userId, newStatus);
-                    return;
-                }
-                if (target.classList.contains('toggle-frozen-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const newStatus = target.getAttribute('data-new-status') === 'true';
-                    await toggleFrozen(userId, newStatus);
-                    return;
-                }
-                if (target.classList.contains('delete-user-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const userEmail = target.getAttribute('data-user-email');
-                    await deleteUser(userId, userEmail);
-                    return;
-                }
-                if (target.classList.contains('change-membership-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const currentType = target.getAttribute('data-current-type');
-                    showChangeMembership(userId, currentType);
-                    return;
-                }
-                if (target.id === 'confirmMembershipChangeBtn') {
-                    const userId = target.getAttribute('data-user-id');
-                    await changeMembership(userId);
-                    return;
-                }
-                if (target.classList.contains('reset-password-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const userEmail = target.getAttribute('data-user-email');
-                    await resetUserPassword(userId, userEmail);
-                    return;
-                }
-                if (target.classList.contains('adjust-wallet-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const userName = target.getAttribute('data-user-name');
-                    const wallet = target.getAttribute('data-wallet');
-                    showAdjustWallet(userId, userName, parseFloat(wallet || 0));
-                    return;
-                }
-                if (target.classList.contains('apply-adjustment-btn')) {
-                    const userId = target.getAttribute('data-user-id');
-                    await adjustWallet(userId);
-                    return;
-                }
-
-                // Task management
-                if (target.id === 'createTaskBtn') {
-                    await showCreateTask();
-                    return;
-                }
-                if (target.id === 'createTaskConfirmBtn') {
-                    await createTask();
-                    return;
-                }
-                if (target.classList.contains('edit-task-btn')) {
-                    const taskId = target.getAttribute('data-task-id');
-                    await editTask(taskId);
-                    return;
-                }
-                if (target.id === 'updateTaskBtn') {
-                    const taskId = target.getAttribute('data-task-id');
-                    await updateTask(taskId);
-                    return;
-                }
-                if (target.classList.contains('toggle-task-btn')) {
-                    const taskId = target.getAttribute('data-task-id');
-                    const newStatus = target.getAttribute('data-new-status') === 'true';
-                    await toggleTask(taskId, newStatus);
-                    return;
-                }
-                if (target.classList.contains('view-requirements-btn')) {
-                    const taskId = target.getAttribute('data-task-id');
-                    await viewRequirements(taskId);
-                    return;
-                }
-
-                // Submissions
-                if (target.classList.contains('approve-submission')) {
-                    const subId = target.getAttribute('data-sub-id');
-                    await reviewSubmission(subId, true);
-                    return;
-                }
-                if (target.classList.contains('reject-submission')) {
-                    const subId = target.getAttribute('data-sub-id');
-                    await reviewSubmission(subId, false);
-                    return;
-                }
-                if (target.classList.contains('revert-submission')) {
-                    const subId = target.getAttribute('data-sub-id');
-                    const userId = target.getAttribute('data-user-id');
-                    const amount = parseFloat(target.getAttribute('data-amount'));
-                    const taskTitle = target.getAttribute('data-task-title');
-                    await revertSubmission(subId, userId, amount, taskTitle);
-                    return;
-                }
-
-                // Withdrawals
-                if (target.classList.contains('process-withdrawal')) {
-                    const withdrawalId = target.getAttribute('data-withdrawal-id');
-                    await processWithdrawal(withdrawalId);
-                    return;
-                }
-                if (target.classList.contains('reject-withdrawal')) {
-                    const withdrawalId = target.getAttribute('data-withdrawal-id');
-                    if (confirm('Reject this withdrawal? The amount will be refunded to the user.')) {
-                        await rejectWithdrawal(withdrawalId);
-                    }
-                    return;
-                }
-                if (target.classList.contains('revert-withdrawal')) {
-                    const withdrawalId = target.getAttribute('data-withdrawal-id');
-                    const userId = target.getAttribute('data-user-id');
-                    const amount = parseFloat(target.getAttribute('data-amount'));
-                    await revertWithdrawal(withdrawalId, userId, amount);
-                    return;
-                }
-
-                // Memberships
-                if (target.classList.contains('approve-membership')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const paymentId = target.getAttribute('data-payment-id');
-                    await approveMembership(userId, paymentId);
-                    return;
-                }
-                if (target.classList.contains('reject-membership')) {
-                    const userId = target.getAttribute('data-user-id');
-                    const paymentId = target.getAttribute('data-payment-id');
-                    await rejectMembership(userId, paymentId);
-                    return;
-                }
-                if (target.classList.contains('revert-membership')) {
-                    const paymentId = target.getAttribute('data-payment-id');
-                    const userId = target.getAttribute('data-user-id');
-                    const amount = parseFloat(target.getAttribute('data-amount'));
-                    const credited = target.getAttribute('data-credited') === 'true';
-                    await revertMembership(paymentId, userId, amount, credited);
-                    return;
-                }
-
-                // Referrals
-                if (target.classList.contains('credit-referral-btn')) {
-                    const referralId = target.getAttribute('data-referral-id');
-                    const referrerId = target.getAttribute('data-referrer-id');
-                    const referredId = target.getAttribute('data-referred-id');
-                    const referredEmail = target.getAttribute('data-referred-email');
-                    await creditReferralBonus(referralId, referrerId, referredId, referredEmail);
-                    return;
-                }
-                if (target.id === 'confirmCreditBtn') {
-                    const referralId = target.getAttribute('data-referral-id');
-                    const referrerId = target.getAttribute('data-referrer-id');
-                    const referredId = target.getAttribute('data-referred-id');
-                    const referredEmail = target.getAttribute('data-referred-email');
-                    await executeCreditBonus(referralId, referrerId, referredId, referredEmail);
-                    return;
-                }
-                if (target.classList.contains('reject-referral-btn')) {
-                    const referralId = target.getAttribute('data-referral-id');
-                    if (confirm('Are you sure you want to reject this referral?')) {
-                        await rejectReferral(referralId);
-                    }
-                    return;
-                }
-
-                // Messages
-                if (target.id === 'sendMessageBtn') {
-                    await sendMessage();
-                    return;
-                }
-                if (target.id === 'individualMessageBtn') {
-                    currentMessageType = 'individual';
-                    document.getElementById('individualMessageForm').style.display = 'block';
-                    document.getElementById('broadcastMessageForm').style.display = 'none';
-                    target.classList.add('btn-primary');
-                    document.getElementById('broadcastMessageBtn').classList.remove('btn-primary');
-                    return;
-                }
-                if (target.id === 'broadcastMessageBtn') {
-                    currentMessageType = 'broadcast';
-                    document.getElementById('broadcastMessageForm').style.display = 'block';
-                    document.getElementById('individualMessageForm').style.display = 'none';
-                    target.classList.add('btn-primary');
-                    document.getElementById('individualMessageBtn').classList.remove('btn-primary');
-                    return;
-                }
-                if (target.id === 'sendBroadcastBtn') {
-                    await sendBroadcast();
-                    return;
-                }
-                if (target.id === 'previewBroadcastBtn') {
-                    previewBroadcast();
-                    return;
-                }
-                if (target.id === 'confirmBroadcastBtn') {
-                    await executeBroadcast();
-                    return;
-                }
-                if (target.id === 'cancelBroadcastBtn') {
-                    closeModal();
-                    return;
-                }
-                if (target.id === 'individualNotificationBtn') {
-                    const form = document.getElementById('individualNotificationForm');
-                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-                    document.getElementById('broadcastNotificationForm').style.display = 'none';
-                    return;
-                }
-                if (target.id === 'broadcastNotificationBtn') {
-                    const form = document.getElementById('broadcastNotificationForm');
-                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-                    document.getElementById('individualNotificationForm').style.display = 'none';
-                    return;
-                }
-                if (target.id === 'sendIndividualNotifBtn') {
-                    await sendIndividualNotification();
-                    return;
-                }
-                if (target.id === 'sendBroadcastNotifBtn') {
-                    await sendBroadcastNotification();
-                    return;
-                }
-                if (target.id === 'confirmBroadcastNotifBtn') {
-                    await executeBroadcastNotification();
-                    return;
-                }
-
-                // Training
-                if (target.id === 'createTrainingBtn') {
-                    e.preventDefault();
-                    await createTraining();
-                    return;
-                }
-                if (target.id === 'updateTrainingBtn') {
-                    e.preventDefault();
-                    const trainingId = target.getAttribute('data-id');
-                    await updateTraining(trainingId);
-                    return;
-                }
-
-                // Petitions
-                if (target.id === 'sendPetitionReplyBtn') {
-                    const petitionId = target.getAttribute('data-petition-id');
-                    const userId = target.getAttribute('data-user-id');
-                    await sendPetitionReply(petitionId, userId);
-                    return;
-                }
-
-                // Offers
-                if (target.id === 'createOfferBtn') {
-                    e.preventDefault();
-                    await createOffer();
-                    return;
-                }
-                if (target.id === 'updateOfferBtn') {
-                    e.preventDefault();
-                    const offerId = target.getAttribute('data-id');
-                    await updateOffer(offerId);
-                    return;
-                }
-
-                // Announcements (NEW)
-                if (target.classList.contains('edit-announcement-btn')) {
-                    const id = target.getAttribute('data-id');
-                    const message = target.getAttribute('data-message');
-                    const order = parseInt(target.getAttribute('data-order'));
-                    const active = target.getAttribute('data-active') === 'true';
-                    editAnnouncement(id, message, order, active);
-                    return;
-                }
-                if (target.classList.contains('toggle-announcement-btn')) {
-                    const id = target.getAttribute('data-id');
-                    const newStatus = target.getAttribute('data-new-status') === 'true';
-                    toggleAnnouncementStatus(id, newStatus);
-                    return;
-                }
-                if (target.classList.contains('delete-announcement-btn')) {
-                    const id = target.getAttribute('data-id');
-                    deleteAnnouncement(id);
-                    return;
-                }
-                if (target.classList.contains('move-announcement-btn')) {
-                    const id = target.getAttribute('data-id');
-                    const direction = target.getAttribute('data-direction');
-                    moveAnnouncement(id, direction);
-                    return;
-                }
-                if (target.id === 'saveAnnouncementBtn') {
-                    saveAnnouncement();
-                    return;
-                }
-                if (target.id === 'updateAnnouncementBtn') {
-                    const id = target.getAttribute('data-id');
-                    updateAnnouncement(id);
-                    return;
-                }
-
-            } catch (error) {
-                console.error('Error in click handler:', error);
-                showAlert('An error occurred: ' + error.message, 'error');
-            }
-        });  
-          
-        // ==================== MISSING CRITICAL FUNCTIONS ADDED ====================
-        window.toggleMobileMenu = function() {
-            const overlay = document.getElementById('mobileMenuOverlay');
-            const menu = document.getElementById('mobileMenu');
-            if (overlay && menu) {
-                overlay.classList.toggle('active');
-                menu.classList.toggle('active');
-            }
-        };
-
-        window.switchTab = function(tabName) {
-            currentTab = tabName;
-            loadDashboard();
-            
-            // Update active tab classes for desktop tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                if (tab.getAttribute('data-tab') === tabName) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
-            });
-            
-            // Update bottom nav active state
-            document.querySelectorAll('.bottom-nav-item').forEach(item => {
-                const onclickAttr = item.getAttribute('onclick');
-                if (onclickAttr && onclickAttr.includes(tabName)) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-        };
-
-        window.logout = function() {
-            auth.signOut().then(() => {
-                window.location.href = 'index.html';
-            }).catch(error => {
-                console.error('Logout error:', error);
-                showAlert('Error logging out: ' + error.message, 'error');
-            });
-        };
-
-        window.showModal = function(content) {
-            const modal = document.getElementById('modal');
-            const backdrop = document.getElementById('modalBackdrop');
-            const modalContent = document.getElementById('modalContent');
-            if (modal && backdrop && modalContent) {
-                modalContent.innerHTML = content;
-                modal.classList.add('active');
-                backdrop.classList.add('active');
-            }
-        };
-
-        window.closeModal = function() {
-            const modal = document.getElementById('modal');
-            const backdrop = document.getElementById('modalBackdrop');
-            if (modal && backdrop) {
-                modal.classList.remove('active');
-                backdrop.classList.remove('active');
-            }
-        };
-
-        window.showAlert = function(message, type = 'info') {
-            const alertModal = document.getElementById('alertModal');
-            const alertBackdrop = document.getElementById('alertBackdrop');
-            const alertIcon = document.getElementById('alertIcon');
-            const alertTitle = document.getElementById('alertTitle');
-            const alertMessage = document.getElementById('alertMessage');
-            const alertButton = document.getElementById('alertButton');
-            
-            if (!alertModal || !alertBackdrop) return;
-            
-            // Set icon and title based on type
-            let iconClass = 'info';
-            let title = 'Info';
-            
-            if (type === 'success') {
-                iconClass = 'success';
-                title = 'Success';
-            } else if (type === 'error') {
-                iconClass = 'error';
-                title = 'Error';
-            } else if (type === 'warning') {
-                iconClass = 'warning';
-                title = 'Warning';
-            } else if (type === 'offer') {
-                iconClass = 'offer';
-                title = 'Special Offer';
-            } else {
-                iconClass = 'info';
-                title = 'Info';
-            }
-            
-            alertIcon.className = `alert-icon ${iconClass}`;
-            alertIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : 
-                                 type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : 
-                                 type === 'warning' ? '<i class="fas fa-exclamation-triangle"></i>' : 
-                                 type === 'offer' ? '<i class="fas fa-tag"></i>' : 
-                                 '<i class="fas fa-info-circle"></i>';
-            alertTitle.textContent = title;
-            alertMessage.textContent = message;
-            alertButton.className = `alert-button ${iconClass}`;
-            
-            alertModal.classList.add('active');
-            alertBackdrop.classList.add('active');
-            
-            // Auto close after 3 seconds for success/info, longer for errors
-            const timeout = type === 'error' ? 5000 : 3000;
-            setTimeout(() => {
-                alertModal.classList.remove('active');
-                alertBackdrop.classList.remove('active');
-            }, timeout);
-        };
-
-        // Initialize alert button click
-        document.getElementById('alertButton')?.addEventListener('click', function() {
-            document.getElementById('alertModal').classList.remove('active');
-            document.getElementById('alertBackdrop').classList.remove('active');
-        });
-
-        // ==================== Helper Functions ====================
-        function formatDate(timestamp) {
-            if (!timestamp) return 'N/A';
-            const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
-            return date.toLocaleString();
-        }
-
-        function formatCurrency(amount) {
-            return '$' + (amount || 0).toFixed(2);
-        }
-
-        function getDeadlineStatus(deadline) {
-            if (!deadline) return null;
-            const now = new Date();
-            const deadlineDate = deadline.seconds ? new Date(deadline.seconds * 1000) : new Date(deadline);
-            const diff = deadlineDate - now;
-            if (diff < 0) return { class: 'danger', text: 'Overdue' };
-            if (diff < 24 * 60 * 60 * 1000) return { class: 'warning', text: 'Due soon' };
-            return { class: 'success', text: 'On track' };
-        }
-
-        function getPackageByType(type) {
-            return membershipPackages?.[type] || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic;
-        }
-
-        function escapeHtml(unsafe) {
-            if (!unsafe) return unsafe;
-            return unsafe.replace(/[&<>"]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                if (m === '"') return '&quot;';
-                return m;
-            });
-        }
-
         // ==================== ANNOUNCEMENTS FUNCTIONS (NEW) ====================
         async function loadAnnouncements() {
             try {
@@ -8506,6 +8086,406 @@
             } catch (e) { showAlert('Error moving: ' + e.message, 'error'); }
         };
 
+        // ==================== INVESTOR MANAGEMENT FUNCTIONS (NEW) ====================
+        function loadInvestorOverview() {
+            let html = `
+                <h3 style="margin-bottom:1.5rem;">💰 Investor Management</h3>
+                <div class="investor-subtabs">
+                    <button class="investor-subtab ${currentInvestorSubTab === 'overview' ? 'active' : ''}" onclick="setInvestorSubTab('overview')">Overview</button>
+                    <button class="investor-subtab ${currentInvestorSubTab === 'deposits' ? 'active' : ''}" onclick="setInvestorSubTab('deposits')">Deposit Requests</button>
+                    <button class="investor-subtab ${currentInvestorSubTab === 'withdrawals' ? 'active' : ''}" onclick="setInvestorSubTab('withdrawals')">Withdrawal Requests</button>
+                    <button class="investor-subtab ${currentInvestorSubTab === 'settings' ? 'active' : ''}" onclick="setInvestorSubTab('settings')">Settings</button>
+                </div>
+                <div id="investorContent"></div>
+            `;
+            document.getElementById('content').innerHTML = html;
+            
+            if (currentInvestorSubTab === 'overview') loadInvestorOverviewContent();
+            else if (currentInvestorSubTab === 'deposits') loadInvestorDeposits();
+            else if (currentInvestorSubTab === 'withdrawals') loadInvestorWithdrawals();
+            else if (currentInvestorSubTab === 'settings') loadInvestorSettings();
+        }
+
+        window.setInvestorSubTab = function(tab) {
+            currentInvestorSubTab = tab;
+            loadInvestorOverview(); // reload the whole section
+        };
+
+        async function loadInvestorOverviewContent() {
+            const container = document.getElementById('investorContent');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center;">Loading investor data...</p>';
+
+            try {
+                // Stats
+                const accountsSnap = await db.collection('investorAccounts').get();
+                const investmentsSnap = await db.collection('investments').get();
+                const depositsSnap = await db.collection('investmentDeposits').where('status', '==', 'pending').get();
+                const withdrawalsSnap = await db.collection('investmentWithdrawals').where('status', '==', 'pending').get();
+
+                let totalInvested = 0;
+                let totalEarnings = 0;
+                investmentsSnap.forEach(doc => {
+                    const inv = doc.data();
+                    if (inv.status === 'active') totalInvested += inv.amount || 0;
+                    if (inv.status === 'completed') totalEarnings += (inv.actualReturn - inv.amount) || 0;
+                });
+
+                let totalAccountBalance = 0;
+                accountsSnap.forEach(doc => {
+                    totalAccountBalance += doc.data().balance || 0;
+                });
+
+                let html = `
+                    <div class="stats-mini-grid">
+                        <div class="stats-mini-card"><div class="stats-mini-value">${accountsSnap.size}</div><div class="stats-mini-label">Active Investors</div></div>
+                        <div class="stats-mini-card"><div class="stats-mini-value">$${totalInvested.toFixed(2)}</div><div class="stats-mini-label">Total Active Invested</div></div>
+                        <div class="stats-mini-card"><div class="stats-mini-value">$${totalEarnings.toFixed(2)}</div><div class="stats-mini-label">Total Earnings Paid</div></div>
+                        <div class="stats-mini-card"><div class="stats-mini-value">$${totalAccountBalance.toFixed(2)}</div><div class="stats-mini-label">Total Investor Wallet Balance</div></div>
+                        <div class="stats-mini-card"><div class="stats-mini-value">${depositsSnap.size}</div><div class="stats-mini-label">Pending Deposits</div></div>
+                        <div class="stats-mini-card"><div class="stats-mini-value">${withdrawalsSnap.size}</div><div class="stats-mini-label">Pending Withdrawals</div></div>
+                    </div>
+                `;
+
+                // Recent deposits
+                const recentDepositsSnap = await db.collection('investmentDeposits').orderBy('createdAt', 'desc').limit(5).get();
+                html += '<h4 style="margin:2rem 0 1rem;">Recent Deposit Requests</h4>';
+                if (recentDepositsSnap.empty) {
+                    html += '<p>No recent deposits.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>User</th><th>Amount</th><th>Date</th><th>Status</th></tr>';
+                    recentDepositsSnap.forEach(doc => {
+                        const d = doc.data();
+                        const date = d.createdAt ? formatDate(d.createdAt) : 'N/A';
+                        const statusClass = d.status === 'pending' ? 'warning' : (d.status === 'approved' ? 'success' : 'danger');
+                        html += `<tr><td>${d.userEmail || d.userId}</td><td>$${d.amount}</td><td>${date}</td><td><span class="badge ${statusClass}">${d.status}</span></td></tr>`;
+                    });
+                    html += '</table>';
+                }
+
+                // Recent withdrawals
+                const recentWithdrawalsSnap = await db.collection('investmentWithdrawals').orderBy('requestedAt', 'desc').limit(5).get();
+                html += '<h4 style="margin:2rem 0 1rem;">Recent Withdrawal Requests</h4>';
+                if (recentWithdrawalsSnap.empty) {
+                    html += '<p>No recent withdrawals.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>User</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr>';
+                    recentWithdrawalsSnap.forEach(doc => {
+                        const w = doc.data();
+                        const date = w.requestedAt ? formatDate(w.requestedAt) : 'N/A';
+                        const statusClass = w.status === 'pending' ? 'warning' : (w.status === 'paid' ? 'success' : 'danger');
+                        html += `<tr><td>${w.userEmail || w.userId}</td><td>$${w.amount}</td><td>${w.method}</td><td>${date}</td><td><span class="badge ${statusClass}">${w.status}</span></td></tr>`;
+                    });
+                    html += '</table>';
+                }
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading investor overview:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function loadInvestorDeposits() {
+            const container = document.getElementById('investorContent');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center;">Loading deposit requests...</p>';
+
+            try {
+                const snapshot = await db.collection('investmentDeposits').orderBy('createdAt', 'desc').get();
+                let html = '<h4>Deposit Requests</h4>';
+                if (snapshot.empty) {
+                    html += '<p>No deposit requests found.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>User</th><th>Amount</th><th>Transaction Code</th><th>Method</th><th>Date</th><th>Status</th><th>Actions</th></tr>';
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        const date = d.createdAt ? formatDate(d.createdAt) : 'N/A';
+                        const statusClass = d.status === 'pending' ? 'warning' : (d.status === 'approved' ? 'success' : 'danger');
+                        html += `
+                            <tr>
+                                <td>${d.userEmail || d.userId}</td>
+                                <td>$${d.amount}</td>
+                                <td>${d.transactionCode}</td>
+                                <td>${d.paymentMethod}</td>
+                                <td>${date}</td>
+                                <td><span class="badge ${statusClass}">${d.status}</span></td>
+                                <td>
+                                    ${d.status === 'pending' ? `
+                                        <button class="btn btn-sm btn-success" onclick="approveInvestorDeposit('${doc.id}', '${d.userId}', ${d.amount})">Approve</button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectInvestorDeposit('${doc.id}', '${d.userId}', ${d.amount})">Reject</button>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    html += '</table>';
+                }
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading investor deposits:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        window.approveInvestorDeposit = async function(depositId, userId, amount) {
+            try {
+                await db.runTransaction(async (transaction) => {
+                    // Find investor account for user
+                    const accountQuery = await transaction.get(
+                        db.collection('investorAccounts').where('userId', '==', userId).limit(1)
+                    );
+                    if (accountQuery.empty) throw new Error('Investor account not found');
+                    const accountRef = accountQuery.docs[0].ref;
+                    transaction.update(accountRef, {
+                        balance: firebase.firestore.FieldValue.increment(amount)
+                    });
+
+                    transaction.update(db.collection('investmentDeposits').doc(depositId), {
+                        status: 'approved',
+                        approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        approvedBy: currentUser.uid
+                    });
+                });
+
+                await sendNotification(userId, 'Investment Deposit Approved', `Your deposit of $${amount} has been approved and added to your investment balance.`, 'success');
+                showAlert('Deposit approved and user notified.', 'success');
+                loadInvestorDeposits();
+            } catch (error) {
+                console.error('Error approving deposit:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.rejectInvestorDeposit = async function(depositId, userId, amount) {
+            try {
+                await db.collection('investmentDeposits').doc(depositId).update({
+                    status: 'rejected',
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    rejectedBy: currentUser.uid
+                });
+                await sendNotification(userId, 'Investment Deposit Rejected', `Your deposit of $${amount} has been rejected. Please contact support if you believe this is an error.`, 'warning');
+                showAlert('Deposit rejected and user notified.', 'success');
+                loadInvestorDeposits();
+            } catch (error) {
+                console.error('Error rejecting deposit:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        async function loadInvestorWithdrawals() {
+            const container = document.getElementById('investorContent');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center;">Loading withdrawal requests...</p>';
+
+            try {
+                const snapshot = await db.collection('investmentWithdrawals').orderBy('requestedAt', 'desc').get();
+                let html = '<h4>Withdrawal Requests</h4>';
+                if (snapshot.empty) {
+                    html += '<p>No withdrawal requests found.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>User</th><th>Amount</th><th>Method</th><th>Account</th><th>Date</th><th>Status</th><th>Actions</th></tr>';
+                    snapshot.forEach(doc => {
+                        const w = doc.data();
+                        const date = w.requestedAt ? formatDate(w.requestedAt) : 'N/A';
+                        const statusClass = w.status === 'pending' ? 'warning' : (w.status === 'paid' ? 'success' : 'danger');
+                        let accountInfo = '';
+                        if (w.method === 'M-Pesa' || w.method === 'Airtel Money') {
+                            accountInfo = `${w.accountName || ''} ${w.phone || ''}`;
+                        } else if (w.method === 'Bank Transfer') {
+                            accountInfo = `${w.bankName || ''} ${w.accountName || ''} ${w.accountNumber || ''}`;
+                        }
+                        html += `
+                            <tr>
+                                <td>${w.userEmail || w.userId}</td>
+                                <td>$${w.amount}</td>
+                                <td>${w.method}</td>
+                                <td>${accountInfo}</td>
+                                <td>${date}</td>
+                                <td><span class="badge ${statusClass}">${w.status}</span></td>
+                                <td>
+                                    ${w.status === 'pending' ? `
+                                        <button class="btn btn-sm btn-success" onclick="approveInvestorWithdrawal('${doc.id}', '${w.userId}', ${w.amount})">Approve</button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectInvestorWithdrawal('${doc.id}', '${w.userId}', ${w.amount})">Reject</button>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    html += '</table>';
+                }
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading investor withdrawals:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        window.approveInvestorWithdrawal = async function(withdrawalId, userId, amount) {
+            try {
+                // Note: In the user code, when a withdrawal is requested, the balance is already deducted.
+                // So approving just marks as paid and records transaction.
+                await db.collection('investmentWithdrawals').doc(withdrawalId).update({
+                    status: 'paid',
+                    paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    paidBy: currentUser.uid
+                });
+
+                // Record transaction (optional)
+                await db.collection('transactions').add({
+                    userId,
+                    userEmail: (await db.collection('users').doc(userId).get()).data().email,
+                    amount: -amount,
+                    type: 'investment_withdrawal',
+                    description: `Investment withdrawal approved`,
+                    relatedId: withdrawalId,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await sendNotification(userId, 'Investment Withdrawal Approved', `Your withdrawal of $${amount} has been processed.`, 'success');
+                showAlert('Withdrawal approved.', 'success');
+                loadInvestorWithdrawals();
+            } catch (error) {
+                console.error('Error approving withdrawal:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.rejectInvestorWithdrawal = async function(withdrawalId, userId, amount) {
+            try {
+                // When rejecting, we need to add the amount back to the investor's balance (since it was deducted at request time)
+                await db.runTransaction(async (transaction) => {
+                    const withdrawalRef = db.collection('investmentWithdrawals').doc(withdrawalId);
+                    const withdrawalDoc = await transaction.get(withdrawalRef);
+                    if (!withdrawalDoc.exists) throw new Error('Withdrawal not found');
+
+                    // Find investor account
+                    const accountQuery = await transaction.get(
+                        db.collection('investorAccounts').where('userId', '==', userId).limit(1)
+                    );
+                    if (!accountQuery.empty) {
+                        const accountRef = accountQuery.docs[0].ref;
+                        transaction.update(accountRef, {
+                            balance: firebase.firestore.FieldValue.increment(amount)
+                        });
+                    }
+
+                    transaction.update(withdrawalRef, {
+                        status: 'rejected',
+                        rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        rejectedBy: currentUser.uid
+                    });
+                });
+
+                await sendNotification(userId, 'Investment Withdrawal Rejected', `Your withdrawal of $${amount} has been rejected. The amount has been refunded to your investment balance.`, 'warning');
+                showAlert('Withdrawal rejected and balance refunded.', 'success');
+                loadInvestorWithdrawals();
+            } catch (error) {
+                console.error('Error rejecting withdrawal:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        async function loadInvestorSettings() {
+            const container = document.getElementById('investorContent');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align:center;">Loading settings...</p>';
+
+            try {
+                const settingsDoc = await db.collection('settings').doc('investment').get();
+                const settings = settingsDoc.exists ? settingsDoc.data() : {
+                    minInvestment: 5,
+                    maxInvestment: 1000,
+                    minWithdrawal: 0.4,
+                    paymentLink: 'https://lipana.dev/pay/nextgen-invest',
+                    durationRates: { '1-5': 20, '5-10': 25, '11-16': 30, '17-24': 35 },
+                    riskDisclaimer: 'Investments involve risk. You may lose some or all of your money.'
+                };
+
+                const html = `
+                    <div class="settings-card">
+                        <h4>Investment Settings</h4>
+                        <div class="settings-row">
+                            <span class="settings-label">Minimum Investment ($)</span>
+                            <input type="number" id="invMinInvestment" class="settings-input" value="${settings.minInvestment}" step="0.01" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Maximum Investment ($) (optional)</span>
+                            <input type="number" id="invMaxInvestment" class="settings-input" value="${settings.maxInvestment || 1000}" step="0.01" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Minimum Withdrawal ($)</span>
+                            <input type="number" id="invMinWithdrawal" class="settings-input" value="${settings.minWithdrawal}" step="0.01" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Payment Link</span>
+                            <input type="url" id="invPaymentLink" class="settings-input" value="${settings.paymentLink}" style="width:300px;">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Risk Disclaimer</span>
+                            <textarea id="invRiskDisclaimer" style="flex:2;">${settings.riskDisclaimer}</textarea>
+                        </div>
+                        <h5 style="margin:1rem 0 0.5rem;">Duration Rates (%)</h5>
+                        <div class="rate-input-group">
+                            <span>1‑5 hours:</span>
+                            <input type="number" id="rate1_5" class="settings-input" value="${settings.durationRates['1-5'] || 20}" min="0" max="100">
+                        </div>
+                        <div class="rate-input-group">
+                            <span>5‑10 hours:</span>
+                            <input type="number" id="rate5_10" class="settings-input" value="${settings.durationRates['5-10'] || 25}" min="0" max="100">
+                        </div>
+                        <div class="rate-input-group">
+                            <span>11‑16 hours:</span>
+                            <input type="number" id="rate11_16" class="settings-input" value="${settings.durationRates['11-16'] || 30}" min="0" max="100">
+                        </div>
+                        <div class="rate-input-group">
+                            <span>17‑24 hours:</span>
+                            <input type="number" id="rate17_24" class="settings-input" value="${settings.durationRates['17-24'] || 35}" min="0" max="100">
+                        </div>
+                        <div style="margin-top:1rem;">
+                            <button class="btn btn-success" onclick="saveInvestorSettings()">Save Settings</button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading investor settings:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        window.saveInvestorSettings = async function() {
+            const minInvestment = parseFloat(document.getElementById('invMinInvestment').value) || 0;
+            const maxInvestment = parseFloat(document.getElementById('invMaxInvestment').value) || null;
+            const minWithdrawal = parseFloat(document.getElementById('invMinWithdrawal').value) || 0;
+            const paymentLink = document.getElementById('invPaymentLink').value.trim();
+            const riskDisclaimer = document.getElementById('invRiskDisclaimer').value.trim();
+
+            const durationRates = {
+                '1-5': parseFloat(document.getElementById('rate1_5').value) || 20,
+                '5-10': parseFloat(document.getElementById('rate5_10').value) || 25,
+                '11-16': parseFloat(document.getElementById('rate11_16').value) || 30,
+                '17-24': parseFloat(document.getElementById('rate17_24').value) || 35
+            };
+
+            try {
+                await db.collection('settings').doc('investment').set({
+                    minInvestment,
+                    maxInvestment,
+                    minWithdrawal,
+                    paymentLink,
+                    durationRates,
+                    riskDisclaimer,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showAlert('Investor settings saved successfully!', 'success');
+                loadInvestorSettings();
+            } catch (error) {
+                console.error('Error saving investor settings:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
         // ==================== LOAD DASHBOARD ====================
         async function loadDashboard() {
             try {
@@ -8577,8 +8557,14 @@
                     case 'settings':
                         await loadSettings();
                         break;
-                    case 'announcements': // NEW
+                    case 'announcements':
                         await loadAnnouncements();
+                        break;
+                    case 'investorOverview':
+                    case 'investorDeposits':
+                    case 'investorWithdrawals':
+                    case 'investorSettings':
+                        loadInvestorOverview(); // the function handles subtabs internally
                         break;
                     default:
                         await loadUsers();
@@ -8943,7 +8929,7 @@
         window.showInactiveUsers = showInactiveUsers;
         window.bulkActionInactive = bulkActionInactive;
 
-        // NEW: Announcements functions
+        // Announcements functions
         window.loadAnnouncements = loadAnnouncements;
         window.showAddAnnouncement = showAddAnnouncement;
         window.saveAnnouncement = saveAnnouncement;
@@ -8951,6 +8937,14 @@
         window.toggleAnnouncementStatus = toggleAnnouncementStatus;
         window.deleteAnnouncement = deleteAnnouncement;
         window.moveAnnouncement = moveAnnouncement;
+
+        // Investor functions
+        window.setInvestorSubTab = setInvestorSubTab;
+        window.approveInvestorDeposit = approveInvestorDeposit;
+        window.rejectInvestorDeposit = rejectInvestorDeposit;
+        window.approveInvestorWithdrawal = approveInvestorWithdrawal;
+        window.rejectInvestorWithdrawal = rejectInvestorWithdrawal;
+        window.saveInvestorSettings = saveInvestorSettings;
     </script>  
 </body>  
 </html>

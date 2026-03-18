@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,13 +94,13 @@
             background: #b91c1c;
             color: white;
             border-radius: 1.5rem;
-            padding: 0.4rem 0.8rem;          /* reduced */
+            padding: 0.4rem 0.8rem;
             margin-bottom: 1rem;
             border: 2px solid #ffcccc;
             box-shadow: 0 6px 20px rgba(185, 28, 28, 0.6);
             display: flex;
             flex-direction: column;
-            gap: 0.2rem;                      /* reduced */
+            gap: 0.2rem;
             transition: all 0.3s ease;
         }
 
@@ -108,7 +109,7 @@
             align-items: center;
             gap: 0.5rem;
             font-weight: 800;
-            font-size: 0.9rem;                 /* reduced from 1.1rem */
+            font-size: 0.9rem;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
@@ -116,7 +117,7 @@
         .announcements-header .live-badge {
             background: #ffffff;
             color: #b91c1c;
-            font-size: 0.6rem;                 /* reduced */
+            font-size: 0.6rem;
             padding: 0.2rem 0.6rem;
             border-radius: 30px;
             animation: pulseLive 1.5s infinite;
@@ -125,17 +126,17 @@
 
         .announcements-content {
             font-weight: 700;
-            font-size: 1rem;                    /* reduced from 1.2rem */
+            font-size: 1rem;
             line-height: 1.3;
             color: #fff;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            min-height: 2.5rem;                  /* reduced */
+            min-height: 2.5rem;
             display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 1rem;
-            padding: 0.4rem 0.8rem;              /* reduced */
+            padding: 0.4rem 0.8rem;
             text-align: center;
             word-break: break-word;
         }
@@ -2933,8 +2934,10 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('design')"><i class="fas fa-pencil-ruler"></i><span>Design Tasks</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('projects')"><i class="fas fa-project-diagram"></i><span>Projects</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('data-annotations')"><i class="fas fa-images"></i><span>Data Annotations</span></div>
-        <!-- NEW: GeoPay menu item -->
+        <!-- GeoPay menu item -->
         <div class="mobile-nav-item" onclick="handleMobileNavClick('geopay')"><i class="fas fa-map-marker-alt"></i><span>GeoPay</span></div>
+        <!-- NEW Investor menu item -->
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('investor')"><i class="fas fa-chart-line"></i><span>Investor</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('howitworks')"><i class="fas fa-info-circle"></i><span>How It Works</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('newbie-trainer')"><i class="fas fa-child"></i><span>Newbie Trainer</span></div>
@@ -3017,14 +3020,15 @@
         <!-- Stats Grid -->
         <div class="stats-grid" id="statsGrid"></div>
 
-        <!-- Desktop Tabs (UPDATED: Added GeoPay tab) -->
+        <!-- Desktop Tabs (UPDATED: Added GeoPay and Investor tabs) -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('transcription')">🎤 Transcription</button>
             <button class="tab" onclick="switchTab('design')">✏️ Design Tasks</button>
             <button class="tab" onclick="switchTab('projects')">📊 Projects</button>
             <button class="tab" onclick="switchTab('data-annotations')">🖼️ Data Annotations</button>
-            <button class="tab" onclick="switchTab('geopay')">📍 GeoPay</button> <!-- NEW -->
+            <button class="tab" onclick="switchTab('geopay')">📍 GeoPay</button>
+            <button class="tab" onclick="switchTab('investor')">💰 Investor</button>  <!-- NEW -->
             <button class="tab" onclick="switchTab('howitworks')">📘 How It Works</button>
             <button class="tab" onclick="switchTab('training')">🎓 Training Center</button>
             <button class="tab" onclick="switchTab('newbie-trainer')">👶 Newbie Trainer</button>
@@ -3157,6 +3161,10 @@
         let pendingBalance = 0;
         let withdrawalCooldownInterval = null;
         let nextAllowedWithdrawalTime = null;
+
+        // NEW: Investor global variables
+        let investorAccount = null;
+        let activeInvestments = [];
 
         // ==================== PAGINATION & CACHING ====================
         const PAGE_SIZE = 5;                         // load 5 tasks at a time
@@ -3556,6 +3564,10 @@
                 case 'geopay':
                     html = `<div class="mirror-tab-header">📍 GeoPay</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Earn by sharing opinions & taking surveys</span></div></div>`;
                     break;
+                // NEW: Investor mirror content
+                case 'investor':
+                    html = `<div class="mirror-tab-header">💰 Investor</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Your investment dashboard</span></div></div>`;
+                    break;
                 default:
                     html = `<div class="mirror-stats"><div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value">${formatBoth(userData?.wallet || 0)}</div></div></div>`;
             }
@@ -3635,18 +3647,18 @@
         // ==================== LOGOUT ====================
         function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); if (membershipPaymentsListener) membershipPaymentsListener(); if (withdrawalCooldownInterval) clearInterval(withdrawalCooldownInterval); auth.signOut(); window.location.href = 'index.html'; }
 
-        // ==================== TAB SWITCHING (UPDATED: added geopay) ====================
+        // ==================== TAB SWITCHING (UPDATED: added geopay and investor) ====================
         function switchTab(tab) {
             currentTab = tab;
             currentTaskViewed = null;
             refreshMirror();
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             for (let t of document.querySelectorAll('.tab')) {
-                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay'))) { t.classList.add('active'); break; }
+                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay').replace('investor','investor'))) { t.classList.add('active'); break; }
             }
             document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('.mobile-nav-item').forEach(i => {
-                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay'))) i.classList.add('active');
+                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay').replace('investor','investor'))) i.classList.add('active');
             });
             document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
             document.querySelectorAll('.bottom-nav-item').forEach(item => {
@@ -3678,6 +3690,9 @@
                     break;
                 case 'geopay':
                     loadGeoPay();
+                    break;
+                case 'investor':   // NEW
+                    loadInvestor();
                     break;
                 case 'howitworks':
                     loadHowItWorks();
@@ -6049,7 +6064,7 @@
                 }, console.error);
         }
 
-        // ==================== GEOPAY SECTION (NEW) ====================
+        // ==================== GEOPAY SECTION ====================
         async function loadGeoPay() {
             currentTaskViewed = null;
             refreshMirror();
@@ -6739,6 +6754,465 @@
             }
         }
 
+        // ==================== INVESTOR SECTION (NEW) ====================
+        async function loadInvestor() {
+            currentTaskViewed = null;
+            refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading investor section...</p></div>';
+
+            try {
+                // Fetch investor account for the user
+                const accountSnap = await db.collection('investorAccounts').where('userId', '==', currentUser.uid).limit(1).get();
+                if (accountSnap.empty) {
+                    // No account yet → show landing page
+                    showInvestorLanding();
+                } else {
+                    investorAccount = { id: accountSnap.docs[0].id, ...accountSnap.docs[0].data() };
+                    // Check for completed investments
+                    await processCompletedInvestments();
+                    // Load active investments
+                    const activeSnap = await db.collection('investments')
+                        .where('userId', '==', currentUser.uid)
+                        .where('status', '==', 'active')
+                        .get();
+                    activeInvestments = [];
+                    activeSnap.forEach(doc => activeInvestments.push({ id: doc.id, ...doc.data() }));
+                    // Show dashboard
+                    showInvestorDashboard();
+                }
+            } catch (e) {
+                console.error('Error loading investor:', e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
+            }
+        }
+
+        async function showInvestorLanding() {
+            // Fetch investment settings
+            const settingsDoc = await db.collection('settings').doc('investment').get();
+            const settings = settingsDoc.exists ? settingsDoc.data() : {
+                minInvestment: 5,
+                minWithdrawal: 0.4,
+                paymentLink: 'https://lipana.dev/pay/nextgen-invest',
+                durationRates: { '1-5': 20, '5-10': 25, '11-16': 30, '17-24': 35 },
+                riskDisclaimer: 'Investments involve risk. You may lose some or all of your money.'
+            };
+
+            const html = `
+                <div class="geopay-card">
+                    <div class="geopay-icon"><i class="fas fa-chart-line"></i></div>
+                    <h2 class="geopay-title">Invest & Earn</h2>
+                    <p class="geopay-subtitle">Invest your money and earn returns over time. Withdraw anytime after reaching minimum payout.</p>
+
+                    <div style="background: #2a2a35; border-radius:1rem; padding:1rem; margin:1.5rem 0; text-align:left;">
+                        <p><strong>💰 Minimum investment:</strong> $${settings.minInvestment}</p>
+                        <p><strong>📈 Return rates (based on duration):</strong></p>
+                        <ul style="margin-left:1.5rem;">
+                            <li>1‑5 hours → 20%</li>
+                            <li>5‑10 hours → 25%</li>
+                            <li>11‑16 hours → 30%</li>
+                            <li>17‑24 hours → 35%</li>
+                        </ul>
+                        <p><strong>💸 Minimum withdrawal:</strong> $${settings.minWithdrawal}</p>
+                        <p><strong>⚠️ Risk disclaimer:</strong> ${settings.riskDisclaimer}</p>
+                    </div>
+
+                    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin:2rem 0;">
+                        <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
+                            <i class="fas fa-hand-holding-usd" style="color:var(--gold); font-size:2rem;"></i>
+                            <h4>Passive Income</h4>
+                            <p style="font-size:0.8rem;">Earn while you sleep</p>
+                        </div>
+                        <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
+                            <i class="fas fa-clock" style="color:var(--gold); font-size:2rem;"></i>
+                            <h4>Flexible Withdrawals</h4>
+                            <p style="font-size:0.8rem;">Withdraw anytime</p>
+                        </div>
+                        <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
+                            <i class="fas fa-shield-alt" style="color:var(--gold); font-size:2rem;"></i>
+                            <h4>Secure</h4>
+                            <p style="font-size:0.8rem;">Your funds are safe</p>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success geopay-start-btn" onclick="startInvesting()">
+                        <i class="fas fa-play"></i> Start Investing
+                    </button>
+                </div>
+            `;
+            document.getElementById('content').innerHTML = html;
+        }
+
+        async function startInvesting() {
+            // Create investor account if not exists
+            try {
+                await db.collection('investorAccounts').add({
+                    userId: currentUser.uid,
+                    balance: 0,
+                    totalInvested: 0,
+                    totalEarnings: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                investorAccount = { balance: 0, totalInvested: 0, totalEarnings: 0 };
+                showInvestorDashboard();
+            } catch (e) {
+                console.error('Error creating investor account:', e);
+                showAlert('Could not create investor account. Please try again.', 'error');
+            }
+        }
+
+        function showInvestorDashboard() {
+            const bal = investorAccount.balance || 0;
+            const totalInv = investorAccount.totalInvested || 0;
+            const totalEarn = investorAccount.totalEarnings || 0;
+            // Calculate pending returns from active investments
+            const pendingReturns = activeInvestments.reduce((sum, inv) => sum + (inv.expectedReturn - inv.amount), 0);
+
+            const html = `
+                <div class="withdrawal-section">
+                    <h4><i class="fas fa-chart-line"></i> Investor Dashboard</h4>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+                        <div class="stat-card" style="margin:0;">
+                            <i class="fas fa-wallet"></i>
+                            <div class="stat-value">${formatBoth(bal)}</div>
+                            <div class="stat-label">Account Balance</div>
+                        </div>
+                        <div class="stat-card" style="margin:0;">
+                            <i class="fas fa-coins"></i>
+                            <div class="stat-value">${formatBoth(totalInv)}</div>
+                            <div class="stat-label">Total Invested</div>
+                        </div>
+                        <div class="stat-card" style="margin:0;">
+                            <i class="fas fa-clock"></i>
+                            <div class="stat-value">${formatBoth(pendingReturns)}</div>
+                            <div class="stat-label">Pending Returns</div>
+                        </div>
+                        <div class="stat-card" style="margin:0;">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            <div class="stat-value">${formatBoth(totalEarn)}</div>
+                            <div class="stat-label">Total Earnings</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:1rem; margin-bottom:2rem;">
+                        <button class="btn btn-success" onclick="showAddFunds()" style="flex:1;"><i class="fas fa-plus-circle"></i> Add Funds</button>
+                        <button class="btn btn-warning" onclick="showWithdrawFunds()" style="flex:1;"><i class="fas fa-money-bill-wave"></i> Withdraw</button>
+                        <button class="btn btn-primary" onclick="showInvestNow()" style="flex:1;"><i class="fas fa-rocket"></i> Invest Now</button>
+                    </div>
+
+                    <h5>Active Investments</h5>
+                    ${activeInvestments.length === 0 ? '<p>No active investments.</p>' : ''}
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:0.8rem;">
+                        ${activeInvestments.map(inv => {
+                            const endTime = inv.endTime.toDate();
+                            const now = new Date();
+                            const remaining = Math.max(0, endTime - now);
+                            const hoursLeft = Math.floor(remaining / (1000*60*60));
+                            const minutesLeft = Math.floor((remaining % (1000*60*60)) / (1000*60));
+                            return `
+                                <div class="training-card" style="padding:1rem;">
+                                    <div><strong>$${inv.amount}</strong> @ ${inv.returnRate}%</div>
+                                    <div>Expected: $${(inv.expectedReturn).toFixed(2)}</div>
+                                    <div class="deadline-badge upcoming"><i class="fas fa-hourglass-half"></i> ${hoursLeft}h ${minutesLeft}m left</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            document.getElementById('content').innerHTML = html;
+        }
+
+        async function showAddFunds() {
+            const settingsDoc = await db.collection('settings').doc('investment').get();
+            const paymentLink = settingsDoc.exists && settingsDoc.data().paymentLink ? settingsDoc.data().paymentLink : 'https://lipana.dev/pay/nextgen-invest';
+
+            showModal(`
+                <div class="modal-content" style="text-align:center;">
+                    <i class="fas fa-credit-card" style="font-size:3rem; color:var(--gold);"></i>
+                    <h3>Add Funds</h3>
+                    <p>Click the button below to make a payment. After payment, enter the transaction code.</p>
+                    <a href="${paymentLink}" target="_blank" class="btn btn-warning" style="display:inline-block; margin:1rem 0;">Pay Now</a>
+                    <input type="number" id="depositAmount" class="smart-input" placeholder="Amount (USD)" min="1" step="0.01" required>
+                    <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code" required>
+                    <select id="paymentMethod" class="smart-input">
+                        <option value="M-Pesa">M-Pesa</option>
+                        <option value="Airtel Money">Airtel Money</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                    <div style="display:flex; gap:1rem; margin-top:1rem;">
+                        <button class="btn btn-success" onclick="submitDeposit()">Submit</button>
+                        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        async function submitDeposit() {
+            const amount = parseFloat(document.getElementById('depositAmount').value);
+            const txCode = document.getElementById('transactionCode').value.trim();
+            const method = document.getElementById('paymentMethod').value;
+            if (!amount || amount <= 0) { showAlert('Enter a valid amount', 'error'); return; }
+            if (!txCode) { showAlert('Enter transaction code', 'error'); return; }
+
+            try {
+                await db.collection('investmentDeposits').add({
+                    userId: currentUser.uid,
+                    amount: amount,
+                    transactionCode: txCode,
+                    paymentMethod: method,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert('Deposit request submitted. It will be reviewed by admin.', 'success');
+            } catch (e) {
+                console.error('Error submitting deposit:', e);
+                showAlert('Failed to submit deposit. Try again.', 'error');
+            }
+        }
+
+        async function showWithdrawFunds() {
+            const settingsDoc = await db.collection('settings').doc('investment').get();
+            const minWithdrawal = settingsDoc.exists && settingsDoc.data().minWithdrawal ? settingsDoc.data().minWithdrawal : 0.4;
+
+            showModal(`
+                <div class="modal-content" style="text-align:center;">
+                    <i class="fas fa-hand-holding-usd" style="font-size:3rem; color:var(--gold);"></i>
+                    <h3>Withdraw Funds</h3>
+                    <p>Available balance: ${formatBoth(investorAccount.balance)}</p>
+                    <input type="number" id="withdrawAmount" class="smart-input" placeholder="Amount" min="${minWithdrawal}" step="0.01" required>
+                    <select id="withdrawMethod" class="smart-input" onchange="toggleWithdrawFields()">
+                        <option value="M-Pesa">M-Pesa</option>
+                        <option value="Airtel Money">Airtel Money</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                    <div id="withdrawMobileFields">
+                        <input type="text" id="withdrawAccountName" class="smart-input" placeholder="Account Name">
+                        <input type="tel" id="withdrawPhone" class="smart-input" placeholder="Phone Number">
+                    </div>
+                    <div id="withdrawBankFields" style="display:none;">
+                        <input type="text" id="withdrawBankName" class="smart-input" placeholder="Bank Name">
+                        <input type="text" id="withdrawBankAccountName" class="smart-input" placeholder="Account Name">
+                        <input type="text" id="withdrawBankAccountNumber" class="smart-input" placeholder="Account Number">
+                    </div>
+                    <div style="display:flex; gap:1rem; margin-top:1rem;">
+                        <button class="btn btn-success" onclick="submitWithdrawal(${minWithdrawal})">Submit</button>
+                        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    </div>
+                </div>
+            `);
+            document.getElementById('withdrawMethod').addEventListener('change', toggleWithdrawFields);
+        }
+
+        function toggleWithdrawFields() {
+            const method = document.getElementById('withdrawMethod').value;
+            document.getElementById('withdrawMobileFields').style.display = (method === 'Bank Transfer') ? 'none' : 'block';
+            document.getElementById('withdrawBankFields').style.display = (method === 'Bank Transfer') ? 'block' : 'none';
+        }
+
+        async function submitWithdrawal(minWithdrawal) {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('withdrawMethod').value;
+            let accountName, phone, bankName, bankAccountName, bankAccountNumber;
+            if (method === 'Bank Transfer') {
+                bankName = document.getElementById('withdrawBankName').value.trim();
+                bankAccountName = document.getElementById('withdrawBankAccountName').value.trim();
+                bankAccountNumber = document.getElementById('withdrawBankAccountNumber').value.trim();
+                if (!bankName || !bankAccountName || !bankAccountNumber) {
+                    showAlert('Please fill all bank fields', 'error'); return;
+                }
+            } else {
+                accountName = document.getElementById('withdrawAccountName').value.trim();
+                phone = document.getElementById('withdrawPhone').value.trim();
+                if (!accountName || !phone) {
+                    showAlert('Please fill account name and phone', 'error'); return;
+                }
+            }
+
+            if (!amount || amount < minWithdrawal) {
+                showAlert(`Minimum withdrawal is $${minWithdrawal}`, 'error'); return;
+            }
+            if (amount > investorAccount.balance) {
+                showAlert('Insufficient balance', 'error'); return;
+            }
+
+            try {
+                // Check for existing pending withdrawal
+                const pendingSnap = await db.collection('investmentWithdrawals')
+                    .where('userId', '==', currentUser.uid)
+                    .where('status', '==', 'pending')
+                    .get();
+                if (!pendingSnap.empty) {
+                    showAlert('You already have a pending withdrawal request.', 'error'); return;
+                }
+
+                // Create withdrawal request
+                const withdrawalData = {
+                    userId: currentUser.uid,
+                    amount: amount,
+                    method: method,
+                    status: 'pending',
+                    requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                if (method === 'Bank Transfer') {
+                    withdrawalData.bankName = bankName;
+                    withdrawalData.accountName = bankAccountName;
+                    withdrawalData.accountNumber = bankAccountNumber;
+                } else {
+                    withdrawalData.accountName = accountName;
+                    withdrawalData.phone = phone;
+                }
+                await db.collection('investmentWithdrawals').add(withdrawalData);
+
+                // Immediately deduct from balance (will be reverted if rejected)
+                await db.collection('investorAccounts').doc(investorAccount.id).update({
+                    balance: firebase.firestore.FieldValue.increment(-amount)
+                });
+                investorAccount.balance -= amount;
+
+                closeModal();
+                showAlert('Withdrawal request submitted. Funds deducted from balance.', 'success');
+                loadInvestor(); // refresh dashboard
+            } catch (e) {
+                console.error('Withdrawal error:', e);
+                showAlert('Error requesting withdrawal', 'error');
+            }
+        }
+
+        async function showInvestNow() {
+            const settingsDoc = await db.collection('settings').doc('investment').get();
+            const minInvestment = settingsDoc.exists && settingsDoc.data().minInvestment ? settingsDoc.data().minInvestment : 5;
+            const maxInvestment = settingsDoc.exists && settingsDoc.data().maxInvestment ? settingsDoc.data().maxInvestment : 1000; // optional
+
+            showModal(`
+                <div class="modal-content" style="text-align:center;">
+                    <i class="fas fa-rocket" style="font-size:3rem; color:var(--gold);"></i>
+                    <h3>Start an Investment</h3>
+                    <p>Available balance: ${formatBoth(investorAccount.balance)}</p>
+                    <input type="number" id="investAmount" class="smart-input" placeholder="Amount (min $${minInvestment})" min="${minInvestment}" max="${maxInvestment}" step="0.01" required>
+                    <label style="display:block; text-align:left; margin:0.5rem 0 0.2rem;">Choose duration:</label>
+                    <select id="investDuration" class="smart-input" onchange="updateReturnRate()">
+                        <option value="3">1‑5 hours (20%)</option>
+                        <option value="7">5‑10 hours (25%)</option>
+                        <option value="13">11‑16 hours (30%)</option>
+                        <option value="20">17‑24 hours (35%)</option>
+                    </select>
+                    <p id="expectedReturnDisplay" style="margin-top:0.5rem; font-weight:600;"></p>
+                    <div style="display:flex; gap:1rem; margin-top:1rem;">
+                        <button class="btn btn-success" onclick="submitInvestment(${minInvestment})">Invest</button>
+                        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    </div>
+                </div>
+            `);
+            updateReturnRate();
+        }
+
+        function updateReturnRate() {
+            const amount = parseFloat(document.getElementById('investAmount').value) || 0;
+            const durationVal = document.getElementById('investDuration').value;
+            let rate;
+            if (durationVal == 3) rate = 20;
+            else if (durationVal == 7) rate = 25;
+            else if (durationVal == 13) rate = 30;
+            else rate = 35;
+            const expected = amount * (1 + rate/100);
+            document.getElementById('expectedReturnDisplay').innerHTML = `Expected return after investment: <strong>$${expected.toFixed(2)}</strong>`;
+        }
+
+        async function submitInvestment(minInvestment) {
+            const amount = parseFloat(document.getElementById('investAmount').value);
+            const durationVal = document.getElementById('investDuration').value;
+            let durationHours, rate;
+            if (durationVal == 3) { durationHours = 3; rate = 20; }
+            else if (durationVal == 7) { durationHours = 7; rate = 25; }
+            else if (durationVal == 13) { durationHours = 13; rate = 30; }
+            else { durationHours = 20; rate = 35; }
+
+            if (!amount || amount < minInvestment) {
+                showAlert(`Minimum investment is $${minInvestment}`, 'error'); return;
+            }
+            if (amount > investorAccount.balance) {
+                showAlert('Insufficient balance', 'error'); return;
+            }
+
+            try {
+                const startTime = new Date();
+                const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
+                const expectedReturn = amount * (1 + rate/100);
+
+                // Create investment record
+                await db.collection('investments').add({
+                    userId: currentUser.uid,
+                    amount: amount,
+                    startTime: firebase.firestore.FieldValue.serverTimestamp(),
+                    durationHours: durationHours,
+                    returnRate: rate,
+                    status: 'active',
+                    endTime: endTime,
+                    expectedReturn: expectedReturn,
+                    actualReturn: 0,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Deduct from balance and add to totalInvested
+                await db.collection('investorAccounts').doc(investorAccount.id).update({
+                    balance: firebase.firestore.FieldValue.increment(-amount),
+                    totalInvested: firebase.firestore.FieldValue.increment(amount)
+                });
+                investorAccount.balance -= amount;
+                investorAccount.totalInvested += amount;
+
+                closeModal();
+                showAlert('Investment started!', 'success');
+                loadInvestor(); // refresh dashboard
+            } catch (e) {
+                console.error('Investment error:', e);
+                showAlert('Failed to start investment. Try again.', 'error');
+            }
+        }
+
+        async function processCompletedInvestments() {
+            const now = new Date();
+            const completedSnap = await db.collection('investments')
+                .where('userId', '==', currentUser.uid)
+                .where('status', '==', 'active')
+                .where('endTime', '<=', now)
+                .get();
+
+            if (completedSnap.empty) return;
+
+            const batch = db.batch();
+            let totalEarnings = 0;
+
+            for (const doc of completedSnap.docs) {
+                const inv = doc.data();
+                const earned = inv.expectedReturn - inv.amount; // profit
+                totalEarnings += earned;
+
+                // Mark investment as completed
+                batch.update(doc.ref, {
+                    status: 'completed',
+                    actualReturn: inv.expectedReturn
+                });
+
+                // Add earnings to investor account balance and totalEarnings
+                const accountRef = db.collection('investorAccounts').doc(investorAccount.id);
+                batch.update(accountRef, {
+                    balance: firebase.firestore.FieldValue.increment(inv.expectedReturn),
+                    totalEarnings: firebase.firestore.FieldValue.increment(earned)
+                });
+
+                // Optional: record transaction
+                // (could add to a subcollection)
+            }
+
+            await batch.commit();
+            // Update local investorAccount
+            investorAccount.balance += totalEarnings + completedSnap.docs.reduce((sum, d) => sum + d.data().amount, 0); // principal + profit
+            investorAccount.totalEarnings += totalEarnings;
+        }
+
         // ==================== HOW IT WORKS (UPDATED: supports image type and preserves HTML) ====================
         async function loadHowItWorks() {
             currentTaskViewed = null;
@@ -7034,3 +7508,4 @@
     </script>
 </body>
 </html>
+```
