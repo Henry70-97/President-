@@ -574,6 +574,8 @@
         <div class="mobile-menu-item" onclick="switchTab('deadlineTracker'); toggleMobileMenu()">⏰ Deadline Tracker</div>
         <div class="mobile-menu-item" onclick="switchTab('newbieTrainer'); toggleMobileMenu()">👶 Newbie Trainer</div>
         <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
+        <!-- NEW: Announcements menu item -->
+        <div class="mobile-menu-item" onclick="switchTab('announcements'); toggleMobileMenu()">📢 Announcements</div>
     </div>
 
     <div class="app-container">  
@@ -625,6 +627,8 @@
             <button class="tab" data-tab="deadlineTracker">⏰ Deadline Tracker</button>  
             <button class="tab" data-tab="newbieTrainer">👶 Newbie Trainer</button>  
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
+            <!-- NEW: Announcements tab -->
+            <button class="tab" data-tab="announcements">📢 Announcements</button>
         </div>  
       
         <div class="content" id="content"></div>  
@@ -8168,6 +8172,42 @@
                     return;
                 }
 
+                // Announcements (NEW)
+                if (target.classList.contains('edit-announcement-btn')) {
+                    const id = target.getAttribute('data-id');
+                    const message = target.getAttribute('data-message');
+                    const order = parseInt(target.getAttribute('data-order'));
+                    const active = target.getAttribute('data-active') === 'true';
+                    editAnnouncement(id, message, order, active);
+                    return;
+                }
+                if (target.classList.contains('toggle-announcement-btn')) {
+                    const id = target.getAttribute('data-id');
+                    const newStatus = target.getAttribute('data-new-status') === 'true';
+                    toggleAnnouncementStatus(id, newStatus);
+                    return;
+                }
+                if (target.classList.contains('delete-announcement-btn')) {
+                    const id = target.getAttribute('data-id');
+                    deleteAnnouncement(id);
+                    return;
+                }
+                if (target.classList.contains('move-announcement-btn')) {
+                    const id = target.getAttribute('data-id');
+                    const direction = target.getAttribute('data-direction');
+                    moveAnnouncement(id, direction);
+                    return;
+                }
+                if (target.id === 'saveAnnouncementBtn') {
+                    saveAnnouncement();
+                    return;
+                }
+                if (target.id === 'updateAnnouncementBtn') {
+                    const id = target.getAttribute('data-id');
+                    updateAnnouncement(id);
+                    return;
+                }
+
             } catch (error) {
                 console.error('Error in click handler:', error);
                 showAlert('An error occurred: ' + error.message, 'error');
@@ -8331,6 +8371,141 @@
             });
         }
 
+        // ==================== ANNOUNCEMENTS FUNCTIONS (NEW) ====================
+        async function loadAnnouncements() {
+            try {
+                const snapshot = await db.collection('announcements').orderBy('order', 'asc').get();
+                let html = `
+                    <h3 style="margin-bottom:1.5rem;">📢 Admin Announcements</h3>
+                    <p style="margin-bottom:1rem;">These messages rotate every 60 seconds in the red pane on the user dashboard.</p>
+                    <div style="margin-bottom:1rem;">
+                        <button class="btn btn-success" onclick="showAddAnnouncement()">+ Add Announcement</button>
+                    </div>
+                    <table class="data-table">
+                        <tr><th>Order</th><th>Message</th><th>Status</th><th>Actions</th></tr>
+                `;
+                if (snapshot.empty) {
+                    html += '<tr><td colspan="4" style="text-align:center;">No announcements. Add one.</td></tr>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const a = doc.data();
+                        const statusClass = a.active ? 'success' : 'secondary';
+                        const statusText = a.active ? 'Active' : 'Inactive';
+                        html += `
+                            <tr>
+                                <td>${a.order || 0}</td>
+                                <td>${escapeHtml(a.message)}</td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editAnnouncement('${doc.id}', '${escapeHtml(a.message)}', ${a.order || 0}, ${a.active})">Edit</button>
+                                    <button class="btn btn-sm btn-warning" onclick="toggleAnnouncementStatus('${doc.id}', ${!a.active})">${a.active ? 'Deactivate' : 'Activate'}</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${doc.id}')">Delete</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="moveAnnouncement('${doc.id}', 'up')"><i class="fas fa-arrow-up"></i></button>
+                                    <button class="btn btn-sm btn-secondary" onclick="moveAnnouncement('${doc.id}', 'down')"><i class="fas fa-arrow-down"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                html += '</table>';
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading announcements:', error);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p></div>`;
+            }
+        }
+
+        window.showAddAnnouncement = function() {
+            // Get next order number (max current order + 1)
+            db.collection('announcements').orderBy('order', 'desc').limit(1).get().then(snap => {
+                let nextOrder = 0;
+                if (!snap.empty) nextOrder = (snap.docs[0].data().order || 0) + 1;
+                showModal(`
+                    <h3 style="margin-bottom:1rem;">Add Announcement</h3>
+                    <input type="text" id="announcementMessage" placeholder="Message text" required>
+                    <input type="number" id="announcementOrder" value="${nextOrder}" min="0">
+                    <button class="btn btn-success" id="saveAnnouncementBtn">Save</button>
+                `);
+                document.getElementById('saveAnnouncementBtn').addEventListener('click', saveAnnouncement);
+            });
+        };
+
+        window.saveAnnouncement = async function() {
+            const message = document.getElementById('announcementMessage').value.trim();
+            const order = parseInt(document.getElementById('announcementOrder').value) || 0;
+            if (!message) { showAlert('Message required', 'error'); return; }
+            try {
+                await db.collection('announcements').add({
+                    message,
+                    order,
+                    active: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                showAlert('Announcement added', 'success');
+                loadAnnouncements();
+            } catch (e) { showAlert('Error: ' + e.message, 'error'); }
+        };
+
+        window.editAnnouncement = function(id, message, order, active) {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Edit Announcement</h3>
+                <input type="text" id="editAnnouncementMessage" value="${message}" required>
+                <input type="number" id="editAnnouncementOrder" value="${order}" min="0">
+                <button class="btn btn-success" id="updateAnnouncementBtn" data-id="${id}">Update</button>
+            `);
+            document.getElementById('updateAnnouncementBtn').addEventListener('click', async function() {
+                const newMessage = document.getElementById('editAnnouncementMessage').value.trim();
+                const newOrder = parseInt(document.getElementById('editAnnouncementOrder').value) || 0;
+                if (!newMessage) { showAlert('Message required', 'error'); return; }
+                try {
+                    await db.collection('announcements').doc(id).update({
+                        message: newMessage,
+                        order: newOrder
+                    });
+                    closeModal();
+                    showAlert('Announcement updated', 'success');
+                    loadAnnouncements();
+                } catch (e) { showAlert('Error: ' + e.message, 'error'); }
+            });
+        };
+
+        window.toggleAnnouncementStatus = async function(id, newStatus) {
+            try {
+                await db.collection('announcements').doc(id).update({ active: newStatus });
+                showAlert(`Announcement ${newStatus ? 'activated' : 'deactivated'}`, 'success');
+                loadAnnouncements();
+            } catch (e) { showAlert('Error: ' + e.message, 'error'); }
+        };
+
+        window.deleteAnnouncement = async function(id) {
+            if (!confirm('Delete this announcement?')) return;
+            try {
+                await db.collection('announcements').doc(id).delete();
+                showAlert('Announcement deleted', 'success');
+                loadAnnouncements();
+            } catch (e) { showAlert('Error: ' + e.message, 'error'); }
+        };
+
+        window.moveAnnouncement = async function(id, direction) {
+            try {
+                const snapshot = await db.collection('announcements').orderBy('order', 'asc').get();
+                const items = [];
+                snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+                const index = items.findIndex(i => i.id === id);
+                if (index === -1) return;
+                const newIndex = direction === 'up' ? index - 1 : index + 1;
+                if (newIndex < 0 || newIndex >= items.length) return;
+                // swap orders
+                const tempOrder = items[index].order;
+                const batch = db.batch();
+                batch.update(db.collection('announcements').doc(items[index].id), { order: items[newIndex].order });
+                batch.update(db.collection('announcements').doc(items[newIndex].id), { order: tempOrder });
+                await batch.commit();
+                loadAnnouncements();
+            } catch (e) { showAlert('Error moving: ' + e.message, 'error'); }
+        };
+
         // ==================== LOAD DASHBOARD ====================
         async function loadDashboard() {
             try {
@@ -8401,6 +8576,9 @@
                         break;
                     case 'settings':
                         await loadSettings();
+                        break;
+                    case 'announcements': // NEW
+                        await loadAnnouncements();
                         break;
                     default:
                         await loadUsers();
@@ -8764,6 +8942,15 @@
         window.cancelTaskAcceptance = cancelTaskAcceptance;
         window.showInactiveUsers = showInactiveUsers;
         window.bulkActionInactive = bulkActionInactive;
+
+        // NEW: Announcements functions
+        window.loadAnnouncements = loadAnnouncements;
+        window.showAddAnnouncement = showAddAnnouncement;
+        window.saveAnnouncement = saveAnnouncement;
+        window.editAnnouncement = editAnnouncement;
+        window.toggleAnnouncementStatus = toggleAnnouncementStatus;
+        window.deleteAnnouncement = deleteAnnouncement;
+        window.moveAnnouncement = moveAnnouncement;
     </script>  
 </body>  
 </html>
