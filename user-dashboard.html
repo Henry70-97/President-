@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4274,121 +4275,8 @@
             }
         }
 
-        // ==================== CANCEL ACCEPTED TASK ====================
-        async function cancelAcceptedTask(taskId) {
-            if (!confirm('Are you sure you want to cancel your acceptance of this task? ' + 
-                         (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE ? 
-                          'If the task has expired, 75% of the reward will be deducted from your wallet.' : ''))) {
-                return;
-            }
-
-            try {
-                // Check if already submitted
-                const submitted = await hasUserSubmitted(taskId);
-                if (submitted) {
-                    showAlert('You have already submitted this task. Cannot cancel acceptance.', 'error');
-                    return;
-                }
-
-                // Get task data
-                const taskRef = db.collection('tasks').doc(taskId);
-                const taskDoc = await taskRef.get();
-                if (!taskDoc.exists) {
-                    showAlert('Task not found', 'error');
-                    return;
-                }
-                const task = taskDoc.data();
-                const reward = parseFloat(task.reward) || 0;
-                const isExpired = isDeadlinePassed(task.deadline);
-
-                showModal(`
-                    <div class="modal-content" style="text-align:center;">
-                        <div class="loading-spinner"></div>
-                        <h3>Processing cancellation...</h3>
-                    </div>
-                `);
-
-                const userRef = db.collection('users').doc(currentUser.uid);
-                const userAcceptRef = taskRef.collection('taskAccepts').doc(currentUser.uid);
-                const userAcceptedTaskRef = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId);
-
-                await db.runTransaction(async (transaction) => {
-                    // Verify user still has accepted this task
-                    const acceptDoc = await transaction.get(userAcceptRef);
-                    if (!acceptDoc.exists) {
-                        throw new Error('You have not accepted this task');
-                    }
-
-                    // Update task accepted count
-                    transaction.update(taskRef, { acceptedCount: firebase.firestore.FieldValue.increment(-1) });
-
-                    // Remove acceptance records
-                    transaction.delete(userAcceptRef);
-                    transaction.delete(userAcceptedTaskRef);
-
-                    // Decrement daily counter if today
-                    const today = new Date().toDateString();
-                    if (userData.lastAcceptedDate === today) {
-                        transaction.update(userRef, {
-                            acceptedToday: firebase.firestore.FieldValue.increment(-1)
-                        });
-                    }
-
-                    // Apply penalty if task expired
-                    if (isExpired) {
-                        const penalty = reward * 0.75; // 75%
-                        if (penalty > 0) {
-                            // Deduct from wallet (negative allowed)
-                            transaction.update(userRef, {
-                                wallet: firebase.firestore.FieldValue.increment(-penalty)
-                            });
-
-                            // Create transaction record for the penalty
-                            const txRef = db.collection('transactions').doc();
-                            transaction.set(txRef, {
-                                userId: currentUser.uid,
-                                type: 'penalty',
-                                description: `Cancellation fee for expired task: ${task.title || 'Untitled'}`,
-                                amount: -penalty,
-                                taskId: taskId,
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                        }
-                    }
-                });
-
-                // Set cooldown (always apply cooldown)
-                const cooldownUntil = new Date(Date.now() + TASK_CANCEL_COOLDOWN_MINUTES * 60 * 1000);
-                await db.collection('users').doc(currentUser.uid).update({
-                    taskCancelCooldownUntil: firebase.firestore.FieldValue.fromDate(cooldownUntil)
-                });
-                userData.taskCancelCooldownUntil = firebase.firestore.Timestamp.fromDate(cooldownUntil);
-
-                closeModal();
-
-                if (isExpired) {
-                    showAlert(`Task cancelled. 75% of the reward (${formatBoth(reward * 0.75)}) has been deducted from your wallet.`, 'success');
-                } else {
-                    showAlert('Task acceptance cancelled successfully. You cannot accept new tasks for 30 minutes.', 'success');
-                }
-
-                // Refresh current view
-                if (currentTab === 'submit') {
-                    loadPendingSubmissions();
-                } else if (currentTab === 'tasks' || currentTab === 'design' || currentTab === 'projects' || currentTab === 'transcription') {
-                    if (currentTab === 'design') loadTasksByCategory('design');
-                    else if (currentTab === 'projects') loadTasksByCategory('projects');
-                    else if (currentTab === 'transcription') loadTasksByCategory('transcription');
-                    else loadTasks();
-                } else if (currentTab === 'data-annotations') {
-                    loadDataAnnotations();
-                }
-            } catch (error) {
-                console.error('Cancel acceptance error:', error);
-                closeModal();
-                showAlert(error.message || 'Failed to cancel acceptance.', 'error');
-            }
-        }
+        // ==================== CANCEL ACCEPTED TASK (REMOVED - USERS CANNOT CANCEL) ====================
+        // The function cancelAcceptedTask has been removed to prevent users from cancelling their own tasks.
 
         // ==================== SUBMIT FORM FUNCTIONS ====================
         async function showSubmitForm(taskId, existingWork = '') {
@@ -4735,7 +4623,7 @@
             }
         }
 
-        // ==================== PENDING SUBMISSIONS ====================
+        // ==================== PENDING SUBMISSIONS (UPDATED: Cancel button removed) ====================
         async function loadPendingSubmissions() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading pending submissions...</p></div>';
@@ -4759,7 +4647,7 @@
                             ${expired ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
                             <div style="display:flex; gap:0.5rem; margin-top:0.8rem;">
                                 <button class="btn btn-success" onclick="showSubmitForm('${doc.id}')" ${expired ? 'disabled' : ''} style="flex:1;">Continue Work</button>
-                                <button class="btn btn-danger" onclick="cancelAcceptedTask('${doc.id}')" style="flex:1;">Cancel Acceptance</button>
+                                <button class="btn btn-danger" disabled style="flex:1;" title="You cannot cancel tasks yourself. Contact admin if needed.">Cancel (Admin only)</button>
                             </div>
                         </div>
                     `;
@@ -6977,3 +6865,4 @@
     </script>
 </body>
 </html>
+```
