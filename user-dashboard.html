@@ -2854,6 +2854,127 @@
             50% { opacity: 0.7; }
             100% { opacity: 1; }
         }
+
+        /* Invite & Earn specific styles */
+        .referral-card {
+            background: linear-gradient(145deg, #1e1e28, #121217);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--gold);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
+        }
+        .referral-code-box {
+            background: #2a2a35;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            border: 1px solid var(--silver-dark);
+        }
+        .referral-code {
+            font-family: monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gold);
+            background: #1e1e28;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            letter-spacing: 2px;
+        }
+        .referral-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .referral-stat-card {
+            background: #1e1e28;
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--silver-dark);
+        }
+        .referral-stat-card i {
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+        .referral-stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--silver-light);
+        }
+        .referral-stat-label {
+            font-size: 0.7rem;
+            color: var(--silver);
+            text-transform: uppercase;
+        }
+        .referrals-list {
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .referral-item {
+            background: #2a2a35;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            border-left: 3px solid var(--gold);
+        }
+        .referral-name {
+            font-weight: 600;
+            color: var(--silver-light);
+        }
+        .referral-status {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 40px;
+        }
+        .referral-status.upgraded {
+            background: rgba(255,215,0,0.2);
+            color: var(--gold);
+        }
+        .referral-status.pending {
+            background: rgba(192,192,192,0.2);
+            color: var(--silver);
+        }
+        .referral-date {
+            font-size: 0.65rem;
+            color: var(--silver-dark);
+        }
+        .copy-btn {
+            background: var(--gold);
+            color: #121217;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .copy-btn:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
+        }
+        .invite-link {
+            background: #1e1e28;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            word-break: break-all;
+            font-size: 0.8rem;
+            border: 1px solid var(--silver-dark);
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -2910,10 +3031,9 @@
             <i class="fas fa-money-bill-wave"></i>
             <span>Withdraw</span>
         </div>
-        <div class="bottom-nav-item" onclick="switchTab('messages')">
-            <i class="fas fa-envelope"></i>
-            <span>Messages</span>
-            <span id="bottomMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.1rem 0.3rem; font-size:0.5rem; margin-left:0;">0</span>
+        <div class="bottom-nav-item" onclick="switchTab('invite')">
+            <i class="fas fa-users"></i>
+            <span>Invite</span>
         </div>
         <div class="bottom-nav-item" onclick="toggleMobileMenu()">
             <i class="fas fa-ellipsis-h"></i>
@@ -2935,8 +3055,8 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('data-annotations')"><i class="fas fa-images"></i><span>Data Annotations</span></div>
         <!-- GeoPay menu item -->
         <div class="mobile-nav-item" onclick="handleMobileNavClick('geopay')"><i class="fas fa-map-marker-alt"></i><span>GeoPay</span></div>
-        <!-- NEW Investor menu item -->
         <div class="mobile-nav-item" onclick="handleMobileNavClick('investor')"><i class="fas fa-chart-line"></i><span>Investor</span></div>
+        <div class="mobile-nav-item" onclick="handleMobileNavClick('invite')"><i class="fas fa-users"></i><span>Invite & Earn</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('howitworks')"><i class="fas fa-info-circle"></i><span>How It Works</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('newbie-trainer')"><i class="fas fa-child"></i><span>Newbie Trainer</span></div>
@@ -3019,7 +3139,7 @@
         <!-- Stats Grid -->
         <div class="stats-grid" id="statsGrid"></div>
 
-        <!-- Desktop Tabs (UPDATED: Added GeoPay and Investor tabs) -->
+        <!-- Desktop Tabs (UPDATED: Added Invite & Earn tab) -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('transcription')">🎤 Transcription</button>
@@ -3027,7 +3147,8 @@
             <button class="tab" onclick="switchTab('projects')">📊 Projects</button>
             <button class="tab" onclick="switchTab('data-annotations')">🖼️ Data Annotations</button>
             <button class="tab" onclick="switchTab('geopay')">📍 GeoPay</button>
-            <button class="tab" onclick="switchTab('investor')">💰 Investor</button>  <!-- NEW -->
+            <button class="tab" onclick="switchTab('investor')">💰 Investor</button>
+            <button class="tab" onclick="switchTab('invite')">👥 Invite & Earn</button>  <!-- NEW -->
             <button class="tab" onclick="switchTab('howitworks')">📘 How It Works</button>
             <button class="tab" onclick="switchTab('training')">🎓 Training Center</button>
             <button class="tab" onclick="switchTab('newbie-trainer')">👶 Newbie Trainer</button>
@@ -3118,7 +3239,9 @@
             elite: { name: 'ELITE', price: 6, duration: 'lifetime', features: [], color: '#f59e0b', buttonClass: 'elite', badge: 'best-value', welcomeBonus: 10 }
         };
         let membershipPackages = null;
-        const REFERRAL_BONUS_REFERRER = 2, REFERRAL_BONUS_REFERRED = 0.5;
+        // Referral bonuses
+        const REFERRER_BONUS = 1;      // $1 for referrer when referred upgrades
+        const REFERRED_BONUS = 0.5;    // $0.5 for new member upon upgrade
         let paymentUrl = "https://lipana.dev/pay/nextgen-membership";
 
         // ==================== OFFER FEATURE ====================
@@ -3239,7 +3362,6 @@
             if (lastShown && (now - parseInt(lastShown) < OFFER_POPUP_COOLDOWN)) {
                 return;
             }
-            // Pick the first active offer for popup (any)
             const firstType = Object.keys(currentOfferMap)[0];
             const offer = currentOfferMap[firstType];
             if (offer) {
@@ -3356,7 +3478,7 @@
             });
         }
 
-        // ==================== ADMIN ANNOUNCEMENTS (from 'announcements' collection) ====================
+        // ==================== ADMIN ANNOUNCEMENTS ====================
         let adminAlerts = [];
         let alertIndex = 0;
         let alertInterval = null;
@@ -3385,10 +3507,7 @@
                 msgDiv.innerHTML = adminAlerts[0];
                 alertIndex = 0;
 
-                // Clear existing interval
                 if (alertInterval) clearInterval(alertInterval);
-
-                // Rotate every 60 seconds
                 alertInterval = setInterval(() => {
                     alertIndex = (alertIndex + 1) % adminAlerts.length;
                     msgDiv.innerHTML = adminAlerts[alertIndex];
@@ -3563,9 +3682,11 @@
                 case 'geopay':
                     html = `<div class="mirror-tab-header">📍 GeoPay</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Earn by sharing opinions & taking surveys</span></div></div>`;
                     break;
-                // NEW: Investor mirror content
                 case 'investor':
                     html = `<div class="mirror-tab-header">💰 Investor</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Your investment dashboard</span></div></div>`;
+                    break;
+                case 'invite':
+                    html = `<div class="mirror-tab-header">👥 Invite & Earn</div><div class="mirror-tab-stats"><div class="mirror-tab-stat-row"><span>Share your code and earn bonuses</span></div></div>`;
                     break;
                 default:
                     html = `<div class="mirror-stats"><div class="mirror-stat-item"><div class="mirror-stat-label">Wallet</div><div class="mirror-stat-value">${formatBoth(userData?.wallet || 0)}</div></div></div>`;
@@ -3646,18 +3767,148 @@
         // ==================== LOGOUT ====================
         function logout() { if (messagesListener) messagesListener(); if (notificationsListener) notificationsListener(); if (acceptedTasksListener) acceptedTasksListener(); if (membershipPaymentsListener) membershipPaymentsListener(); if (withdrawalCooldownInterval) clearInterval(withdrawalCooldownInterval); auth.signOut(); window.location.href = 'index.html'; }
 
-        // ==================== TAB SWITCHING (UPDATED: added geopay and investor) ====================
+        // ==================== REFERRAL CODE GENERATION ====================
+        function generateReferralCode(uid) { return uid.substring(0, 8).toUpperCase(); }
+
+        // ==================== PROCESS REFERRAL BONUS ON UPGRADE ====================
+        async function processReferralBonus(userId, membershipType) {
+            try {
+                const referralSnap = await db.collection('referrals').where('referredId', '==', userId).where('status', '==', 'pending').limit(1).get();
+                if (referralSnap.empty) return;
+                const referralDoc = referralSnap.docs[0];
+                const referral = referralDoc.data();
+                const referrerId = referral.referrerId;
+                if (!referrerId) return;
+
+                if (referral.bonusPaidToReferrer && referral.bonusPaidToReferred) return;
+
+                const batch = db.batch();
+                batch.update(referralDoc.ref, {
+                    status: 'upgraded',
+                    upgradedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    bonusPaidToReferrer: true,
+                    bonusPaidToReferred: true
+                });
+
+                const referrerRef = db.collection('users').doc(referrerId);
+                batch.update(referrerRef, {
+                    wallet: firebase.firestore.FieldValue.increment(REFERRER_BONUS),
+                    referralEarnings: firebase.firestore.FieldValue.increment(REFERRER_BONUS)
+                });
+                const txReferrer = db.collection('transactions').doc();
+                batch.set(txReferrer, {
+                    userId: referrerId,
+                    type: 'referral_bonus',
+                    description: `Referral bonus for user ${userId} upgrade`,
+                    amount: REFERRER_BONUS,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                const referredRef = db.collection('users').doc(userId);
+                batch.update(referredRef, {
+                    wallet: firebase.firestore.FieldValue.increment(REFERRED_BONUS),
+                    referralEarnings: firebase.firestore.FieldValue.increment(REFERRED_BONUS)
+                });
+                const txReferred = db.collection('transactions').doc();
+                batch.set(txReferred, {
+                    userId: userId,
+                    type: 'referral_bonus',
+                    description: `Welcome bonus from referrer ${referrerId}`,
+                    amount: REFERRED_BONUS,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await batch.commit();
+
+                const referrerUser = await db.collection('users').doc(referrerId).get();
+                if (referrerUser.exists) {
+                    await db.collection('notifications').add({
+                        userId: referrerId,
+                        title: 'Referral Bonus Earned!',
+                        message: `Your referred user upgraded to ${membershipType} and you earned $${REFERRER_BONUS}!`,
+                        type: 'referral',
+                        read: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                await db.collection('notifications').add({
+                    userId: userId,
+                    title: 'Welcome Bonus!',
+                    message: `You received $${REFERRED_BONUS} as a welcome bonus from your referrer!`,
+                    type: 'referral',
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) { console.error('Error processing referral bonus:', e); }
+        }
+
+        // ==================== LOAD REFERRALS DASHBOARD ====================
+        async function loadReferrals() {
+            currentTaskViewed = null;
+            refreshMirror();
+            document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading referral data...</p></div>';
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                let userRefCode = userDoc.data().referralCode;
+                if (!userRefCode) {
+                    userRefCode = generateReferralCode(currentUser.uid);
+                    await db.collection('users').doc(currentUser.uid).update({ referralCode: userRefCode });
+                }
+                const inviteLink = `${window.location.origin}${window.location.pathname}?ref=${userRefCode}`;
+                const referralsSnap = await db.collection('referrals').where('referrerId', '==', currentUser.uid).orderBy('createdAt', 'desc').get();
+                const referrals = [];
+                referralsSnap.forEach(doc => referrals.push({ id: doc.id, ...doc.data() }));
+                const totalReferrals = referrals.length;
+                const upgradedReferrals = referrals.filter(r => r.status === 'upgraded').length;
+                const pendingReferrals = totalReferrals - upgradedReferrals;
+                const totalEarnings = (userDoc.data().referralEarnings || 0);
+
+                let referralsHtml = '<div class="referral-card"><h3><i class="fas fa-users"></i> Invite & Earn</h3><p>Share your unique code or link with friends. When they sign up and upgrade their membership (Premium or Elite), you earn <strong>$1</strong> and they get <strong>$0.5</strong> instantly!</p>';
+                referralsHtml += `<div class="referral-code-box"><div><i class="fas fa-code"></i> Your Referral Code: <span class="referral-code">${userRefCode}</span></div><button class="copy-btn" onclick="copyToClipboard('${userRefCode}')"><i class="fas fa-copy"></i> Copy Code</button></div>`;
+                referralsHtml += `<div class="referral-code-box"><div><i class="fas fa-link"></i> Invite Link: <span class="invite-link">${inviteLink}</span></div><button class="copy-btn" onclick="copyToClipboard('${inviteLink}')"><i class="fas fa-copy"></i> Copy Link</button></div>`;
+                referralsHtml += `<div class="referral-stats-grid"><div class="referral-stat-card"><i class="fas fa-user-plus"></i><div class="referral-stat-value">${totalReferrals}</div><div class="referral-stat-label">Total Invites</div></div><div class="referral-stat-card"><i class="fas fa-check-circle"></i><div class="referral-stat-value">${upgradedReferrals}</div><div class="referral-stat-label">Upgraded</div></div><div class="referral-stat-card"><i class="fas fa-hourglass-half"></i><div class="referral-stat-value">${pendingReferrals}</div><div class="referral-stat-label">Pending</div></div><div class="referral-stat-card"><i class="fas fa-dollar-sign"></i><div class="referral-stat-value">${formatBoth(totalEarnings)}</div><div class="referral-stat-label">Earnings</div></div></div>`;
+
+                if (referrals.length === 0) {
+                    referralsHtml += '<div class="empty-state"><i class="fas fa-user-friends"></i><p>No referrals yet. Share your link and start earning!</p></div>';
+                } else {
+                    referralsHtml += '<h4><i class="fas fa-list"></i> Your Referrals</h4><div class="referrals-list">';
+                    referrals.forEach(ref => {
+                        const statusClass = ref.status === 'upgraded' ? 'upgraded' : 'pending';
+                        const statusText = ref.status === 'upgraded' ? '✅ Upgraded' : '⏳ Pending';
+                        const date = ref.createdAt ? formatDate(ref.createdAt) : 'N/A';
+                        referralsHtml += `<div class="referral-item"><div><div class="referral-name">${escapeHtml(ref.referredName || ref.referredEmail || 'User')}</div><div class="referral-date"><i class="far fa-calendar-alt"></i> Joined: ${date}</div></div><div><span class="referral-status ${statusClass}">${statusText}</span></div></div>`;
+                    });
+                    referralsHtml += '</div>';
+                }
+                referralsHtml += `<div class="referral-card" style="margin-top:1rem; background:#2a2a35;"><i class="fas fa-info-circle"></i> <strong>How it works:</strong> When someone signs up using your code and later upgrades their membership (Premium or Elite), you get $1 and they get $0.5. Bonuses are added automatically to your wallet. You can track all your referrals here.</div>`;
+                document.getElementById('content').innerHTML = referralsHtml;
+            } catch (e) {
+                console.error('Error loading referrals:', e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadReferrals()">Retry</button></div>`;
+            }
+        }
+
+        // ==================== COPY TO CLIPBOARD ====================
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('Copied to clipboard!', 'success');
+            }).catch(() => {
+                showAlert('Failed to copy', 'error');
+            });
+        }
+
+        // ==================== TAB SWITCHING (UPDATED: added invite) ====================
         function switchTab(tab) {
             currentTab = tab;
             currentTaskViewed = null;
             refreshMirror();
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             for (let t of document.querySelectorAll('.tab')) {
-                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay').replace('investor','investor'))) { t.classList.add('active'); break; }
+                if (t.textContent.toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay').replace('investor','investor').replace('invite','invite'))) { t.classList.add('active'); break; }
             }
             document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
             document.querySelectorAll('.mobile-nav-item').forEach(i => {
-                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay').replace('investor','investor'))) i.classList.add('active');
+                if ((i.textContent || '').toLowerCase().includes(tab.replace('howitworks','how it works').replace('data-annotations','data annotations').replace('newbie-trainer','newbie trainer').replace('geopay','geopay').replace('investor','investor').replace('invite','invite'))) i.classList.add('active');
             });
             document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
             document.querySelectorAll('.bottom-nav-item').forEach(item => {
@@ -3666,7 +3917,8 @@
                     (tab === 'tasks' && item.textContent.includes('Tasks')) ||
                     (tab === 'transactions' && item.textContent.includes('Transactions')) ||
                     (tab === 'submissions' && item.textContent.includes('Submissions')) ||
-                    (tab === 'messages' && item.textContent.includes('Messages'))) {
+                    (tab === 'messages' && item.textContent.includes('Messages')) ||
+                    (tab === 'invite' && item.textContent.includes('Invite'))) {
                     item.classList.add('active');
                 }
             });
@@ -3690,8 +3942,11 @@
                 case 'geopay':
                     loadGeoPay();
                     break;
-                case 'investor':   // NEW
+                case 'investor':
                     loadInvestor();
+                    break;
+                case 'invite':
+                    loadReferrals();
                     break;
                 case 'howitworks':
                     loadHowItWorks();
@@ -3760,7 +4015,6 @@
                 tasksCache = null;
             }
             taskListType = 'all';
-            // Allowed categories: everything except 'GeoPay'
             const allowedCategories = [
                 'writing', 'data-entry', 'research', 'translation', 'other',
                 'design', 'projects', 'transcription', 'ai_annotation'
@@ -3826,7 +4080,6 @@
             const container = document.getElementById('content');
             container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading tasks...</p></div>';
 
-            // Try cache first
             const cached = getCachedTasks();
             if (cached && cached.type === taskListType && JSON.stringify(cached.constraints) === JSON.stringify(taskQueryConstraints)) {
                 renderTaskPage(cached.tasks, true);
@@ -3872,7 +4125,6 @@
                 snapshot.forEach(doc => newTasks.push({ id: doc.id, ...doc.data() }));
                 lastTaskDoc = snapshot.docs[snapshot.docs.length - 1];
 
-                // For each task, check if user has accepted it (from acceptedTasks listener)
                 const acceptedTaskIds = new Set();
                 if (userData) {
                     const acceptedSnap = await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').get();
@@ -3885,7 +4137,6 @@
 
                 renderTaskPage(newTasks, isFirstPage);
 
-                // Cache first page only (to keep cache small)
                 if (isFirstPage) {
                     setCachedTasks({
                         type: taskListType,
@@ -3995,12 +4246,10 @@
             const difficulty = document.getElementById('difficultyFilter')?.value;
             const sortBy = document.getElementById('sortFilter')?.value;
 
-            // Build query constraints
             taskQueryConstraints = [{ field: 'active', op: '==', value: true }];
             if (category && category !== 'all') taskQueryConstraints.push({ field: 'category', op: '==', value: category });
             if (difficulty && difficulty !== 'all') taskQueryConstraints.push({ field: 'difficulty', op: '==', value: difficulty });
 
-            // Sort
             if (sortBy === 'newest') taskQueryConstraints.push({ field: 'createdAt', op: 'orderBy', direction: 'desc' });
             else if (sortBy === 'oldest') taskQueryConstraints.push({ field: 'createdAt', op: 'orderBy', direction: 'asc' });
             else if (sortBy === 'amount-high') taskQueryConstraints.push({ field: 'reward', op: 'orderBy', direction: 'desc' });
@@ -4225,11 +4474,10 @@
             URL.revokeObjectURL(url);
         }
 
-        // ==================== CLEANUP CANCELLED TASKS (NEW) ====================
+        // ==================== CLEANUP CANCELLED TASKS ====================
         async function cleanupCancelledTasks() {
             const acceptedRef = db.collection('users').doc(currentUser.uid).collection('acceptedTasks');
             const acceptedSnap = await acceptedRef.get();
-
             if (acceptedSnap.empty) return;
 
             const batch = db.batch();
@@ -4238,13 +4486,9 @@
             for (const doc of acceptedSnap.docs) {
                 const taskId = doc.id;
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
-
-                // If task no longer exists OR is inactive, remove it
                 if (!taskDoc.exists || taskDoc.data().active === false) {
                     batch.delete(doc.ref);
                     removedCount++;
-
-                    // Optional: create a notification for the user
                     await db.collection('notifications').add({
                         userId: currentUser.uid,
                         title: 'Task Cancelled',
@@ -4259,7 +4503,6 @@
             if (removedCount > 0) {
                 await batch.commit();
                 console.log(`Removed ${removedCount} cancelled tasks.`);
-                // Refresh the submit tab if it's currently open
                 if (currentTab === 'submit') {
                     loadPendingSubmissions();
                 }
@@ -4273,7 +4516,6 @@
                 return;
             }
 
-            // --- COOLDOWN CHECK ---
             if (userData.taskCancelCooldownUntil) {
                 const cooldownUntil = userData.taskCancelCooldownUntil.toDate ? userData.taskCancelCooldownUntil.toDate() : new Date(userData.taskCancelCooldownUntil);
                 const now = new Date();
@@ -4284,16 +4526,13 @@
                 }
             }
 
-            // --- CONCURRENT TASK LIMIT ---
             if (acceptedTasksCount >= MAX_CONCURRENT_TASKS) {
                 showAlert(`You already have an active task. Please submit or cancel it before accepting a new one.`, 'error');
                 return;
             }
 
-            // --- DAILY LIMIT ---
             const today = new Date().toDateString();
             if (userData.lastAcceptedDate !== today) {
-                // New day – reset counter later in transaction
                 userData.acceptedToday = 0;
                 userData.lastAcceptedDate = today;
             }
@@ -4311,13 +4550,11 @@
                 }
                 const task = taskDoc.data();
 
-                // Check if task is active (NEW)
                 if (task.active === false) {
                     showAlert('This task is no longer available (deactivated by admin).', 'error');
                     return;
                 }
 
-                // ===== MODIFIED: Newbie Trainer required only for transcription, design, and ai_annotation =====
                 const categoriesRequiringTraining = ['transcription', 'design', 'ai_annotation'];
                 if (categoriesRequiringTraining.includes(task.category) && !userData.newbieQualified) {
                     showModal(`
@@ -4401,7 +4638,6 @@
                         acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // Update daily counter in user doc
                     const userRef = db.collection('users').doc(currentUser.uid);
                     transaction.update(userRef, {
                         acceptedToday: firebase.firestore.FieldValue.increment(1),
@@ -4411,7 +4647,6 @@
 
                 closeModal();
                 showAlert('Task accepted successfully! You can now submit your work.', 'success');
-                // Refresh current task list
                 if (currentTab === 'tasks' || currentTab === 'design' || currentTab === 'projects' || currentTab === 'transcription') {
                     if (currentTab === 'design') loadTasksByCategory('design');
                     else if (currentTab === 'projects') loadTasksByCategory('projects');
@@ -4423,9 +4658,7 @@
                     loadPendingSubmissions();
                 }
                 setTimeout(() => {
-                    // After acceptance, redirect based on category
                     if (task.category === 'GeoPay') {
-                        // Close any open modal and launch the GeoPay flow
                         closeModal();
                         startGeoPayTask(taskId, task.subcategory);
                     } else {
@@ -4439,9 +4672,6 @@
             }
         }
 
-        // ==================== CANCEL ACCEPTED TASK (REMOVED - USERS CANNOT CANCEL) ====================
-        // The function cancelAcceptedTask has been removed to prevent users from cancelling their own tasks.
-
         // ==================== SUBMIT FORM FUNCTIONS ====================
         async function showSubmitForm(taskId, existingWork = '') {
             try {
@@ -4452,10 +4682,8 @@
                 }
                 const task = taskDoc.data();
 
-                // Check if task is still active (NEW)
                 if (task.active === false) {
                     showAlert('This task has been cancelled by admin and cannot be submitted.', 'error');
-                    // Remove from accepted tasks
                     await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
                     if (currentTab === 'submit') loadPendingSubmissions();
                     return;
@@ -4719,15 +4947,6 @@
             }
         }
 
-        // ==================== COPY TO CLIPBOARD ====================
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showAlert('Link copied to clipboard!', 'success');
-            }).catch(() => {
-                showAlert('Failed to copy', 'error');
-            });
-        }
-
         // ==================== HAS USER SUBMITTED ====================
         async function hasUserSubmitted(taskId) {
             const snap = await db.collection('submissions').where('userId','==',currentUser.uid).where('taskId','==',taskId).get();
@@ -4752,7 +4971,6 @@
                         const statusClass = sub.status === 'approved' ? 'success' : sub.status === 'rejected' ? 'danger' : 'warning';
                         const date = sub.submittedAt?.toDate ? sub.submittedAt.toDate().toLocaleDateString() : 'N/A';
                         const earned = sub.earned ? formatBoth(sub.earned) : '';
-                        // For GeoPay surveys, display answers
                         let answersHtml = '';
                         if (sub.answers && sub.answers.length) {
                             answersHtml = `<div style="margin-top:0.5rem; background:#f1f5f9; padding:0.5rem; border-radius:0.5rem;"><small><strong>Answers:</strong></small>`;
@@ -4801,9 +5019,8 @@
             }
         }
 
-        // ==================== PENDING SUBMISSIONS (UPDATED: Cancel button removed) ====================
+        // ==================== PENDING SUBMISSIONS ====================
         async function loadPendingSubmissions() {
-            // Clean up cancelled tasks first
             await cleanupCancelledTasks();
 
             currentTaskViewed = null; refreshMirror();
@@ -4852,7 +5069,6 @@
                 const canWithdraw = (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE) && !userData.frozen; 
                 let ws = ''; 
 
-                // Check cooldown (3 hours between paid withdrawals)
                 let cooldownHtml = '';
                 let cooldownActive = false;
                 nextAllowedWithdrawalTime = null;
@@ -5115,7 +5331,7 @@
         // ==================== MEMBERSHIP OPTIONS ====================
         function showMembershipOptions(usingOffer = false) {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
-            const offer = currentOfferMap['premium'];  // get offer for premium if exists
+            const offer = currentOfferMap['premium'];
             const hasOffer = offer && new Date(offer.endDateTime.seconds * 1000) > new Date();
             const offerPrice = hasOffer ? offer.newAmount : premiumPkg.price;
             const originalPrice = hasOffer ? offer.originalPrice : premiumPkg.price;
@@ -5155,7 +5371,7 @@
 
         function showEliteUpgradeOptions(usingOffer = false) {
             const elitePkg = (membershipPackages && membershipPackages.elite) || DEFAULT_MEMBERSHIP_PACKAGES.elite;
-            const offer = currentOfferMap['elite'];  // get offer for elite if exists
+            const offer = currentOfferMap['elite'];
             const hasOffer = offer && new Date(offer.endDateTime.seconds * 1000) > new Date();
             const offerPrice = hasOffer ? offer.newAmount : elitePkg.price;
             const originalPrice = hasOffer ? offer.originalPrice : elitePkg.price;
@@ -5367,7 +5583,7 @@
             }
         }
 
-        // ==================== NEWBIE TRAINER (TIMED, MULTIPLE ANSWERS) - FIXED NESTED ARRAYS ====================
+        // ==================== NEWBIE TRAINER ====================
         async function loadNewbieTrainer() {
             currentTaskViewed = null;
             refreshMirror();
@@ -5385,10 +5601,8 @@
                     return;
                 }
 
-                // Time limit (in minutes) – default to 30 if not set
                 const timeLimitMinutes = trainer.timeLimitMinutes || 30;
 
-                // Check latest submission
                 const submissionsSnap = await db.collection('newbieSubmissions')
                     .where('userId', '==', currentUser.uid)
                     .orderBy('submittedAt', 'desc')
@@ -5398,7 +5612,6 @@
 
                 let html = `<h3>👶 Newbie Trainer</h3>`;
 
-                // Display training materials
                 if (trainer.materials && trainer.materials.length) {
                     html += `<div class="training-card free" style="margin-bottom:1rem;"><h4>Training Materials</h4>`;
                     trainer.materials.forEach(m => {
@@ -5411,7 +5624,6 @@
                     html += `</div>`;
                 }
 
-                // If already approved, show success and exit
                 if (lastSubmission && lastSubmission.status === 'approved') {
                     if (!userData.newbieQualified) {
                         await db.collection('users').doc(currentUser.uid).update({ newbieQualified: true });
@@ -5422,35 +5634,29 @@
                     return;
                 }
 
-                // If pending, show pending message
                 if (lastSubmission && lastSubmission.status === 'pending') {
                     html += `<div class="alert-dialog" style="display:block; position:static; transform:none; margin:1rem 0; border-top-color:#f59e0b;"><i class="fas fa-hourglass-half"></i> Your answers are pending review. You will be notified once reviewed.</div>`;
                     document.getElementById('content').innerHTML = html;
                     return;
                 }
 
-                // If rejected, show form with previous answers filled, but also add timer if not started
                 if (lastSubmission && lastSubmission.status === 'rejected') {
                     html += `<div class="alert-dialog error" style="display:block; position:static; transform:none; margin:1rem 0;"><i class="fas fa-times-circle"></i> Your submission was rejected. Reason: ${escapeHtml(lastSubmission.feedback || 'No feedback provided.')} Please review the materials and try again.</div>`;
-                    // Render form with previous answers
                     html += renderTimedQuestionForm(trainer.questions, lastSubmission.answers, timeLimitMinutes, true);
                 } else {
-                    // No previous submission or it was rejected and we show form; for a fresh start, we also need to start timer.
-                    // But we must ensure we don't start timer on page reload if the user already had a session. We'll store start time in sessionStorage.
                     const sessionStartKey = 'newbieTimerStart';
                     let startTime = sessionStorage.getItem(sessionStartKey);
                     if (!startTime) {
                         startTime = Date.now();
                         sessionStorage.setItem(sessionStartKey, startTime);
                     }
-                    const elapsed = (Date.now() - parseInt(startTime)) / 1000 / 60; // minutes
+                    const elapsed = (Date.now() - parseInt(startTime)) / 1000 / 60;
                     const remaining = Math.max(0, timeLimitMinutes - elapsed);
                     html += renderTimedQuestionForm(trainer.questions, null, timeLimitMinutes, false, remaining);
                 }
 
                 document.getElementById('content').innerHTML = html;
 
-                // Attach form submit handler
                 const form = document.getElementById('newbieForm');
                 if (form) {
                     form.addEventListener('submit', async (e) => {
@@ -5465,10 +5671,7 @@
         }
 
         function renderTimedQuestionForm(questions, previousAnswers, timeLimitMinutes, isRejected = false, remainingMinutes = timeLimitMinutes) {
-            // Generate HTML for questions with appropriate input types
             let formHtml = `<form id="newbieForm" style="margin-top:1rem;">`;
-
-            // Timer display
             const timerId = 'newbieTimer';
             formHtml += `
                 <div class="newbie-timer" id="${timerId}">
@@ -5478,19 +5681,17 @@
 
             questions.forEach((q, index) => {
                 const savedAnswer = previousAnswers ? previousAnswers[index] : '';
-                // Prepare saved answer array for multiple choice (both old array and new string formats)
                 let savedAnswerArray = [];
                 if (savedAnswer) {
                     if (Array.isArray(savedAnswer)) {
-                        savedAnswerArray = savedAnswer; // old format (array)
+                        savedAnswerArray = savedAnswer;
                     } else {
-                        savedAnswerArray = savedAnswer.split(',').map(s => s.trim()); // new format (string)
+                        savedAnswerArray = savedAnswer.split(',').map(s => s.trim());
                     }
                 }
 
                 let inputHtml = '';
                 if (q.type === 'multipleChoice' && q.options) {
-                    // Multiple choice: checkboxes (multiple answers allowed)
                     let optionsHtml = '';
                     q.options.forEach(opt => {
                         const checked = savedAnswerArray.includes(opt) ? 'checked' : '';
@@ -5503,10 +5704,8 @@
                     });
                     inputHtml = `<div class="geopay-options-list">${optionsHtml}</div>`;
                 } else if (q.type === 'singleChoice' && q.options) {
-                    // Single choice: radio buttons
                     let optionsHtml = '';
                     q.options.forEach(opt => {
-                        // Determine checked: if savedAnswer is array, take first element; else compare directly
                         const isChecked = savedAnswer ? 
                             (Array.isArray(savedAnswer) ? savedAnswer[0] === opt : savedAnswer === opt) : false;
                         const checked = isChecked ? 'checked' : '';
@@ -5519,7 +5718,6 @@
                     });
                     inputHtml = `<div class="geopay-options-list">${optionsHtml}</div>`;
                 } else {
-                    // Text answer
                     inputHtml = `<textarea class="geopay-textarea" name="q${index}" placeholder="Your answer...">${escapeHtml(savedAnswer)}</textarea>`;
                 }
 
@@ -5537,7 +5735,6 @@
                 </div>
             </form>`;
 
-            // Add timer script
             const script = `
                 <script>
                     (function() {
@@ -5550,13 +5747,12 @@
                                 clearInterval(interval);
                                 timerElement.textContent = 'Time Expired!';
                                 timerElement.className = 'newbie-timer expired';
-                                // Auto-submit form
                                 document.getElementById('newbieForm').requestSubmit();
                             } else {
                                 const minutes = Math.floor(diff / 60000);
                                 const seconds = Math.floor((diff % 60000) / 1000);
                                 timerElement.textContent = \`Time Remaining: \${minutes}:\${seconds.toString().padStart(2,'0')}\`;
-                                if (diff < 300000) { // 5 minutes
+                                if (diff < 300000) {
                                     timerElement.classList.add('warning');
                                 }
                             }
@@ -5568,15 +5764,12 @@
             return formHtml + script;
         }
 
-        // ==================== UPDATED NEWBIE SUBMIT FUNCTION WITH NESTED ARRAY FIX ====================
         async function submitNewbieAnswers(questions) {
-            // Validate questions array
             if (!questions || !Array.isArray(questions) || questions.length === 0) {
                 showAlert('No questions found. Please contact admin.', 'error');
                 return;
             }
 
-            // Gather answers
             const answers = [];
             for (let i = 0; i < questions.length; i++) {
                 const q = questions[i];
@@ -5587,7 +5780,6 @@
                         showAlert(`Please answer question ${i+1}.`, 'error');
                         return;
                     }
-                    // Store as comma-separated string instead of array
                     answers.push(selected.join(', '));
                 } else if (q.type === 'singleChoice') {
                     const radio = document.querySelector(`input[name="q${i}"]:checked`);
@@ -5624,14 +5816,12 @@
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Clear timer session
                 sessionStorage.removeItem('newbieTimerStart');
 
                 showAlert('Your answers have been submitted for review. You will be notified once approved.', 'success');
                 loadNewbieTrainer();
             } catch (e) {
                 console.error('Error submitting answers:', e);
-                // Show more specific error message
                 showAlert('Failed to submit: ' + (e.message || 'Unknown error'), 'error');
             }
         }
@@ -5888,7 +6078,6 @@
         async function loadMembershipPackages() { try { const doc = await db.collection('settings').doc('membershipPackages').get(); membershipPackages = doc.exists ? doc.data() : DEFAULT_MEMBERSHIP_PACKAGES; } catch (e) { membershipPackages = DEFAULT_MEMBERSHIP_PACKAGES; } }
         function getPackageByType(type) { return (membershipPackages && membershipPackages[type]) || DEFAULT_MEMBERSHIP_PACKAGES[type] || DEFAULT_MEMBERSHIP_PACKAGES.basic; }
         function getWelcomeBonus(type) { return (type === MEMBERSHIP_TYPES.ELITE) ? (getPackageByType(type).welcomeBonus || 10) : 0; }
-        function generateReferralCode(uid) { return uid.substring(0,8).toUpperCase(); }
 
         // ==================== TRANSACTIONS ====================
         async function loadTransactions() {
@@ -5901,7 +6090,7 @@
                     html += '<div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No transactions yet.</p></div>';
                 } else {
                     html += '<table class="transactions-table">';
-                    html += '<tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr>';
+                    html += '<thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr></thead><tbody>';
                     snap.forEach(doc => {
                         const tx = doc.data();
                         const date = tx.createdAt ? formatDate(tx.createdAt) : 'N/A';
@@ -5912,7 +6101,7 @@
                         const amountStr = (amount >= 0 ? '+' : '') + formatBoth(amount);
                         html += `<tr><td>${date}</td><td><span class="badge primary">${type.replace(/_/g, ' ')}</span></td><td>${escapeHtml(description)}</td><td class="tx-amount ${amountClass}">${amountStr}</td></tr>`;
                     });
-                    html += '</table>';
+                    html += '</tbody></table>';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (e) {
@@ -5934,11 +6123,10 @@
             try {
                 const leaderboardSnap = await db.collection('leaderboard').orderBy('rank', 'asc').get();
                 if (!leaderboardSnap.empty) {
-                    // Group by userName to avoid duplicates
                     const leaderboardMap = new Map();
                     leaderboardSnap.forEach(doc => {
                         const entry = doc.data();
-                        const key = entry.userName; // group by user name
+                        const key = entry.userName;
                         if (!leaderboardMap.has(key) || leaderboardMap.get(key).points < entry.points) {
                             leaderboardMap.set(key, entry);
                         }
@@ -5946,11 +6134,11 @@
                     const uniqueEntries = Array.from(leaderboardMap.values()).sort((a, b) => a.rank - b.rank);
                     
                     let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table">';
-                    html += '<tr><th>Rank</th><th>User</th><th>Points</th></tr>';
+                    html += '<thead><tr><th>Rank</th><th>User</th><th>Points</th></tr></thead><tbody>';
                     uniqueEntries.forEach(entry => {
                         html += `<tr><td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td></tr>`;
                     });
-                    html += '</table>';
+                    html += '</tbody></table>';
                     document.getElementById('content').innerHTML = html;
                 } else {
                     const usersSnap = await db.collection('users').get();
@@ -5963,9 +6151,9 @@
                     }
                     leaderboard.sort((a,b) => b.points - a.points);
                     let html = '<h3>🏆 Leaderboard (by earnings & approvals)</h3><table class="leaderboard-table">';
-                    html += '<tr><th>Rank</th><th>User</th><th>Points</th><th>Wallet</th></tr>';
+                    html += '<thead><tr><th>Rank</th><th>User</th><th>Points</th><th>Wallet</th></tr></thead><tbody>';
                     leaderboard.slice(0, 20).forEach((u, idx) => { html += `<tr><td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td></tr>`; });
-                    html += '</table>';
+                    html += '</tbody></table>';
                     document.getElementById('content').innerHTML = html;
                 }
             } catch (e) {
@@ -6027,14 +6215,14 @@
             }
         }
 
-        // ==================== MEMBERSHIP PAYMENTS LISTENER ====================
+        // ==================== MEMBERSHIP PAYMENTS LISTENER (ENHANCED WITH REFERRAL) ====================
         function setupMembershipPaymentsListener() {
             if (membershipPaymentsListener) membershipPaymentsListener();
             membershipPaymentsListener = db.collection('membershipPayments')
                 .where('userId', '==', currentUser.uid)
-                .onSnapshot(snapshot => {
+                .onSnapshot(async snapshot => {
                     let newPendingBalance = 0;
-                    snapshot.docChanges().forEach(change => {
+                    snapshot.docChanges().forEach(async change => {
                         const payment = change.doc.data();
                         if (change.type === 'added' && payment.status === 'pending') {
                             newPendingBalance += payment.amount || 0;
@@ -6044,6 +6232,8 @@
                                 const bonus = (payment.amount || 0) * 0.1;
                                 showPaymentApprovedPopup(payment.amount || 0, bonus);
                                 newPendingBalance -= (payment.amount || 0);
+                                // Process referral bonus when payment approved (user upgraded)
+                                await processReferralBonus(currentUser.uid, payment.membershipType || 'premium');
                             } else if (payment.status === 'pending') {
                                 newPendingBalance += (payment.amount || 0);
                             }
@@ -6071,7 +6261,6 @@
             currentTaskViewed = null;
             refreshMirror();
             
-            // Check if user is suspended
             if (userData.suspended) {
                 showWarningPopup(`Your account is suspended. Reason: ${userData.suspendedReason || 'No reason provided.'} You cannot access GeoPay.`);
                 return;
@@ -6104,7 +6293,6 @@
         }
 
         async function showGeoPayOption(subcategory) {
-            // Fetch available GeoPay tasks from Firestore
             try {
                 const snapshot = await db.collection('tasks')
                     .where('active', '==', true)
@@ -6124,7 +6312,6 @@
                     return;
                 }
 
-                // Show list of available tasks
                 const tasks = [];
                 snapshot.forEach(doc => tasks.push({ id: doc.id, ...doc.data() }));
                 
@@ -6197,30 +6384,26 @@
             }, 200);
         }
 
-        // ==================== UPDATED: BETTER ERROR LOGGING AND TASK EXISTENCE CHECK ====================
         async function startGeoPayTask(taskId, subcategory) {
-            console.log('Attempting to start GeoPay task with ID:', taskId); // ADDED
+            console.log('Attempting to start GeoPay task with ID:', taskId);
             closeModal();
 
             try {
-                // Fetch the task document first to ensure it exists
                 const taskRef = db.collection('tasks').doc(taskId);
                 const taskDoc = await taskRef.get();
 
                 if (!taskDoc.exists) {
-                    console.error('Task not found in Firestore. Task ID:', taskId); // ADDED
+                    console.error('Task not found in Firestore. Task ID:', taskId);
                     showAlert(`Task not found (ID: ${taskId}). It may have been deleted.`, 'error');
                     return;
                 }
 
                 const task = taskDoc.data();
 
-                // Check if user has already accepted this task
                 const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
                 const acceptDoc = await acceptRef.get();
                 
                 if (acceptDoc.exists) {
-                    // Already accepted, just open the task
                     if (subcategory === 'geosurvey') {
                         showGeoSurvey(taskId);
                     } else {
@@ -6229,7 +6412,6 @@
                     return;
                 }
 
-                // Check daily limit and concurrent tasks
                 if (acceptedTasksCount >= MAX_CONCURRENT_TASKS) {
                     showAlert(`You already have an active task. Please submit or cancel it before starting a new one.`, 'error');
                     return;
@@ -6245,7 +6427,6 @@
                     return;
                 }
 
-                // Accept the task
                 await db.runTransaction(async (transaction) => {
                     transaction.set(acceptRef, {
                         userId: currentUser.uid,
@@ -6272,7 +6453,6 @@
                     });
                 });
 
-                // Open the appropriate task view
                 if (subcategory === 'geosurvey') {
                     showGeoSurvey(taskId);
                 } else {
@@ -6281,7 +6461,6 @@
 
             } catch (e) {
                 console.error('GeoPay start error:', e);
-                // Show the specific error message to the user
                 showAlert('Error starting task: ' + (e.message || 'Unknown error'), 'error');
             }
         }
@@ -6291,7 +6470,6 @@
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 const task = taskDoc.data();
 
-                // Check if already submitted
                 if (await hasUserSubmitted(taskId)) {
                     showAlert('You have already submitted this task.', 'error');
                     return;
@@ -6407,7 +6585,6 @@
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Remove from accepted tasks
                 await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
                 localStorage.removeItem(`geopay_opinion_${taskId}`);
 
@@ -6432,19 +6609,16 @@
                 const taskDoc = await db.collection('tasks').doc(taskId).get();
                 const task = taskDoc.data();
 
-                // Check if already submitted
                 if (await hasUserSubmitted(taskId)) {
                     showAlert('You have already submitted this survey.', 'error');
                     return;
                 }
 
-                // Get start time from taskAccepts
                 const acceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
                 const acceptDoc = await acceptRef.get();
                 
                 let startTime;
                 if (!acceptDoc.exists) {
-                    // First time - record start time
                     startTime = new Date();
                     await acceptRef.set({
                         userId: currentUser.uid,
@@ -6461,7 +6635,6 @@
                 const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
                 const now = new Date();
 
-                // Check if expired
                 if (now > endTime) {
                     showModal(`
                         <div class="modal-content" style="text-align:center;">
@@ -6472,7 +6645,6 @@
                         </div>
                     `);
                     
-                    // Mark as failed
                     await db.collection('submissions').add({
                         userId: currentUser.uid,
                         userEmail: currentUser.email,
@@ -6487,14 +6659,12 @@
                     return;
                 }
 
-                // Build survey HTML
                 let questionsHtml = '';
                 if (task.questions && task.questions.length) {
                     task.questions.forEach((q, index) => {
                         if (q.type === 'multipleChoice' && q.options) {
                             let optionsHtml = '';
                             q.options.forEach((opt, optIndex) => {
-                                // Show correct answer indicator with star if available (for info only)
                                 const isCorrect = q.correctAnswer && opt === q.correctAnswer;
                                 const correctStar = isCorrect ? ' <span style="color:#10b981; margin-left:5px;" title="Correct answer"><i class="fas fa-star"></i></span>' : '';
                                 
@@ -6526,7 +6696,6 @@
                     questionsHtml = '<p>No questions available for this survey.</p>';
                 }
 
-                // Calculate time remaining
                 const timeRemaining = Math.floor((endTime - now) / 1000);
                 const minutes = Math.floor(timeRemaining / 60);
                 const seconds = timeRemaining % 60;
@@ -6560,7 +6729,6 @@
                     </div>
                 `);
 
-                // Start countdown timer
                 const timerElement = document.getElementById('surveyTimer');
                 const submitBtn = document.getElementById('submitSurveyBtn');
                 
@@ -6603,7 +6771,6 @@
                 const task = taskDoc.data();
                 const questions = task.questions || [];
 
-                // Gather answers and validate
                 const answers = [];
                 let score = 0;
                 let totalPoints = 0;
@@ -6614,7 +6781,6 @@
                     totalPoints += q.points || 1;
 
                     if (q.type === 'multipleChoice') {
-                        // For multiple choice, check if an option is selected
                         const selected = document.querySelector(`input[name="q${i}"]:checked`);
                         
                         if (!selected) {
@@ -6626,21 +6792,17 @@
                         const answer = selected.value;
                         answers.push(answer);
                         
-                        // Check if answer is correct (if correctAnswer exists)
                         if (q.correctAnswer) {
                             if (answer === q.correctAnswer) {
                                 score += q.points || 1;
                             } else {
-                                // Wrong answer - show message but still proceed
                                 errors.push(`Question ${i+1}: Your answer "${answer}" is not correct. The correct answer is "${q.correctAnswer}". Your answer has been recorded.`);
                             }
                         } else {
-                            // No correct answer specified, just count participation
                             score += q.points || 1;
                         }
                         
                     } else {
-                        // Text answer
                         const textarea = document.getElementById(`q${i}`);
                         if (!textarea || !textarea.value.trim()) {
                             errors.push(`Question ${i+1}: Please provide an answer`);
@@ -6650,16 +6812,12 @@
                         
                         const answer = textarea.value.trim();
                         answers.push(answer);
-                        
-                        // Text answers always get points (admin will review)
                         score += q.points || 1;
                     }
                 }
 
-                // If there are unanswered questions, show errors and return
                 const unansweredErrors = errors.filter(e => e.includes('Please select') || e.includes('Please provide'));
                 if (unansweredErrors.length > 0) {
-                    // Create a formatted error message for unanswered questions
                     let errorHtml = '<div style="color:#ef4444; margin-bottom:1rem; text-align:center;">';
                     errorHtml += '<i class="fas fa-exclamation-circle" style="font-size:3rem;"></i>';
                     errorHtml += '<h3 style="color:#ef4444;">Please answer all questions</h3>';
@@ -6671,18 +6829,15 @@
                     errorHtml += '<button class="btn btn-primary" onclick="closeModal()">OK</button>';
                     errorHtml += '</div>';
                     
-                    // Replace modal content with error
                     document.getElementById('modalContent').innerHTML = errorHtml;
                     return;
                 }
 
-                // Check if any answers are null (shouldn't happen if validation passed)
                 if (answers.includes(null)) {
                     showAlert('Please answer all questions before submitting.', 'error');
                     return;
                 }
 
-                // Show warning for wrong answers but allow submission
                 const wrongAnswers = errors.filter(e => e.includes('not correct'));
                 let warningMessage = '';
                 if (wrongAnswers.length > 0) {
@@ -6699,21 +6854,18 @@
 
                 showModal(`<div class="modal-content"><div class="loading-spinner"></div><h3>Submitting survey...</h3></div>`);
 
-                // Calculate score percentage if there were correct answers
                 const scorePercentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : null;
 
-                // Save submission with answers and score
                 const submissionData = {
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
                     taskId: taskId,
                     taskTitle: task.title || 'Geo Survey',
                     answers: answers,
-                    status: 'pending', // Always pending for admin review
+                    status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // If we have correct answers and calculated a score, store it
                 if (scorePercentage !== null) {
                     submissionData.autoScore = score;
                     submissionData.totalPoints = totalPoints;
@@ -6722,10 +6874,8 @@
 
                 await db.collection('submissions').add(submissionData);
 
-                // Remove from accepted tasks
                 await db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId).delete();
 
-                // Show success message with warnings if any
                 let successMessage = '';
                 if (scorePercentage !== null) {
                     successMessage = `
@@ -6756,23 +6906,19 @@
             }
         }
 
-        // ==================== INVESTOR SECTION (UPDATED WITH TRANSACTION HISTORY) ====================
+        // ==================== INVESTOR SECTION ====================
         async function loadInvestor() {
             currentTaskViewed = null;
             refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading investor section...</p></div>';
 
             try {
-                // Fetch investor account for the user
                 const accountSnap = await db.collection('investorAccounts').where('userId', '==', currentUser.uid).limit(1).get();
                 if (accountSnap.empty) {
-                    // No account yet → show landing page
                     showInvestorLanding();
                 } else {
                     investorAccount = { id: accountSnap.docs[0].id, ...accountSnap.docs[0].data() };
-                    // Check for completed investments
                     await processCompletedInvestments();
-                    // Load active investments
                     const activeSnap = await db.collection('investments')
                         .where('userId', '==', currentUser.uid)
                         .where('status', '==', 'active')
@@ -6780,7 +6926,6 @@
                     activeInvestments = [];
                     activeSnap.forEach(doc => activeInvestments.push({ id: doc.id, ...doc.data() }));
                     
-                    // Load completed investments for history
                     const completedSnap = await db.collection('investments')
                         .where('userId', '==', currentUser.uid)
                         .where('status', '==', 'completed')
@@ -6789,7 +6934,6 @@
                     const completedInvestments = [];
                     completedSnap.forEach(doc => completedInvestments.push({ id: doc.id, ...doc.data() }));
                     
-                    // Load deposit history
                     const depositsSnap = await db.collection('investmentDeposits')
                         .where('userId', '==', currentUser.uid)
                         .orderBy('createdAt', 'desc')
@@ -6797,7 +6941,6 @@
                     const deposits = [];
                     depositsSnap.forEach(doc => deposits.push({ id: doc.id, ...doc.data() }));
                     
-                    // Load withdrawal history
                     const withdrawalsSnap = await db.collection('investmentWithdrawals')
                         .where('userId', '==', currentUser.uid)
                         .orderBy('requestedAt', 'desc')
@@ -6805,7 +6948,6 @@
                     const withdrawals = [];
                     withdrawalsSnap.forEach(doc => withdrawals.push({ id: doc.id, ...doc.data() }));
                     
-                    // Show dashboard with history
                     showInvestorDashboardWithHistory(investorAccount, activeInvestments, completedInvestments, deposits, withdrawals);
                 }
             } catch (e) {
@@ -6815,7 +6957,6 @@
         }
 
         function showInvestorLanding() {
-            // Fetch investment settings
             db.collection('settings').doc('investment').get().then(settingsDoc => {
                 const settings = settingsDoc.exists ? settingsDoc.data() : {
                     minInvestment: 5,
@@ -7131,7 +7272,6 @@
             }
 
             try {
-                // Check for existing pending withdrawal
                 const pendingSnap = await db.collection('investmentWithdrawals')
                     .where('userId', '==', currentUser.uid)
                     .where('status', '==', 'pending')
@@ -7140,7 +7280,6 @@
                     showAlert('You already have a pending withdrawal request.', 'error'); return;
                 }
 
-                // Create withdrawal request
                 const withdrawalData = {
                     userId: currentUser.uid,
                     amount: amount,
@@ -7158,7 +7297,6 @@
                 }
                 await db.collection('investmentWithdrawals').add(withdrawalData);
 
-                // Immediately deduct from balance (will be reverted if rejected)
                 await db.collection('investorAccounts').doc(investorAccount.id).update({
                     balance: firebase.firestore.FieldValue.increment(-amount)
                 });
@@ -7166,7 +7304,7 @@
 
                 closeModal();
                 showAlert('Withdrawal request submitted. Funds deducted from balance.', 'success');
-                loadInvestor(); // refresh dashboard
+                loadInvestor();
             } catch (e) {
                 console.error('Withdrawal error:', e);
                 showAlert('Error requesting withdrawal', 'error');
@@ -7176,7 +7314,7 @@
         async function showInvestNow() {
             const settingsDoc = await db.collection('settings').doc('investment').get();
             const minInvestment = settingsDoc.exists && settingsDoc.data().minInvestment ? settingsDoc.data().minInvestment : 5;
-            const maxInvestment = settingsDoc.exists && settingsDoc.data().maxInvestment ? settingsDoc.data().maxInvestment : 1000; // optional
+            const maxInvestment = settingsDoc.exists && settingsDoc.data().maxInvestment ? settingsDoc.data().maxInvestment : 1000;
 
             showModal(`
                 <div class="modal-content" style="text-align:center;">
@@ -7234,7 +7372,6 @@
                 const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
                 const expectedReturn = amount * (1 + rate/100);
 
-                // Create investment record
                 await db.collection('investments').add({
                     userId: currentUser.uid,
                     amount: amount,
@@ -7248,7 +7385,6 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Deduct from balance and add to totalInvested
                 await db.collection('investorAccounts').doc(investorAccount.id).update({
                     balance: firebase.firestore.FieldValue.increment(-amount),
                     totalInvested: firebase.firestore.FieldValue.increment(amount)
@@ -7258,7 +7394,7 @@
 
                 closeModal();
                 showAlert('Investment started!', 'success');
-                loadInvestor(); // refresh dashboard
+                loadInvestor();
             } catch (e) {
                 console.error('Investment error:', e);
                 showAlert('Failed to start investment. Try again.', 'error');
@@ -7280,16 +7416,14 @@
 
             for (const doc of completedSnap.docs) {
                 const inv = doc.data();
-                const earned = inv.expectedReturn - inv.amount; // profit
+                const earned = inv.expectedReturn - inv.amount;
                 totalEarnings += earned;
 
-                // Mark investment as completed
                 batch.update(doc.ref, {
                     status: 'completed',
                     actualReturn: inv.expectedReturn
                 });
 
-                // Add earnings to investor account balance and totalEarnings
                 const accountRef = db.collection('investorAccounts').doc(investorAccount.id);
                 batch.update(accountRef, {
                     balance: firebase.firestore.FieldValue.increment(inv.expectedReturn),
@@ -7298,12 +7432,11 @@
             }
 
             await batch.commit();
-            // Update local investorAccount
             investorAccount.balance += completedSnap.docs.reduce((sum, d) => sum + d.data().expectedReturn, 0);
             investorAccount.totalEarnings += totalEarnings;
         }
 
-        // ==================== HOW IT WORKS (UPDATED: supports image type and preserves HTML) ====================
+        // ==================== HOW IT WORKS ====================
         async function loadHowItWorks() {
             currentTaskViewed = null;
             refreshMirror();
@@ -7312,7 +7445,6 @@
             try {
                 const doc = await db.collection('howItWorks').doc('content').get();
                 if (!doc.exists) {
-                    // Default content if not set
                     document.getElementById('content').innerHTML = `
                         <h3>📘 How It Works</h3>
                         <div class="training-card free" style="margin-bottom:1rem;">
@@ -7337,14 +7469,11 @@
                 if (data.sections && data.sections.length) {
                     data.sections.forEach(section => {
                         if (section.type === 'image') {
-                            // Image section – always render an <img> tag, no escaping needed
                             html += `<div class="training-card free" style="margin-bottom:1rem;">
                                         <h4 style="margin-bottom:0.5rem;">${escapeHtml(section.title || '')}</h4>
                                         <img src="${escapeHtml(section.content)}" style="max-width:100%; border-radius:0.5rem; margin:1rem 0;">
                                      </div>`;
                         } else {
-                            // Heading or paragraph – render the raw HTML from the editor (trusted admin content)
-                            // Do NOT escape – we want bold, lists, links, etc. to appear.
                             html += `<div class="training-card free" style="margin-bottom:1rem;">
                                         <h4 style="margin-bottom:0.5rem;">${escapeHtml(section.title || '')}</h4>
                                         <div>${section.content}</div>
@@ -7355,7 +7484,6 @@
                     html += '<p>No content available.</p>';
                 }
 
-                // Add reminder about AI assistant
                 html += `
                     <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 1rem; margin-top: 1rem; border-radius: 0.5rem;">
                         <p><i class="fas fa-robot" style="color:#10b981;"></i> <strong>Need more help?</strong> Click the AI Assistant button at the bottom right of the screen to ask any question.</p>
@@ -7369,7 +7497,7 @@
             }
         }
 
-        // ==================== AUTH STATE LISTENER ====================
+        // ==================== AUTH STATE LISTENER (MODIFIED WITH REFERRAL) ====================
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
             const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
@@ -7381,11 +7509,10 @@
                     const referralCode = urlParams.get('ref');
                     let referredBy = null;
                     if (referralCode) {
-                        const usersSnapshot = await db.collection('users').get();
-                        for (const u of usersSnapshot.docs) {
-                            if (generateReferralCode(u.id) === referralCode) { referredBy = u.id; break; }
-                        }
+                        const usersSnapshot = await db.collection('users').where('referralCode', '==', referralCode).limit(1).get();
+                        if (!usersSnapshot.empty) referredBy = usersSnapshot.docs[0].id;
                     }
+                    const newRefCode = generateReferralCode(user.uid);
                     await db.collection('users').doc(user.uid).set({
                         email: user.email,
                         displayName: user.displayName || 'User',
@@ -7406,6 +7533,7 @@
                         referredBy: referredBy,
                         totalReferrals: 0,
                         referralEarnings: 0,
+                        referralCode: newRefCode,
                         newbieQualified: false,
                         newbieAttempts: 0,
                         acceptedToday: 0,
@@ -7417,32 +7545,28 @@
                             referrerId: referredBy,
                             referredId: user.uid,
                             referredEmail: user.email,
+                            referredName: user.displayName || user.email,
                             status: 'pending',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            bonusPaidToReferrer: false,
+                            bonusPaidToReferred: false
+                        });
+                        await db.collection('users').doc(referredBy).update({
+                            totalReferrals: firebase.firestore.FieldValue.increment(1)
                         });
                     }
                     const newDoc = await db.collection('users').doc(user.uid).get();
                     userData = { id: user.uid, ...newDoc.data() };
                 } else {
                     userData = { id: user.uid, ...doc.data() };
-                    // Ensure missing fields
-                    if (userData.acceptedToday === undefined) { await db.collection('users').doc(user.uid).update({ acceptedToday: 0 }); userData.acceptedToday = 0; }
-                    if (userData.lastAcceptedDate === undefined) { await db.collection('users').doc(user.uid).update({ lastAcceptedDate: null }); userData.lastAcceptedDate = null; }
-                    if (userData.frozen === undefined) { await db.collection('users').doc(user.uid).update({ frozen: false }); userData.frozen = false; }
-                    if (userData.suspended === undefined) { await db.collection('users').doc(user.uid).update({ suspended: false }); userData.suspended = false; }
-                    if (userData.suspendedReason === undefined) { await db.collection('users').doc(user.uid).update({ suspendedReason: '' }); userData.suspendedReason = ''; }
-                    if (userData.newbieQualified === undefined) { 
-                        await db.collection('users').doc(user.uid).update({ newbieQualified: false }); 
-                        userData.newbieQualified = false; 
+                    if (!userData.referralCode) {
+                        const newCode = generateReferralCode(user.uid);
+                        await db.collection('users').doc(user.uid).update({ referralCode: newCode });
+                        userData.referralCode = newCode;
                     }
-                    if (userData.newbieAttempts === undefined) { 
-                        await db.collection('users').doc(user.uid).update({ newbieAttempts: 0 }); 
-                        userData.newbieAttempts = 0; 
-                    }
-                    const welcomeBonus = getWelcomeBonus(MEMBERSHIP_TYPES.ELITE);
-                    if (userData.membershipType === MEMBERSHIP_TYPES.ELITE && !userData.eliteBonusApplied) {
-                        await db.collection('users').doc(user.uid).update({ wallet: firebase.firestore.FieldValue.increment(welcomeBonus), eliteBonusApplied: true });
-                        userData.wallet = (userData.wallet || 0) + welcomeBonus;
+                    if (userData.referredBy && !userData.initialReferralBonusGiven) {
+                        await processReferralBonus(user.uid, 'basic');
+                        await db.collection('users').doc(user.uid).update({ initialReferralBonusGiven: true });
                     }
                 }
                 if (userData.active === false) { await auth.signOut(); window.location.href = 'index.html'; return; }
@@ -7465,7 +7589,6 @@
                 }, 300000);
 
                 setupTicker();
-                // Load admin alerts (NEW) - now using 'announcements' collection
                 await loadAdminAlerts();
                 setupMessageCounter(); setupWalletListener(); setupNotificationsListener();
                 setupAcceptedTasksListener();
@@ -7545,24 +7668,6 @@
         function formatDeadline(deadline) { if (!deadline) return 'No deadline'; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); const diff = d - new Date(); if (diff < 0) return 'Expired'; const days = Math.ceil(diff / (1000*60*60*24)); if (days > 7) return d.toLocaleDateString(); if (days > 1) return `${days} days left`; if (days === 1) return '1 day left'; return `${Math.ceil(diff / (1000*60*60))} hours left`; }
         function getDeadlineClass(deadline) { if (!deadline) return ''; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); const diff = d - new Date(); if (diff < 0) return 'expired'; if (diff < 24*60*60*1000) return 'urgent'; return 'upcoming'; }
 
-        // ==================== HOW IT WORKS COMING SOON ====================
-        function showHowItWorksComingSoon() {
-            currentTaskViewed = null;
-            refreshMirror();
-            showModal(`
-                <div style="text-align: center; padding: 1rem;">
-                    <i class="fas fa-tools" style="font-size: 4rem; color: #6366f1; margin-bottom: 1rem;"></i>
-                    <h3 style="margin-bottom: 1rem;">How It Works - Coming Soon!</h3>
-                    <p style="margin: 1rem 0; color: #475569;">We're working hard to bring you a comprehensive guide. In the meantime, feel free to ask our AI assistant for help.</p>
-                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
-                        <button class="btn btn-primary" onclick="openAIAssistant(); closeModal();">Ask AI Assistant</button>
-                        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-                    </div>
-                </div>
-            `);
-        }
-
-        // ==================== CHECKING QUALIFICATION ====================
         function showCheckingQualification(category) {
             showModal(`
                 <div class="modal-content" style="text-align:center;">
@@ -7577,7 +7682,6 @@
             }, 1500);
         }
 
-        // ==================== LINK GENERATOR ====================
         function openLinkGenerator() {
             const iframeContent = `
                 <iframe src="https://s.ci.co.ke/i//" title="Link Generator"></iframe>
@@ -7598,4 +7702,3 @@
     </script>
 </body>
 </html>
-```
