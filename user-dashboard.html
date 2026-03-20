@@ -2960,7 +2960,7 @@
         <div class="mobile-nav-item" onclick="handleMobileNavClick('earnings')"><i class="fas fa-chart-line"></i><span>Earnings Graph</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
         <div class="mobile-nav-item" onclick="handleMobileNavClick('transactions')"><i class="fas fa-exchange-alt"></i><span>Transactions</span></div>
-        <div class="mobile-nav-item" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t', '_blank')" style="color: #25D366;">
+        <div class="mobile-nav-item" onclick="window.open('https://chat.whatsapp.com/C7gqHLZOo3z7WNG8JHku6z?mode=gi_t', '_blank')" style="color: #25D366;">
             <i class="fab fa-whatsapp"></i><span>Join WhatsApp Group</span>
         </div>
         <div style="margin-top: 2rem; padding-top: 1rem; border-top: 2px solid #2a2a35;">
@@ -2991,7 +2991,7 @@
                     <i class="fas fa-clock"></i>
                     <span id="clockDisplay"></span>
                 </div>
-                <button class="whatsapp-group-btn" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t', '_blank')">
+                <button class="whatsapp-group-btn" onclick="window.open('https://chat.whatsapp.com/C7gqHLZOo3z7WNG8JHku6z?mode=gi_t', '_blank')">
                     <i class="fab fa-whatsapp"></i><span class="desktop-only">Join WhatsApp Group</span>
                 </button>
                 <div class="notification-wrapper">
@@ -7539,7 +7539,7 @@
             } catch (e) { console.error('Dashboard error:', e); switchTab('tasks'); }
         }
 
-        function showNotQualifiedDialog(section) { showModal(`<div class="modal-content" style="text-align:center;"><div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div><h3 style="color:#ef4444;">Access Restricted</h3><p>You don't qualify for <strong>${section}</strong>.</p><div style="background:#f1f5f9; padding:1rem; border-radius:1rem; margin:1rem 0;"><p>This section requires specific qualifications. Contact admin.</p></div><div style="display:flex; gap:1rem; justify-content:center;"><button class="btn btn-primary" onclick="window.open('https://chat.whatsapp.com/F9ql5QAItJr8iCdpeEdHEu?mode=gi_t','_blank')"><i class="fab fa-whatsapp"></i> Contact Admin</button><button class="btn btn-secondary" onclick="closeModal()">Close</button></div></div>`); }
+        function showNotQualifiedDialog(section) { showModal(`<div class="modal-content" style="text-align:center;"><div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div><h3 style="color:#ef4444;">Access Restricted</h3><p>You don't qualify for <strong>${section}</strong>.</p><div style="background:#f1f5f9; padding:1rem; border-radius:1rem; margin:1rem 0;"><p>This section requires specific qualifications. Contact admin.</p></div><div style="display:flex; gap:1rem; justify-content:center;"><button class="btn btn-primary" onclick="window.open('https://chat.whatsapp.com/C7gqHLZOo3z7WNG8JHku6z?mode=gi_t','_blank')"><i class="fab fa-whatsapp"></i> Contact Admin</button><button class="btn btn-secondary" onclick="closeModal()">Close</button></div></div>`); }
 
         function isDeadlinePassed(deadline) { if (!deadline) return false; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); return new Date() > d; }
         function formatDeadline(deadline) { if (!deadline) return 'No deadline'; const d = deadline.toDate ? deadline.toDate() : new Date(deadline); const diff = d - new Date(); if (diff < 0) return 'Expired'; const days = Math.ceil(diff / (1000*60*60*24)); if (days > 7) return d.toLocaleDateString(); if (days > 1) return `${days} days left`; if (days === 1) return '1 day left'; return `${Math.ceil(diff / (1000*60*60))} hours left`; }
