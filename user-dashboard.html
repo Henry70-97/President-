@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5901,7 +5900,8 @@
                 if (snap.empty) {
                     html += '<div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No transactions yet.</p></div>';
                 } else {
-                    html += '<table class="transactions-table"><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr>';
+                    html += '<table class="transactions-table">';
+                    html += '<tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr>';
                     snap.forEach(doc => {
                         const tx = doc.data();
                         const date = tx.createdAt ? formatDate(tx.createdAt) : 'N/A';
@@ -5945,7 +5945,8 @@
                     });
                     const uniqueEntries = Array.from(leaderboardMap.values()).sort((a, b) => a.rank - b.rank);
                     
-                    let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th></tr>';
+                    let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table">';
+                    html += '<tr><th>Rank</th><th>User</th><th>Points</th></tr>';
                     uniqueEntries.forEach(entry => {
                         html += `<tr><td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td></tr>`;
                     });
@@ -5961,7 +5962,8 @@
                         leaderboard.push({ name: u.displayName || u.email, points, wallet: u.wallet });
                     }
                     leaderboard.sort((a,b) => b.points - a.points);
-                    let html = '<h3>🏆 Leaderboard (by earnings & approvals)</h3><table class="leaderboard-table"><tr><th>Rank</th><th>User</th><th>Points</th><th>Wallet</th></tr>';
+                    let html = '<h3>🏆 Leaderboard (by earnings & approvals)</h3><table class="leaderboard-table">';
+                    html += '<tr><th>Rank</th><th>User</th><th>Points</th><th>Wallet</th></tr>';
                     leaderboard.slice(0, 20).forEach((u, idx) => { html += `<tr><td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td></tr>`; });
                     html += '</table>';
                     document.getElementById('content').innerHTML = html;
@@ -6754,7 +6756,7 @@
             }
         }
 
-        // ==================== INVESTOR SECTION (NEW) ====================
+        // ==================== INVESTOR SECTION (UPDATED WITH TRANSACTION HISTORY) ====================
         async function loadInvestor() {
             currentTaskViewed = null;
             refreshMirror();
@@ -6777,8 +6779,34 @@
                         .get();
                     activeInvestments = [];
                     activeSnap.forEach(doc => activeInvestments.push({ id: doc.id, ...doc.data() }));
-                    // Show dashboard
-                    showInvestorDashboard();
+                    
+                    // Load completed investments for history
+                    const completedSnap = await db.collection('investments')
+                        .where('userId', '==', currentUser.uid)
+                        .where('status', '==', 'completed')
+                        .orderBy('endTime', 'desc')
+                        .get();
+                    const completedInvestments = [];
+                    completedSnap.forEach(doc => completedInvestments.push({ id: doc.id, ...doc.data() }));
+                    
+                    // Load deposit history
+                    const depositsSnap = await db.collection('investmentDeposits')
+                        .where('userId', '==', currentUser.uid)
+                        .orderBy('createdAt', 'desc')
+                        .get();
+                    const deposits = [];
+                    depositsSnap.forEach(doc => deposits.push({ id: doc.id, ...doc.data() }));
+                    
+                    // Load withdrawal history
+                    const withdrawalsSnap = await db.collection('investmentWithdrawals')
+                        .where('userId', '==', currentUser.uid)
+                        .orderBy('requestedAt', 'desc')
+                        .get();
+                    const withdrawals = [];
+                    withdrawalsSnap.forEach(doc => withdrawals.push({ id: doc.id, ...doc.data() }));
+                    
+                    // Show dashboard with history
+                    showInvestorDashboardWithHistory(investorAccount, activeInvestments, completedInvestments, deposits, withdrawals);
                 }
             } catch (e) {
                 console.error('Error loading investor:', e);
@@ -6786,64 +6814,67 @@
             }
         }
 
-        async function showInvestorLanding() {
+        function showInvestorLanding() {
             // Fetch investment settings
-            const settingsDoc = await db.collection('settings').doc('investment').get();
-            const settings = settingsDoc.exists ? settingsDoc.data() : {
-                minInvestment: 5,
-                minWithdrawal: 0.4,
-                paymentLink: 'https://lipana.dev/pay/nextgen-invest',
-                durationRates: { '1-5': 20, '5-10': 25, '11-16': 30, '17-24': 35 },
-                riskDisclaimer: 'Investments involve risk. You may lose some or all of your money.'
-            };
+            db.collection('settings').doc('investment').get().then(settingsDoc => {
+                const settings = settingsDoc.exists ? settingsDoc.data() : {
+                    minInvestment: 5,
+                    minWithdrawal: 0.4,
+                    paymentLink: 'https://lipana.dev/pay/nextgen-invest',
+                    durationRates: { '1-5': 20, '5-10': 25, '11-16': 30, '17-24': 35 },
+                    riskDisclaimer: 'Investments involve risk. You may lose some or all of your money.'
+                };
 
-            const html = `
-                <div class="geopay-card">
-                    <div class="geopay-icon"><i class="fas fa-chart-line"></i></div>
-                    <h2 class="geopay-title">Invest & Earn</h2>
-                    <p class="geopay-subtitle">Invest your money and earn returns over time. Withdraw anytime after reaching minimum payout.</p>
+                const html = `
+                    <div class="geopay-card">
+                        <div class="geopay-icon"><i class="fas fa-chart-line"></i></div>
+                        <h2 class="geopay-title">Invest & Earn</h2>
+                        <p class="geopay-subtitle">Invest your money and earn returns over time. Withdraw anytime after reaching minimum payout.</p>
 
-                    <div style="background: #2a2a35; border-radius:1rem; padding:1rem; margin:1.5rem 0; text-align:left;">
-                        <p><strong>💰 Minimum investment:</strong> $${settings.minInvestment}</p>
-                        <p><strong>📈 Return rates (based on duration):</strong></p>
-                        <ul style="margin-left:1.5rem;">
-                            <li>1‑5 hours → 20%</li>
-                            <li>5‑10 hours → 25%</li>
-                            <li>11‑16 hours → 30%</li>
-                            <li>17‑24 hours → 35%</li>
-                        </ul>
-                        <p><strong>💸 Minimum withdrawal:</strong> $${settings.minWithdrawal}</p>
-                        <p><strong>⚠️ Risk disclaimer:</strong> ${settings.riskDisclaimer}</p>
+                        <div style="background: #2a2a35; border-radius:1rem; padding:1rem; margin:1.5rem 0; text-align:left;">
+                            <p><strong>💰 Minimum investment:</strong> $${settings.minInvestment}</p>
+                            <p><strong>📈 Return rates (based on duration):</strong></p>
+                            <ul style="margin-left:1.5rem;">
+                                <li>1‑5 hours → 20%</li>
+                                <li>5‑10 hours → 25%</li>
+                                <li>11‑16 hours → 30%</li>
+                                <li>17‑24 hours → 35%</li>
+                            </ul>
+                            <p><strong>💸 Minimum withdrawal:</strong> $${settings.minWithdrawal}</p>
+                            <p><strong>⚠️ Risk disclaimer:</strong> ${settings.riskDisclaimer}</p>
+                        </div>
+
+                        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin:2rem 0;">
+                            <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
+                                <i class="fas fa-hand-holding-usd" style="color:var(--gold); font-size:2rem;"></i>
+                                <h4>Passive Income</h4>
+                                <p style="font-size:0.8rem;">Earn while you sleep</p>
+                            </div>
+                            <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
+                                <i class="fas fa-clock" style="color:var(--gold); font-size:2rem;"></i>
+                                <h4>Flexible Withdrawals</h4>
+                                <p style="font-size:0.8rem;">Withdraw anytime</p>
+                            </div>
+                            <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
+                                <i class="fas fa-shield-alt" style="color:var(--gold); font-size:2rem;"></i>
+                                <h4>Secure</h4>
+                                <p style="font-size:0.8rem;">Your funds are safe</p>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-success geopay-start-btn" onclick="startInvesting()">
+                            <i class="fas fa-play"></i> Start Investing
+                        </button>
                     </div>
-
-                    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin:2rem 0;">
-                        <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
-                            <i class="fas fa-hand-holding-usd" style="color:var(--gold); font-size:2rem;"></i>
-                            <h4>Passive Income</h4>
-                            <p style="font-size:0.8rem;">Earn while you sleep</p>
-                        </div>
-                        <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
-                            <i class="fas fa-clock" style="color:var(--gold); font-size:2rem;"></i>
-                            <h4>Flexible Withdrawals</h4>
-                            <p style="font-size:0.8rem;">Withdraw anytime</p>
-                        </div>
-                        <div style="background:#1e1e28; padding:1rem; border-radius:1rem; flex:1; min-width:150px;">
-                            <i class="fas fa-shield-alt" style="color:var(--gold); font-size:2rem;"></i>
-                            <h4>Secure</h4>
-                            <p style="font-size:0.8rem;">Your funds are safe</p>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-success geopay-start-btn" onclick="startInvesting()">
-                        <i class="fas fa-play"></i> Start Investing
-                    </button>
-                </div>
-            `;
-            document.getElementById('content').innerHTML = html;
+                `;
+                document.getElementById('content').innerHTML = html;
+            }).catch(e => {
+                console.error('Error loading investment settings:', e);
+                showAlert('Error loading investor section', 'error');
+            });
         }
 
         async function startInvesting() {
-            // Create investor account if not exists
             try {
                 await db.collection('investorAccounts').add({
                     userId: currentUser.uid,
@@ -6854,21 +6885,20 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 investorAccount = { balance: 0, totalInvested: 0, totalEarnings: 0 };
-                showInvestorDashboard();
+                loadInvestor();
             } catch (e) {
                 console.error('Error creating investor account:', e);
                 showAlert('Could not create investor account. Please try again.', 'error');
             }
         }
 
-        function showInvestorDashboard() {
-            const bal = investorAccount.balance || 0;
-            const totalInv = investorAccount.totalInvested || 0;
-            const totalEarn = investorAccount.totalEarnings || 0;
-            // Calculate pending returns from active investments
-            const pendingReturns = activeInvestments.reduce((sum, inv) => sum + (inv.expectedReturn - inv.amount), 0);
+        function showInvestorDashboardWithHistory(account, activeInv, completedInv, deposits, withdrawals) {
+            const bal = account.balance || 0;
+            const totalInv = account.totalInvested || 0;
+            const totalEarn = account.totalEarnings || 0;
+            const pendingReturns = activeInv.reduce((sum, inv) => sum + (inv.expectedReturn - inv.amount), 0);
 
-            const html = `
+            let html = `
                 <div class="withdrawal-section">
                     <h4><i class="fas fa-chart-line"></i> Investor Dashboard</h4>
                     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.5rem;">
@@ -6901,9 +6931,9 @@
                     </div>
 
                     <h5>Active Investments</h5>
-                    ${activeInvestments.length === 0 ? '<p>No active investments.</p>' : ''}
+                    ${activeInv.length === 0 ? '<p>No active investments.</p>' : ''}
                     <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:0.8rem;">
-                        ${activeInvestments.map(inv => {
+                        ${activeInv.map(inv => {
                             const endTime = inv.endTime.toDate();
                             const now = new Date();
                             const remaining = Math.max(0, endTime - now);
@@ -6917,6 +6947,68 @@
                                 </div>
                             `;
                         }).join('')}
+                    </div>
+
+                    <h5 style="margin-top:2rem;">Completed Investments</h5>
+                    ${completedInv.length === 0 ? '<p>No completed investments.</p>' : ''}
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:0.8rem;">
+                        ${completedInv.map(inv => `
+                            <div class="training-card" style="padding:1rem;">
+                                <div><strong>$${inv.amount}</strong> @ ${inv.returnRate}%</div>
+                                <div>Earned: $${(inv.actualReturn - inv.amount).toFixed(2)}</div>
+                                <div class="deadline-badge success"><i class="fas fa-check-circle"></i> Completed</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <h5 style="margin-top:2rem;">Deposit History</h5>
+                    ${deposits.length === 0 ? '<p>No deposits yet.</p>' : ''}
+                    <div class="transaction-history">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Transaction Code</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                ${deposits.map(d => `
+                                    <tr>
+                                        <td>${d.createdAt ? formatDate(d.createdAt) : 'N/A'}</td>
+                                        <td class="tx-amount positive">+$${d.amount.toFixed(2)}</td>
+                                        <td>${d.paymentMethod || 'N/A'}</td>
+                                        <td>${d.transactionCode || 'N/A'}</td>
+                                        <td><span class="badge ${d.status === 'approved' ? 'success' : d.status === 'pending' ? 'warning' : 'danger'}">${d.status || 'pending'}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h5 style="margin-top:2rem;">Withdrawal History</h5>
+                    ${withdrawals.length === 0 ? '<p>No withdrawals yet.</p>' : ''}
+                    <div class="transaction-history">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                ${withdrawals.map(w => {
+                                    let details = '';
+                                    if (w.method === 'Bank Transfer') {
+                                        details = `${w.bankName || ''} - ${w.accountName || ''} (${w.accountNumber || ''})`;
+                                    } else {
+                                        details = `${w.accountName || ''} - ${w.phone || ''}`;
+                                    }
+                                    return `
+                                        <tr>
+                                            <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
+                                            <td class="tx-amount negative">-$${w.amount.toFixed(2)}</td>
+                                            <td>${w.method}</td>
+                                            <td>${escapeHtml(details)}</td>
+                                            <td><span class="badge ${w.status === 'paid' ? 'success' : w.status === 'pending' ? 'warning' : 'danger'}">${w.status || 'pending'}</span></td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             `;
@@ -6966,6 +7058,7 @@
                 });
                 closeModal();
                 showAlert('Deposit request submitted. It will be reviewed by admin.', 'success');
+                loadInvestor();
             } catch (e) {
                 console.error('Error submitting deposit:', e);
                 showAlert('Failed to submit deposit. Try again.', 'error');
@@ -7202,14 +7295,11 @@
                     balance: firebase.firestore.FieldValue.increment(inv.expectedReturn),
                     totalEarnings: firebase.firestore.FieldValue.increment(earned)
                 });
-
-                // Optional: record transaction
-                // (could add to a subcollection)
             }
 
             await batch.commit();
             // Update local investorAccount
-            investorAccount.balance += totalEarnings + completedSnap.docs.reduce((sum, d) => sum + d.data().amount, 0); // principal + profit
+            investorAccount.balance += completedSnap.docs.reduce((sum, d) => sum + d.data().expectedReturn, 0);
             investorAccount.totalEarnings += totalEarnings;
         }
 
