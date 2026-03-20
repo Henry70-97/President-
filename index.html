@@ -55,14 +55,13 @@
             100% { transform: translateY(0px); filter: drop-shadow(0 0 5px #ccb16b); }
         }
         
-        /* Intro logo styling */
         .intro-logo {
             max-width: 80%;
             max-height: 300px;
             object-fit: contain;
             animation: fadeReveal 1.8s ease;
             filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
-            border-radius: 20px; /* optional, in case logo has sharp corners */
+            border-radius: 20px;
         }
         
         @keyframes fadeReveal {
@@ -74,7 +73,6 @@
             opacity: 0;
         }
         
-        /* Main background - elegant metallic neutral */
         body {
             background: linear-gradient(145deg, #dbd0bd 0%, #b8aa92 100%);
             min-height: 100vh;
@@ -85,7 +83,6 @@
             position: relative;
         }
         
-        /* Professional card - clean, elevated, subtle metallic */
         .auth-card {
             background: rgba(255, 251, 242, 0.9);
             backdrop-filter: blur(10px);
@@ -106,7 +103,6 @@
             box-shadow: 0 40px 70px -20px #3d3429, 0 0 0 1px #dac292 inset;
         }
         
-        /* Logo inside the auth card */
         .logo {
             text-align: center;
             margin-bottom: 2rem;
@@ -120,7 +116,6 @@
             filter: drop-shadow(0 2px 8px rgba(120, 90, 40, 0.2));
         }
         
-        /* Tabs - clean, professional */
         .tabs {
             display: flex;
             gap: 0.75rem;
@@ -152,12 +147,12 @@
             font-weight: 600;
         }
         
-        /* Forms */
         .form { display: block; }
         .form.hidden { display: none; }
         
         .input-group {
             margin-bottom: 1.25rem;
+            position: relative;
         }
         
         .input-group input, 
@@ -184,7 +179,23 @@
             font-weight: 300;
         }
         
-        /* Buttons */
+        /* Password toggle button */
+        .password-toggle {
+            position: absolute;
+            right: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #aaa08b;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+        .password-toggle:hover {
+            color: #c8aa6b;
+        }
+        
         .btn {
             width: 100%;
             padding: 1rem;
@@ -264,7 +275,6 @@
             border-bottom: 1px dashed #d4b985;
         }
         
-        /* Forgot password link */
         .forgot-password {
             text-align: right;
             margin-top: -0.5rem;
@@ -291,7 +301,6 @@
             gap: 0.3rem;
         }
         
-        /* Referrer message refined */
         .referrer-message {
             background: #f6efe2;
             border-left: 4px solid #c5a159;
@@ -317,7 +326,6 @@
             letter-spacing: 0.3px;
         }
         
-        /* alert dialog */
         .alert-dialog {
             position: fixed;
             top: 50%;
@@ -344,10 +352,8 @@
         }
         .overlay.show { display: block; }
         
-        /* verify message */
         #verifyMessage h3 { color: #3d3425; }
         
-        /* Reset password modal */
         .reset-modal {
             position: fixed;
             top: 50%;
@@ -393,7 +399,6 @@
 
     <div class="auth-card">
         <div class="logo">
-            <!-- Replaced text with image logo -->
             <img src="logo.jpg" alt="NextGen Hub Logo" class="card-logo">
         </div>
         
@@ -411,9 +416,11 @@
             </div>
             <div class="input-group">
                 <input type="password" id="loginPassword" placeholder="Password">
+                <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+                    <i class="far fa-eye-slash"></i>
+                </button>
             </div>
             
-            <!-- Forgot Password Link -->
             <div class="forgot-password">
                 <a onclick="showResetPasswordModal()">Forgot password?</a>
             </div>
@@ -439,9 +446,12 @@
             </div>
             <div class="input-group">
                 <input type="password" id="regPassword" placeholder="Password (min. 6 characters)">
+                <button type="button" class="password-toggle" onclick="togglePassword('regPassword')">
+                    <i class="far fa-eye-slash"></i>
+                </button>
             </div>
             <div class="input-group">
-                <input type="tel" id="regPhone" placeholder="Phone number (optional)">
+                <input type="tel" id="regPhone" placeholder="Phone number (required)" required>
             </div>
             <button class="btn btn-primary" onclick="handleRegister()">Create account</button>
             <div class="info-text">
@@ -488,16 +498,16 @@
     </div>
     
     <script>
-        // Fade out intro after animation (allowing time for logo to be seen)
+        // Fade out intro after animation
         window.addEventListener('load', function() {
             const intro = document.getElementById('introOverlay');
             setTimeout(() => {
                 intro.classList.add('fade-out');
                 setTimeout(() => intro.style.display = 'none', 1200);
-            }, 3000); // slightly shorter than before because no typewriter, but still pleasant
+            }, 3000);
         });
 
-        // Firebase Config (unchanged, functional)
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
             authDomain: "nextgen-5fb6f.firebaseapp.com",
@@ -515,6 +525,7 @@
             return userId.substring(0, 8).toUpperCase();
         }
         
+        // Get referral code from URL (supports ?ref=CODE or /ref/CODE)
         function getReferralCodeFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             const queryRef = urlParams.get('ref');
@@ -529,23 +540,28 @@
             return null;
         }
         
+        // Query Firestore for a user by referralCode (efficient)
+        async function getUserByReferralCode(code) {
+            const snapshot = await db.collection('users')
+                .where('referralCode', '==', code)
+                .limit(1)
+                .get();
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                return { id: doc.id, ...doc.data() };
+            }
+            return null;
+        }
+        
         async function checkForReferrer() {
             const refCode = getReferralCodeFromUrl();
             if (!refCode) return;
             sessionStorage.setItem('pendingReferral', refCode);
-            try {
-                const snapshot = await db.collection('users').get();
-                let found = false;
-                for (const doc of snapshot.docs) {
-                    if (generateReferralCode(doc.id) === refCode) {
-                        const name = doc.data().displayName || 'a NextGen user';
-                        showReferrerMessage(name);
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) showReferrerMessage('a NextGen user');
-            } catch {
+            const user = await getUserByReferralCode(refCode);
+            if (user) {
+                const name = user.displayName || 'a NextGen user';
+                showReferrerMessage(name);
+            } else {
                 showReferrerMessage('a NextGen user');
             }
         }
@@ -554,10 +570,22 @@
             document.getElementById('referrerMessageContainer').innerHTML = `
                 <div class="referrer-message">
                     <i class="fas fa-user-check" style="color:#b4945a;"></i>
-                    <div>Referred by <strong>${name}</strong> <span class="bonus-badge">+$0.5 bonus</span></div>
+                    <div>Referred by <strong>${escapeHtml(name)}</strong> <span class="bonus-badge">+$0.5 bonus</span></div>
                 </div>
             `;
         }
+        
+        // Simple escape to prevent XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
         document.addEventListener('DOMContentLoaded', checkForReferrer);
         
         // UI helpers
@@ -580,7 +608,7 @@
             document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
             document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
             document.getElementById('verifyMessage').classList.add('hidden');
-            hideResetPasswordModal(); // Hide reset modal when switching tabs
+            hideResetPasswordModal();
         }
         
         function showVerifyView(email) {
@@ -590,11 +618,26 @@
             document.getElementById('verifyEmail').innerText = email;
         }
         
+        // Password toggle function
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = field.nextElementSibling.querySelector('i');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        }
+        
         // Reset Password Functions
         function showResetPasswordModal() {
             document.getElementById('resetModal').classList.add('show');
             document.getElementById('resetOverlay').classList.add('show');
-            document.getElementById('resetEmail').value = ''; // Clear previous input
+            document.getElementById('resetEmail').value = '';
         }
         
         function hideResetPasswordModal() {
@@ -604,33 +647,21 @@
         
         async function handlePasswordReset() {
             const email = document.getElementById('resetEmail').value;
-            
             if (!email) {
                 showAlert('Please enter your email address', 'error');
                 return;
             }
-            
-            // Simple email validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showAlert('Please enter a valid email address', 'error');
                 return;
             }
-            
             try {
-                // Firebase password reset
                 await auth.sendPasswordResetEmail(email);
-                
-                // Hide the reset modal
                 hideResetPasswordModal();
-                
-                // Show success message
                 showAlert(`Password reset email sent to ${email}. Please check your inbox.`, 'success');
-                
             } catch (error) {
                 console.error('Password reset error:', error);
-                
-                // Handle specific Firebase errors
                 switch (error.code) {
                     case 'auth/user-not-found':
                         showAlert('No account found with this email address.', 'error');
@@ -652,39 +683,84 @@
             const email = document.getElementById('regEmail').value;
             const pwd = document.getElementById('regPassword').value;
             const phone = document.getElementById('regPhone').value;
-            if (!name || !email || !pwd) return showAlert('All required fields', 'error');
-            if (pwd.length < 6) return showAlert('Password min 6 chars', 'error');
+            
+            if (!name || !email || !pwd) {
+                showAlert('Please fill in all required fields', 'error');
+                return;
+            }
+            if (!phone) {
+                showAlert('Phone number is required', 'error');
+                return;
+            }
+            if (pwd.length < 6) {
+                showAlert('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
             try {
                 const cred = await auth.createUserWithEmailAndPassword(email, pwd);
                 await cred.user.sendEmailVerification();
+                
                 const referralCode = sessionStorage.getItem('pendingReferral');
                 let referredBy = null;
                 if (referralCode) {
-                    const snap = await db.collection('users').get();
-                    for (const doc of snap.docs) {
-                        if (generateReferralCode(doc.id) === referralCode) { referredBy = doc.id; break; }
-                    }
+                    const referrer = await getUserByReferralCode(referralCode);
+                    if (referrer) referredBy = referrer.id;
                     sessionStorage.removeItem('pendingReferral');
                 }
-                const userData = { email, displayName: name, phone, role:'user', wallet:0, active:true, verified:false,
-                    membershipType:'basic', membershipPaid:false, membershipStatus:'pending', totalFeesPaid:0,
-                    unreadMessages:0, totalReferrals:0, referralEarnings:0, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                
+                const userData = {
+                    email,
+                    displayName: name,
+                    phone,
+                    role: 'user',
+                    wallet: 0,
+                    active: true,
+                    verified: false,
+                    membershipType: 'basic',
+                    membershipPaid: false,
+                    membershipStatus: 'pending',
+                    totalFeesPaid: 0,
+                    unreadMessages: 0,
+                    totalReferrals: 0,
+                    referralEarnings: 0,
+                    referralCode: generateReferralCode(cred.user.uid),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
                 if (referredBy) userData.referredBy = referredBy;
+                
                 await db.collection('users').doc(cred.user.uid).set(userData);
+                
                 if (referredBy) {
-                    await db.collection('referrals').add({ referrerId: referredBy, referredId: cred.user.uid, referredEmail: email, referredName: name, status: 'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+                    await db.collection('referrals').add({
+                        referrerId: referredBy,
+                        referredId: cred.user.uid,
+                        referredEmail: email,
+                        referredName: name,
+                        status: 'pending',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(() => {});
                 }
+                
                 showVerifyView(email);
                 showAlert('Verification email sent!', 'success');
-            } catch (e) { showAlert(e.message, 'error'); }
+            } catch (e) {
+                showAlert(e.message, 'error');
+            }
         }
         
         async function handleLogin() {
             const email = document.getElementById('loginEmail').value;
             const pwd = document.getElementById('loginPassword').value;
-            if (!email || !pwd) return showAlert('Enter credentials', 'error');
-            try { await auth.signInWithEmailAndPassword(email, pwd); } 
-            catch (e) { showAlert(e.message, 'error'); }
+            if (!email || !pwd) {
+                showAlert('Please enter email and password', 'error');
+                return;
+            }
+            try {
+                await auth.signInWithEmailAndPassword(email, pwd);
+            } catch (e) {
+                showAlert(e.message, 'error');
+            }
         }
         
         async function handleGoogleLogin() {
@@ -696,24 +772,46 @@
                 const doc = await userRef.get();
                 if (!doc.exists) {
                     let referredBy = null;
-                    const refCode = sessionStorage.getItem('pendingReferral');
-                    if (refCode) {
-                        const snap = await db.collection('users').get();
-                        for (const d of snap.docs) {
-                            if (generateReferralCode(d.id) === refCode) { referredBy = d.id; break; }
-                        }
+                    const referralCode = sessionStorage.getItem('pendingReferral');
+                    if (referralCode) {
+                        const referrer = await getUserByReferralCode(referralCode);
+                        if (referrer) referredBy = referrer.id;
                         sessionStorage.removeItem('pendingReferral');
                     }
-                    const data = { email: user.email, displayName: user.displayName, phone:'', role:'user', wallet:0, active:true, verified:true,
-                        membershipType:'basic', membershipPaid:false, membershipStatus:'pending', totalFeesPaid:0,
-                        unreadMessages:0, totalReferrals:0, referralEarnings:0, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                    const data = {
+                        email: user.email,
+                        displayName: user.displayName || 'User',
+                        phone: '',
+                        role: 'user',
+                        wallet: 0,
+                        active: true,
+                        verified: true,
+                        membershipType: 'basic',
+                        membershipPaid: false,
+                        membershipStatus: 'pending',
+                        totalFeesPaid: 0,
+                        unreadMessages: 0,
+                        totalReferrals: 0,
+                        referralEarnings: 0,
+                        referralCode: generateReferralCode(user.uid),
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
                     if (referredBy) data.referredBy = referredBy;
                     await userRef.set(data);
                     if (referredBy) {
-                        await db.collection('referrals').add({ referrerId: referredBy, referredId: user.uid, referredEmail: user.email, referredName: user.displayName, status:'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+                        await db.collection('referrals').add({
+                            referrerId: referredBy,
+                            referredId: user.uid,
+                            referredEmail: user.email,
+                            referredName: user.displayName,
+                            status: 'pending',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }).catch(() => {});
                     }
                 }
-            } catch (e) { showAlert(e.message, 'error'); }
+            } catch (e) {
+                showAlert(e.message, 'error');
+            }
         }
         
         async function checkVerification() {
@@ -722,7 +820,9 @@
             if (auth.currentUser.emailVerified) {
                 await db.collection('users').doc(auth.currentUser.uid).update({ verified: true });
                 window.location.href = 'user-dashboard.html';
-            } else showAlert('Email not verified yet', 'error');
+            } else {
+                showAlert('Email not verified yet', 'error');
+            }
         }
         
         async function resendVerification() {
@@ -735,14 +835,23 @@
         auth.onAuthStateChanged(async (user) => {
             if (!user) return;
             const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
-            if (!user.emailVerified && !isGoogle) { showVerifyView(user.email); return; }
+            if (!user.emailVerified && !isGoogle) {
+                showVerifyView(user.email);
+                return;
+            }
             try {
                 const udoc = await db.collection('users').doc(user.uid).get();
                 if (!udoc.exists) return;
                 const data = udoc.data();
-                if (data.active === false) { await auth.signOut(); showAlert('Account disabled', 'error'); return; }
+                if (data.active === false) {
+                    await auth.signOut();
+                    showAlert('Account disabled', 'error');
+                    return;
+                }
                 window.location.href = data.role === 'admin' ? 'admin-dashboard.html' : 'user-dashboard.html';
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         });
     </script>
 </body>

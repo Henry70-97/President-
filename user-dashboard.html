@@ -3240,8 +3240,9 @@
         };
         let membershipPackages = null;
         // Referral bonuses
-        const REFERRER_BONUS = 1;      // $1 for referrer when referred upgrades
-        const REFERRED_BONUS = 0.5;    // $0.5 for new member upon upgrade
+        const REFERRER_BONUS_PREMIUM = 2;      // $2 for referrer when referred upgrades to Premium
+        const REFERRER_BONUS_ELITE = 4;        // $4 for referrer when referred upgrades to Elite
+        const REFERRED_BONUS = 0.5;            // $0.5 for new member upon any upgrade
         let paymentUrl = "https://lipana.dev/pay/nextgen-membership";
 
         // ==================== OFFER FEATURE ====================
@@ -3770,45 +3771,77 @@
         // ==================== REFERRAL CODE GENERATION ====================
         function generateReferralCode(uid) { return uid.substring(0, 8).toUpperCase(); }
 
-        // ==================== PROCESS REFERRAL BONUS ON UPGRADE ====================
+        // ==================== PROCESS REFERRAL BONUS ON UPGRADE (UPDATED WITH LEVEL 2) ====================
         async function processReferralBonus(userId, membershipType) {
             try {
-                const referralSnap = await db.collection('referrals').where('referredId', '==', userId).where('status', '==', 'pending').limit(1).get();
-                if (referralSnap.empty) return;
-                const referralDoc = referralSnap.docs[0];
-                const referral = referralDoc.data();
-                const referrerId = referral.referrerId;
+                // First, get the user's document to find their referrer
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (!userDoc.exists) return;
+                const userDataRef = userDoc.data();
+                const referrerId = userDataRef.referredBy;
+                
                 if (!referrerId) return;
 
-                if (referral.bonusPaidToReferrer && referral.bonusPaidToReferred) return;
+                // Determine bonus amounts
+                let referrerBonus = 0;
+                if (membershipType === MEMBERSHIP_TYPES.PREMIUM) {
+                    referrerBonus = REFERRER_BONUS_PREMIUM; // $2
+                } else if (membershipType === MEMBERSHIP_TYPES.ELITE) {
+                    referrerBonus = REFERRER_BONUS_ELITE; // $4
+                } else {
+                    return; // Only premium/elite trigger referral bonuses
+                }
 
+                // Check if the referrer already received a bonus for this referred user (avoid double)
+                const referralSnap = await db.collection('referrals')
+                    .where('referrerId', '==', referrerId)
+                    .where('referredId', '==', userId)
+                    .limit(1)
+                    .get();
+                
+                if (referralSnap.empty) {
+                    // This should not happen if referral was recorded at signup, but just in case
+                    console.warn('Referral record not found for', userId, 'under referrer', referrerId);
+                    return;
+                }
+                
+                const referralDoc = referralSnap.docs[0];
+                const referralData = referralDoc.data();
+                
+                // Check if this membership type bonus has already been awarded
+                const bonusesGiven = referralData.bonusesGiven || [];
+                if (bonusesGiven.includes(membershipType)) {
+                    return; // Already awarded
+                }
+                
+                // Award the bonus
                 const batch = db.batch();
-                batch.update(referralDoc.ref, {
-                    status: 'upgraded',
-                    upgradedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    bonusPaidToReferrer: true,
-                    bonusPaidToReferred: true
-                });
-
+                
+                // Update referrer wallet
                 const referrerRef = db.collection('users').doc(referrerId);
                 batch.update(referrerRef, {
-                    wallet: firebase.firestore.FieldValue.increment(REFERRER_BONUS),
-                    referralEarnings: firebase.firestore.FieldValue.increment(REFERRER_BONUS)
+                    wallet: firebase.firestore.FieldValue.increment(referrerBonus),
+                    referralEarnings: firebase.firestore.FieldValue.increment(referrerBonus)
                 });
+                
+                // Add transaction for referrer
                 const txReferrer = db.collection('transactions').doc();
                 batch.set(txReferrer, {
                     userId: referrerId,
                     type: 'referral_bonus',
-                    description: `Referral bonus for user ${userId} upgrade`,
-                    amount: REFERRER_BONUS,
+                    description: `Referral bonus for ${membershipType} upgrade of user ${userId}`,
+                    amount: referrerBonus,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
+                
+                // Update referred user's wallet (they always get $0.5)
                 const referredRef = db.collection('users').doc(userId);
                 batch.update(referredRef, {
                     wallet: firebase.firestore.FieldValue.increment(REFERRED_BONUS),
                     referralEarnings: firebase.firestore.FieldValue.increment(REFERRED_BONUS)
                 });
+                
+                // Add transaction for referred user
                 const txReferred = db.collection('transactions').doc();
                 batch.set(txReferred, {
                     userId: userId,
@@ -3817,20 +3850,27 @@
                     amount: REFERRED_BONUS,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
+                
+                // Update referral document with the awarded bonus
+                batch.update(referralDoc.ref, {
+                    bonusesGiven: firebase.firestore.FieldValue.arrayUnion(membershipType),
+                    status: 'upgraded', // if not already
+                    upgradedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
                 await batch.commit();
-
-                const referrerUser = await db.collection('users').doc(referrerId).get();
-                if (referrerUser.exists) {
-                    await db.collection('notifications').add({
-                        userId: referrerId,
-                        title: 'Referral Bonus Earned!',
-                        message: `Your referred user upgraded to ${membershipType} and you earned $${REFERRER_BONUS}!`,
-                        type: 'referral',
-                        read: false,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
+                
+                // Notify referrer
+                await db.collection('notifications').add({
+                    userId: referrerId,
+                    title: 'Referral Bonus Earned!',
+                    message: `Your referred user upgraded to ${membershipType} and you earned $${referrerBonus}!`,
+                    type: 'referral',
+                    read: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Notify referred user
                 await db.collection('notifications').add({
                     userId: userId,
                     title: 'Welcome Bonus!',
@@ -3839,10 +3879,54 @@
                     read: false,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-            } catch (e) { console.error('Error processing referral bonus:', e); }
+                
+                // ---- LEVEL 2 REFERRAL BONUS ----
+                // If the referrer has a referrer (level 2), give them a bonus
+                const referrerDoc = await db.collection('users').doc(referrerId).get();
+                const level2ReferrerId = referrerDoc.exists ? referrerDoc.data().referredBy : null;
+                if (level2ReferrerId) {
+                    // Determine level 2 bonus: for premium upgrade: $0.5, for elite upgrade: $1
+                    let level2Bonus = 0;
+                    if (membershipType === MEMBERSHIP_TYPES.PREMIUM) {
+                        level2Bonus = 0.5;
+                    } else if (membershipType === MEMBERSHIP_TYPES.ELITE) {
+                        level2Bonus = 1;
+                    }
+                    
+                    if (level2Bonus > 0) {
+                        const level2Batch = db.batch();
+                        const level2Ref = db.collection('users').doc(level2ReferrerId);
+                        level2Batch.update(level2Ref, {
+                            wallet: firebase.firestore.FieldValue.increment(level2Bonus),
+                            referralEarnings: firebase.firestore.FieldValue.increment(level2Bonus)
+                        });
+                        const txLevel2 = db.collection('transactions').doc();
+                        level2Batch.set(txLevel2, {
+                            userId: level2ReferrerId,
+                            type: 'referral_bonus_level2',
+                            description: `Level 2 referral bonus for upgrade of user ${userId}`,
+                            amount: level2Bonus,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        await level2Batch.commit();
+                        
+                        await db.collection('notifications').add({
+                            userId: level2ReferrerId,
+                            title: 'Level 2 Referral Bonus!',
+                            message: `Your referred user's referral upgraded to ${membershipType} and you earned $${level2Bonus}!`,
+                            type: 'referral',
+                            read: false,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }
+                
+            } catch (e) {
+                console.error('Error processing referral bonus:', e);
+            }
         }
 
-        // ==================== LOAD REFERRALS DASHBOARD ====================
+        // ==================== LOAD REFERRALS DASHBOARD (WITH LEVEL 1 & 2) ====================
         async function loadReferrals() {
             currentTaskViewed = null;
             refreshMirror();
@@ -3854,34 +3938,74 @@
                     userRefCode = generateReferralCode(currentUser.uid);
                     await db.collection('users').doc(currentUser.uid).update({ referralCode: userRefCode });
                 }
-                const inviteLink = `${window.location.origin}${window.location.pathname}?ref=${userRefCode}`;
-                const referralsSnap = await db.collection('referrals').where('referrerId', '==', currentUser.uid).orderBy('createdAt', 'desc').get();
-                const referrals = [];
-                referralsSnap.forEach(doc => referrals.push({ id: doc.id, ...doc.data() }));
-                const totalReferrals = referrals.length;
-                const upgradedReferrals = referrals.filter(r => r.status === 'upgraded').length;
+                const inviteLink = `${window.location.origin}/signup?ref=${userRefCode}`;
+                
+                // Get Level 1 referrals
+                const level1Snap = await db.collection('referrals')
+                    .where('referrerId', '==', currentUser.uid)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                const level1 = [];
+                const level1Ids = [];
+                level1Snap.forEach(doc => {
+                    const data = doc.data();
+                    level1.push({ id: doc.id, ...data });
+                    level1Ids.push(data.referredId);
+                });
+                
+                // Get Level 2 referrals (referrals of level1)
+                let level2 = [];
+                if (level1Ids.length > 0) {
+                    const level2Snap = await db.collection('referrals')
+                        .where('referrerId', 'in', level1Ids.slice(0, 10)) // Firestore 'in' limited to 10, but we can fetch in batches if needed. For demo, we'll fetch up to 10. In practice you might need multiple queries.
+                        .orderBy('createdAt', 'desc')
+                        .get();
+                    level2Snap.forEach(doc => {
+                        level2.push({ id: doc.id, ...doc.data() });
+                    });
+                }
+                
+                // Compute stats
+                const totalReferrals = level1.length;
+                const upgradedReferrals = level1.filter(r => r.status === 'upgraded').length;
                 const pendingReferrals = totalReferrals - upgradedReferrals;
                 const totalEarnings = (userDoc.data().referralEarnings || 0);
-
-                let referralsHtml = '<div class="referral-card"><h3><i class="fas fa-users"></i> Invite & Earn</h3><p>Share your unique code or link with friends. When they sign up and upgrade their membership (Premium or Elite), you earn <strong>$1</strong> and they get <strong>$0.5</strong> instantly!</p>';
-                referralsHtml += `<div class="referral-code-box"><div><i class="fas fa-code"></i> Your Referral Code: <span class="referral-code">${userRefCode}</span></div><button class="copy-btn" onclick="copyToClipboard('${userRefCode}')"><i class="fas fa-copy"></i> Copy Code</button></div>`;
-                referralsHtml += `<div class="referral-code-box"><div><i class="fas fa-link"></i> Invite Link: <span class="invite-link">${inviteLink}</span></div><button class="copy-btn" onclick="copyToClipboard('${inviteLink}')"><i class="fas fa-copy"></i> Copy Link</button></div>`;
-                referralsHtml += `<div class="referral-stats-grid"><div class="referral-stat-card"><i class="fas fa-user-plus"></i><div class="referral-stat-value">${totalReferrals}</div><div class="referral-stat-label">Total Invites</div></div><div class="referral-stat-card"><i class="fas fa-check-circle"></i><div class="referral-stat-value">${upgradedReferrals}</div><div class="referral-stat-label">Upgraded</div></div><div class="referral-stat-card"><i class="fas fa-hourglass-half"></i><div class="referral-stat-value">${pendingReferrals}</div><div class="referral-stat-label">Pending</div></div><div class="referral-stat-card"><i class="fas fa-dollar-sign"></i><div class="referral-stat-value">${formatBoth(totalEarnings)}</div><div class="referral-stat-label">Earnings</div></div></div>`;
-
-                if (referrals.length === 0) {
-                    referralsHtml += '<div class="empty-state"><i class="fas fa-user-friends"></i><p>No referrals yet. Share your link and start earning!</p></div>';
+                
+                let html = '<div class="referral-card"><h3><i class="fas fa-users"></i> Invite & Earn</h3><p>Share your unique code or link with friends. When they sign up and upgrade their membership (Premium or Elite), you earn <strong>$2 (Premium)</strong> or <strong>$4 (Elite)</strong> and they get <strong>$0.5</strong> instantly! Additionally, if your direct referral invites someone, you earn a <strong>Level 2 bonus</strong> of $0.5 for Premium upgrades and $1 for Elite upgrades.</p>';
+                html += `<div class="referral-code-box"><div><i class="fas fa-code"></i> Your Referral Code: <span class="referral-code">${userRefCode}</span></div><button class="copy-btn" onclick="copyToClipboard('${userRefCode}')"><i class="fas fa-copy"></i> Copy Code</button></div>`;
+                html += `<div class="referral-code-box"><div><i class="fas fa-link"></i> Invite Link: <span class="invite-link">${inviteLink}</span></div><button class="copy-btn" onclick="copyToClipboard('${inviteLink}')"><i class="fas fa-copy"></i> Copy Link</button></div>`;
+                html += `<div class="referral-stats-grid"><div class="referral-stat-card"><i class="fas fa-user-plus"></i><div class="referral-stat-value">${totalReferrals}</div><div class="referral-stat-label">Level 1 Invites</div></div><div class="referral-stat-card"><i class="fas fa-check-circle"></i><div class="referral-stat-value">${upgradedReferrals}</div><div class="referral-stat-label">Upgraded</div></div><div class="referral-stat-card"><i class="fas fa-hourglass-half"></i><div class="referral-stat-value">${pendingReferrals}</div><div class="referral-stat-label">Pending</div></div><div class="referral-stat-card"><i class="fas fa-dollar-sign"></i><div class="referral-stat-value">${formatBoth(totalEarnings)}</div><div class="referral-stat-label">Earnings</div></div></div>`;
+                
+                // Level 1 list
+                if (level1.length === 0) {
+                    html += '<div class="empty-state"><i class="fas fa-user-friends"></i><p>No referrals yet. Share your link and start earning!</p></div>';
                 } else {
-                    referralsHtml += '<h4><i class="fas fa-list"></i> Your Referrals</h4><div class="referrals-list">';
-                    referrals.forEach(ref => {
+                    html += '<h4><i class="fas fa-users"></i> Level 1 Referrals (Direct)</h4><div class="referrals-list">';
+                    level1.forEach(ref => {
                         const statusClass = ref.status === 'upgraded' ? 'upgraded' : 'pending';
                         const statusText = ref.status === 'upgraded' ? '✅ Upgraded' : '⏳ Pending';
                         const date = ref.createdAt ? formatDate(ref.createdAt) : 'N/A';
-                        referralsHtml += `<div class="referral-item"><div><div class="referral-name">${escapeHtml(ref.referredName || ref.referredEmail || 'User')}</div><div class="referral-date"><i class="far fa-calendar-alt"></i> Joined: ${date}</div></div><div><span class="referral-status ${statusClass}">${statusText}</span></div></div>`;
+                        const membershipType = ref.upgradedMembershipType ? ` (${ref.upgradedMembershipType})` : '';
+                        html += `<div class="referral-item"><div><div class="referral-name">${escapeHtml(ref.referredName || ref.referredEmail || 'User')}</div><div class="referral-date"><i class="far fa-calendar-alt"></i> Joined: ${date}${membershipType}</div></div><div><span class="referral-status ${statusClass}">${statusText}</span></div></div>`;
                     });
-                    referralsHtml += '</div>';
+                    html += '</div>';
                 }
-                referralsHtml += `<div class="referral-card" style="margin-top:1rem; background:#2a2a35;"><i class="fas fa-info-circle"></i> <strong>How it works:</strong> When someone signs up using your code and later upgrades their membership (Premium or Elite), you get $1 and they get $0.5. Bonuses are added automatically to your wallet. You can track all your referrals here.</div>`;
-                document.getElementById('content').innerHTML = referralsHtml;
+                
+                // Level 2 list
+                if (level2.length > 0) {
+                    html += '<h4 style="margin-top:2rem;"><i class="fas fa-user-friends"></i> Level 2 Referrals (Invited by your referrals)</h4><div class="referrals-list">';
+                    level2.forEach(ref => {
+                        const statusClass = ref.status === 'upgraded' ? 'upgraded' : 'pending';
+                        const statusText = ref.status === 'upgraded' ? '✅ Upgraded' : '⏳ Pending';
+                        const date = ref.createdAt ? formatDate(ref.createdAt) : 'N/A';
+                        const membershipType = ref.upgradedMembershipType ? ` (${ref.upgradedMembershipType})` : '';
+                        html += `<div class="referral-item"><div><div class="referral-name">${escapeHtml(ref.referredName || ref.referredEmail || 'User')}</div><div class="referral-date"><i class="far fa-calendar-alt"></i> Joined: ${date}${membershipType}</div></div><div><span class="referral-status ${statusClass}">${statusText}</span></div></div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                html += `<div class="referral-card" style="margin-top:1rem; background:#2a2a35;"><i class="fas fa-info-circle"></i> <strong>How it works:</strong> When someone signs up using your code and later upgrades their membership (Premium or Elite), you get $2 (Premium) or $4 (Elite) and they get $0.5. If your direct referral invites someone who upgrades, you get a Level 2 bonus of $0.5 (Premium) or $1 (Elite). Bonuses are added automatically to your wallet. You can track all your referrals here.</div>`;
+                document.getElementById('content').innerHTML = html;
             } catch (e) {
                 console.error('Error loading referrals:', e);
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadReferrals()">Retry</button></div>`;
@@ -6090,7 +6214,7 @@
                     html += '<div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No transactions yet.</p></div>';
                 } else {
                     html += '<table class="transactions-table">';
-                    html += '<thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr></thead><tbody>';
+                    html += '<thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th> </thead><tbody>';
                     snap.forEach(doc => {
                         const tx = doc.data();
                         const date = tx.createdAt ? formatDate(tx.createdAt) : 'N/A';
@@ -6101,7 +6225,7 @@
                         const amountStr = (amount >= 0 ? '+' : '') + formatBoth(amount);
                         html += `<tr><td>${date}</td><td><span class="badge primary">${type.replace(/_/g, ' ')}</span></td><td>${escapeHtml(description)}</td><td class="tx-amount ${amountClass}">${amountStr}</td></tr>`;
                     });
-                    html += '</tbody></table>';
+                    html += '</tbody> </table>';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (e) {
@@ -7107,8 +7231,7 @@
                     <div class="transaction-history">
                         <table class="transactions-table">
                             <thead>
-                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Transaction Code</th><th>Status</th></tr>
-                            </thead>
+                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Transaction Code</th><th>Status</th> </thead>
                             <tbody>
                                 ${deposits.map(d => `
                                     <tr>
@@ -7120,7 +7243,7 @@
                                     </tr>
                                 `).join('')}
                             </tbody>
-                        </table>
+                         </table>
                     </div>
 
                     <h5 style="margin-top:2rem;">Withdrawal History</h5>
@@ -7128,8 +7251,7 @@
                     <div class="transaction-history">
                         <table class="transactions-table">
                             <thead>
-                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th></tr>
-                            </thead>
+                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th> </thead>
                             <tbody>
                                 ${withdrawals.map(w => {
                                     let details = '';
@@ -7145,11 +7267,11 @@
                                             <td>${w.method}</td>
                                             <td>${escapeHtml(details)}</td>
                                             <td><span class="badge ${w.status === 'paid' ? 'success' : w.status === 'pending' ? 'warning' : 'danger'}">${w.status || 'pending'}</span></td>
-                                        </tr>
+                                         </tr>
                                     `;
                                 }).join('')}
                             </tbody>
-                        </table>
+                         </table>
                     </div>
                 </div>
             `;
@@ -7548,8 +7670,7 @@
                             referredName: user.displayName || user.email,
                             status: 'pending',
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            bonusPaidToReferrer: false,
-                            bonusPaidToReferred: false
+                            bonusesGiven: [] // track which membership types have given bonus
                         });
                         await db.collection('users').doc(referredBy).update({
                             totalReferrals: firebase.firestore.FieldValue.increment(1)
@@ -7564,10 +7685,7 @@
                         await db.collection('users').doc(user.uid).update({ referralCode: newCode });
                         userData.referralCode = newCode;
                     }
-                    if (userData.referredBy && !userData.initialReferralBonusGiven) {
-                        await processReferralBonus(user.uid, 'basic');
-                        await db.collection('users').doc(user.uid).update({ initialReferralBonusGiven: true });
-                    }
+                    // Note: initialReferralBonusGiven is not needed because bonuses are per upgrade type
                 }
                 if (userData.active === false) { await auth.signOut(); window.location.href = 'index.html'; return; }
                 currentUser = user;
