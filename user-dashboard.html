@@ -623,6 +623,53 @@
             display: block;
         }
 
+        /* New category styles for mobile menu */
+        .mobile-nav-category {
+            margin-bottom: 0.5rem;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .mobile-nav-category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            background: #1e1e28;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 0.75rem;
+            color: var(--silver-light);
+        }
+
+        .mobile-nav-category-header i:first-child {
+            margin-right: 0.75rem;
+            color: var(--gold);
+        }
+
+        .mobile-nav-category-header .toggle-icon {
+            transition: transform 0.2s;
+        }
+
+        .mobile-nav-category-items {
+            display: none;
+            background: #16161e;
+            padding: 0.5rem 0;
+            border-radius: 0 0 0.75rem 0.75rem;
+        }
+
+        .mobile-nav-category-items .mobile-nav-item {
+            padding-left: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .mobile-nav-category-items .mobile-nav-item i {
+            width: 24px;
+            text-align: center;
+        }
+
         /* Stats grid */
         .stats-grid {
             display: grid;
@@ -3041,48 +3088,88 @@
         </div>
     </div>
 
-    <!-- Mobile Navigation -->
+    <!-- Mobile Navigation (new category structure) -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileMenu()"></div>
     <div class="mobile-nav" id="mobileNav">
         <div class="mobile-nav-header">
             <h3>🔷 NextGen</h3>
             <i class="fas fa-times close-menu" onclick="closeMobileMenu()"></i>
         </div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('tasks')"><i class="fas fa-tasks"></i><span>Available Tasks</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('transcription')"><i class="fas fa-microphone"></i><span>Transcription Tasks</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('design')"><i class="fas fa-pencil-ruler"></i><span>Design Tasks</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('projects')"><i class="fas fa-project-diagram"></i><span>Projects</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('data-annotations')"><i class="fas fa-images"></i><span>Data Annotations</span></div>
-        <!-- GeoPay menu item -->
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('geopay')"><i class="fas fa-map-marker-alt"></i><span>GeoPay</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('investor')"><i class="fas fa-chart-line"></i><span>Investor</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('invite')"><i class="fas fa-users"></i><span>Invite & Earn</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('howitworks')"><i class="fas fa-info-circle"></i><span>How It Works</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('newbie-trainer')"><i class="fas fa-child"></i><span>Newbie Trainer</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('submissions')"><i class="fas fa-file-alt"></i><span>My Submissions</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('withdrawals')"><i class="fas fa-money-bill-wave"></i><span>Withdrawals</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('submit')" style="position: relative;">
-            <i class="fas fa-paper-plane"></i><span>Submit Task</span>
-            <span id="mobileSubmitBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span>
+
+        <!-- Category 1: Task Management -->
+        <div class="mobile-nav-category">
+            <div class="mobile-nav-category-header">
+                <i class="fas fa-tasks"></i> Task Management
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="mobile-nav-category-items">
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('tasks')"><i class="fas fa-tasks"></i><span>Available Tasks</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('transcription')"><i class="fas fa-microphone"></i><span>Transcription Tasks</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('design')"><i class="fas fa-pencil-ruler"></i><span>Design Tasks</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('projects')"><i class="fas fa-project-diagram"></i><span>Projects</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('data-annotations')"><i class="fas fa-images"></i><span>Data Annotations</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('submit')"><i class="fas fa-paper-plane"></i><span>Submit Task</span><span id="mobileSubmitBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('submissions')"><i class="fas fa-file-alt"></i><span>My Submissions</span></div>
+            </div>
         </div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('messages')">
-            <i class="fas fa-envelope"></i><span>Messages</span>
-            <span id="mobileMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span>
+
+        <!-- Category 2: Earnings & Financial -->
+        <div class="mobile-nav-category">
+            <div class="mobile-nav-category-header">
+                <i class="fas fa-coins"></i> Earnings & Financial
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="mobile-nav-category-items">
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('geopay')"><i class="fas fa-map-marker-alt"></i><span>GeoPay</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('investor')"><i class="fas fa-chart-line"></i><span>Investor</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('invite')"><i class="fas fa-users"></i><span>Invite & Earn</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('withdrawals')"><i class="fas fa-money-bill-wave"></i><span>Withdrawals</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('transactions')"><i class="fas fa-exchange-alt"></i><span>Transactions</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('earnings')"><i class="fas fa-chart-line"></i><span>Earnings Graph</span></div>
+            </div>
         </div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('notifications')">
-            <i class="fas fa-bell"></i><span>Notifications</span>
-            <span id="mobileNotifBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span>
+
+        <!-- Category 3: Account & Communication -->
+        <div class="mobile-nav-category">
+            <div class="mobile-nav-category-header">
+                <i class="fas fa-user-circle"></i> Account & Communication
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="mobile-nav-category-items">
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('messages')"><i class="fas fa-envelope"></i><span>Messages</span><span id="mobileMessagesBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('notifications')"><i class="fas fa-bell"></i><span>Notifications</span><span id="mobileNotifBadge" style="display:none; background:#ef4444; color:white; border-radius:40px; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:auto;">0</span></div>
+            </div>
         </div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('leaderboard')"><i class="fas fa-trophy"></i><span>Leaderboard</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('faq')"><i class="fas fa-question-circle"></i><span>FAQ</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('feedback')"><i class="fas fa-star"></i><span>Client Feedback</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('earnings')"><i class="fas fa-chart-line"></i><span>Earnings Graph</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
-        <div class="mobile-nav-item" onclick="handleMobileNavClick('transactions')"><i class="fas fa-exchange-alt"></i><span>Transactions</span></div>
-        <div class="mobile-nav-item" onclick="window.open('https://chat.whatsapp.com/C7gqHLZOo3z7WNG8JHku6z?mode=gi_t', '_blank')" style="color: #25D366;">
-            <i class="fab fa-whatsapp"></i><span>Join WhatsApp Group</span>
+
+        <!-- Category 4: Community & Support -->
+        <div class="mobile-nav-category">
+            <div class="mobile-nav-category-header">
+                <i class="fas fa-users"></i> Community & Support
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="mobile-nav-category-items">
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('leaderboard')"><i class="fas fa-trophy"></i><span>Leaderboard</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('faq')"><i class="fas fa-question-circle"></i><span>FAQ</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('feedback')"><i class="fas fa-star"></i><span>Client Feedback</span></div>
+                <div class="mobile-nav-item" onclick="window.open('https://chat.whatsapp.com/C7gqHLZOo3z7WNG8JHku6z?mode=gi_t', '_blank')" style="color: #25D366;"><i class="fab fa-whatsapp"></i><span>Join WhatsApp Group</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('howitworks')"><i class="fas fa-info-circle"></i><span>How It Works</span></div>
+            </div>
         </div>
+
+        <!-- Category 5: Training & Onboarding -->
+        <div class="mobile-nav-category">
+            <div class="mobile-nav-category-header">
+                <i class="fas fa-graduation-cap"></i> Training & Onboarding
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="mobile-nav-category-items">
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('training')"><i class="fas fa-graduation-cap"></i><span>Training Center</span></div>
+                <div class="mobile-nav-item" onclick="handleMobileNavClick('newbie-trainer')"><i class="fas fa-child"></i><span>Newbie Trainer</span></div>
+            </div>
+        </div>
+
+        <!-- Logout at bottom -->
         <div style="margin-top: 2rem; padding-top: 1rem; border-top: 2px solid #2a2a35;">
             <div class="mobile-nav-item" onclick="logout()" style="color: #ef4444;"><i class="fas fa-sign-out-alt"></i><span>Logout</span></div>
         </div>
@@ -3139,7 +3226,7 @@
         <!-- Stats Grid -->
         <div class="stats-grid" id="statsGrid"></div>
 
-        <!-- Desktop Tabs (UPDATED: Added Invite & Earn tab) -->
+        <!-- Desktop Tabs (unchanged) -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('tasks')">📋 Available Tasks</button>
             <button class="tab" onclick="switchTab('transcription')">🎤 Transcription</button>
@@ -3148,7 +3235,7 @@
             <button class="tab" onclick="switchTab('data-annotations')">🖼️ Data Annotations</button>
             <button class="tab" onclick="switchTab('geopay')">📍 GeoPay</button>
             <button class="tab" onclick="switchTab('investor')">💰 Investor</button>
-            <button class="tab" onclick="switchTab('invite')">👥 Invite & Earn</button>  <!-- NEW -->
+            <button class="tab" onclick="switchTab('invite')">👥 Invite & Earn</button>
             <button class="tab" onclick="switchTab('howitworks')">📘 How It Works</button>
             <button class="tab" onclick="switchTab('training')">🎓 Training Center</button>
             <button class="tab" onclick="switchTab('newbie-trainer')">👶 Newbie Trainer</button>
@@ -3971,7 +4058,7 @@
                 const pendingReferrals = totalReferrals - upgradedReferrals;
                 const totalEarnings = (userDoc.data().referralEarnings || 0);
                 
-                let html = '<div class="referral-card"><h3><i class="fas fa-users"></i> Invite & Earn</h3><p>Share your unique code or link with friends. When they sign up and upgrade their membership (Premium or Elite), you earn <strong>$2 (Premium)</strong> or <strong>$4 (Elite)</strong> and they get <strong>$0.5</strong> instantly! Additionally, if your direct referral invites someone, you earn a <strong>Level 2 bonus</strong> of $0.5 for Premium upgrades and $1 for Elite upgrades.</p>';
+                let html = '<div class="referral-card"><h3><i class="fas fa-users"></i> Invite & Earn</h3><p>Share your unique code or link with friends. When they sign up and upgrade their membership (Premium or Elite), you earn <strong>$2 (Premium)</strong> or <strong>$4 (Elite)</strong> and they get <strong>$0.5</strong> instantly! Additionally, if your direct referral invites someone who upgrades, you earn a <strong>Level 2 bonus</strong> of $0.5 for Premium upgrades and $1 for Elite upgrades.</p>';
                 html += `<div class="referral-code-box"><div><i class="fas fa-code"></i> Your Referral Code: <span class="referral-code">${userRefCode}</span></div><button class="copy-btn" onclick="copyToClipboard('${userRefCode}')"><i class="fas fa-copy"></i> Copy Code</button></div>`;
                 html += `<div class="referral-code-box"><div><i class="fas fa-link"></i> Invite Link: <span class="invite-link">${inviteLink}</span></div><button class="copy-btn" onclick="copyToClipboard('${inviteLink}')"><i class="fas fa-copy"></i> Copy Link</button></div>`;
                 html += `<div class="referral-stats-grid"><div class="referral-stat-card"><i class="fas fa-user-plus"></i><div class="referral-stat-value">${totalReferrals}</div><div class="referral-stat-label">Level 1 Invites</div></div><div class="referral-stat-card"><i class="fas fa-check-circle"></i><div class="referral-stat-value">${upgradedReferrals}</div><div class="referral-stat-label">Upgraded</div></div><div class="referral-stat-card"><i class="fas fa-hourglass-half"></i><div class="referral-stat-value">${pendingReferrals}</div><div class="referral-stat-label">Pending</div></div><div class="referral-stat-card"><i class="fas fa-dollar-sign"></i><div class="referral-stat-value">${formatBoth(totalEarnings)}</div><div class="referral-stat-label">Earnings</div></div></div>`;
@@ -6214,7 +6301,7 @@
                     html += '<div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No transactions yet.</p></div>';
                 } else {
                     html += '<table class="transactions-table">';
-                    html += '<thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th> </thead><tbody>';
+                    html += '<thead> <tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th> </tr></thead><tbody>';
                     snap.forEach(doc => {
                         const tx = doc.data();
                         const date = tx.createdAt ? formatDate(tx.createdAt) : 'N/A';
@@ -6225,7 +6312,7 @@
                         const amountStr = (amount >= 0 ? '+' : '') + formatBoth(amount);
                         html += `<tr><td>${date}</td><td><span class="badge primary">${type.replace(/_/g, ' ')}</span></td><td>${escapeHtml(description)}</td><td class="tx-amount ${amountClass}">${amountStr}</td></tr>`;
                     });
-                    html += '</tbody> </table>';
+                    html += '</tbody></table>';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (e) {
@@ -7231,7 +7318,8 @@
                     <div class="transaction-history">
                         <table class="transactions-table">
                             <thead>
-                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Transaction Code</th><th>Status</th> </thead>
+                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Transaction Code</th><th>Status</th></tr>
+                            </thead>
                             <tbody>
                                 ${deposits.map(d => `
                                     <tr>
@@ -7243,7 +7331,7 @@
                                     </tr>
                                 `).join('')}
                             </tbody>
-                         </table>
+                        </table>
                     </div>
 
                     <h5 style="margin-top:2rem;">Withdrawal History</h5>
@@ -7251,7 +7339,8 @@
                     <div class="transaction-history">
                         <table class="transactions-table">
                             <thead>
-                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th> </thead>
+                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th></tr>
+                            </thead>
                             <tbody>
                                 ${withdrawals.map(w => {
                                     let details = '';
@@ -7267,11 +7356,11 @@
                                             <td>${w.method}</td>
                                             <td>${escapeHtml(details)}</td>
                                             <td><span class="badge ${w.status === 'paid' ? 'success' : w.status === 'pending' ? 'warning' : 'danger'}">${w.status || 'pending'}</span></td>
-                                         </tr>
+                                        </tr>
                                     `;
                                 }).join('')}
                             </tbody>
-                         </table>
+                        </table>
                     </div>
                 </div>
             `;
@@ -7816,6 +7905,47 @@
             document.getElementById('iframeModal').classList.remove('active');
             document.getElementById('iframeModalBackdrop').classList.remove('active');
             document.getElementById('iframeModalContent').innerHTML = '';
+        }
+
+        // ==================== MOBILE CATEGORY ACCORDION ====================
+        function initMobileCategories() {
+            const categories = document.querySelectorAll('.mobile-nav-category');
+            categories.forEach(cat => {
+                const header = cat.querySelector('.mobile-nav-category-header');
+                const items = cat.querySelector('.mobile-nav-category-items');
+                const icon = header.querySelector('.toggle-icon');
+                
+                header.addEventListener('click', (e) => {
+                    // Close all other categories
+                    categories.forEach(other => {
+                        if (other !== cat) {
+                            const otherItems = other.querySelector('.mobile-nav-category-items');
+                            const otherIcon = other.querySelector('.toggle-icon');
+                            if (otherItems) otherItems.style.display = 'none';
+                            if (otherIcon) otherIcon.classList.remove('fa-chevron-up');
+                            if (otherIcon) otherIcon.classList.add('fa-chevron-down');
+                        }
+                    });
+                    // Toggle current category
+                    const isOpen = items.style.display === 'block';
+                    items.style.display = isOpen ? 'none' : 'block';
+                    if (icon) {
+                        if (isOpen) {
+                            icon.classList.remove('fa-chevron-up');
+                            icon.classList.add('fa-chevron-down');
+                        } else {
+                            icon.classList.remove('fa-chevron-down');
+                            icon.classList.add('fa-chevron-up');
+                        }
+                    }
+                });
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMobileCategories);
+        } else {
+            initMobileCategories();
         }
     </script>
 </body>
