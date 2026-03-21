@@ -576,6 +576,8 @@
         <div class="mobile-menu-item" onclick="switchTab('settings'); toggleMobileMenu()">⚙️ Settings</div>
         <!-- NEW: Announcements menu item -->
         <div class="mobile-menu-item" onclick="switchTab('announcements'); toggleMobileMenu()">📢 Announcements</div>
+        <!-- NEW: Investor menu item -->
+        <div class="mobile-menu-item" onclick="switchTab('investor'); toggleMobileMenu()">💰 Investor</div>
     </div>
 
     <div class="app-container">  
@@ -629,6 +631,8 @@
             <button class="tab" data-tab="settings">⚙️ Settings</button>  
             <!-- NEW: Announcements tab -->
             <button class="tab" data-tab="announcements">📢 Announcements</button>
+            <!-- NEW: Investor tab -->
+            <button class="tab" data-tab="investor">💰 Investor</button>
         </div>  
       
         <div class="content" id="content"></div>  
@@ -8172,7 +8176,7 @@
                     return;
                 }
 
-                // Announcements (NEW)
+                // Announcements
                 if (target.classList.contains('edit-announcement-btn')) {
                     const id = target.getAttribute('data-id');
                     const message = target.getAttribute('data-message');
@@ -8205,6 +8209,44 @@
                 if (target.id === 'updateAnnouncementBtn') {
                     const id = target.getAttribute('data-id');
                     updateAnnouncement(id);
+                    return;
+                }
+
+                // Investor buttons
+                if (target.classList.contains('edit-announcement-btn')) {
+                    // handled above
+                }
+                if (target.id === 'saveInvestorSettingsBtn') {
+                    e.preventDefault();
+                    await saveInvestorSettings();
+                    return;
+                }
+                if (target.classList.contains('approve-investment-deposit')) {
+                    const id = target.getAttribute('data-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    await approveInvestmentDeposit(id, userId, amount);
+                    return;
+                }
+                if (target.classList.contains('reject-investment-deposit')) {
+                    const id = target.getAttribute('data-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    await rejectInvestmentDeposit(id, userId, amount);
+                    return;
+                }
+                if (target.classList.contains('approve-investment-withdrawal')) {
+                    const id = target.getAttribute('data-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    await approveInvestmentWithdrawal(id, userId, amount);
+                    return;
+                }
+                if (target.classList.contains('reject-investment-withdrawal')) {
+                    const id = target.getAttribute('data-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    await rejectInvestmentWithdrawal(id, userId, amount);
                     return;
                 }
 
@@ -8371,7 +8413,7 @@
             });
         }
 
-        // ==================== ANNOUNCEMENTS FUNCTIONS (NEW) ====================
+        // ==================== ANNOUNCEMENTS FUNCTIONS ====================
         async function loadAnnouncements() {
             try {
                 const snapshot = await db.collection('announcements').orderBy('order', 'asc').get();
@@ -8506,6 +8548,322 @@
             } catch (e) { showAlert('Error moving: ' + e.message, 'error'); }
         };
 
+        // ==================== INVESTOR MANAGEMENT ====================
+        let currentInvestorSubTab = 'settings'; // 'settings' or 'transactions'
+
+        async function loadInvestorManager() {
+            currentTab = 'investor';
+            currentTaskViewed = null;
+            let html = `
+                <h3 style="margin-bottom:1.5rem;">💰 Investor Management</h3>
+                <div class="training-subtabs">
+                    <button class="training-subtab ${currentInvestorSubTab === 'settings' ? 'active' : ''}" onclick="setInvestorSubTab('settings')">Settings</button>
+                    <button class="training-subtab ${currentInvestorSubTab === 'transactions' ? 'active' : ''}" onclick="setInvestorSubTab('transactions')">Transactions</button>
+                </div>
+                <div id="investorContent"></div>
+            `;
+            document.getElementById('content').innerHTML = html;
+            
+            if (currentInvestorSubTab === 'settings') {
+                loadInvestorSettings();
+            } else {
+                loadInvestmentTransactions();
+            }
+        }
+
+        window.setInvestorSubTab = function(tab) {
+            currentInvestorSubTab = tab;
+            loadInvestorManager();
+        };
+
+        async function loadInvestorSettings() {
+            const container = document.getElementById('investorContent');
+            if (!container) return;
+            container.innerHTML = '<p class="loading">Loading settings...</p>';
+
+            try {
+                const doc = await db.collection('settings').doc('investment').get();
+                const settings = doc.exists ? doc.data() : {
+                    minInvestment: 5,
+                    maxInvestment: 1000,
+                    minWithdrawal: 0.4,
+                    paymentLink: 'https://lipana.dev/pay/nextgen-invest',
+                    durationRates: { '1-5': 20, '5-10': 25, '11-16': 30, '17-24': 35 },
+                    riskDisclaimer: 'Investments involve risk. You may lose some or all of your money.'
+                };
+
+                let html = `
+                    <div class="settings-card">
+                        <h4>⚙️ General Settings</h4>
+                        <div class="settings-row">
+                            <span class="settings-label">Minimum Investment ($)</span>
+                            <input type="number" id="invMinInvestment" class="settings-input" value="${settings.minInvestment}" step="0.01" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Maximum Investment ($)</span>
+                            <input type="number" id="invMaxInvestment" class="settings-input" value="${settings.maxInvestment}" step="0.01" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Minimum Withdrawal ($)</span>
+                            <input type="number" id="invMinWithdrawal" class="settings-input" value="${settings.minWithdrawal}" step="0.01" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Payment Link (for adding funds)</span>
+                            <input type="url" id="invPaymentLink" class="settings-input" value="${settings.paymentLink}" style="width:300px;">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Risk Disclaimer</span>
+                            <textarea id="invRiskDisclaimer" rows="3" style="width:100%;">${settings.riskDisclaimer}</textarea>
+                        </div>
+                    </div>
+                    <div class="settings-card">
+                        <h4>⏱️ Return Rates by Duration</h4>
+                        <p style="margin-bottom:0.5rem; color:#64748b;">Format: duration range -> percentage</p>
+                        <div class="settings-row">
+                            <span class="settings-label">1‑5 hours (%)</span>
+                            <input type="number" id="invRate1" class="settings-input" value="${settings.durationRates['1-5'] || 20}" step="0.1" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">5‑10 hours (%)</span>
+                            <input type="number" id="invRate2" class="settings-input" value="${settings.durationRates['5-10'] || 25}" step="0.1" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">11‑16 hours (%)</span>
+                            <input type="number" id="invRate3" class="settings-input" value="${settings.durationRates['11-16'] || 30}" step="0.1" min="0">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">17‑24 hours (%)</span>
+                            <input type="number" id="invRate4" class="settings-input" value="${settings.durationRates['17-24'] || 35}" step="0.1" min="0">
+                        </div>
+                    </div>
+                    <div style="margin-top:2rem;">
+                        <button class="btn btn-success" onclick="saveInvestorSettings()">Save All Changes</button>
+                    </div>
+                `;
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading investor settings:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        window.saveInvestorSettings = async function() {
+            const settings = {
+                minInvestment: parseFloat(document.getElementById('invMinInvestment').value) || 5,
+                maxInvestment: parseFloat(document.getElementById('invMaxInvestment').value) || 1000,
+                minWithdrawal: parseFloat(document.getElementById('invMinWithdrawal').value) || 0.4,
+                paymentLink: document.getElementById('invPaymentLink').value.trim() || 'https://lipana.dev/pay/nextgen-invest',
+                durationRates: {
+                    '1-5': parseFloat(document.getElementById('invRate1').value) || 20,
+                    '5-10': parseFloat(document.getElementById('invRate2').value) || 25,
+                    '11-16': parseFloat(document.getElementById('invRate3').value) || 30,
+                    '17-24': parseFloat(document.getElementById('invRate4').value) || 35
+                },
+                riskDisclaimer: document.getElementById('invRiskDisclaimer').value.trim() || 'Investments involve risk.'
+            };
+
+            try {
+                await db.collection('settings').doc('investment').set(settings);
+                showAlert('Investor settings saved successfully!', 'success');
+                loadInvestorManager(); // refresh
+            } catch (error) {
+                console.error('Error saving investor settings:', error);
+                showAlert('Error saving settings: ' + error.message, 'error');
+            }
+        };
+
+        async function loadInvestmentTransactions() {
+            const container = document.getElementById('investorContent');
+            if (!container) return;
+            container.innerHTML = '<p class="loading">Loading transactions...</p>';
+
+            try {
+                const [depositsSnap, withdrawalsSnap] = await Promise.all([
+                    db.collection('investmentDeposits').orderBy('createdAt', 'desc').get(),
+                    db.collection('investmentWithdrawals').orderBy('requestedAt', 'desc').get()
+                ]);
+
+                let html = '<h4 style="margin-top:0;">Pending Deposits</h4>';
+                if (depositsSnap.empty) {
+                    html += '<p>No deposit requests.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>User</th><th>Amount</th><th>Method</th><th>Code</th><th>Date</th><th>Status</th><th>Actions</th></tr>';
+                    depositsSnap.forEach(doc => {
+                        const d = doc.data();
+                        const statusClass = d.status === 'pending' ? 'warning' : (d.status === 'approved' ? 'success' : 'danger');
+                        html += `
+                            <tr>
+                                <td>${d.userId ? d.userId.substring(0,8) : 'N/A'}</td>
+                                <td>$${d.amount.toFixed(2)}</td>
+                                <td>${d.paymentMethod || 'N/A'}</td>
+                                <td>${d.transactionCode || 'N/A'}</td>
+                                <td>${d.createdAt ? formatDate(d.createdAt) : 'N/A'}</td>
+                                <td><span class="badge ${statusClass}">${d.status}</span></td>
+                                <td>
+                                    ${d.status === 'pending' ? `
+                                        <button class="btn btn-sm btn-success" onclick="approveInvestmentDeposit('${doc.id}', '${d.userId}', ${d.amount})">Approve</button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectInvestmentDeposit('${doc.id}', '${d.userId}', ${d.amount})">Reject</button>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    html += '</table>';
+                }
+
+                html += '<h4 style="margin-top:2rem;">Pending Withdrawals</h4>';
+                if (withdrawalsSnap.empty) {
+                    html += '<p>No withdrawal requests.</p>';
+                } else {
+                    html += '<table class="data-table"><tr><th>User</th><th>Amount</th><th>Method</th><th>Details</th><th>Date</th><th>Status</th><th>Actions</th></tr>';
+                    withdrawalsSnap.forEach(doc => {
+                        const w = doc.data();
+                        const statusClass = w.status === 'pending' ? 'warning' : (w.status === 'paid' ? 'success' : 'danger');
+                        let details = '';
+                        if (w.method === 'Bank Transfer') {
+                            details = `${w.bankName || ''} - ${w.accountName || ''} (${w.accountNumber || ''})`;
+                        } else {
+                            details = `${w.accountName || ''} - ${w.phone || ''}`;
+                        }
+                        html += `
+                            <tr>
+                                <td>${w.userId ? w.userId.substring(0,8) : 'N/A'}</td>
+                                <td>$${w.amount.toFixed(2)}</td>
+                                <td>${w.method}</td>
+                                <td>${details}</td>
+                                <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
+                                <td><span class="badge ${statusClass}">${w.status}</span></td>
+                                <td>
+                                    ${w.status === 'pending' ? `
+                                        <button class="btn btn-sm btn-success" onclick="approveInvestmentWithdrawal('${doc.id}', '${w.userId}', ${w.amount})">Approve</button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectInvestmentWithdrawal('${doc.id}', '${w.userId}', ${w.amount})">Reject</button>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    html += '</table>';
+                }
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading investment transactions:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        // ========== Deposit actions ==========
+        window.approveInvestmentDeposit = async function(docId, userId, amount) {
+            if (!confirm(`Approve deposit of $${amount.toFixed(2)} for user ${userId}?`)) return;
+            try {
+                // Update deposit status
+                await db.collection('investmentDeposits').doc(docId).update({
+                    status: 'approved',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Find the investor account for this user
+                const accountSnap = await db.collection('investorAccounts').where('userId', '==', userId).get();
+                if (accountSnap.empty) {
+                    // Create account if it doesn't exist
+                    await db.collection('investorAccounts').add({
+                        userId: userId,
+                        balance: amount,
+                        totalInvested: 0,
+                        totalEarnings: 0,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    const accountRef = accountSnap.docs[0].ref;
+                    await accountRef.update({
+                        balance: firebase.firestore.FieldValue.increment(amount)
+                    });
+                }
+
+                // Optionally, record a transaction in the user's transactions
+                await db.collection('transactions').add({
+                    userId: userId,
+                    amount: amount,
+                    type: 'investment_deposit',
+                    description: 'Deposit approved by admin',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showAlert('Deposit approved and user balance updated.', 'success');
+                loadInvestmentTransactions();
+            } catch (error) {
+                console.error('Error approving deposit:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.rejectInvestmentDeposit = async function(docId, userId, amount) {
+            if (!confirm(`Reject deposit of $${amount.toFixed(2)}? This action cannot be undone.`)) return;
+            try {
+                await db.collection('investmentDeposits').doc(docId).update({
+                    status: 'rejected',
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showAlert('Deposit rejected.', 'info');
+                loadInvestmentTransactions();
+            } catch (error) {
+                console.error('Error rejecting deposit:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // ========== Withdrawal actions ==========
+        window.approveInvestmentWithdrawal = async function(docId, userId, amount) {
+            if (!confirm(`Approve withdrawal of $${amount.toFixed(2)} for user ${userId}?`)) return;
+            try {
+                await db.collection('investmentWithdrawals').doc(docId).update({
+                    status: 'paid',
+                    paidAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                // No need to adjust balance again because it was already deducted when requested.
+                showAlert('Withdrawal approved.', 'success');
+                loadInvestmentTransactions();
+            } catch (error) {
+                console.error('Error approving withdrawal:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.rejectInvestmentWithdrawal = async function(docId, userId, amount) {
+            if (!confirm(`Reject withdrawal of $${amount.toFixed(2)}? The amount will be refunded to the user's investor account.`)) return;
+            try {
+                // Update withdrawal status
+                await db.collection('investmentWithdrawals').doc(docId).update({
+                    status: 'rejected',
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Refund the amount to the user's investor account
+                const accountSnap = await db.collection('investorAccounts').where('userId', '==', userId).get();
+                if (!accountSnap.empty) {
+                    const accountRef = accountSnap.docs[0].ref;
+                    await accountRef.update({
+                        balance: firebase.firestore.FieldValue.increment(amount)
+                    });
+                }
+
+                // Record transaction
+                await db.collection('transactions').add({
+                    userId: userId,
+                    amount: amount,
+                    type: 'investment_withdrawal_reversal',
+                    description: 'Withdrawal rejected, amount refunded',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showAlert('Withdrawal rejected and amount refunded.', 'success');
+                loadInvestmentTransactions();
+            } catch (error) {
+                console.error('Error rejecting withdrawal:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
         // ==================== LOAD DASHBOARD ====================
         async function loadDashboard() {
             try {
@@ -8577,8 +8935,11 @@
                     case 'settings':
                         await loadSettings();
                         break;
-                    case 'announcements': // NEW
+                    case 'announcements':
                         await loadAnnouncements();
+                        break;
+                    case 'investor':   // NEW
+                        await loadInvestorManager();
                         break;
                     default:
                         await loadUsers();
@@ -8943,7 +9304,7 @@
         window.showInactiveUsers = showInactiveUsers;
         window.bulkActionInactive = bulkActionInactive;
 
-        // NEW: Announcements functions
+        // Announcements functions
         window.loadAnnouncements = loadAnnouncements;
         window.showAddAnnouncement = showAddAnnouncement;
         window.saveAnnouncement = saveAnnouncement;
@@ -8951,6 +9312,15 @@
         window.toggleAnnouncementStatus = toggleAnnouncementStatus;
         window.deleteAnnouncement = deleteAnnouncement;
         window.moveAnnouncement = moveAnnouncement;
+
+        // Investor functions
+        window.loadInvestorManager = loadInvestorManager;
+        window.setInvestorSubTab = setInvestorSubTab;
+        window.saveInvestorSettings = saveInvestorSettings;
+        window.approveInvestmentDeposit = approveInvestmentDeposit;
+        window.rejectInvestmentDeposit = rejectInvestmentDeposit;
+        window.approveInvestmentWithdrawal = approveInvestmentWithdrawal;
+        window.rejectInvestmentWithdrawal = rejectInvestmentWithdrawal;
     </script>  
 </body>  
 </html>
