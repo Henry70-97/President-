@@ -1651,6 +1651,109 @@
             background: var(--silver-light);
         }
 
+        /* Open Book Modal Styles */
+        .book-modal {
+            max-width: 900px;
+            width: 90%;
+            background: #fff9ef;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            font-family: 'Inter', 'Georgia', serif;
+        }
+
+        .book {
+            display: flex;
+            flex-direction: row;
+            background: #fdf8e7;
+            position: relative;
+        }
+
+        .book-spine {
+            width: 30px;
+            background: linear-gradient(to right, #e0c8a0, #c8aa70, #e0c8a0);
+            box-shadow: inset -2px 0 5px rgba(0,0,0,0.1), inset 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+
+        .book-page {
+            flex: 1;
+            padding: 2rem 1.8rem;
+            background: #fff9ef;
+            color: #2c2418;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+
+        .book-page h3 {
+            font-family: 'Georgia', serif;
+            font-weight: 600;
+            border-bottom: 1px solid #d4bc8a;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            color: #b87c2e;
+        }
+
+        .book-page p {
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .book-meta {
+            background: #f7f0e0;
+            border-radius: 1rem;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #b87c2e;
+        }
+
+        .book-buttons {
+            background: #fdf8e7;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            border-top: 2px solid #d4bc8a;
+        }
+
+        .book-buttons button {
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .book-buttons .btn-accept {
+            background: #b87c2e;
+            color: white;
+        }
+        .book-buttons .btn-accept:hover {
+            background: #9b5e1a;
+        }
+        .book-buttons .btn-secondary {
+            background: #e8e0cf;
+            color: #2c2418;
+        }
+        .book-buttons .btn-secondary:hover {
+            background: #ddd0b8;
+        }
+
+        @media (max-width: 768px) {
+            .book {
+                flex-direction: column;
+            }
+            .book-spine {
+                width: 100%;
+                height: 20px;
+                background: linear-gradient(to bottom, #e0c8a0, #c8aa70);
+            }
+            .book-page {
+                max-height: 50vh;
+            }
+        }
+
         /* Modal & backdrop */
         .modal-backdrop {
             display: none;
@@ -4482,7 +4585,7 @@
             applyFilters();
         }
 
-        // ==================== TASK DETAILS ====================
+        // ==================== TASK DETAILS (UPDATED WITH OPEN BOOK STYLE) ====================
         async function viewTaskDetails(taskId) {
             try {
                 const doc = await db.collection('tasks').doc(taskId).get();
@@ -4491,102 +4594,95 @@
                 currentTaskViewed = task;
                 refreshMirror();
 
-                let audioHtml = '';
+                // Left page content
+                let leftPage = `
+                    <div class="book-page">
+                        <h3><i class="fas fa-book-open"></i> Task Brief</h3>
+                        <div class="book-meta">
+                            <p><strong>Client:</strong> ${escapeHtml(task.clientName || 'Admin')}</p>
+                            <p><strong>Reward:</strong> ${formatBoth(parseFloat(task.reward) || 0)}</p>
+                            ${task.deadline ? `<p><strong>Deadline:</strong> ${formatDeadline(task.deadline)}</p>` : ''}
+                            <p><strong>Category:</strong> ${escapeHtml(task.category||'other')}</p>
+                        </div>
+                        <div class="book-meta">
+                            <strong>Description</strong>
+                            <p>${escapeHtml(task.description || 'No description')}</p>
+                        </div>
+                `;
+
+                // Add audio/video embed on left page if applicable
                 if (task.category === 'transcription' && task.audioUrl) {
-                    audioHtml = `
-                        <div style="margin-bottom:1rem; background:#f0f9ff; padding:1rem; border-radius:0.5rem; border-left:4px solid #0284c7;">
-                            <h4 style="font-size:0.9rem; margin-bottom:0.5rem;"><i class="fas fa-headphones"></i> Audio to Transcribe</h4>
-                            <audio controls style="width:100%;">
+                    leftPage += `
+                        <div class="book-meta">
+                            <strong><i class="fas fa-headphones"></i> Audio to Transcribe</strong>
+                            <audio controls style="width:100%; margin-top:0.5rem;">
                                 <source src="${task.audioUrl}" type="audio/mpeg">
-                                Your browser does not support the audio element.
                             </audio>
-                            ${task.audioDuration ? `<p style="font-size:0.7rem; margin-top:0.2rem;">Duration: ${task.audioDuration}</p>` : ''}
-                            <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${task.audioUrl}')" style="margin-top:0.3rem;"><i class="fas fa-copy"></i> Copy Audio Link</button>
+                            ${task.audioDuration ? `<p>Duration: ${task.audioDuration}</p>` : ''}
                         </div>
                     `;
                 }
-
-                let videoHtml = '';
                 if (task.category === 'ai_annotation' && task.annotationSubcategory === 'action_recognition' && task.videoUrl) {
                     const youtubeEmbedUrl = getYouTubeEmbedUrl(task.videoUrl);
                     if (youtubeEmbedUrl) {
-                        videoHtml = `
-                            <div style="margin-bottom:1rem; background:#f0f9ff; padding:1rem; border-radius:0.5rem; border-left:4px solid #ff0000;">
-                                <h4 style="font-size:0.9rem; margin-bottom:0.5rem;"><i class="fab fa-youtube" style="color:#ff0000;"></i> YouTube Video to Annotate</h4>
-                                <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:0.5rem; border:1px solid #e2e8f0;">
-                                    <iframe 
-                                        src="${youtubeEmbedUrl}" 
-                                        style="position:absolute; top:0; left:0; width:100%; height:100%;" 
-                                        frameborder="0" 
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                        allowfullscreen>
-                                    </iframe>
+                        leftPage += `
+                            <div class="book-meta">
+                                <strong><i class="fab fa-youtube"></i> Video to Annotate</strong>
+                                <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; margin-top:0.5rem;">
+                                    <iframe src="${youtubeEmbedUrl}" style="position:absolute; top:0; left:0; width:100%; height:100%;" frameborder="0" allowfullscreen></iframe>
                                 </div>
-                                <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${task.videoUrl}')" style="margin-top:0.3rem;"><i class="fas fa-copy"></i> Copy Video Link</button>
                             </div>
                         `;
                     } else {
-                        videoHtml = `
-                            <div style="margin-bottom:1rem; background:#f0f9ff; padding:1rem; border-radius:0.5rem; border-left:4px solid #0284c7;">
-                                <h4 style="font-size:0.9rem; margin-bottom:0.5rem;"><i class="fas fa-video"></i> Video to Annotate</h4>
-                                <video controls style="width:100%; max-height:300px; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                        leftPage += `
+                            <div class="book-meta">
+                                <strong><i class="fas fa-video"></i> Video to Annotate</strong>
+                                <video controls style="width:100%; margin-top:0.5rem;">
                                     <source src="${task.videoUrl}" type="video/mp4">
-                                    Your browser does not support the video element.
                                 </video>
-                                <button class="btn btn-sm btn-secondary" onclick="copyToClipboard('${task.videoUrl}')" style="margin-top:0.3rem;"><i class="fas fa-copy"></i> Copy Video Link</button>
                             </div>
                         `;
                     }
                 }
 
-                showModal(`
-                    <div class="pdf-document">
-                        <div class="pdf-header">
-                            <div class="company">
-                                <img src="logo.jpg" alt="NextGen Logo">
-                                <h2>NextGen Hub</h2>
-                            </div>
-                            <span class="pdf-badge">Task #${taskId.substring(0,8)}</span>
+                leftPage += `</div>`; // close left page
+
+                // Right page: instructions
+                let rightPage = `
+                    <div class="book-page">
+                        <h3><i class="fas fa-feather-alt"></i> Instructions</h3>
+                        <div class="book-meta">
+                            <p>${escapeHtml(task.instructions || 'No specific instructions.')}</p>
                         </div>
-                        <div class="pdf-content">
-                            <div class="pdf-title">${escapeHtml(task.title)}</div>
-                            <div class="pdf-grid">
-                                <div class="pdf-grid-item">
-                                    <span class="pdf-grid-label">Client</span>
-                                    <span class="pdf-grid-value"><i class="fas fa-user-circle"></i> ${escapeHtml(task.clientName || 'Admin')}</span>
-                                </div>
-                                <div class="pdf-grid-item">
-                                    <span class="pdf-grid-label">Reward</span>
-                                    <span class="pdf-grid-value"><i class="fas fa-dollar-sign"></i> ${formatBoth(parseFloat(task.reward)||0)}</span>
-                                </div>
-                                ${task.deadline ? `
-                                <div class="pdf-grid-item">
-                                    <span class="pdf-grid-label">Deadline</span>
-                                    <span class="pdf-grid-value"><i class="fas fa-calendar-alt"></i> ${formatDeadline(task.deadline)}</span>
-                                </div>` : ''}
-                                <div class="pdf-grid-item">
-                                    <span class="pdf-grid-label">Category</span>
-                                    <span class="pdf-grid-value"><i class="fas fa-tag"></i> ${escapeHtml(task.category||'other')}</span>
-                                </div>
-                            </div>
-                            ${audioHtml}
-                            ${videoHtml}
-                            <div class="pdf-section">
-                                <div class="pdf-section-title"><i class="fas fa-align-left"></i> Description</div>
-                                <div class="pdf-section-content">${escapeHtml(task.description || 'No description')}</div>
-                            </div>
-                            <div class="pdf-section">
-                                <div class="pdf-section-title"><i class="fas fa-clipboard-list"></i> Instructions</div>
-                                <div class="pdf-section-content">${escapeHtml(task.instructions || 'No instructions')}</div>
-                            </div>
-                            <div class="pdf-actions">
-                                <button class="pdf-btn pdf-btn-primary" onclick="acceptTask('${taskId}')"><i class="fas fa-check-circle"></i> Accept Task</button>
-                                <button class="pdf-btn pdf-btn-download" onclick="downloadTaskDetails(${JSON.stringify(task).replace(/"/g, '&quot;')})"><i class="fas fa-download"></i> Download Details</button>
-                                <button class="pdf-btn pdf-btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button>
-                            </div>
+                        <div class="book-meta">
+                            <strong>Need help?</strong>
+                            <p>Click the AI Assistant button at the bottom right of the screen for instant support.</p>
                         </div>
                     </div>
-                `);
+                `;
+
+                const modalHtml = `
+                    <div class="book-modal">
+                        <div class="book">
+                            ${leftPage}
+                            <div class="book-spine"></div>
+                            ${rightPage}
+                        </div>
+                        <div class="book-buttons">
+                            <button class="btn-accept" onclick="acceptTask('${taskId}')">
+                                <i class="fas fa-check-circle"></i> Accept Task
+                            </button>
+                            <button class="btn-secondary" onclick="downloadTaskDetails(${JSON.stringify(task).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="btn-secondary" onclick="closeModal()">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                showModal(modalHtml);
             } catch (e) {
                 showAlert('Error loading task details','error');
             }
@@ -6301,7 +6397,7 @@
                     html += '<div class="empty-state"><i class="fas fa-exchange-alt"></i><p>No transactions yet.</p></div>';
                 } else {
                     html += '<table class="transactions-table">';
-                    html += '<thead> <tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th> </tr></thead><tbody>';
+                    html += '<thead>  <th>Date</th><th>Type</th><th>Description</th><th>Amount</th> </thead><tbody>';
                     snap.forEach(doc => {
                         const tx = doc.data();
                         const date = tx.createdAt ? formatDate(tx.createdAt) : 'N/A';
