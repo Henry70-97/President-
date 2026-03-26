@@ -13,7 +13,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* All existing styles remain exactly as they were */
+        /* All existing styles remain unchanged */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding-bottom: 80px; }
         .app-container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
@@ -1029,10 +1029,14 @@
                     <p style="margin-bottom:1rem;">Tickers are scrolling messages that appear to users. Active tickers are shown in order. Auto-generated tickers have type "auto".</p>
                     <div style="margin-bottom:1rem;">
                         <button class="btn btn-success" onclick="showAddTicker()">+ Add Manual Ticker</button>
+                        <button class="btn btn-warning" onclick="showPasteTickers()">📋 Paste Multiple Tickers</button>
                         <button class="btn btn-warning" onclick="clearAutoTickers()">🗑️ Clear All Auto Tickers</button>
                     </div>
                     <table class="data-table">
-                        <tr><th>Order</th><th>Message</th><th>Type</th><th>Status</th><th>Actions</th></tr>
+                         <thead>
+                              <th>Order</th><th>Message</th><th>Type</th><th>Status</th><th>Actions</th>
+                         </thead>
+                         <tbody>
                 `;
                 if (snapshot.empty) {
                     html += '<tr><td colspan="5" style="text-align:center;">No tickers. Add one or wait for auto events.</td></tr>';
@@ -1043,29 +1047,112 @@
                         const statusText = t.active ? 'Active' : 'Inactive';
                         const typeBadge = t.type === 'auto' ? '<span class="badge info">auto</span>' : '<span class="badge primary">manual</span>';
                         html += `
-                            <tr>
-                                <td>${t.order || 0}</td>
-                                <td>${t.message}</td>
-                                <td>${typeBadge}</td>
-                                <td><span class="badge ${statusClass}">${statusText}</span></td>
-                                <td>
+                             <tr>
+                                 <td>${t.order || 0}</td>
+                                 <td>${t.message}</td>
+                                 <td>${typeBadge}</td>
+                                 <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                 <td>
                                     <button class="btn btn-sm btn-primary" onclick="editTicker('${doc.id}', '${t.message}', ${t.order}, ${t.active})">Edit</button>
                                     <button class="btn btn-sm btn-warning" onclick="toggleTickerStatus('${doc.id}', ${!t.active})">${t.active ? 'Deactivate' : 'Activate'}</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteTicker('${doc.id}')">Delete</button>
                                     <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'up')"><i class="fas fa-arrow-up"></i></button>
                                     <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'down')"><i class="fas fa-arrow-down"></i></button>
-                                </td>
-                            </tr>
+                                 </td>
+                             </tr>
                         `;
                     });
                 }
-                html += '</table>';
+                html += '   </tbody>  </table>';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading tickers:', error);
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading tickers: ${error.message}</p><button class="btn btn-primary" onclick="loadTickers()">Retry</button></div>`;
             }
         }
+
+        window.showPasteTickers = function() {
+            showModal(`
+                <h3 style="margin-bottom:1rem;">Paste Multiple Tickers</h3>
+                <p style="color:#64748b; margin-bottom:0.5rem;">
+                    Paste each ticker on a new line in the format:<br>
+                    <code>Message|Order</code> (e.g., "Welcome to NextGen!|1")<br>
+                    If you omit order, it will be set to current timestamp.
+                </p>
+                <textarea id="pasteTickerData" rows="12" style="width:100%; font-family:monospace;" placeholder="Paste your tickers here..."></textarea>
+                <div style="display:flex; gap:1rem; margin-top:1rem;">
+                    <button class="btn btn-success" id="processPasteTickersBtn">Process & Add</button>
+                    <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
+                </div>
+            `);
+
+            document.getElementById('processPasteTickersBtn').addEventListener('click', async function() {
+                const rawText = document.getElementById('pasteTickerData').value.trim();
+                if (!rawText) {
+                    showAlert('Please paste some tickers first.', 'error');
+                    return;
+                }
+
+                const lines = rawText.split('\n');
+                const tickers = [];
+                const errors = [];
+
+                lines.forEach((line, idx) => {
+                    line = line.trim();
+                    if (line === '') return;
+                    let message, order;
+                    if (line.includes('|')) {
+                        const parts = line.split('|');
+                        message = parts[0].trim();
+                        order = parseInt(parts[1].trim());
+                        if (isNaN(order)) {
+                            errors.push(`Line ${idx+1}: Invalid order "${parts[1]}"`);
+                        }
+                    } else {
+                        message = line;
+                        order = Date.now() + idx; // ensure unique order
+                    }
+                    if (message) {
+                        tickers.push({ message, order });
+                    } else {
+                        errors.push(`Line ${idx+1}: Missing message`);
+                    }
+                });
+
+                if (errors.length > 0) {
+                    showAlert('Parsing errors:\n' + errors.join('\n'), 'error');
+                    return;
+                }
+
+                if (tickers.length === 0) {
+                    showAlert('No valid tickers found to add.', 'warning');
+                    return;
+                }
+
+                if (!confirm(`Add ${tickers.length} ticker(s)?`)) return;
+
+                try {
+                    const batch = db.batch();
+                    tickers.forEach(t => {
+                        const ref = db.collection('tickers').doc();
+                        batch.set(ref, {
+                            message: t.message,
+                            order: t.order,
+                            active: true,
+                            type: 'manual',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                    await batch.commit();
+                    showAlert(`Successfully added ${tickers.length} ticker(s)!`, 'success');
+                    closeModal();
+                    loadTickers();
+                } catch (error) {
+                    console.error('Error adding tickers:', error);
+                    showAlert('Error adding tickers: ' + error.message, 'error');
+                }
+            });
+        };
 
         window.clearAutoTickers = async function() {
             if (!confirm('Delete all auto-generated tickers? Manual tickers will remain.')) return;
@@ -1130,7 +1217,7 @@
                     </div>
                 `;
                 html += '<table class="data-table" id="usersTable">'; 
-                html += '<tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Active</th><th>Suspended</th><th>Newbie Qualified</th><th>Actions</th></tr>'; 
+                html += '<thead><tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Active</th><th>Suspended</th><th>Newbie Qualified</th><th>Actions</th></tr></thead><tbody>'; 
                 
                 users.forEach(user => { 
                     const membershipClass = user.membershipType === 'elite' ? 'warning' : user.membershipType === 'premium' ? 'primary' : 'info'; 
@@ -1172,12 +1259,12 @@
                                     ${suspended ? 'Unsuspend' : 'Suspend'}
                                 </button>
                                 <button class="btn btn-sm btn-info" onclick="generateUserReport('${user.id}')">📋 Full Report</button>
-                            </td> 
-                        </tr> 
+                              </td> 
+                          </tr> 
                     `; 
                 }); 
                  
-                html += '</table>'; 
+                html += '</tbody></table>'; 
                 document.getElementById('content').innerHTML = html; 
             } catch (error) {
                 console.error('Error loading users:', error);
@@ -1794,7 +1881,10 @@
                         <button class="btn btn-primary" id="createTaskBtn">+ New Task</button> 
                     </div> 
                     <table class="data-table"> 
-                    <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Subcategory</th><th>Audio</th><th>AI Annotation</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th></tr> 
+                        <thead>
+                             <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Subcategory</th><th>Audio</th><th>AI Annotation</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
                 `; 
                 
                 for (let i = 0; i < tasks.length; i++) { 
@@ -1854,34 +1944,34 @@
                     const acceptCount = task.acceptedCount || 0;
                     
                     html += ` 
-                        <tr> 
-                            <td>${task.title}</td> 
-                            <td><span class="client-badge">${task.clientName || 'NextGen'}</span></td> 
-                            <td>$${task.reward}</td> 
+                          <tr> 
+                              <td>${task.title}</td> 
+                              <td><span class="client-badge">${task.clientName || 'NextGen'}</span></td> 
+                              <td>$${task.reward}</td> 
                             <td class="deadline-cell"> 
                                 <span class="deadline-badge">${deadlineDisplay}</span> 
                                 ${deadlineStatus ? `<br><small class="badge ${deadlineStatus.class}">${deadlineStatus.text}</small>` : ''} 
-                            </td> 
-                            <td>${task.category}</td> 
-                            <td>${subcategoryDisplay}</td> 
-                            <td>${audioDisplay}</td>
-                            <td>${annotationDisplay}</td>
-                            <td>${task.collaborable ? '✅' : '❌'}</td> 
-                            <td><span class="badge info">${assignedDisplay}</span></td> 
-                            <td><span class="badge primary">${subCount}</span></td> 
-                            <td><span class="badge warning">${acceptCount}</span></td> 
-                            <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td> 
+                              </td> 
+                              <td>${task.category}</td> 
+                              <td>${subcategoryDisplay}</td> 
+                              <td>${audioDisplay}</td>
+                              <td>${annotationDisplay}</td>
+                              <td>${task.collaborable ? '✅' : '❌'}</td> 
+                              <td><span class="badge info">${assignedDisplay}</span></td> 
+                              <td><span class="badge primary">${subCount}</span></td> 
+                              <td><span class="badge warning">${acceptCount}</span></td> 
+                              <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td> 
                             <td class="action-buttons"> 
                                 <button class="btn btn-primary edit-task-btn" data-task-id="${task.id}">Edit</button> 
                                 <button class="btn btn-info view-requirements-btn" data-task-id="${task.id}">View Details</button> 
                                 <button class="btn btn-warning toggle-task-btn" data-task-id="${task.id}" data-new-status="${!task.active}">${task.active ? 'Deactivate' : 'Activate'}</button> 
                                 <button class="btn btn-secondary" onclick="showTaskSubmissions('${task.id}')">View Acceptees</button>
-                            </td> 
-                        </tr> 
+                              </td> 
+                          </tr> 
                     `; 
                 } 
                  
-                html += '</table>'; 
+                html += '   </tbody>  </table>'; 
                 document.getElementById('content').innerHTML = html; 
             } catch (error) {
                 console.error('Error loading tasks:', error);
@@ -2070,6 +2160,10 @@
                     </div>
                 </div>
 
+                <!-- NEW: Task Paper Image Field -->
+                <h4 style="margin: 1rem 0 0.5rem;">Task Paper Image (Optional)</h4>
+                <input type="url" id="taskPaperImageUrl" placeholder="URL of image containing the task paper (e.g., screenshot of PDF)">
+
                 <h4 style="margin: 1rem 0 0.5rem;">Collaboration</h4>  
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">  
                     <label><input type="checkbox" id="taskCollaborable"> Allow collaboration (multiple users can accept)</label>  
@@ -2142,6 +2236,8 @@
             const assignedTo = document.getElementById('taskAssignedTo').value;  
             const collaborable = document.getElementById('taskCollaborable').checked;  
             const maxCollaborators = collaborable ? parseInt(document.getElementById('taskMaxCollaborators').value) || 5 : 2;  
+            // NEW: Task Paper Image URL
+            const taskPaperImageUrl = document.getElementById('taskPaperImageUrl').value || null;
             
             // NEW: GeoPay fields
             let subcategory = null;
@@ -2246,6 +2342,8 @@
                     annotationSubcategory,
                     imageUrl,
                     videoUrl,
+                    // NEW Task Paper Image
+                    taskPaperImageUrl,
                     acceptedCount: 0,  
                     active: true,  
                     submissionsCount: 0,  
@@ -2447,6 +2545,10 @@
                     </div>
                 </div>
 
+                <!-- NEW: Task Paper Image Field (escaped) -->
+                <h4 style="margin: 1rem 0 0.5rem;">Task Paper Image</h4>
+                <input type="url" id="editTaskPaperImageUrl" value="${escapeHtml(data.taskPaperImageUrl || '')}" placeholder="URL of image containing the task paper">
+
                 <h4 style="margin: 1rem 0 0.5rem;">Collaboration</h4>  
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">  
                     <label><input type="checkbox" id="editCollaborable" ${data.collaborable ? 'checked' : ''}> Allow collaboration (multiple users can accept)</label>  
@@ -2518,6 +2620,8 @@
             const assignedTo = document.getElementById('editAssignedTo').value;  
             const collaborable = document.getElementById('editCollaborable').checked;  
             const maxCollaborators = collaborable ? parseInt(document.getElementById('editMaxCollaborators').value) || 5 : 2;  
+            // NEW: Task Paper Image URL
+            const taskPaperImageUrl = document.getElementById('editTaskPaperImageUrl').value || null;
             
             // NEW: GeoPay fields
             let subcategory = null;
@@ -2617,7 +2721,9 @@
                 audioSize,
                 annotationSubcategory,
                 imageUrl,
-                videoUrl
+                videoUrl,
+                // NEW Task Paper Image
+                taskPaperImageUrl
             });  
               
             closeModal();  
@@ -2663,6 +2769,19 @@
                         </div>
                     `;
                 }
+            }
+
+            // NEW: Task Paper Image (escaped)
+            let imageHtml = '';
+            if (data.taskPaperImageUrl) {
+                const safeUrl = escapeHtml(data.taskPaperImageUrl);
+                imageHtml = `
+                    <div style="background: #e0e7ff; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <strong>🖼️ Task Paper Image:</strong><br>
+                        <img src="${safeUrl}" alt="Task Paper" style="max-width:100%; max-height:300px; border-radius:0.5rem; border:1px solid #e2e8f0;">
+                        <br><a href="${safeUrl}" target="_blank">Open full image</a>
+                    </div>
+                `;
             }
 
             // NEW: GeoPay survey details
@@ -2733,6 +2852,7 @@
 
                 ${audioHtml}
                 ${aiHtml}
+                ${imageHtml}
                 ${geopayHtml}
             `);  
         }  
@@ -2745,7 +2865,7 @@
                 if (invitesSnap.empty) {
                     html += '<p>No pending team approvals.</p>';
                 } else {
-                    html += '<table class="data-table"><tr><th>Task</th><th>User</th><th>Invited By</th><th>Actions</th></tr>';
+                    html += '<table class="data-table"> <thead>  </thead><tbody>';
                     for (const doc of invitesSnap.docs) {
                         const invite = doc.data();
                         const taskDoc = await db.collection('tasks').doc(invite.taskId).get();
@@ -2755,18 +2875,18 @@
                         const inviterDoc = await db.collection('users').doc(invite.invitedBy).get();
                         const inviterName = inviterDoc.exists ? inviterDoc.data().displayName || inviterDoc.data().email : invite.invitedByName || 'Unknown';
                         html += `
-                            <tr>
-                                <td>${taskTitle}</td>
-                                <td>${userEmail}</td>
-                                <td>${inviterName}</td>
-                                <td>
+                              <tr>
+                                  <td>${taskTitle}</td>
+                                  <td>${userEmail}</td>
+                                  <td>${inviterName}</td>
+                                  <td>
                                     <button class="btn btn-sm btn-success" onclick="approveTeamMember('${invite.taskId}', '${invite.userId}', '${doc.id}')">Approve</button>
                                     <button class="btn btn-sm btn-danger" onclick="rejectTeamMember('${invite.taskId}', '${invite.userId}', '${doc.id}')">Reject</button>
-                                </td>
-                            </tr>
+                                  </td>
+                              </tr>
                         `;
                     }
-                    html += '</table>';
+                    html += '</tbody> </table>';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
@@ -6127,7 +6247,7 @@
                 if (snapshot.empty) {
                     html += '<p>No applications yet.</p>';
                 } else {
-                    html += '<table class="data-table"><tr><th>User</th><th>Training</th><th>Type</th><th>Status</th><th>Applied</th><th>Actions</th></tr>';
+                    html += '<table class="data-table"> <thead>   </thead><tbody>';
                     for (const doc of snapshot.docs) {
                         const app = doc.data();
                         const trainingDoc = await db.collection('trainings').doc(app.trainingId).get();
@@ -6137,23 +6257,23 @@
                             '<span class="badge warning">Prepaid</span>';
                         const statusClass = app.status === 'pending' ? 'warning' : (app.status === 'approved' ? 'success' : 'danger');
                         html += `
-                            <tr>
-                                <td>${app.userEmail}</td>
-                                <td>${trainingTitle}</td>
-                                <td>${typeBadge}</td>
-                                <td><span class="badge ${statusClass}">${app.status}</span></td>
-                                <td>${app.appliedAt ? formatDate(app.appliedAt) : 'N/A'}</td>
-                                <td>
+                               <tr>
+                                   <td>${app.userEmail}</td>
+                                   <td>${trainingTitle}</td>
+                                   <td>${typeBadge}</td>
+                                   <td><span class="badge ${statusClass}">${app.status}</span></td>
+                                   <td>${app.appliedAt ? formatDate(app.appliedAt) : 'N/A'}</td>
+                                   <td>
                                     ${app.status === 'pending' ? `
                                         <button class="btn btn-sm btn-success" onclick="approveTrainingApplication('${doc.id}', '${app.userId}')">Approve</button>
                                         <button class="btn btn-sm btn-danger" onclick="rejectTrainingApplication('${doc.id}')">Reject</button>
                                     ` : ''}
                                     ${app.paymentDetails ? `<small>${app.paymentDetails}</small>` : ''}
-                                </td>
-                            </tr>
+                                   </td>
+                               </tr>
                         `;
                     }
-                    html += '</table>';
+                    html += '</tbody>   </table>';
                 }
                 trainingContent.innerHTML = html;
             } catch (error) {
@@ -6496,27 +6616,27 @@
                 if (snapshot.empty) {
                     html += '<p>No submissions yet.</p>';
                 } else {
-                    html += '<table class="data-table"><tr><th>User</th><th>Submitted</th><th>Status</th><th>Actions</th></tr>';
+                    html += '<table class="data-table"> <thead>   </thead><tbody>';
                     for (const doc of snapshot.docs) {
                         const sub = doc.data();
                         const statusClass = sub.status === 'pending' ? 'warning' : (sub.status === 'approved' ? 'success' : 'danger');
                         const date = sub.submittedAt ? formatDate(sub.submittedAt) : 'N/A';
                         html += `
-                            <tr>
-                                <td>${sub.userName || sub.userEmail || sub.userId}</td>
-                                <td>${date}</td>
-                                <td><span class="badge ${statusClass}">${sub.status}</span></td>
-                                <td>
+                               <tr>
+                                   <td>${sub.userName || sub.userEmail || sub.userId}</td>
+                                   <td>${date}</td>
+                                   <td><span class="badge ${statusClass}">${sub.status}</span></td>
+                                   <td>
                                     <button class="btn btn-sm btn-primary" onclick="viewNewbieSubmission('${doc.id}')">View Answers</button>
                                     ${sub.status === 'pending' ? `
                                         <button class="btn btn-sm btn-success" onclick="approveNewbieSubmission('${doc.id}', '${sub.userId}')">Approve</button>
                                         <button class="btn btn-sm btn-danger" onclick="rejectNewbieSubmission('${doc.id}', '${sub.userId}')">Reject</button>
                                     ` : ''}
-                                </td>
-                            </tr>
+                                   </td>
+                               </tr>
                         `;
                     }
-                    html += '</table>';
+                    html += '</tbody>   </table>';
                 }
                 container.innerHTML = html;
             } catch (error) {
@@ -6625,19 +6745,13 @@
                 if (snapshot.empty) {
                     html += '<p>No recent login activity.</p>';
                 } else {
-                    html += '<table class="data-table">';
-                    html += '<tr><th>User</th><th>Email</th><th>Login Time</th><th>IP Address (if available)</th></tr>';
+                    html += '<table class="data-table"> <thead>   </thead><tbody>';
                     snapshot.forEach(doc => {
                         const log = doc.data();
                         const time = log.timestamp ? formatDate(log.timestamp) : 'N/A';
-                        html += `<tr>
-                            <td>${log.userName || 'N/A'}</td>
-                            <td>${log.userEmail || 'N/A'}</td>
-                            <td>${time}</td>
-                            <td>${log.ip || 'N/A'}</td>
-                        </tr>`;
+                        html += ` <tr><td>${log.userName || 'N/A'}</td><td>${log.userEmail || 'N/A'}</td><td>${time}</td><td>${log.ip || 'N/A'}</td></tr>`;
                     });
-                    html += '</table>';
+                    html += '</tbody>   </table>';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
@@ -6658,22 +6772,15 @@
                 if (snapshot.empty) {
                     html += '<p>No transactions found.</p>';
                 } else {
-                    html += '<table class="data-table">';
-                    html += '<tr><th>Date</th><th>User</th><th>Type</th><th>Description</th><th>Amount</th></tr>';
+                    html += '<table class="data-table"> <thead>   </thead><tbody>';
                     snapshot.forEach(doc => {
                         const t = doc.data();
                         const date = t.createdAt ? formatDate(t.createdAt) : 'N/A';
                         const amountClass = t.amount >= 0 ? 'success' : 'danger';
                         const amountStr = t.amount >= 0 ? `+$${t.amount.toFixed(2)}` : `-$${Math.abs(t.amount).toFixed(2)}`;
-                        html += `<tr>
-                            <td>${date}</td>
-                            <td>${t.userEmail || 'Unknown'}</td>
-                            <td><span class="badge primary">${t.type.replace('_', ' ')}</span></td>
-                            <td>${t.description}</td>
-                            <td><span class="badge ${amountClass}">${amountStr}</span></td>
-                        </tr>`;
+                        html += ` <tr><td>${date}</td><td>${t.userEmail || 'Unknown'}</td><td><span class="badge primary">${t.type.replace('_', ' ')}</span></td><td>${t.description}</td><td><span class="badge ${amountClass}">${amountStr}</span></td></tr>`;
                     });
-                    html += '</table>';
+                    html += '</tbody>   </table>';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
@@ -6689,30 +6796,33 @@
                 let html = `
                     <h3 style="margin-bottom:1.5rem;">📢 Petitions from Users</h3>
                     <table class="data-table">
-                        <tr><th>User</th><th>Message</th><th>Date</th><th>Response</th><th>Actions</th></tr>
+                        <thead>
+                            <th>User</th><th>Message</th><th>Date</th><th>Response</th><th>Actions</th>
+                        </thead>
+                        <tbody>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="5" style="text-align:center;">No petitions yet.</td></tr>';
+                    html += '   <td colspan="5" style="text-align:center;">No petitions yet.   ';
                 } else {
                     snapshot.forEach(doc => {
                         const p = doc.data();
                         const date = p.createdAt ? formatDate(p.createdAt) : 'N/A';
                         const hasResponse = p.response ? 'Yes' : 'No';
                         html += `
-                            <tr>
-                                <td>${p.userEmail || p.userName || p.userId}</td>
-                                <td>${p.message.substring(0,50)}...</td>
-                                <td>${date}</td>
-                                <td><span class="badge ${p.response ? 'success' : 'warning'}">${hasResponse}</span></td>
-                                <td>
+                              <tr>
+                                  <td>${p.userEmail || p.userName || p.userId}</td>
+                                  <td>${p.message.substring(0,50)}...</td>
+                                  <td>${date}</td>
+                                  <td><span class="badge ${p.response ? 'success' : 'warning'}">${hasResponse}</span></td>
+                                  <td>
                                     <button class="btn btn-sm btn-primary" onclick="viewPetition('${doc.id}', '${p.userId}', '${p.message.replace(/'/g, "\\'")}', '${p.response || ''}')">View</button>
                                     ${!p.response ? `<button class="btn btn-sm btn-warning" onclick="replyToPetition('${doc.id}', '${p.userId}', '${p.message.replace(/'/g, "\\'")}')">Reply</button>` : ''}
-                                </td>
-                            </tr>
+                                  </td>
+                              </tr>
                         `;
                     });
                 }
-                html += '</table>';
+                html += '   </tbody>   </table>';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading petitions:', error);
@@ -6773,14 +6883,18 @@
                     <h3 style="margin-bottom:1.5rem;">🏆 Leaderboard Management</h3>
                     <div style="display: flex; gap: 1rem; margin-bottom:1rem;">
                         <button class="btn btn-success" onclick="showAddLeaderboardEntry()">+ Add Manual Entry</button>
-                        <button class="btn btn-primary" onclick="generateLeaderboardFromUsers()">⚙️ Generate from Users</button>
+                        <button class="btn btn-primary" onclick="generateLeaderboardFromUsers()">⚙️ Generate from Users (Clears Auto Entries)</button>
+                        <button class="btn btn-danger" onclick="deleteAllAutoEntries()">🗑️ Delete All Auto Entries</button>
                         <button class="btn btn-info" onclick="showPasteLeaderboardEntries()">📋 Paste Entries</button>
                     </div>
                     <table class="data-table">
-                        <tr><th>Rank</th><th>User Name</th><th>Points</th><th>Type</th><th>Actions</th></tr>
+                        <thead>
+                            <th>Rank</th><th>User Name</th><th>Points</th><th>Type</th><th>Actions</th>
+                        </thead>
+                        <tbody>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="5" style="text-align:center;">No leaderboard entries. Add one or generate.</td></tr>';
+                    html += '   <td colspan="5" style="text-align:center;">No leaderboard entries. Add one or generate.   ';
                 } else {
                     snapshot.forEach(doc => {
                         const entry = doc.data();
@@ -6788,26 +6902,40 @@
                             ? '<span class="badge warning">Manual</span>' 
                             : '<span class="badge info">Auto</span>';
                         html += `
-                            <tr>
-                                <td>#${entry.rank}</td>
-                                <td>${entry.userName}</td>
-                                <td>${entry.points}</td>
-                                <td>${typeBadge}</td>
-                                <td>
+                              <tr>
+                                  <td>#${entry.rank}</td>
+                                  <td>${entry.userName}</td>
+                                  <td>${entry.points}</td>
+                                  <td>${typeBadge}</td>
+                                  <td>
                                     <button class="btn btn-sm btn-primary" onclick="editLeaderboardEntry('${doc.id}', ${entry.rank}, '${entry.userName}', ${entry.points})">Edit</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteLeaderboardEntry('${doc.id}')">Delete</button>
-                                </td>
-                            </tr>
+                                  </td>
+                              </tr>
                         `;
                     });
                 }
-                html += '</table>';
+                html += '   </tbody>   </table>';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading leaderboard:', error);
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p><button class="btn btn-primary" onclick="loadLeaderboardManager()">Retry</button></div>`;
             }
         }
+
+        window.deleteAllAutoEntries = async function() {
+            if (!confirm('Delete all auto-generated leaderboard entries? Manual entries will remain.')) return;
+            try {
+                const auto = await db.collection('leaderboard').where('type', '==', 'auto').get();
+                const batch = db.batch();
+                auto.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                showAlert('All auto entries deleted', 'success');
+                loadLeaderboardManager();
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error');
+            }
+        };
 
         window.showAddLeaderboardEntry = function() {
             showModal(`
@@ -6886,7 +7014,7 @@
         };
 
         window.generateLeaderboardFromUsers = async function() {
-            if (!confirm('This will regenerate auto entries from users. Manual entries (including pasted) will be preserved and re-ranked. Continue?')) return;
+            if (!confirm('This will delete all current auto entries and regenerate from users. Manual entries will be preserved and re-ranked. Continue?')) return;
 
             showAlert('Processing users...', 'info', 'Please wait');
             try {
@@ -7105,27 +7233,30 @@
                         <button class="btn btn-primary" onclick="loadDefaultFaqs()">📥 Load Default FAQs</button>
                     </div>
                     <table class="data-table">
-                        <tr><th>Order</th><th>Question</th><th>Answer</th><th>Actions</th></tr>
+                        <thead>
+                            <th>Order</th><th>Question</th><th>Answer</th><th>Actions</th>
+                        </thead>
+                        <tbody>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="4" style="text-align:center;">No FAQs. Add one or load defaults.</td></tr>';
+                    html += '   <td colspan="4" style="text-align:center;">No FAQs. Add one or load defaults.   ';
                 } else {
                     snapshot.forEach(doc => {
                         const faq = doc.data();
                         html += `
-                            <tr>
-                                <td>${faq.order || 0}</td>
-                                <td>${faq.question}</td>
-                                <td>${faq.answer.substring(0,50)}...</td>
-                                <td>
+                              <tr>
+                                  <td>${faq.order || 0}</td>
+                                  <td>${faq.question}</td>
+                                  <td>${faq.answer.substring(0,50)}...</td>
+                                  <td>
                                     <button class="btn btn-sm btn-primary" onclick="editFaq('${doc.id}', ${faq.order || 0}, '${faq.question}', '${faq.answer}')">Edit</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteFaq('${doc.id}')">Delete</button>
-                                </td>
-                            </tr>
+                                  </td>
+                              </tr>
                         `;
                     });
                 }
-                html += '</table>';
+                html += '   </tbody>   </table>';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading FAQs:', error);
@@ -7230,27 +7361,30 @@
                         <button class="btn btn-primary" onclick="loadSampleFeedback()">📥 Add Sample Feedback</button>
                     </div>
                     <table class="data-table">
-                        <tr><th>Client</th><th>Message</th><th>Date</th><th>Actions</th></tr>
+                        <thead>
+                            <th>Client</th><th>Message</th><th>Date</th><th>Actions</th>
+                        </thead>
+                        <tbody>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="4" style="text-align:center;">No feedback. Add one or load samples.</td></tr>';
+                    html += '   <td colspan="4" style="text-align:center;">No feedback. Add one or load samples.   ';
                 } else {
                     snapshot.forEach(doc => {
                         const fb = doc.data();
                         const date = fb.createdAt ? formatDate(fb.createdAt) : 'N/A';
                         html += `
-                            <tr>
-                                <td>${fb.clientName || 'Anonymous'}</td>
-                                <td>${fb.message.substring(0,50)}...</td>
-                                <td>${date}</td>
-                                <td>
+                              <tr>
+                                  <td>${fb.clientName || 'Anonymous'}</td>
+                                  <td>${fb.message.substring(0,50)}...</td>
+                                  <td>${date}</td>
+                                  <td>
                                     <button class="btn btn-sm btn-danger" onclick="deleteFeedback('${doc.id}')">Delete</button>
-                                </td>
-                            </tr>
+                                  </td>
+                              </tr>
                         `;
                     });
                 }
-                html += '</table>';
+                html += '   </tbody>   </table>';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading feedback:', error);
@@ -7693,38 +7827,41 @@
                         <button class="btn btn-info" onclick="bulkActionInactive('unfreeze')">Unfreeze Selected</button>
                     </div>
                     <table class="data-table" id="inactiveUsersTable">
-                        <tr>
-                            <th><input type="checkbox" id="selectAllInactive" onclick="toggleSelectAllInactive()"></th>
-                            <th>Email</th><th>Name</th><th>Wallet</th><th>Membership</th><th>Last Login</th><th>Last Submission</th><th>Actions</th>
-                        </tr>
+                        <thead>
+                              <tr>
+                                <th><input type="checkbox" id="selectAllInactive" onclick="toggleSelectAllInactive()"></th>
+                                <th>Email</th><th>Name</th><th>Wallet</th><th>Membership</th><th>Last Login</th><th>Last Submission</th><th>Actions</th>
+                              </tr>
+                        </thead>
+                        <tbody>
                 `;
 
                 if (inactiveList.length === 0) {
-                    html += '<tr><td colspan="8" style="text-align:center;">No inactive users found.</td></tr>';
+                    html += '   <td colspan="8" style="text-align:center;">No inactive users found.   ';
                 } else {
                     inactiveList.forEach(u => {
                         const lastLoginStr = u.lastLogin ? formatDate(u.lastLogin) : 'Never';
                         const lastSubStr = u.lastSubmission ? formatDate(u.lastSubmission) : 'Never';
                         const membershipClass = u.membershipType === 'elite' ? 'warning' : u.membershipType === 'premium' ? 'primary' : 'info';
                         html += `
-                            <tr data-user-id="${u.id}">
-                                <td><input type="checkbox" class="inactive-user-checkbox" value="${u.id}"></td>
-                                <td>${u.email}</td>
-                                <td>${u.displayName || ''}</td>
-                                <td>$${u.wallet || 0}</td>
-                                <td><span class="badge ${membershipClass}">${(u.membershipType || 'basic').toUpperCase()}</span></td>
-                                <td>${lastLoginStr}</td>
-                                <td>${lastSubStr}</td>
-                                <td>
+                              <tr data-user-id="${u.id}">
+                                  <td><input type="checkbox" class="inactive-user-checkbox" value="${u.id}"></td>
+                                  <td>${u.email}</td>
+                                  <td>${u.displayName || ''}</td>
+                                  <td>$${u.wallet || 0}</td>
+                                  <td><span class="badge ${membershipClass}">${(u.membershipType || 'basic').toUpperCase()}</span></td>
+                                  <td>${lastLoginStr}</td>
+                                  <td>${lastSubStr}</td>
+                                  <td>
                                     <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}', '${u.email}')">Delete</button>
                                     <button class="btn btn-sm btn-warning" onclick="toggleSuspendUser('${u.id}', ${u.suspended || false})">${u.suspended ? 'Unsuspend' : 'Suspend'}</button>
                                     <button class="btn btn-sm btn-secondary" onclick="toggleFrozen('${u.id}', ${u.frozen || false})">${u.frozen ? 'Unfreeze' : 'Freeze'}</button>
-                                </td>
-                            </tr>
+                                  </td>
+                              </tr>
                         `;
                     });
                 }
-                html += '</table>';
+                html += '   </tbody>   </table>';
                 document.getElementById('content').innerHTML = html;
 
                 window.toggleSelectAllInactive = function() {
@@ -8235,6 +8372,14 @@
                     await rejectInvestmentDeposit(id, userId, amount);
                     return;
                 }
+                if (target.classList.contains('revert-investment-deposit')) {
+                    const id = target.getAttribute('data-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    const originalStatus = target.getAttribute('data-status');
+                    await revertInvestmentDeposit(id, userId, amount, originalStatus);
+                    return;
+                }
                 if (target.classList.contains('approve-investment-withdrawal')) {
                     const id = target.getAttribute('data-id');
                     const userId = target.getAttribute('data-user-id');
@@ -8247,6 +8392,21 @@
                     const userId = target.getAttribute('data-user-id');
                     const amount = parseFloat(target.getAttribute('data-amount'));
                     await rejectInvestmentWithdrawal(id, userId, amount);
+                    return;
+                }
+                if (target.classList.contains('revert-investment-withdrawal')) {
+                    const id = target.getAttribute('data-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const amount = parseFloat(target.getAttribute('data-amount'));
+                    const originalStatus = target.getAttribute('data-status');
+                    await revertInvestmentWithdrawal(id, userId, amount, originalStatus);
+                    return;
+                }
+                if (target.classList.contains('revert-investment-account')) {
+                    const id = target.getAttribute('data-id');
+                    const userId = target.getAttribute('data-user-id');
+                    const action = target.getAttribute('data-action');
+                    await revertInvestmentAccount(id, userId, action);
                     return;
                 }
 
@@ -8424,32 +8584,35 @@
                         <button class="btn btn-success" onclick="showAddAnnouncement()">+ Add Announcement</button>
                     </div>
                     <table class="data-table">
-                        <tr><th>Order</th><th>Message</th><th>Status</th><th>Actions</th></tr>
+                        <thead>
+                               <th>Order</th><th>Message</th><th>Status</th><th>Actions</th>
+                        </thead>
+                        <tbody>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="4" style="text-align:center;">No announcements. Add one.</td></tr>';
+                    html += '   <td colspan="4" style="text-align:center;">No announcements. Add one.   ';
                 } else {
                     snapshot.forEach(doc => {
                         const a = doc.data();
                         const statusClass = a.active ? 'success' : 'secondary';
                         const statusText = a.active ? 'Active' : 'Inactive';
                         html += `
-                            <tr>
-                                <td>${a.order || 0}</td>
-                                <td>${escapeHtml(a.message)}</td>
-                                <td><span class="badge ${statusClass}">${statusText}</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="editAnnouncement('${doc.id}', '${escapeHtml(a.message)}', ${a.order || 0}, ${a.active})">Edit</button>
-                                    <button class="btn btn-sm btn-warning" onclick="toggleAnnouncementStatus('${doc.id}', ${!a.active})">${a.active ? 'Deactivate' : 'Activate'}</button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement('${doc.id}')">Delete</button>
-                                    <button class="btn btn-sm btn-secondary" onclick="moveAnnouncement('${doc.id}', 'up')"><i class="fas fa-arrow-up"></i></button>
-                                    <button class="btn btn-sm btn-secondary" onclick="moveAnnouncement('${doc.id}', 'down')"><i class="fas fa-arrow-down"></i></button>
-                                </td>
-                            </tr>
+                               <tr>
+                                   <td>${a.order || 0}</td>
+                                   <td>${escapeHtml(a.message)}</td>
+                                   <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                   <td>
+                                        <button class="btn btn-sm btn-primary edit-announcement-btn" data-id="${doc.id}" data-message="${escapeHtml(a.message)}" data-order="${a.order || 0}" data-active="${a.active}">Edit</button>
+                                        <button class="btn btn-sm btn-warning toggle-announcement-btn" data-id="${doc.id}" data-new-status="${!a.active}">${a.active ? 'Deactivate' : 'Activate'}</button>
+                                        <button class="btn btn-sm btn-danger delete-announcement-btn" data-id="${doc.id}">Delete</button>
+                                        <button class="btn btn-sm btn-secondary move-announcement-btn" data-id="${doc.id}" data-direction="up"><i class="fas fa-arrow-up"></i></button>
+                                        <button class="btn btn-sm btn-secondary move-announcement-btn" data-id="${doc.id}" data-direction="down"><i class="fas fa-arrow-down"></i></button>
+                                   </td>
+                               </tr>
                         `;
                     });
                 }
-                html += '</table>';
+                html += '   </tbody>    </table>';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading announcements:', error);
@@ -8548,17 +8711,17 @@
             } catch (e) { showAlert('Error moving: ' + e.message, 'error'); }
         };
 
-        // ==================== INVESTOR MANAGEMENT ====================
-        let currentInvestorSubTab = 'settings'; // 'settings' or 'transactions'
+        // ==================== INVESTOR MANAGEMENT (ENHANCED) ====================
+        let currentInvestorSubTab = 'settings'; // 'settings', 'transactions', or 'accounts'
 
         async function loadInvestorManager() {
             currentTab = 'investor';
-            currentTaskViewed = null;
             let html = `
                 <h3 style="margin-bottom:1.5rem;">💰 Investor Management</h3>
                 <div class="training-subtabs">
                     <button class="training-subtab ${currentInvestorSubTab === 'settings' ? 'active' : ''}" onclick="setInvestorSubTab('settings')">Settings</button>
                     <button class="training-subtab ${currentInvestorSubTab === 'transactions' ? 'active' : ''}" onclick="setInvestorSubTab('transactions')">Transactions</button>
+                    <button class="training-subtab ${currentInvestorSubTab === 'accounts' ? 'active' : ''}" onclick="setInvestorSubTab('accounts')">Active Accounts</button>
                 </div>
                 <div id="investorContent"></div>
             `;
@@ -8566,8 +8729,10 @@
             
             if (currentInvestorSubTab === 'settings') {
                 loadInvestorSettings();
-            } else {
+            } else if (currentInvestorSubTab === 'transactions') {
                 loadInvestmentTransactions();
+            } else {
+                loadInvestorAccounts();
             }
         }
 
@@ -8637,7 +8802,7 @@
                         </div>
                     </div>
                     <div style="margin-top:2rem;">
-                        <button class="btn btn-success" onclick="saveInvestorSettings()">Save All Changes</button>
+                        <button class="btn btn-success" id="saveInvestorSettingsBtn">Save All Changes</button>
                     </div>
                 `;
                 container.innerHTML = html;
@@ -8683,40 +8848,48 @@
                     db.collection('investmentWithdrawals').orderBy('requestedAt', 'desc').get()
                 ]);
 
-                let html = '<h4 style="margin-top:0;">Pending Deposits</h4>';
+                let html = '<h4 style="margin-top:0;">Deposits</h4>';
                 if (depositsSnap.empty) {
                     html += '<p>No deposit requests.</p>';
                 } else {
-                    html += '<table class="data-table"><tr><th>User</th><th>Amount</th><th>Method</th><th>Code</th><th>Date</th><th>Status</th><th>Actions</th></tr>';
-                    depositsSnap.forEach(doc => {
+                    html += '<table class="data-table"> <thead> <th>User</th><th>Amount</th><th>Method</th><th>Code</th><th>Date</th><th>Status</th><th>Actions</th> </thead><tbody>';
+                    for (const doc of depositsSnap.docs) {
                         const d = doc.data();
                         const statusClass = d.status === 'pending' ? 'warning' : (d.status === 'approved' ? 'success' : 'danger');
+                        // fetch username
+                        let userName = d.userId;
+                        try {
+                            const userDoc = await db.collection('users').doc(d.userId).get();
+                            if (userDoc.exists) userName = userDoc.data().displayName || userDoc.data().email;
+                        } catch(e) {}
                         html += `
-                            <tr>
-                                <td>${d.userId ? d.userId.substring(0,8) : 'N/A'}</td>
-                                <td>$${d.amount.toFixed(2)}</td>
-                                <td>${d.paymentMethod || 'N/A'}</td>
-                                <td>${d.transactionCode || 'N/A'}</td>
-                                <td>${d.createdAt ? formatDate(d.createdAt) : 'N/A'}</td>
-                                <td><span class="badge ${statusClass}">${d.status}</span></td>
-                                <td>
+                             <tr>
+                                 <td>${userName}</td>
+                                 <td>$${d.amount.toFixed(2)}</td>
+                                 <td>${d.paymentMethod || 'N/A'}</td>
+                                 <td>${d.transactionCode || 'N/A'}</td>
+                                 <td>${d.createdAt ? formatDate(d.createdAt) : 'N/A'}</td>
+                                 <td><span class="badge ${statusClass}">${d.status}</span></td>
+                                 <td>
                                     ${d.status === 'pending' ? `
-                                        <button class="btn btn-sm btn-success" onclick="approveInvestmentDeposit('${doc.id}', '${d.userId}', ${d.amount})">Approve</button>
-                                        <button class="btn btn-sm btn-danger" onclick="rejectInvestmentDeposit('${doc.id}', '${d.userId}', ${d.amount})">Reject</button>
-                                    ` : ''}
-                                </td>
-                            </tr>
+                                        <button class="btn btn-sm btn-success approve-investment-deposit" data-id="${doc.id}" data-user-id="${d.userId}" data-amount="${d.amount}">Approve</button>
+                                        <button class="btn btn-sm btn-danger reject-investment-deposit" data-id="${doc.id}" data-user-id="${d.userId}" data-amount="${d.amount}">Reject</button>
+                                    ` : `
+                                        <button class="btn btn-sm btn-warning revert-investment-deposit" data-id="${doc.id}" data-user-id="${d.userId}" data-amount="${d.amount}" data-status="${d.status}">Revert</button>
+                                    `}
+                                 </td>
+                             </tr>
                         `;
-                    });
-                    html += '</table>';
+                    }
+                    html += '</tbody>   </table>';
                 }
 
-                html += '<h4 style="margin-top:2rem;">Pending Withdrawals</h4>';
+                html += '<h4 style="margin-top:2rem;">Withdrawals</h4>';
                 if (withdrawalsSnap.empty) {
                     html += '<p>No withdrawal requests.</p>';
                 } else {
-                    html += '<table class="data-table"><tr><th>User</th><th>Amount</th><th>Method</th><th>Details</th><th>Date</th><th>Status</th><th>Actions</th></tr>';
-                    withdrawalsSnap.forEach(doc => {
+                    html += '<table class="data-table"> <thead> <th>User</th><th>Amount</th><th>Method</th><th>Details</th><th>Date</th><th>Status</th><th>Actions</th> </thead><tbody>';
+                    for (const doc of withdrawalsSnap.docs) {
                         const w = doc.data();
                         const statusClass = w.status === 'pending' ? 'warning' : (w.status === 'paid' ? 'success' : 'danger');
                         let details = '';
@@ -8725,24 +8898,31 @@
                         } else {
                             details = `${w.accountName || ''} - ${w.phone || ''}`;
                         }
+                        let userName = w.userId;
+                        try {
+                            const userDoc = await db.collection('users').doc(w.userId).get();
+                            if (userDoc.exists) userName = userDoc.data().displayName || userDoc.data().email;
+                        } catch(e) {}
                         html += `
-                            <tr>
-                                <td>${w.userId ? w.userId.substring(0,8) : 'N/A'}</td>
-                                <td>$${w.amount.toFixed(2)}</td>
-                                <td>${w.method}</td>
-                                <td>${details}</td>
-                                <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
-                                <td><span class="badge ${statusClass}">${w.status}</span></td>
-                                <td>
+                             <tr>
+                                 <td>${userName}</td>
+                                 <td>$${w.amount.toFixed(2)}</td>
+                                 <td>${w.method}</td>
+                                 <td>${details}</td>
+                                 <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
+                                 <td><span class="badge ${statusClass}">${w.status}</span></td>
+                                 <td>
                                     ${w.status === 'pending' ? `
-                                        <button class="btn btn-sm btn-success" onclick="approveInvestmentWithdrawal('${doc.id}', '${w.userId}', ${w.amount})">Approve</button>
-                                        <button class="btn btn-sm btn-danger" onclick="rejectInvestmentWithdrawal('${doc.id}', '${w.userId}', ${w.amount})">Reject</button>
-                                    ` : ''}
-                                </td>
-                            </tr>
+                                        <button class="btn btn-sm btn-success approve-investment-withdrawal" data-id="${doc.id}" data-user-id="${w.userId}" data-amount="${w.amount}">Approve</button>
+                                        <button class="btn btn-sm btn-danger reject-investment-withdrawal" data-id="${doc.id}" data-user-id="${w.userId}" data-amount="${w.amount}">Reject</button>
+                                    ` : `
+                                        <button class="btn btn-sm btn-warning revert-investment-withdrawal" data-id="${doc.id}" data-user-id="${w.userId}" data-amount="${w.amount}" data-status="${w.status}">Revert</button>
+                                    `}
+                                 </td>
+                             </tr>
                         `;
-                    });
-                    html += '</table>';
+                    }
+                    html += '</tbody>   </table>';
                 }
 
                 container.innerHTML = html;
@@ -8752,7 +8932,63 @@
             }
         }
 
-        // ========== Deposit actions ==========
+        // New: Load active investor accounts
+        async function loadInvestorAccounts() {
+            const container = document.getElementById('investorContent');
+            if (!container) return;
+            container.innerHTML = '<p class="loading">Loading accounts...</p>';
+            try {
+                const accountsSnap = await db.collection('investorAccounts').get();
+                let html = '<h4>Active Investor Accounts</h4>';
+                if (accountsSnap.empty) {
+                    html += '<p>No investor accounts yet.</p>';
+                } else {
+                    html += '<table class="data-table"> <thead> <th>User</th><th>Balance</th><th>Total Invested</th><th>Total Earned</th><th>Maturity (based on last deposit)</th><th>Actions</th> </thead><tbody>';
+                    for (const doc of accountsSnap.docs) {
+                        const acc = doc.data();
+                        let userName = acc.userId;
+                        try {
+                            const userDoc = await db.collection('users').doc(acc.userId).get();
+                            if (userDoc.exists) userName = userDoc.data().displayName || userDoc.data().email;
+                        } catch(e) {}
+                        // Find last active deposit (approved, not reverted)
+                        const lastDepositQuery = await db.collection('investmentDeposits')
+                            .where('userId', '==', acc.userId)
+                            .where('status', '==', 'approved')
+                            .orderBy('approvedAt', 'desc')
+                            .limit(1)
+                            .get();
+                        let maturity = 'N/A';
+                        if (!lastDepositQuery.empty) {
+                            const deposit = lastDepositQuery.docs[0].data();
+                            const approvedDate = deposit.approvedAt.toDate();
+                            const duration = deposit.durationHours || 24; // default 24 hours
+                            const maturityDate = new Date(approvedDate.getTime() + duration * 60 * 60 * 1000);
+                            maturity = formatDate(maturityDate);
+                        }
+                        html += `
+                             <tr>
+                                 <td>${userName}</td>
+                                 <td>$${acc.balance.toFixed(2)}</td>
+                                 <td>$${(acc.totalInvested || 0).toFixed(2)}</td>
+                                 <td>$${(acc.totalEarnings || 0).toFixed(2)}</td>
+                                 <td>${maturity}</td>
+                                 <td>
+                                    <button class="btn btn-sm btn-danger revert-investment-account" data-id="${doc.id}" data-user-id="${acc.userId}" data-action="reset">Reset Account</button>
+                                 </td>
+                             </tr>
+                        `;
+                    }
+                    html += '</tbody>   </table>';
+                }
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading investor accounts:', error);
+                container.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        // ========== Deposit actions with revert ==========
         window.approveInvestmentDeposit = async function(docId, userId, amount) {
             if (!confirm(`Approve deposit of $${amount.toFixed(2)} for user ${userId}?`)) return;
             try {
@@ -8769,18 +9005,19 @@
                     await db.collection('investorAccounts').add({
                         userId: userId,
                         balance: amount,
-                        totalInvested: 0,
+                        totalInvested: amount,
                         totalEarnings: 0,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } else {
                     const accountRef = accountSnap.docs[0].ref;
                     await accountRef.update({
-                        balance: firebase.firestore.FieldValue.increment(amount)
+                        balance: firebase.firestore.FieldValue.increment(amount),
+                        totalInvested: firebase.firestore.FieldValue.increment(amount)
                     });
                 }
 
-                // Optionally, record a transaction in the user's transactions
+                // Record transaction
                 await db.collection('transactions').add({
                     userId: userId,
                     amount: amount,
@@ -8812,7 +9049,43 @@
             }
         };
 
-        // ========== Withdrawal actions ==========
+        window.revertInvestmentDeposit = async function(docId, userId, amount, originalStatus) {
+            if (!confirm(`Revert this deposit? This will set status back to pending and ${originalStatus === 'approved' ? 'subtract the amount from user balance' : 'no other effect'}.`)) return;
+            try {
+                // If it was approved, subtract amount
+                if (originalStatus === 'approved') {
+                    const accountSnap = await db.collection('investorAccounts').where('userId', '==', userId).get();
+                    if (!accountSnap.empty) {
+                        const accountRef = accountSnap.docs[0].ref;
+                        await accountRef.update({
+                            balance: firebase.firestore.FieldValue.increment(-amount),
+                            totalInvested: firebase.firestore.FieldValue.increment(-amount)
+                        });
+                    }
+                    // Add reversal transaction
+                    await db.collection('transactions').add({
+                        userId: userId,
+                        amount: -amount,
+                        type: 'investment_deposit_reversal',
+                        description: 'Deposit reverted by admin',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                // Update status back to pending
+                await db.collection('investmentDeposits').doc(docId).update({
+                    status: 'pending',
+                    approvedAt: null,
+                    rejectedAt: null
+                });
+                showAlert('Deposit reverted to pending.', 'success');
+                loadInvestmentTransactions();
+            } catch (error) {
+                console.error('Error reverting deposit:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // Withdrawal actions with revert
         window.approveInvestmentWithdrawal = async function(docId, userId, amount) {
             if (!confirm(`Approve withdrawal of $${amount.toFixed(2)} for user ${userId}?`)) return;
             try {
@@ -8860,6 +9133,76 @@
                 loadInvestmentTransactions();
             } catch (error) {
                 console.error('Error rejecting withdrawal:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.revertInvestmentWithdrawal = async function(docId, userId, amount, originalStatus) {
+            if (!confirm(`Revert this withdrawal? This will set status back to pending and ${originalStatus === 'paid' ? 'add the amount back to the user\'s balance' : 'no effect'}.`)) return;
+            try {
+                if (originalStatus === 'paid') {
+                    // Add back to user's investor account
+                    const accountSnap = await db.collection('investorAccounts').where('userId', '==', userId).get();
+                    if (!accountSnap.empty) {
+                        const accountRef = accountSnap.docs[0].ref;
+                        await accountRef.update({
+                            balance: firebase.firestore.FieldValue.increment(amount)
+                        });
+                    }
+                    await db.collection('transactions').add({
+                        userId: userId,
+                        amount: amount,
+                        type: 'investment_withdrawal_reversal',
+                        description: 'Withdrawal reverted by admin',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else if (originalStatus === 'rejected') {
+                    // If it was rejected, we already refunded; reverting a reject means we subtract again? For simplicity, we just set back to pending and do nothing else.
+                    // But to be consistent, we should subtract if it was rejected.
+                    const accountSnap = await db.collection('investorAccounts').where('userId', '==', userId).get();
+                    if (!accountSnap.empty) {
+                        const accountRef = accountSnap.docs[0].ref;
+                        await accountRef.update({
+                            balance: firebase.firestore.FieldValue.increment(-amount)
+                        });
+                    }
+                    await db.collection('transactions').add({
+                        userId: userId,
+                        amount: -amount,
+                        type: 'investment_withdrawal_reversal',
+                        description: 'Withdrawal revert of rejected request',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                // Change status back to pending
+                await db.collection('investmentWithdrawals').doc(docId).update({
+                    status: 'pending',
+                    paidAt: null,
+                    rejectedAt: null
+                });
+                showAlert('Withdrawal reverted to pending.', 'success');
+                loadInvestmentTransactions();
+            } catch (error) {
+                console.error('Error reverting withdrawal:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        // Account revert (reset)
+        window.revertInvestmentAccount = async function(accountId, userId, action) {
+            if (!confirm(`Reset investor account for user ${userId}? This will set balance to 0 and clear totals.`)) return;
+            try {
+                await db.collection('investorAccounts').doc(accountId).update({
+                    balance: 0,
+                    totalInvested: 0,
+                    totalEarnings: 0,
+                    resetAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    resetBy: currentUser.email
+                });
+                showAlert('Account reset.', 'success');
+                loadInvestorAccounts();
+            } catch (error) {
+                console.error('Error resetting account:', error);
                 showAlert('Error: ' + error.message, 'error');
             }
         };
@@ -9258,6 +9601,7 @@
         window.editLeaderboardEntry = editLeaderboardEntry;
         window.deleteLeaderboardEntry = deleteLeaderboardEntry;
         window.generateLeaderboardFromUsers = generateLeaderboardFromUsers;
+        window.deleteAllAutoEntries = deleteAllAutoEntries;
         window.showAddFaq = showAddFaq;
         window.editFaq = editFaq;
         window.deleteFaq = deleteFaq;
@@ -9319,8 +9663,12 @@
         window.saveInvestorSettings = saveInvestorSettings;
         window.approveInvestmentDeposit = approveInvestmentDeposit;
         window.rejectInvestmentDeposit = rejectInvestmentDeposit;
+        window.revertInvestmentDeposit = revertInvestmentDeposit;
         window.approveInvestmentWithdrawal = approveInvestmentWithdrawal;
         window.rejectInvestmentWithdrawal = rejectInvestmentWithdrawal;
+        window.revertInvestmentWithdrawal = revertInvestmentWithdrawal;
+        window.revertInvestmentAccount = revertInvestmentAccount;
+        window.loadInvestorAccounts = loadInvestorAccounts;
     </script>  
 </body>  
 </html>
