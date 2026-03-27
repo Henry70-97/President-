@@ -755,7 +755,13 @@
         let currentNewbieSubTab = 'content'; // for newbie trainer
         let membershipPackages = null;
         let feeSettings = null;
-        let paymentUrl = ''; // for training payment link
+        let paymentUrl = ''; // for training payment link (legacy)
+        let paymentLinks = {
+            investment: '',
+            training: '',
+            premiumMembership: '',
+            eliteMembership: ''
+        };
         
         // Referral constants  
         const REFERRAL_BONUS_REFERRER = 2; // $2 for referrer  
@@ -936,7 +942,8 @@
             try {
                 await loadMembershipPackages();
                 await loadFeeSettings();
-                await loadPaymentSettings(); // load payment URL
+                await loadPaymentSettings(); // load payment URL (legacy)
+                await loadPaymentLinks();    // load new payment links
                 await setupAutoTickers();   // start listening for auto events
             } catch (e) {
                 console.error('Error loading settings:', e);
@@ -1039,7 +1046,7 @@
                          <tbody>
                 `;
                 if (snapshot.empty) {
-                    html += '<tr><td colspan="5" style="text-align:center;">No tickers. Add one or wait for auto events.</td></tr>';
+                    html += '   <td colspan="5" style="text-align:center;">No tickers. Add one or wait for auto events.   ';
                 } else {
                     snapshot.forEach(doc => {
                         const t = doc.data();
@@ -1047,23 +1054,23 @@
                         const statusText = t.active ? 'Active' : 'Inactive';
                         const typeBadge = t.type === 'auto' ? '<span class="badge info">auto</span>' : '<span class="badge primary">manual</span>';
                         html += `
-                             <tr>
-                                 <td>${t.order || 0}</td>
-                                 <td>${t.message}</td>
-                                 <td>${typeBadge}</td>
-                                 <td><span class="badge ${statusClass}">${statusText}</span></td>
-                                 <td>
-                                    <button class="btn btn-sm btn-primary" onclick="editTicker('${doc.id}', '${t.message}', ${t.order}, ${t.active})">Edit</button>
-                                    <button class="btn btn-sm btn-warning" onclick="toggleTickerStatus('${doc.id}', ${!t.active})">${t.active ? 'Deactivate' : 'Activate'}</button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteTicker('${doc.id}')">Delete</button>
-                                    <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'up')"><i class="fas fa-arrow-up"></i></button>
-                                    <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'down')"><i class="fas fa-arrow-down"></i></button>
-                                 </td>
-                             </tr>
+                               .
+                                    <td>${t.order || 0}</td>
+                                    <td>${t.message}</td>
+                                    <td>${typeBadge}</td>
+                                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editTicker('${doc.id}', '${t.message}', ${t.order}, ${t.active})">Edit</button>
+                                        <button class="btn btn-sm btn-warning" onclick="toggleTickerStatus('${doc.id}', ${!t.active})">${t.active ? 'Deactivate' : 'Activate'}</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteTicker('${doc.id}')">Delete</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'up')"><i class="fas fa-arrow-up"></i></button>
+                                        <button class="btn btn-sm btn-secondary" onclick="moveTicker('${doc.id}', 'down')"><i class="fas fa-arrow-down"></i></button>
+                                    </td>
+                                  
                         `;
                     });
                 }
-                html += '   </tbody>  </table>';
+                html += '   </tbody>   ';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading tickers:', error);
@@ -1217,7 +1224,7 @@
                     </div>
                 `;
                 html += '<table class="data-table" id="usersTable">'; 
-                html += '<thead><tr><th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Active</th><th>Suspended</th><th>Newbie Qualified</th><th>Actions</th></tr></thead><tbody>'; 
+                html += '<thead>   <th>Email</th><th>Name</th><th>Wallet</th><th>Referrals</th><th>Referral Earnings</th><th>Membership</th><th>Verified</th><th>Frozen</th><th>Role</th><th>Active</th><th>Suspended</th><th>Newbie Qualified</th><th>Actions</th> </thead><tbody>'; 
                 
                 users.forEach(user => { 
                     const membershipClass = user.membershipType === 'elite' ? 'warning' : user.membershipType === 'premium' ? 'primary' : 'info'; 
@@ -1233,16 +1240,16 @@
                     
                     html += ` 
                         <tr class="user-row" data-email="${user.email.toLowerCase()}" data-name="${(user.displayName || '').toLowerCase()}"> 
-                            <td>${user.email}</td> 
-                            <td>${user.displayName}</td> 
-                            <td>$${user.wallet || 0}</td> 
-                            <td><span class="badge primary">${user.totalReferrals || 0}</span></td> 
-                            <td>$${user.referralEarnings || 0}</td> 
-                            <td><span class="badge ${membershipClass}">${(user.membershipType || 'basic').toUpperCase()}</span></td> 
-                            <td><span class="badge ${verified ? 'success' : 'warning'}">${verified ? 'Verified' : 'Unverified'}</span></td> 
-                            <td><span class="badge ${frozen ? 'danger' : 'success'}">${frozen ? 'Frozen' : 'Active'}</span></td> 
-                            <td>${user.role}</td> 
-                            <td><span class="badge ${active ? 'success' : 'danger'}">${active ? 'Active' : 'Inactive'}</span></td> 
+                            <td>${user.email}</td>
+                            <td>${user.displayName}</td>
+                            <td>$${user.wallet || 0}</td>
+                            <td><span class="badge primary">${user.totalReferrals || 0}</span></td>
+                            <td>$${user.referralEarnings || 0}</td>
+                            <td><span class="badge ${membershipClass}">${(user.membershipType || 'basic').toUpperCase()}</span></td>
+                            <td><span class="badge ${verified ? 'success' : 'warning'}">${verified ? 'Verified' : 'Unverified'}</span></td>
+                            <td><span class="badge ${frozen ? 'danger' : 'success'}">${frozen ? 'Frozen' : 'Active'}</span></td>
+                            <td>${user.role}</td>
+                            <td><span class="badge ${active ? 'success' : 'danger'}">${active ? 'Active' : 'Inactive'}</span></td>
                             <td>${suspendedStatus}</td>
                             <td>${newbieQualified}</td>
                             <td class="action-buttons"> 
@@ -1259,12 +1266,12 @@
                                     ${suspended ? 'Unsuspend' : 'Suspend'}
                                 </button>
                                 <button class="btn btn-sm btn-info" onclick="generateUserReport('${user.id}')">📋 Full Report</button>
-                              </td> 
-                          </tr> 
+                               </td> 
+                           </tr> 
                     `; 
                 }); 
                  
-                html += '</tbody></table>'; 
+                html += '</tbody> </div>'; 
                 document.getElementById('content').innerHTML = html; 
             } catch (error) {
                 console.error('Error loading users:', error);
@@ -1882,7 +1889,7 @@
                     </div> 
                     <table class="data-table"> 
                         <thead>
-                             <tr><th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Subcategory</th><th>Audio</th><th>AI Annotation</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th></tr>
+                              <th>Title</th><th>Client</th><th>Reward</th><th>Deadline</th><th>Category</th><th>Subcategory</th><th>Audio</th><th>AI Annotation</th><th>Collab</th><th>Assigned To</th><th>Submissions</th><th>Acceptances</th><th>Status</th><th>Actions</th>
                         </thead>
                         <tbody>
                 `; 
@@ -1944,34 +1951,34 @@
                     const acceptCount = task.acceptedCount || 0;
                     
                     html += ` 
-                          <tr> 
-                              <td>${task.title}</td> 
-                              <td><span class="client-badge">${task.clientName || 'NextGen'}</span></td> 
-                              <td>$${task.reward}</td> 
-                            <td class="deadline-cell"> 
+                           <tr> 
+                              <td>${task.title}</td>
+                              <td><span class="client-badge">${task.clientName || 'NextGen'}</span></td>
+                              <td>$${task.reward}</td>
+                              <td class="deadline-cell"> 
                                 <span class="deadline-badge">${deadlineDisplay}</span> 
                                 ${deadlineStatus ? `<br><small class="badge ${deadlineStatus.class}">${deadlineStatus.text}</small>` : ''} 
-                              </td> 
-                              <td>${task.category}</td> 
-                              <td>${subcategoryDisplay}</td> 
+                              </td>
+                              <td>${task.category}</td>
+                              <td>${subcategoryDisplay}</td>
                               <td>${audioDisplay}</td>
                               <td>${annotationDisplay}</td>
-                              <td>${task.collaborable ? '✅' : '❌'}</td> 
-                              <td><span class="badge info">${assignedDisplay}</span></td> 
-                              <td><span class="badge primary">${subCount}</span></td> 
-                              <td><span class="badge warning">${acceptCount}</span></td> 
-                              <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td> 
-                            <td class="action-buttons"> 
+                              <td>${task.collaborable ? '✅' : '❌'}</td>
+                              <td><span class="badge info">${assignedDisplay}</span></td>
+                              <td><span class="badge primary">${subCount}</span></td>
+                              <td><span class="badge warning">${acceptCount}</span></td>
+                              <td><span class="badge ${task.active ? 'success' : 'danger'}">${task.active ? 'Active' : 'Inactive'}</span></td>
+                              <td class="action-buttons"> 
                                 <button class="btn btn-primary edit-task-btn" data-task-id="${task.id}">Edit</button> 
                                 <button class="btn btn-info view-requirements-btn" data-task-id="${task.id}">View Details</button> 
                                 <button class="btn btn-warning toggle-task-btn" data-task-id="${task.id}" data-new-status="${!task.active}">${task.active ? 'Deactivate' : 'Activate'}</button> 
                                 <button class="btn btn-secondary" onclick="showTaskSubmissions('${task.id}')">View Acceptees</button>
                               </td> 
-                          </tr> 
+                           </tr> 
                     `; 
                 } 
                  
-                html += '   </tbody>  </table>'; 
+                html += '   </tbody>   '; 
                 document.getElementById('content').innerHTML = html; 
             } catch (error) {
                 console.error('Error loading tasks:', error);
@@ -2865,7 +2872,7 @@
                 if (invitesSnap.empty) {
                     html += '<p>No pending team approvals.</p>';
                 } else {
-                    html += '<table class="data-table"> <thead>  </thead><tbody>';
+                    html += '<table class="data-table"> <thead>   </thead><tbody>';
                     for (const doc of invitesSnap.docs) {
                         const invite = doc.data();
                         const taskDoc = await db.collection('tasks').doc(invite.taskId).get();
@@ -2875,18 +2882,18 @@
                         const inviterDoc = await db.collection('users').doc(invite.invitedBy).get();
                         const inviterName = inviterDoc.exists ? inviterDoc.data().displayName || inviterDoc.data().email : invite.invitedByName || 'Unknown';
                         html += `
-                              <tr>
-                                  <td>${taskTitle}</td>
-                                  <td>${userEmail}</td>
-                                  <td>${inviterName}</td>
-                                  <td>
+                               .
+                                     Was${taskTitle}Was
+                                     Was${userEmail}Was
+                                     Was${inviterName}Was
+                                     Was
                                     <button class="btn btn-sm btn-success" onclick="approveTeamMember('${invite.taskId}', '${invite.userId}', '${doc.id}')">Approve</button>
                                     <button class="btn btn-sm btn-danger" onclick="rejectTeamMember('${invite.taskId}', '${invite.userId}', '${doc.id}')">Reject</button>
-                                  </td>
-                              </tr>
+                                     Was
+                                 .
                         `;
                     }
-                    html += '</tbody> </table>';
+                    html += '</tbody>   ';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
@@ -4681,7 +4688,8 @@
                 if (!membershipPackages) {
                     await loadMembershipPackages();
                 }
-                await loadPaymentSettings();
+                await loadPaymentSettings(); // legacy training payment URL
+                await loadPaymentLinks();     // new multi‑payment links
                 
                 const totalFees = (feeSettings.transactionFeePercent || 0) + (feeSettings.platformFeePercent || 0);
                 
@@ -4774,15 +4782,34 @@
                         </div>
                     </div>
 
-                    <!-- Payment URL Configuration -->
+                    <!-- New: Payment Links Manager -->
                     <div class="settings-card" style="margin-top: 2rem;">
-                        <h4><i class="fas fa-link"></i> Training Payment URL</h4>
+                        <h4><i class="fas fa-link"></i> Payment Links Manager</h4>
+                        <p style="margin-bottom: 1rem; color: #64748b;">Set separate payment URLs for different sections. These will be used when users need to make payments.</p>
+                        
                         <div class="settings-row">
-                            <span class="settings-label">Payment Link</span>
-                            <input type="url" id="paymentUrlInput" class="settings-input" value="${paymentUrl}" style="width: 300px;">
+                            <span class="settings-label">Investment Deposits</span>
+                            <input type="url" id="paymentLinkInvestment" class="settings-input" value="${paymentLinks.investment || ''}" style="width: 300px;">
                         </div>
-                        <p class="settings-label" style="margin-top: 0.5rem;">Users will be redirected to this URL when paying for prepaid trainings.</p>
-                        <button class="btn btn-success" onclick="savePaymentUrl()">Save Payment URL</button>
+                        <div class="settings-row">
+                            <span class="settings-label">Training Purchases</span>
+                            <input type="url" id="paymentLinkTraining" class="settings-input" value="${paymentLinks.training || ''}" style="width: 300px;">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Premium Membership</span>
+                            <input type="url" id="paymentLinkPremium" class="settings-input" value="${paymentLinks.premiumMembership || ''}" style="width: 300px;">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Elite Membership</span>
+                            <input type="url" id="paymentLinkElite" class="settings-input" value="${paymentLinks.eliteMembership || ''}" style="width: 300px;">
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Legacy Training URL (old)</span>
+                            <input type="url" id="legacyPaymentUrl" class="settings-input" value="${paymentUrl}" style="width: 300px;">
+                            <span class="settings-label" style="font-size: 0.8rem;">(deprecated, kept for compatibility)</span>
+                        </div>
+                        
+                        <button class="btn btn-success" onclick="saveAllPaymentLinks()" style="margin-top: 1rem;">Save All Payment Links</button>
                     </div>
                     
                     <div style="display: flex; gap: 1rem; margin-top: 1rem;">
@@ -4802,13 +4829,87 @@
             }
         }
 
-        window.savePaymentUrl = async function() {
-            const url = document.getElementById('paymentUrlInput').value;
-            if (!url) {
-                showAlert('Please enter a URL', 'error');
-                return;
+        // Load new payment links
+        async function loadPaymentLinks() {
+            try {
+                const doc = await db.collection('settings').doc('paymentLinks').get();
+                if (doc.exists) {
+                    paymentLinks = doc.data();
+                } else {
+                    // Initialize with empty links
+                    paymentLinks = {
+                        investment: '',
+                        training: '',
+                        premiumMembership: '',
+                        eliteMembership: ''
+                    };
+                    await db.collection('settings').doc('paymentLinks').set(paymentLinks);
+                }
+            } catch (error) {
+                console.error('Error loading payment links:', error);
+                paymentLinks = {
+                    investment: '',
+                    training: '',
+                    premiumMembership: '',
+                    eliteMembership: ''
+                };
             }
-            await savePaymentSettings(url);
+        }
+
+        // Save all payment links
+        window.saveAllPaymentLinks = async function() {
+            const newLinks = {
+                investment: document.getElementById('paymentLinkInvestment').value.trim(),
+                training: document.getElementById('paymentLinkTraining').value.trim(),
+                premiumMembership: document.getElementById('paymentLinkPremium').value.trim(),
+                eliteMembership: document.getElementById('paymentLinkElite').value.trim()
+            };
+            // Also update legacy URL
+            const legacyUrl = document.getElementById('legacyPaymentUrl').value.trim();
+            if (legacyUrl !== paymentUrl) {
+                await savePaymentSettings(legacyUrl);
+            }
+            try {
+                await db.collection('settings').doc('paymentLinks').set(newLinks);
+                paymentLinks = newLinks;
+                showAlert('Payment links saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving payment links:', error);
+                showAlert('Error saving payment links: ' + error.message, 'error');
+            }
+        };
+
+        // Legacy payment settings (training)
+        async function loadPaymentSettings() {
+            try {
+                const doc = await db.collection('settings').doc('paymentSettings').get();
+                if (doc.exists) {
+                    paymentUrl = doc.data().paymentUrl || '';
+                }
+            } catch (error) {
+                console.error('Error loading payment settings:', error);
+                paymentUrl = '';
+            }
+        }
+
+        async function savePaymentSettings(url) {
+            try {
+                await db.collection('settings').doc('paymentSettings').set({
+                    paymentUrl: url,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                paymentUrl = url;
+                showAlert('Payment URL saved successfully!', 'success');
+                loadSettings();
+            } catch (error) {
+                console.error('Error saving payment URL:', error);
+                showAlert('Error saving payment URL: ' + error.message, 'error');
+            }
+        }
+
+        window.savePaymentUrl = function() {
+            const url = document.getElementById('paymentUrlInput')?.value;
+            if (url) savePaymentSettings(url);
         };
 
         // ==================== Referrals ====================
@@ -6257,23 +6358,23 @@
                             '<span class="badge warning">Prepaid</span>';
                         const statusClass = app.status === 'pending' ? 'warning' : (app.status === 'approved' ? 'success' : 'danger');
                         html += `
-                               <tr>
-                                   <td>${app.userEmail}</td>
-                                   <td>${trainingTitle}</td>
-                                   <td>${typeBadge}</td>
-                                   <td><span class="badge ${statusClass}">${app.status}</span></td>
-                                   <td>${app.appliedAt ? formatDate(app.appliedAt) : 'N/A'}</td>
-                                   <td>
+                                .
+                                     Was${app.userEmail}Was
+                                     Was${trainingTitle}Was
+                                     Was${typeBadge}Was
+                                     Was<span class="badge ${statusClass}">${app.status}</span>Was
+                                     Was${app.appliedAt ? formatDate(app.appliedAt) : 'N/A'}Was
+                                     Was
                                     ${app.status === 'pending' ? `
                                         <button class="btn btn-sm btn-success" onclick="approveTrainingApplication('${doc.id}', '${app.userId}')">Approve</button>
                                         <button class="btn btn-sm btn-danger" onclick="rejectTrainingApplication('${doc.id}')">Reject</button>
                                     ` : ''}
                                     ${app.paymentDetails ? `<small>${app.paymentDetails}</small>` : ''}
-                                   </td>
-                               </tr>
+                                     Was
+                                 .
                         `;
                     }
-                    html += '</tbody>   </table>';
+                    html += '</tbody>   ';
                 }
                 trainingContent.innerHTML = html;
             } catch (error) {
@@ -6622,21 +6723,21 @@
                         const statusClass = sub.status === 'pending' ? 'warning' : (sub.status === 'approved' ? 'success' : 'danger');
                         const date = sub.submittedAt ? formatDate(sub.submittedAt) : 'N/A';
                         html += `
-                               <tr>
-                                   <td>${sub.userName || sub.userEmail || sub.userId}</td>
-                                   <td>${date}</td>
-                                   <td><span class="badge ${statusClass}">${sub.status}</span></td>
-                                   <td>
+                                .
+                                     Was${sub.userName || sub.userEmail || sub.userId}Was
+                                     Was${date}Was
+                                     Was<span class="badge ${statusClass}">${sub.status}</span>Was
+                                     Was
                                     <button class="btn btn-sm btn-primary" onclick="viewNewbieSubmission('${doc.id}')">View Answers</button>
                                     ${sub.status === 'pending' ? `
                                         <button class="btn btn-sm btn-success" onclick="approveNewbieSubmission('${doc.id}', '${sub.userId}')">Approve</button>
                                         <button class="btn btn-sm btn-danger" onclick="rejectNewbieSubmission('${doc.id}', '${sub.userId}')">Reject</button>
                                     ` : ''}
-                                   </td>
-                               </tr>
+                                     Was
+                                 .
                         `;
                     }
-                    html += '</tbody>   </table>';
+                    html += '</tbody>   ';
                 }
                 container.innerHTML = html;
             } catch (error) {
@@ -6749,9 +6850,9 @@
                     snapshot.forEach(doc => {
                         const log = doc.data();
                         const time = log.timestamp ? formatDate(log.timestamp) : 'N/A';
-                        html += ` <tr><td>${log.userName || 'N/A'}</td><td>${log.userEmail || 'N/A'}</td><td>${time}</td><td>${log.ip || 'N/A'}</td></tr>`;
+                        html += `   Was${log.userName || 'N/A'}Was${log.userEmail || 'N/A'}Was${time}Was${log.ip || 'N/A'}Was `;
                     });
-                    html += '</tbody>   </table>';
+                    html += '</tbody>   ';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
@@ -6778,9 +6879,9 @@
                         const date = t.createdAt ? formatDate(t.createdAt) : 'N/A';
                         const amountClass = t.amount >= 0 ? 'success' : 'danger';
                         const amountStr = t.amount >= 0 ? `+$${t.amount.toFixed(2)}` : `-$${Math.abs(t.amount).toFixed(2)}`;
-                        html += ` <tr><td>${date}</td><td>${t.userEmail || 'Unknown'}</td><td><span class="badge primary">${t.type.replace('_', ' ')}</span></td><td>${t.description}</td><td><span class="badge ${amountClass}">${amountStr}</span></td></tr>`;
+                        html += `   Was${date}Was${t.userEmail || 'Unknown'}Was<span class="badge primary">${t.type.replace('_', ' ')}</span>Was${t.description}Was<span class="badge ${amountClass}">${amountStr}</span>Was `;
                     });
-                    html += '</tbody>   </table>';
+                    html += '</tbody>   ';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
@@ -6809,20 +6910,20 @@
                         const date = p.createdAt ? formatDate(p.createdAt) : 'N/A';
                         const hasResponse = p.response ? 'Yes' : 'No';
                         html += `
-                              <tr>
-                                  <td>${p.userEmail || p.userName || p.userId}</td>
-                                  <td>${p.message.substring(0,50)}...</td>
-                                  <td>${date}</td>
-                                  <td><span class="badge ${p.response ? 'success' : 'warning'}">${hasResponse}</span></td>
-                                  <td>
+                               .
+                                     Was${p.userEmail || p.userName || p.userId}Was
+                                     Was${p.message.substring(0,50)}...Was
+                                     Was${date}Was
+                                     Was<span class="badge ${p.response ? 'success' : 'warning'}">${hasResponse}</span>Was
+                                     Was
                                     <button class="btn btn-sm btn-primary" onclick="viewPetition('${doc.id}', '${p.userId}', '${p.message.replace(/'/g, "\\'")}', '${p.response || ''}')">View</button>
                                     ${!p.response ? `<button class="btn btn-sm btn-warning" onclick="replyToPetition('${doc.id}', '${p.userId}', '${p.message.replace(/'/g, "\\'")}')">Reply</button>` : ''}
-                                  </td>
-                              </tr>
+                                     Was
+                                 .
                         `;
                     });
                 }
-                html += '   </tbody>   </table>';
+                html += '   </tbody>   ';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading petitions:', error);
@@ -6875,16 +6976,18 @@
             }
         };
 
-        // ==================== Leaderboard ====================
+        // ==================== LEADERBOARD (with duplicate management) ====================
         async function loadLeaderboardManager() {
             try {
                 const snapshot = await db.collection('leaderboard').orderBy('rank', 'asc').get();
                 let html = `
                     <h3 style="margin-bottom:1.5rem;">🏆 Leaderboard Management</h3>
-                    <div style="display: flex; gap: 1rem; margin-bottom:1rem;">
+                    <div style="display: flex; gap: 1rem; margin-bottom:1rem; flex-wrap:wrap;">
                         <button class="btn btn-success" onclick="showAddLeaderboardEntry()">+ Add Manual Entry</button>
                         <button class="btn btn-primary" onclick="generateLeaderboardFromUsers()">⚙️ Generate from Users (Clears Auto Entries)</button>
                         <button class="btn btn-danger" onclick="deleteAllAutoEntries()">🗑️ Delete All Auto Entries</button>
+                        <button class="btn btn-warning" onclick="findAndRemoveDuplicates()">🔍 Find Duplicates</button>
+                        <button class="btn btn-warning" onclick="removeAllDuplicates()">🧹 Remove All Duplicates</button>
                         <button class="btn btn-info" onclick="showPasteLeaderboardEntries()">📋 Paste Entries</button>
                     </div>
                     <table class="data-table">
@@ -6902,26 +7005,178 @@
                             ? '<span class="badge warning">Manual</span>' 
                             : '<span class="badge info">Auto</span>';
                         html += `
-                              <tr>
-                                  <td>#${entry.rank}</td>
-                                  <td>${entry.userName}</td>
-                                  <td>${entry.points}</td>
-                                  <td>${typeBadge}</td>
-                                  <td>
+                               .
+                                     Was#${entry.rank}Was
+                                     Was${entry.userName}Was
+                                     Was${entry.points}Was
+                                     Was${typeBadge}Was
+                                     Was
                                     <button class="btn btn-sm btn-primary" onclick="editLeaderboardEntry('${doc.id}', ${entry.rank}, '${entry.userName}', ${entry.points})">Edit</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteLeaderboardEntry('${doc.id}')">Delete</button>
-                                  </td>
-                              </tr>
+                                     Was
+                                 .
                         `;
                     });
                 }
-                html += '   </tbody>   </table>';
+                html += '   </tbody>   ';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading leaderboard:', error);
                 document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p><button class="btn btn-primary" onclick="loadLeaderboardManager()">Retry</button></div>`;
             }
         }
+
+        // Helper: Find duplicates among manual entries and show modal with checkboxes
+        window.findAndRemoveDuplicates = async function() {
+            try {
+                const snapshot = await db.collection('leaderboard')
+                    .where('type', '==', 'manual')
+                    .get();
+                if (snapshot.empty) {
+                    showAlert('No manual entries found.', 'info');
+                    return;
+                }
+                const entries = [];
+                snapshot.forEach(doc => {
+                    entries.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Group by (userName, points) – treat as duplicate if both same
+                const groups = new Map();
+                entries.forEach(entry => {
+                    const key = `${entry.userName.toLowerCase()}|${entry.points}`;
+                    if (!groups.has(key)) groups.set(key, []);
+                    groups.get(key).push(entry);
+                });
+
+                const duplicates = [];
+                groups.forEach(group => {
+                    if (group.length > 1) {
+                        // Keep the first one, mark others as duplicate
+                        const [first, ...rest] = group;
+                        duplicates.push(...rest.map(d => ({ ...d, firstId: first.id })));
+                    }
+                });
+
+                if (duplicates.length === 0) {
+                    showAlert('No duplicate manual entries found.', 'info');
+                    return;
+                }
+
+                // Build modal HTML
+                let modalHtml = `
+                    <h3 style="margin-bottom:1rem;">Duplicate Manual Entries Found</h3>
+                    <p>Select which duplicate entries to delete. The first occurrence of each duplicate group will be kept.</p>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                `;
+                // Show duplicates grouped by key for better understanding
+                const byGroup = new Map();
+                duplicates.forEach(d => {
+                    const key = `${d.userName}|${d.points}`;
+                    if (!byGroup.has(key)) byGroup.set(key, []);
+                    byGroup.get(key).push(d);
+                });
+                byGroup.forEach((group, key) => {
+                    const [userName, points] = key.split('|');
+                    modalHtml += `<div style="margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.5rem;">
+                        <strong>${userName} (${points} pts)</strong> – ${group.length} duplicate(s)
+                    </div>`;
+                    group.forEach(dup => {
+                        modalHtml += `
+                            <div style="margin-left:1rem; margin-bottom:0.5rem;">
+                                <label>
+                                    <input type="checkbox" class="dup-checkbox" value="${dup.id}" data-first="${dup.firstId}">
+                                    ID: ${dup.id.substring(0,8)}... (Rank ${dup.rank})
+                                </label>
+                            </div>
+                        `;
+                    });
+                });
+                modalHtml += `
+                    </div>
+                    <div style="margin-top:1rem;">
+                        <button class="btn btn-danger" id="deleteSelectedDupBtn">Delete Selected</button>
+                        <button class="btn btn-primary" id="selectAllDupBtn">Select All</button>
+                        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    </div>
+                `;
+                showModal(modalHtml);
+
+                document.getElementById('selectAllDupBtn').addEventListener('click', () => {
+                    document.querySelectorAll('.dup-checkbox').forEach(cb => cb.checked = true);
+                });
+                document.getElementById('deleteSelectedDupBtn').addEventListener('click', async () => {
+                    const selected = Array.from(document.querySelectorAll('.dup-checkbox:checked')).map(cb => cb.value);
+                    if (selected.length === 0) {
+                        showAlert('No entries selected', 'warning');
+                        return;
+                    }
+                    if (!confirm(`Delete ${selected.length} duplicate entry(s)?`)) return;
+                    try {
+                        const batch = db.batch();
+                        selected.forEach(id => {
+                            batch.delete(db.collection('leaderboard').doc(id));
+                        });
+                        await batch.commit();
+                        showAlert(`${selected.length} duplicate(s) deleted.`, 'success');
+                        closeModal();
+                        loadLeaderboardManager();
+                    } catch (error) {
+                        console.error('Error deleting duplicates:', error);
+                        showAlert('Error: ' + error.message, 'error');
+                    }
+                });
+            } catch (error) {
+                console.error('Error finding duplicates:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
+
+        window.removeAllDuplicates = async function() {
+            if (!confirm('Remove all duplicate manual entries? This will keep only the first occurrence of each unique (userName, points) pair.')) return;
+            try {
+                const snapshot = await db.collection('leaderboard')
+                    .where('type', '==', 'manual')
+                    .get();
+                if (snapshot.empty) {
+                    showAlert('No manual entries found.', 'info');
+                    return;
+                }
+                const entries = [];
+                snapshot.forEach(doc => {
+                    entries.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Group by (userName, points) – keep only the first in each group
+                const toDelete = [];
+                const seen = new Set();
+                entries.forEach(entry => {
+                    const key = `${entry.userName.toLowerCase()}|${entry.points}`;
+                    if (seen.has(key)) {
+                        toDelete.push(entry.id);
+                    } else {
+                        seen.add(key);
+                    }
+                });
+
+                if (toDelete.length === 0) {
+                    showAlert('No duplicates found.', 'info');
+                    return;
+                }
+
+                if (!confirm(`Delete ${toDelete.length} duplicate entry(s)?`)) return;
+                const batch = db.batch();
+                toDelete.forEach(id => {
+                    batch.delete(db.collection('leaderboard').doc(id));
+                });
+                await batch.commit();
+                showAlert(`${toDelete.length} duplicate(s) removed.`, 'success');
+                loadLeaderboardManager();
+            } catch (error) {
+                console.error('Error removing duplicates:', error);
+                showAlert('Error: ' + error.message, 'error');
+            }
+        };
 
         window.deleteAllAutoEntries = async function() {
             if (!confirm('Delete all auto-generated leaderboard entries? Manual entries will remain.')) return;
@@ -7111,7 +7366,7 @@
             }
         };
 
-        // ========== NEW: PASTE LEADERBOARD ENTRIES ==========
+        // ========== PASTE LEADERBOARD ENTRIES (unchanged) ==========
         window.showPasteLeaderboardEntries = function() {
             showModal(`
                 <h3 style="margin-bottom:1rem;">Paste Leaderboard Entries</h3>
@@ -7141,46 +7396,24 @@
 
                 lines.forEach((line, index) => {
                     line = line.trim();
-                    if (line === '' || line.startsWith('#')) {
-                        // Optionally keep rank line format: #1  name  points  type
-                        const parts = line.split(/\s+/); // split by whitespace
-                        // Expected parts: ["#1", "username", "points", "type"]
-                        if (parts.length >= 4) {
-                            const rankStr = parts[0].replace('#', '');
-                            const rank = parseInt(rankStr, 10);
-                            const userName = parts[1];
-                            const points = parseFloat(parts[2]);
-                            const type = 'manual'; // always treat pasted entries as manual
-
-                            if (isNaN(rank) || rank <= 0) {
-                                errors.push(`Line ${index+1}: Invalid rank "${parts[0]}"`);
-                            } else if (!userName) {
-                                errors.push(`Line ${index+1}: Missing user name`);
-                            } else if (isNaN(points)) {
-                                errors.push(`Line ${index+1}: Invalid points "${parts[2]}"`);
-                            } else {
-                                entries.push({ rank, userName, points, type });
-                            }
+                    if (line === '') return;
+                    // Try to parse lines that may or may not start with #
+                    let rank, userName, points, type;
+                    // Remove leading # if present
+                    const cleanLine = line.replace(/^#/, '');
+                    const parts = cleanLine.split(/\s+/);
+                    if (parts.length >= 3) {
+                        rank = parseInt(parts[0], 10);
+                        userName = parts[1];
+                        points = parseFloat(parts[2]);
+                        type = parts[3] ? parts[3] : 'manual';
+                        if (!isNaN(rank) && rank > 0 && userName && !isNaN(points)) {
+                            entries.push({ rank, userName, points, type });
                         } else {
-                            errors.push(`Line ${index+1}: Line does not have enough parts (expected 4)`);
+                            errors.push(`Line ${index+1}: Could not parse line: "${line}"`);
                         }
                     } else {
-                        // If line doesn't start with #, try to parse anyway (maybe they omitted #)
-                        const parts = line.split(/\s+/);
-                        if (parts.length >= 3) {
-                            // Assume rank is first, but it might not have # – try to parse as number
-                            const rank = parseInt(parts[0], 10);
-                            const userName = parts[1];
-                            const points = parseFloat(parts[2]);
-                            const type = 'manual';
-                            if (!isNaN(rank) && rank > 0 && userName && !isNaN(points)) {
-                                entries.push({ rank, userName, points, type });
-                            } else {
-                                errors.push(`Line ${index+1}: Could not parse line: "${line}"`);
-                            }
-                        } else {
-                            errors.push(`Line ${index+1}: Line has insufficient data (expected at least rank, name, points)`);
-                        }
+                        errors.push(`Line ${index+1}: Line has insufficient data (expected at least rank, name, points)`);
                     }
                 });
 
@@ -7194,14 +7427,12 @@
                     return;
                 }
 
-                // Confirm with user
                 if (!confirm(`Add ${entries.length} entries to the leaderboard?`)) return;
 
-                // Write to Firestore
                 try {
                     const batch = db.batch();
                     entries.forEach(entry => {
-                        const docRef = db.collection('leaderboard').doc(); // auto‑generated ID
+                        const docRef = db.collection('leaderboard').doc();
                         batch.set(docRef, {
                             rank: entry.rank,
                             userName: entry.userName,
@@ -7211,10 +7442,9 @@
                         });
                     });
                     await batch.commit();
-
                     showAlert(`Successfully added ${entries.length} leaderboard entries!`, 'success');
                     closeModal();
-                    loadLeaderboardManager(); // refresh the table
+                    loadLeaderboardManager();
                 } catch (error) {
                     console.error('Error adding pasted entries:', error);
                     showAlert('Error saving entries: ' + error.message, 'error');
@@ -7244,19 +7474,19 @@
                     snapshot.forEach(doc => {
                         const faq = doc.data();
                         html += `
-                              <tr>
-                                  <td>${faq.order || 0}</td>
-                                  <td>${faq.question}</td>
-                                  <td>${faq.answer.substring(0,50)}...</td>
-                                  <td>
+                               .
+                                     Was${faq.order || 0}Was
+                                     Was${faq.question}Was
+                                     Was${faq.answer.substring(0,50)}...Was
+                                     Was
                                     <button class="btn btn-sm btn-primary" onclick="editFaq('${doc.id}', ${faq.order || 0}, '${faq.question}', '${faq.answer}')">Edit</button>
                                     <button class="btn btn-sm btn-danger" onclick="deleteFaq('${doc.id}')">Delete</button>
-                                  </td>
-                              </tr>
+                                     Was
+                                 .
                         `;
                     });
                 }
-                html += '   </tbody>   </table>';
+                html += '   </tbody>   ';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading FAQs:', error);
@@ -7373,18 +7603,18 @@
                         const fb = doc.data();
                         const date = fb.createdAt ? formatDate(fb.createdAt) : 'N/A';
                         html += `
-                              <tr>
-                                  <td>${fb.clientName || 'Anonymous'}</td>
-                                  <td>${fb.message.substring(0,50)}...</td>
-                                  <td>${date}</td>
-                                  <td>
+                               .
+                                     Was${fb.clientName || 'Anonymous'}Was
+                                     Was${fb.message.substring(0,50)}...Was
+                                     Was${date}Was
+                                     Was
                                     <button class="btn btn-sm btn-danger" onclick="deleteFeedback('${doc.id}')">Delete</button>
-                                  </td>
-                              </tr>
+                                     Was
+                                 .
                         `;
                     });
                 }
-                html += '   </tbody>   </table>';
+                html += '   </tbody>   ';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading feedback:', error);
@@ -7828,10 +8058,10 @@
                     </div>
                     <table class="data-table" id="inactiveUsersTable">
                         <thead>
-                              <tr>
+                               .
                                 <th><input type="checkbox" id="selectAllInactive" onclick="toggleSelectAllInactive()"></th>
                                 <th>Email</th><th>Name</th><th>Wallet</th><th>Membership</th><th>Last Login</th><th>Last Submission</th><th>Actions</th>
-                              </tr>
+                               .
                         </thead>
                         <tbody>
                 `;
@@ -7845,23 +8075,23 @@
                         const membershipClass = u.membershipType === 'elite' ? 'warning' : u.membershipType === 'premium' ? 'primary' : 'info';
                         html += `
                               <tr data-user-id="${u.id}">
-                                  <td><input type="checkbox" class="inactive-user-checkbox" value="${u.id}"></td>
-                                  <td>${u.email}</td>
-                                  <td>${u.displayName || ''}</td>
-                                  <td>$${u.wallet || 0}</td>
-                                  <td><span class="badge ${membershipClass}">${(u.membershipType || 'basic').toUpperCase()}</span></td>
-                                  <td>${lastLoginStr}</td>
-                                  <td>${lastSubStr}</td>
-                                  <td>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}', '${u.email}')">Delete</button>
-                                    <button class="btn btn-sm btn-warning" onclick="toggleSuspendUser('${u.id}', ${u.suspended || false})">${u.suspended ? 'Unsuspend' : 'Suspend'}</button>
-                                    <button class="btn btn-sm btn-secondary" onclick="toggleFrozen('${u.id}', ${u.frozen || false})">${u.frozen ? 'Unfreeze' : 'Freeze'}</button>
-                                  </td>
-                              </tr>
+                                     <td><input type="checkbox" class="inactive-user-checkbox" value="${u.id}"></td>
+                                     <td>${u.email}</td>
+                                     <td>${u.displayName || ''}</td>
+                                     <td>$${u.wallet || 0}</td>
+                                     <td><span class="badge ${membershipClass}">${(u.membershipType || 'basic').toUpperCase()}</span></td>
+                                     <td>${lastLoginStr}</td>
+                                     <td>${lastSubStr}</td>
+                                     <td>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}', '${u.email}')">Delete</button>
+                                        <button class="btn btn-sm btn-warning" onclick="toggleSuspendUser('${u.id}', ${u.suspended || false})">${u.suspended ? 'Unsuspend' : 'Suspend'}</button>
+                                        <button class="btn btn-sm btn-secondary" onclick="toggleFrozen('${u.id}', ${u.frozen || false})">${u.frozen ? 'Unfreeze' : 'Freeze'}</button>
+                                     </td>
+                                  
                         `;
                     });
                 }
-                html += '   </tbody>   </table>';
+                html += '   </tbody>   ';
                 document.getElementById('content').innerHTML = html;
 
                 window.toggleSelectAllInactive = function() {
@@ -8597,22 +8827,22 @@
                         const statusClass = a.active ? 'success' : 'secondary';
                         const statusText = a.active ? 'Active' : 'Inactive';
                         html += `
-                               <tr>
-                                   <td>${a.order || 0}</td>
-                                   <td>${escapeHtml(a.message)}</td>
-                                   <td><span class="badge ${statusClass}">${statusText}</span></td>
-                                   <td>
+                                .
+                                     Was${a.order || 0}Was
+                                     Was${escapeHtml(a.message)}Was
+                                     Was<span class="badge ${statusClass}">${statusText}</span>Was
+                                     Was
                                         <button class="btn btn-sm btn-primary edit-announcement-btn" data-id="${doc.id}" data-message="${escapeHtml(a.message)}" data-order="${a.order || 0}" data-active="${a.active}">Edit</button>
                                         <button class="btn btn-sm btn-warning toggle-announcement-btn" data-id="${doc.id}" data-new-status="${!a.active}">${a.active ? 'Deactivate' : 'Activate'}</button>
                                         <button class="btn btn-sm btn-danger delete-announcement-btn" data-id="${doc.id}">Delete</button>
                                         <button class="btn btn-sm btn-secondary move-announcement-btn" data-id="${doc.id}" data-direction="up"><i class="fas fa-arrow-up"></i></button>
                                         <button class="btn btn-sm btn-secondary move-announcement-btn" data-id="${doc.id}" data-direction="down"><i class="fas fa-arrow-down"></i></button>
-                                   </td>
-                               </tr>
+                                     Was
+                                 .
                         `;
                     });
                 }
-                html += '   </tbody>    </table>';
+                html += '   </tbody>   ';
                 document.getElementById('content').innerHTML = html;
             } catch (error) {
                 console.error('Error loading announcements:', error);
@@ -8711,7 +8941,7 @@
             } catch (e) { showAlert('Error moving: ' + e.message, 'error'); }
         };
 
-        // ==================== INVESTOR MANAGEMENT (ENHANCED) ====================
+        // ==================== INVESTOR MANAGEMENT (ENHANCED WITH IMPROVED TABLES) ====================
         let currentInvestorSubTab = 'settings'; // 'settings', 'transactions', or 'accounts'
 
         async function loadInvestorManager() {
@@ -8852,7 +9082,7 @@
                 if (depositsSnap.empty) {
                     html += '<p>No deposit requests.</p>';
                 } else {
-                    html += '<table class="data-table"> <thead> <th>User</th><th>Amount</th><th>Method</th><th>Code</th><th>Date</th><th>Status</th><th>Actions</th> </thead><tbody>';
+                    html += '<div class="overflow-x-auto"><table class="data-table"><thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Code</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
                     for (const doc of depositsSnap.docs) {
                         const d = doc.data();
                         const statusClass = d.status === 'pending' ? 'warning' : (d.status === 'approved' ? 'success' : 'danger');
@@ -8863,32 +9093,32 @@
                             if (userDoc.exists) userName = userDoc.data().displayName || userDoc.data().email;
                         } catch(e) {}
                         html += `
-                             <tr>
-                                 <td>${userName}</td>
-                                 <td>$${d.amount.toFixed(2)}</td>
-                                 <td>${d.paymentMethod || 'N/A'}</td>
-                                 <td>${d.transactionCode || 'N/A'}</td>
-                                 <td>${d.createdAt ? formatDate(d.createdAt) : 'N/A'}</td>
-                                 <td><span class="badge ${statusClass}">${d.status}</span></td>
-                                 <td>
+                              <tr>
+                                  <td>${escapeHtml(userName)}</td>
+                                  <td>$${d.amount.toFixed(2)}</td>
+                                  <td>${escapeHtml(d.paymentMethod || 'N/A')}</td>
+                                  <td>${escapeHtml(d.transactionCode || 'N/A')}</td>
+                                  <td>${d.createdAt ? formatDate(d.createdAt) : 'N/A'}</td>
+                                  <td><span class="badge ${statusClass}">${d.status || 'pending'}</span></td>
+                                  <td>
                                     ${d.status === 'pending' ? `
                                         <button class="btn btn-sm btn-success approve-investment-deposit" data-id="${doc.id}" data-user-id="${d.userId}" data-amount="${d.amount}">Approve</button>
                                         <button class="btn btn-sm btn-danger reject-investment-deposit" data-id="${doc.id}" data-user-id="${d.userId}" data-amount="${d.amount}">Reject</button>
                                     ` : `
                                         <button class="btn btn-sm btn-warning revert-investment-deposit" data-id="${doc.id}" data-user-id="${d.userId}" data-amount="${d.amount}" data-status="${d.status}">Revert</button>
                                     `}
-                                 </td>
-                             </tr>
+                                  </td>
+                              </tr>
                         `;
                     }
-                    html += '</tbody>   </table>';
+                    html += '</tbody></table></div>';
                 }
 
                 html += '<h4 style="margin-top:2rem;">Withdrawals</h4>';
                 if (withdrawalsSnap.empty) {
                     html += '<p>No withdrawal requests.</p>';
                 } else {
-                    html += '<table class="data-table"> <thead> <th>User</th><th>Amount</th><th>Method</th><th>Details</th><th>Date</th><th>Status</th><th>Actions</th> </thead><tbody>';
+                    html += '<div class="overflow-x-auto"><table class="data-table"><thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Details</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
                     for (const doc of withdrawalsSnap.docs) {
                         const w = doc.data();
                         const statusClass = w.status === 'pending' ? 'warning' : (w.status === 'paid' ? 'success' : 'danger');
@@ -8904,25 +9134,25 @@
                             if (userDoc.exists) userName = userDoc.data().displayName || userDoc.data().email;
                         } catch(e) {}
                         html += `
-                             <tr>
-                                 <td>${userName}</td>
-                                 <td>$${w.amount.toFixed(2)}</td>
-                                 <td>${w.method}</td>
-                                 <td>${details}</td>
-                                 <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
-                                 <td><span class="badge ${statusClass}">${w.status}</span></td>
-                                 <td>
+                              <tr>
+                                  <td>${escapeHtml(userName)}</td>
+                                  <td>$${w.amount.toFixed(2)}</td>
+                                  <td>${escapeHtml(w.method)}</td>
+                                  <td>${escapeHtml(details)}</td>
+                                  <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
+                                  <td><span class="badge ${statusClass}">${w.status || 'pending'}</span></td>
+                                  <td>
                                     ${w.status === 'pending' ? `
                                         <button class="btn btn-sm btn-success approve-investment-withdrawal" data-id="${doc.id}" data-user-id="${w.userId}" data-amount="${w.amount}">Approve</button>
                                         <button class="btn btn-sm btn-danger reject-investment-withdrawal" data-id="${doc.id}" data-user-id="${w.userId}" data-amount="${w.amount}">Reject</button>
                                     ` : `
                                         <button class="btn btn-sm btn-warning revert-investment-withdrawal" data-id="${doc.id}" data-user-id="${w.userId}" data-amount="${w.amount}" data-status="${w.status}">Revert</button>
                                     `}
-                                 </td>
-                             </tr>
+                                  </td>
+                              </tr>
                         `;
                     }
-                    html += '</tbody>   </table>';
+                    html += '</tbody></table></div>';
                 }
 
                 container.innerHTML = html;
@@ -8932,7 +9162,7 @@
             }
         }
 
-        // New: Load active investor accounts
+        // New: Load active investor accounts (with improved layout)
         async function loadInvestorAccounts() {
             const container = document.getElementById('investorContent');
             if (!container) return;
@@ -8943,7 +9173,7 @@
                 if (accountsSnap.empty) {
                     html += '<p>No investor accounts yet.</p>';
                 } else {
-                    html += '<table class="data-table"> <thead> <th>User</th><th>Balance</th><th>Total Invested</th><th>Total Earned</th><th>Maturity (based on last deposit)</th><th>Actions</th> </thead><tbody>';
+                    html += '<div class="overflow-x-auto"><table class="data-table"><thead><tr><th>User</th><th>Balance</th><th>Total Invested</th><th>Total Earned</th><th>Maturity (based on last deposit)</th><th>Actions</th></tr></thead><tbody>';
                     for (const doc of accountsSnap.docs) {
                         const acc = doc.data();
                         let userName = acc.userId;
@@ -8966,20 +9196,25 @@
                             const maturityDate = new Date(approvedDate.getTime() + duration * 60 * 60 * 1000);
                             maturity = formatDate(maturityDate);
                         }
+                        // Safe numeric formatting:
+                        const balance = (acc.balance || 0).toFixed(2);
+                        const totalInvested = (acc.totalInvested || 0).toFixed(2);
+                        const totalEarnings = (acc.totalEarnings || 0).toFixed(2);
+                        
                         html += `
-                             <tr>
-                                 <td>${userName}</td>
-                                 <td>$${acc.balance.toFixed(2)}</td>
-                                 <td>$${(acc.totalInvested || 0).toFixed(2)}</td>
-                                 <td>$${(acc.totalEarnings || 0).toFixed(2)}</td>
-                                 <td>${maturity}</td>
-                                 <td>
-                                    <button class="btn btn-sm btn-danger revert-investment-account" data-id="${doc.id}" data-user-id="${acc.userId}" data-action="reset">Reset Account</button>
-                                 </td>
-                             </tr>
+                              <tr>
+                                  <td>${escapeHtml(userName)}</td>
+                                  <td>$${balance}</td>
+                                  <td>$${totalInvested}</td>
+                                  <td>$${totalEarnings}</td>
+                                  <td>${maturity}</td>
+                                  <td>
+                                      <button class="btn btn-sm btn-danger revert-investment-account" data-id="${doc.id}" data-user-id="${acc.userId}" data-action="reset">Reset Account</button>
+                                  </td>
+                              </tr>
                         `;
                     }
-                    html += '</tbody>   </table>';
+                    html += '</tbody></table></div>';
                 }
                 container.innerHTML = html;
             } catch (error) {
@@ -9380,6 +9615,55 @@
             }
         }
 
+        // Load payment links (new)
+        async function loadPaymentLinks() {
+            try {
+                const doc = await db.collection('settings').doc('paymentLinks').get();
+                if (doc.exists) {
+                    paymentLinks = doc.data();
+                } else {
+                    paymentLinks = {
+                        investment: '',
+                        training: '',
+                        premiumMembership: '',
+                        eliteMembership: ''
+                    };
+                    await db.collection('settings').doc('paymentLinks').set(paymentLinks);
+                }
+            } catch (error) {
+                console.error('Error loading payment links:', error);
+                paymentLinks = {
+                    investment: '',
+                    training: '',
+                    premiumMembership: '',
+                    eliteMembership: ''
+                };
+            }
+        }
+
+        window.saveAllPaymentLinks = async function() {
+            const newLinks = {
+                investment: document.getElementById('paymentLinkInvestment').value.trim(),
+                training: document.getElementById('paymentLinkTraining').value.trim(),
+                premiumMembership: document.getElementById('paymentLinkPremium').value.trim(),
+                eliteMembership: document.getElementById('paymentLinkElite').value.trim()
+            };
+            // Also update legacy URL
+            const legacyUrl = document.getElementById('legacyPaymentUrl').value.trim();
+            if (legacyUrl !== paymentUrl) {
+                await savePaymentSettings(legacyUrl);
+            }
+            try {
+                await db.collection('settings').doc('paymentLinks').set(newLinks);
+                paymentLinks = newLinks;
+                showAlert('Payment links saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving payment links:', error);
+                showAlert('Error saving payment links: ' + error.message, 'error');
+            }
+        };
+
+        // Legacy payment settings (training)
         async function loadPaymentSettings() {
             try {
                 const doc = await db.collection('settings').doc('paymentSettings').get();
@@ -9602,6 +9886,8 @@
         window.deleteLeaderboardEntry = deleteLeaderboardEntry;
         window.generateLeaderboardFromUsers = generateLeaderboardFromUsers;
         window.deleteAllAutoEntries = deleteAllAutoEntries;
+        window.findAndRemoveDuplicates = findAndRemoveDuplicates;
+        window.removeAllDuplicates = removeAllDuplicates;
         window.showAddFaq = showAddFaq;
         window.editFaq = editFaq;
         window.deleteFaq = deleteFaq;
@@ -9669,6 +9955,7 @@
         window.revertInvestmentWithdrawal = revertInvestmentWithdrawal;
         window.revertInvestmentAccount = revertInvestmentAccount;
         window.loadInvestorAccounts = loadInvestorAccounts;
+        window.saveAllPaymentLinks = saveAllPaymentLinks;
     </script>  
 </body>  
 </html>

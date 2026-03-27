@@ -3433,7 +3433,8 @@
         const REFERRER_BONUS_PREMIUM = 2;      // $2 for referrer when referred upgrades to Premium
         const REFERRER_BONUS_ELITE = 4;        // $4 for referrer when referred upgrades to Elite
         const REFERRED_BONUS = 0.5;            // $0.5 for new member upon any upgrade
-        let paymentUrl = "https://lipana.dev/pay/nextgen-membership";
+        let paymentUrl = "https://lipana.dev/pay/nextgen-membership"; // legacy, kept for compatibility
+        let paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '' };
 
         // ==================== OFFER FEATURE ====================
         let currentOfferMap = {};  // map from membershipType to offer data
@@ -3538,6 +3539,21 @@
             } catch (e) {
                 console.error('Error loading active offers:', e);
                 currentOfferMap = {};
+            }
+        }
+
+        // ==================== LOAD PAYMENT LINKS (NEW) ====================
+        async function loadPaymentLinks() {
+            try {
+                const doc = await db.collection('settings').doc('paymentLinks').get();
+                if (doc.exists) {
+                    paymentLinks = doc.data();
+                } else {
+                    paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '' };
+                }
+            } catch (e) {
+                console.error('Error loading payment links:', e);
+                paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '' };
             }
         }
 
@@ -5635,7 +5651,7 @@
             }
         }
 
-        // ==================== MEMBERSHIP OPTIONS ====================
+        // ==================== MEMBERSHIP OPTIONS (UPDATED WITH PAYMENT LINKS) ====================
         function showMembershipOptions(usingOffer = false) {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
             const offer = currentOfferMap['premium'];
@@ -5643,12 +5659,14 @@
             const offerPrice = hasOffer ? offer.newAmount : premiumPkg.price;
             const originalPrice = hasOffer ? offer.originalPrice : premiumPkg.price;
             const offerId = hasOffer ? offer.id : null;
+            // Use dedicated payment link for premium, fallback to old paymentUrl
+            const premiumPaymentLink = paymentLinks.premiumMembership || paymentUrl;
 
             showModal(`<div class="modal-content" style="text-align:center;">
                 <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;">
                     <i class="fas fa-bolt" style="font-size:2rem;"></i>
                     <h3 style="color:white;">Ready to Upgrade?</h3>
-                    <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('${paymentUrl}','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
+                    <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('${premiumPaymentLink}','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
                 </div>
                 <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i>
                 <h3>Upgrade Your Membership</h3>
@@ -5683,12 +5701,14 @@
             const offerPrice = hasOffer ? offer.newAmount : elitePkg.price;
             const originalPrice = hasOffer ? offer.originalPrice : elitePkg.price;
             const offerId = hasOffer ? offer.id : null;
+            // Use dedicated payment link for elite, fallback to old paymentUrl
+            const elitePaymentLink = paymentLinks.eliteMembership || paymentUrl;
 
             showModal(`<div class="modal-content" style="text-align:center;">
                 <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#f59e0b,#d97706); padding:1.5rem; border-radius:1rem; color:white;">
                     <i class="fas fa-crown" style="font-size:2rem;"></i>
                     <h3 style="color:white;">Go Elite!</h3>
-                    <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('${paymentUrl}','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
+                    <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('${elitePaymentLink}','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
                 </div>
                 <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i>
                 <h3>Upgrade to Elite Membership</h3>
@@ -5768,7 +5788,7 @@
             }
         }
 
-        // ==================== TRAINING CENTER ====================
+        // ==================== TRAINING CENTER (UPDATED WITH TRAINING PAYMENT LINK) ====================
         async function loadTrainings() { 
             currentTaskViewed = null; refreshMirror(); 
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>'; 
@@ -5818,6 +5838,8 @@
                         if (t.type === 'free') { 
                             actionHtml = `<button class="btn btn-success" onclick="applyForTraining('${doc.id}', 'free')">Apply Now</button>`; 
                         } else { 
+                            // Use the training payment link
+                            const trainingPaymentLink = paymentLinks.training || paymentUrl;
                             actionHtml = `<button class="btn btn-warning" onclick="showPrepaidPayment('${doc.id}', ${t.price})">Apply (Prepaid)</button>`; 
                         } 
                     } 
@@ -5856,7 +5878,8 @@
         }
 
         async function showPrepaidPayment(trainingId, price) { 
-            showModal(`<div class="modal-content" style="text-align:center;"><i class="fas fa-credit-card" style="font-size:3rem; color:#f59e0b;"></i><h3>Prepaid Training</h3><p>Amount to pay: <strong>${formatBoth(price)}</strong></p><p>Click the button below to pay (opens in new tab). After payment, enter the transaction code.</p><a href="${paymentUrl}" target="_blank" class="btn btn-warning" style="display:inline-block; margin-bottom:1rem;">Pay ${formatBoth(price)} now</a><input type="text" id="transactionCode" class="smart-input" placeholder="Transaction code"><textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea><div style="display:flex; gap:1rem; margin-top:1rem;"><button class="btn btn-success" onclick="submitPrepaidApplication('${trainingId}', ${price})">Submit Application</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); 
+            const trainingPaymentLink = paymentLinks.training || paymentUrl;
+            showModal(`<div class="modal-content" style="text-align:center;"><i class="fas fa-credit-card" style="font-size:3rem; color:#f59e0b;"></i><h3>Prepaid Training</h3><p>Amount to pay: <strong>${formatBoth(price)}</strong></p><p>Click the button below to pay (opens in new tab). After payment, enter the transaction code.</p><a href="${trainingPaymentLink}" target="_blank" class="btn btn-warning" style="display:inline-block; margin-bottom:1rem;">Pay ${formatBoth(price)} now</a><input type="text" id="transactionCode" class="smart-input" placeholder="Transaction code"><textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea><div style="display:flex; gap:1rem; margin-top:1rem;"><button class="btn btn-success" onclick="submitPrepaidApplication('${trainingId}', ${price})">Submit Application</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button></div></div>`); 
         }
 
         async function submitPrepaidApplication(trainingId, price) {
@@ -6406,9 +6429,9 @@
                         const amount = tx.amount || 0;
                         const amountClass = amount >= 0 ? 'positive' : 'negative';
                         const amountStr = (amount >= 0 ? '+' : '') + formatBoth(amount);
-                        html += `<tr><td>${date}</td><td><span class="badge primary">${type.replace(/_/g, ' ')}</span></td><td>${escapeHtml(description)}</td><td class="tx-amount ${amountClass}">${amountStr}</td></tr>`;
+                        html += `   .<td>${date}</td><td><span class="badge primary">${type.replace(/_/g, ' ')}</span></td><td>${escapeHtml(description)}</td><td class="tx-amount ${amountClass}">${amountStr}</td> `;
                     });
-                    html += '</tbody></table>';
+                    html += '</tbody> </div>';
                 }
                 document.getElementById('content').innerHTML = html;
             } catch (e) {
@@ -6441,11 +6464,11 @@
                     const uniqueEntries = Array.from(leaderboardMap.values()).sort((a, b) => a.rank - b.rank);
                     
                     let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table">';
-                    html += '<thead><tr><th>Rank</th><th>User</th><th>Points</th></tr></thead><tbody>';
+                    html += '<thead>   <th>Rank</th><th>User</th><th>Points</th> </thead><tbody>';
                     uniqueEntries.forEach(entry => {
-                        html += `<tr><td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td></tr>`;
+                        html += `   .<td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td> `;
                     });
-                    html += '</tbody></table>';
+                    html += '</tbody> </div>';
                     document.getElementById('content').innerHTML = html;
                 } else {
                     const usersSnap = await db.collection('users').get();
@@ -6458,9 +6481,9 @@
                     }
                     leaderboard.sort((a,b) => b.points - a.points);
                     let html = '<h3>🏆 Leaderboard (by earnings & approvals)</h3><table class="leaderboard-table">';
-                    html += '<thead><tr><th>Rank</th><th>User</th><th>Points</th><th>Wallet</th></tr></thead><tbody>';
-                    leaderboard.slice(0, 20).forEach((u, idx) => { html += `<tr><td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td></tr>`; });
-                    html += '</tbody></table>';
+                    html += '<thead>   <th>Rank</th><th>User</th><th>Points</th><th>Wallet</th> </thead><tbody>';
+                    leaderboard.slice(0, 20).forEach((u, idx) => { html += `   .<td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td> `; });
+                    html += '</tbody> </div>';
                     document.getElementById('content').innerHTML = html;
                 }
             } catch (e) {
@@ -7213,7 +7236,7 @@
             }
         }
 
-        // ==================== INVESTOR SECTION ====================
+        // ==================== INVESTOR SECTION (UPDATED WITH INVESTMENT PAYMENT LINK) ====================
         async function loadInvestor() {
             currentTaskViewed = null;
             refreshMirror();
@@ -7414,17 +7437,17 @@
                     <div class="transaction-history">
                         <table class="transactions-table">
                             <thead>
-                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Transaction Code</th><th>Status</th></tr>
+                                 <th>Date</th><th>Amount</th><th>Method</th><th>Transaction Code</th><th>Status</th>
                             </thead>
                             <tbody>
                                 ${deposits.map(d => `
-                                    <tr>
+                                     <tr>
                                         <td>${d.createdAt ? formatDate(d.createdAt) : 'N/A'}</td>
                                         <td class="tx-amount positive">+$${d.amount.toFixed(2)}</td>
                                         <td>${d.paymentMethod || 'N/A'}</td>
                                         <td>${d.transactionCode || 'N/A'}</td>
                                         <td><span class="badge ${d.status === 'approved' ? 'success' : d.status === 'pending' ? 'warning' : 'danger'}">${d.status || 'pending'}</span></td>
-                                    </tr>
+                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
@@ -7435,7 +7458,7 @@
                     <div class="transaction-history">
                         <table class="transactions-table">
                             <thead>
-                                <tr><th>Date</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th></tr>
+                                 <th>Date</th><th>Amount</th><th>Method</th><th>Details</th><th>Status</th>
                             </thead>
                             <tbody>
                                 ${withdrawals.map(w => {
@@ -7446,13 +7469,13 @@
                                         details = `${w.accountName || ''} - ${w.phone || ''}`;
                                     }
                                     return `
-                                        <tr>
+                                         <tr>
                                             <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
                                             <td class="tx-amount negative">-$${w.amount.toFixed(2)}</td>
                                             <td>${w.method}</td>
                                             <td>${escapeHtml(details)}</td>
                                             <td><span class="badge ${w.status === 'paid' ? 'success' : w.status === 'pending' ? 'warning' : 'danger'}">${w.status || 'pending'}</span></td>
-                                        </tr>
+                                         </tr>
                                     `;
                                 }).join('')}
                             </tbody>
@@ -7464,15 +7487,15 @@
         }
 
         async function showAddFunds() {
-            const settingsDoc = await db.collection('settings').doc('investment').get();
-            const paymentLink = settingsDoc.exists && settingsDoc.data().paymentLink ? settingsDoc.data().paymentLink : 'https://lipana.dev/pay/nextgen-invest';
+            // Use the investment payment link from the new paymentLinks object
+            const investmentPaymentLink = paymentLinks.investment || (await db.collection('settings').doc('investment').get()).data()?.paymentLink || 'https://lipana.dev/pay/nextgen-invest';
 
             showModal(`
                 <div class="modal-content" style="text-align:center;">
                     <i class="fas fa-credit-card" style="font-size:3rem; color:var(--gold);"></i>
                     <h3>Add Funds</h3>
                     <p>Click the button below to make a payment. After payment, enter the transaction code.</p>
-                    <a href="${paymentLink}" target="_blank" class="btn btn-warning" style="display:inline-block; margin:1rem 0;">Pay Now</a>
+                    <a href="${investmentPaymentLink}" target="_blank" class="btn btn-warning" style="display:inline-block; margin:1rem 0;">Pay Now</a>
                     <input type="number" id="depositAmount" class="smart-input" placeholder="Amount (USD)" min="1" step="0.01" required>
                     <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code" required>
                     <select id="paymentMethod" class="smart-input">
@@ -7883,7 +7906,8 @@
                 await loadFeeSettings(); 
                 await loadMembershipPackages();
                 await loadWithdrawalSettings();
-                await loadPaymentSettings();
+                await loadPaymentSettings(); // legacy
+                await loadPaymentLinks();     // new payment links
                 await loadActiveOffer();
                 checkAndShowOfferPopup();
                 setInterval(() => {
