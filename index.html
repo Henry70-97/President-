@@ -2,512 +2,425 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NextGen HUB | Academic Hub</title>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <!-- Font Awesome -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>NextGen Hub | Modern Authentication</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (free icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs (modular style, compat for simplicity) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        
-        /* Intro Overlay - refined metallic */
-        .intro-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 40% 40%, #c5b8a4, #9b8f7a, #6a6256, #3e3a34);
-            background-size: 250% 250%;
-            animation: subtleShift 5s ease infinite;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-            transition: opacity 1.2s cubic-bezier(0.65, 0, 0.35, 1);
-            opacity: 1;
-            pointer-events: none;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
-        
-        @keyframes subtleShift {
-            0% { background-position: 0% 0%; }
-            50% { background-position: 100% 100%; }
-            100% { background-position: 0% 0%; }
-        }
-        
-        .intro-content {
-            text-align: center;
-            color: #fff;
-            text-shadow: 0 4px 30px rgba(0,0,0,0.6);
-            transform: translateY(0);
-            animation: professionalFloat 3s ease-in-out infinite;
-            padding: 1rem;
-        }
-        
-        @keyframes professionalFloat {
-            0% { transform: translateY(0px); filter: drop-shadow(0 0 5px #e9d19b); }
-            50% { transform: translateY(-8px); filter: drop-shadow(0 0 20px #dbb45c); }
-            100% { transform: translateY(0px); filter: drop-shadow(0 0 5px #ccb16b); }
-        }
-        
-        .intro-logo {
-            max-width: 80%;
-            max-height: 300px;
-            object-fit: contain;
-            animation: fadeReveal 1.8s ease;
-            filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
-            border-radius: 20px;
-        }
-        
-        @keyframes fadeReveal {
-            0% { opacity: 0; letter-spacing: 6px; filter: blur(8px); }
-            100% { opacity: 1; letter-spacing: normal; filter: blur(0); }
-        }
-        
-        .intro-overlay.fade-out {
-            opacity: 0;
-        }
-        
+
         body {
-            background: linear-gradient(145deg, #dbd0bd 0%, #b8aa92 100%);
             min-height: 100vh;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 35%, #43e97b 70%, #f9a826 100%);
+            background-attachment: fixed;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 1.5rem;
             position: relative;
+            overflow-x: hidden;
         }
-        
-        .auth-card {
-            background: rgba(255, 251, 242, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            padding: 2.75rem 2.5rem;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 
-                0 30px 60px -20px rgba(40, 30, 10, 0.5),
-                0 0 0 1px rgba(210, 180, 140, 0.25) inset,
-                0 0 0 1px rgba(255, 245, 220, 0.7);
-            border: 1px solid rgba(230, 210, 170, 0.4);
-            transition: transform 0.3s ease;
+
+        /* Animated gradient blobs for depth */
+        .blob {
+            position: fixed;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            filter: blur(70px);
+            z-index: 0;
+            pointer-events: none;
+            animation: floatBlob 18s infinite alternate ease-in-out;
         }
-        
-        .auth-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 40px 70px -20px #3d3429, 0 0 0 1px #dac292 inset;
+
+        .blob-1 { top: -15vh; left: -10vw; background: radial-gradient(circle, rgba(255,140,200,0.4), rgba(0,255,200,0.1)); }
+        .blob-2 { bottom: -10vh; right: -5vw; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(255,220,100,0.3), rgba(0,150,255,0.1)); animation-duration: 22s; }
+        .blob-3 { top: 40vh; left: 60vw; width: 35vw; height: 35vw; background: radial-gradient(circle, rgba(100,255,180,0.3), rgba(255,90,200,0.1)); animation-duration: 14s; }
+
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(5%, 5%) scale(1.1); }
         }
-        
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .card-logo {
-            max-width: 100%;
-            height: auto;
-            max-height: 80px;
-            object-fit: contain;
-            filter: drop-shadow(0 2px 8px rgba(120, 90, 40, 0.2));
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 2rem;
-            background: #efeadb;
-            padding: 0.4rem;
-            border-radius: 48px;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 0.85rem 0.5rem;
-            border: none;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 1rem;
-            background: transparent;
-            color: #655a4a;
-            cursor: pointer;
-            transition: all 0.25s;
-            border: 1px solid transparent;
-        }
-        
-        .tab.active {
-            background: #ffffff;
-            color: #413a2c;
-            box-shadow: 0 6px 14px rgba(160, 130, 70, 0.2);
-            border: 1px solid #eedbba;
-            font-weight: 600;
-        }
-        
-        .form { display: block; }
-        .form.hidden { display: none; }
-        
-        .input-group {
-            margin-bottom: 1.25rem;
-            position: relative;
-        }
-        
-        .input-group input, 
-        .input-group select {
-            width: 100%;
-            padding: 1rem 1.2rem;
-            border-radius: 60px;
-            border: 1.5px solid #e0d3be;
-            background: #fffdf8;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            color: #2f2a21;
-        }
-        
-        .input-group input:focus {
-            border-color: #c8aa6b;
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(200, 170, 107, 0.15);
-            background: #ffffff;
-        }
-        
-        .input-group input::placeholder {
-            color: #aaa08b;
-            font-weight: 300;
-        }
-        
-        /* Password toggle button */
-        .password-toggle {
-            position: absolute;
-            right: 1.2rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #aaa08b;
-            font-size: 1rem;
-            transition: color 0.2s;
-        }
-        .password-toggle:hover {
-            color: #c8aa6b;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 60px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.25s;
-            letter-spacing: 0.2px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(115deg, #ad8f56, #c7aa70);
-            color: #232018;
-            border: 1px solid #e7cf99;
-            box-shadow: 0 10px 18px -10px #7a653d;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(115deg, #b5985c, #d2b67b);
-            box-shadow: 0 14px 22px -8px #8d7443;
-            transform: scale(1.01);
-        }
-        
-        .btn-google {
-            background: #ffffff;
-            color: #413a2e;
-            border: 1.5px solid #dad0bc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-google:hover {
-            background: #fcf8f0;
-            border-color: #c5ae82;
-        }
-        
-        .divider {
-            text-align: center;
-            margin: 1.8rem 0;
-            position: relative;
-        }
-        
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
+
+        /* Splash Overlay */
+        .splash-overlay {
+            position: fixed;
+            top: 0;
             left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #cbb48b, transparent);
-        }
-        
-        .divider span {
-            background: rgba(255, 251, 242, 0.95);
-            padding: 0 1.2rem;
-            position: relative;
-            color: #7e6e51;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        
-        .link {
-            text-align: center;
-            margin-top: 1rem;
-        }
-        
-        .link a {
-            color: #9d853e;
-            text-decoration: none;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.9rem;
-            border-bottom: 1px dashed #d4b985;
-        }
-        
-        .forgot-password {
-            text-align: right;
-            margin-top: -0.5rem;
-            margin-bottom: 1.25rem;
-        }
-        
-        .forgot-password a {
-            color: #9d853e;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 1px dashed #d4b985;
-        }
-        
-        .info-text {
-            text-align: center;
-            color: #796b51;
-            margin: 1.2rem 0 0;
-            font-size: 0.85rem;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(15px);
+            z-index: 2000;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.3rem;
+            flex-direction: column;
+            transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            opacity: 1;
         }
-        
-        .referrer-message {
-            background: #f6efe2;
-            border-left: 4px solid #c5a159;
-            padding: 1rem 1.2rem;
-            margin-bottom: 1.8rem;
-            border-radius: 60px;
-            font-size: 0.95rem;
-            color: #3a3326;
-            display: flex;
-            align-items: center;
-            gap: 0.7rem;
-            box-shadow: 0 3px 10px rgba(170, 140, 70, 0.1);
+
+        .splash-logo {
+            text-align: center;
+            animation: floatLogo 2s infinite alternate ease-in-out;
         }
-        
-        .bonus-badge {
-            background: #d8b87a;
-            color: #2f2a1f;
-            padding: 0.2rem 0.8rem;
-            border-radius: 40px;
-            font-size: 0.75rem;
+
+        .splash-logo img {
+            width: 130px;
+            height: 130px;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 25px rgba(0,0,0,0.2));
+        }
+
+        .splash-logo h2 {
+            color: white;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin-top: 1rem;
+            background: linear-gradient(135deg, #fff, #ffec99);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        @keyframes floatLogo {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-12px); }
+        }
+
+        /* Main Auth Container (hidden initially) */
+        .auth-container {
+            width: 100%;
+            max-width: 520px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(20, 20, 35, 0.45);
+            backdrop-filter: blur(14px);
+            border-radius: 42px;
+            padding: 2rem 2rem 2.2rem;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255,255,255,0.15);
+            transition: all 0.3s ease;
+        }
+
+        /* Light / dark auto based on system? Add dark base with light text */
+        @media (prefers-color-scheme: light) {
+            .glass-card {
+                background: rgba(245, 245, 255, 0.6);
+                backdrop-filter: blur(16px);
+                box-shadow: 0 20px 35px rgba(0,0,0,0.1);
+            }
+            .glass-card input, .glass-card .input-wrapper input, .glass-card select {
+                background: rgba(255,255,255,0.85);
+                color: #1e1e2f;
+            }
+            .glass-card label {
+                color: #1e1e2f;
+            }
+            .greeting-title, .subtitle {
+                color: #1e1e2a;
+            }
+            .chip {
+                background: rgba(0,0,0,0.08);
+                color: #1e1e2a;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .glass-card input, .glass-card .input-wrapper input, .glass-card select {
+                background: rgba(30,30,45,0.8);
+                color: #f0f0f0;
+            }
+            .chip {
+                background: rgba(255,255,255,0.12);
+                color: #eee;
+            }
+        }
+
+        .greeting-title {
+            font-size: 1.9rem;
             font-weight: 700;
-            margin-left: 0.6rem;
+            background: linear-gradient(135deg, #FFFFFF, #f0b7ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            margin-bottom: 1rem;
+        }
+
+        .earning-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 1rem 0 1.5rem 0;
+        }
+
+        .chip {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(4px);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 500;
             letter-spacing: 0.3px;
         }
-        
-        .alert-dialog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #fffcf2;
-            padding: 2rem;
-            border-radius: 32px;
-            box-shadow: 0 40px 70px -20px #2f2a20;
-            z-index: 2000;
-            max-width: 380px;
-            width: 90%;
-            text-align: center;
-            display: none;
-            border: 1px solid #ecdbbd;
+
+        .input-group {
+            margin-bottom: 1.2rem;
         }
-        .alert-dialog.show { display: block; }
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(25, 20, 10, 0.5);
-            z-index: 1999;
-            display: none;
+
+        .input-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
         }
-        .overlay.show { display: block; }
-        
-        #verifyMessage h3 { color: #3d3425; }
-        
-        .reset-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #fffcf2;
-            padding: 2.5rem;
-            border-radius: 32px;
-            box-shadow: 0 40px 70px -20px #2f2a20;
-            z-index: 2500;
-            max-width: 400px;
-            width: 90%;
-            display: none;
-            border: 1px solid #ecdbbd;
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(30,30,45,0.7);
+            border-radius: 28px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s;
         }
-        .reset-modal.show { display: block; }
-        .reset-modal h2 {
-            color: #3d3425;
-            margin-bottom: 0.5rem;
-            font-size: 1.8rem;
+        .input-wrapper:focus-within {
+            border-color: #f9a826;
+            box-shadow: 0 0 0 3px rgba(249,168,38,0.3);
         }
-        .reset-modal p {
-            color: #6b5e48;
-            margin-bottom: 1.8rem;
+        .input-wrapper i {
+            padding: 0 14px;
+            color: #ccc;
+            font-size: 1rem;
         }
-        .close-modal {
-            position: absolute;
-            top: 1rem;
-            right: 1.5rem;
-            font-size: 1.8rem;
+        .input-wrapper input, .input-wrapper select {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 14px 14px 14px 0;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        /* triple select for DOB */
+        .dob-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .dob-group .input-wrapper {
+            flex: 1;
+        }
+        .toggle-password {
             cursor: pointer;
-            color: #9d853e;
+            padding-right: 16px;
+        }
+
+        .forgot-link {
+            text-align: right;
+            margin-bottom: 1.5rem;
+        }
+        .forgot-link a, .switch-link {
+            font-size: 0.75rem;
+            color: #ffdb8e;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .forgot-link a:hover, .switch-link:hover {
+            text-decoration: underline;
+        }
+
+        .gradient-btn {
+            width: 100%;
+            background: linear-gradient(95deg, #a855f7, #f97316);
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 1.2rem;
+        }
+        .gradient-btn:hover {
+            transform: scale(1.01);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .social-btn {
+            width: 100%;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 12px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            color: white;
+        }
+        .social-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .switch-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        .error-message {
+            background: rgba(255,70,70,0.2);
+            border-left: 4px solid #ff4d4d;
+            padding: 10px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            margin-bottom: 1rem;
+            color: #ffb3b3;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden-form {
+            display: none;
+        }
+
+        .transition-fade {
+            transition: opacity 0.25s ease-in-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 550px) {
+            .glass-card { padding: 1.6rem; }
+            .greeting-title { font-size: 1.6rem; }
+            .dob-group { flex-direction: column; gap: 8px; }
         }
     </style>
 </head>
 <body>
-    <!-- Intro overlay with logo only -->
-    <div class="intro-overlay" id="introOverlay">
-        <div class="intro-content">
-            <img src="logo.jpg" alt="NextGen Hub Logo" class="intro-logo">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- Splash Screen -->
+    <div id="splash" class="splash-overlay">
+        <div class="splash-logo">
+            <!-- using actual logo.png from same folder -->
+            <img src="logo.png" alt="NextGen Hub Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ccircle cx=%2750%27 cy=%2750%27 r=%2745%27 fill=%27url(%23grad)%27/%3E%3Cdefs%3E%3ClinearGradient id=%27grad%27 x1=%270%25%27 y1=%270%25%27 x2=%27100%25%27 y2=%27100%25%27%3E%3Cstop offset=%270%25%27 stop-color=%27%23a855f7%27/%3E%3Cstop offset=%27100%25%27 stop-color=%27%23f97316%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x=%2750%27 y=%2767%27 font-size=%2738%27 text-anchor=%27middle%27 fill=%27white%27 font-weight=%27bold%27%3ENG%3C/text%3E%3C/svg%3E';">
+            <h2>NextGen Hub</h2>
         </div>
     </div>
 
-    <div class="auth-card">
-        <div class="logo">
-            <img src="logo.jpg" alt="NextGen Hub Logo" class="card-logo">
-        </div>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('login')">Log in</button>
-            <button class="tab" onclick="switchTab('register')">Register</button>
-        </div>
-        
-        <div id="referrerMessageContainer"></div>
-        
-        <!-- Login Form -->
-        <div id="loginForm" class="form">
-            <div class="input-group">
-                <input type="email" id="loginEmail" placeholder="Email address">
-            </div>
-            <div class="input-group">
-                <input type="password" id="loginPassword" placeholder="Password">
-                <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
-                    <i class="far fa-eye-slash"></i>
-                </button>
-            </div>
-            
-            <div class="forgot-password">
-                <a onclick="showResetPasswordModal()">Forgot password?</a>
-            </div>
-            
-            <button class="btn btn-primary" onclick="handleLogin()">Sign in</button>
-            
-            <div class="divider">
-                <span>or continue with</span>
-            </div>
-            
-            <button class="btn btn-google" onclick="handleGoogleLogin()">
-                <i class="fab fa-google"></i> Google
-            </button>
-        </div>
-        
-        <!-- Register Form -->
-        <div id="registerForm" class="form hidden">
-            <div class="input-group">
-                <input type="text" id="regName" placeholder="Full name">
-            </div>
-            <div class="input-group">
-                <input type="email" id="regEmail" placeholder="Email address">
-            </div>
-            <div class="input-group">
-                <input type="password" id="regPassword" placeholder="Password (min. 6 characters)">
-                <button type="button" class="password-toggle" onclick="togglePassword('regPassword')">
-                    <i class="far fa-eye-slash"></i>
-                </button>
-            </div>
-            <div class="input-group">
-                <input type="tel" id="regPhone" placeholder="Phone number (required)" required>
-            </div>
-            <button class="btn btn-primary" onclick="handleRegister()">Create account</button>
-            <div class="info-text">
-                <i class="fas fa-envelope fa-sm"></i> Verification email will be sent
-            </div>
-        </div>
-        
-        <!-- Verify Email Message -->
-        <div id="verifyMessage" class="form hidden">
-            <div style="text-align: center;">
-                <i class="fas fa-envelope-open-text" style="font-size: 3rem; color: #b4945a; margin-bottom: 1rem;"></i>
-                <h3 style="margin-bottom: 0.75rem; font-weight: 600;">Verify your email</h3>
-                <p style="color: #6b5e48; margin-bottom: 2rem;">We've sent a link to <strong id="verifyEmail"></strong></p>
-                <button class="btn btn-primary" onclick="checkVerification()">I've verified — continue</button>
-                <div class="link" style="margin-top: 1.5rem;">
-                    <a onclick="resendVerification()">Resend email</a>
+    <!-- Main Auth Panel -->
+    <div id="authContainer" class="auth-container" style="opacity:0;">
+        <div class="glass-card">
+            <!-- Dynamic Title & Chips -->
+            <div>
+                <h1 class="greeting-title">Hello, Welcome To NextGen</h1>
+                <div class="earning-chips">
+                    <span class="chip">📝 Transcription</span>
+                    <span class="chip">📊 Trading</span>
+                    <span class="chip">💳 Gropay</span>
+                    <span class="chip">✍️ Academic writing</span>
+                    <span class="chip">📈 Data annotations</span>
+                    <span class="chip">📁 Projects</span>
+                    <span class="chip">📰 Article writing</span>
+                    <span class="chip">🎨 Design</span>
+                    <span class="chip">🤖 AI Engineering</span>
+                    <span class="chip">✨ + more</span>
                 </div>
+                <p class="subtitle" id="formSubtitle">Sign in to continue to NextGen Hub</p>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div id="loginError" class="error-message" style="display:none;"></div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <div class="input-wrapper"><i class="fas fa-envelope"></i><input type="email" id="loginEmail" placeholder="hello@nextgen.com"></div>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="••••••"><i class="fas fa-eye-slash toggle-password" data-target="loginPassword"></i></div>
+                </div>
+                <div class="forgot-link"><a id="forgotPasswordBtn">Forgot password?</a></div>
+                <button id="loginBtn" class="gradient-btn">Sign In →</button>
+                <button id="googleLoginBtn" class="social-btn"><i class="fab fa-google"></i> Continue with Google</button>
+                <div class="switch-text">Don't have an account? <span class="switch-link" id="showRegisterLink">Sign up</span></div>
+            </div>
+
+            <!-- Registration Form (hidden initially) -->
+            <div id="registerForm" style="display:none;">
+                <div id="registerError" class="error-message" style="display:none;"></div>
+                <div class="input-group"><label>Full Name</label><div class="input-wrapper"><i class="fas fa-user"></i><input type="text" id="regFullName" placeholder="John Doe"></div></div>
+                <div class="input-group"><label>Nationality</label><div class="input-wrapper"><i class="fas fa-globe"></i><input type="text" id="regNationality" placeholder="e.g., American"></div></div>
+                
+                <!-- Date of Birth: scrollable selects (Day, Month, Year) starting 2008 -->
+                <div class="input-group">
+                    <label>Date of birth</label>
+                    <div class="dob-group">
+                        <div class="input-wrapper"><i class="fas fa-calendar-day"></i><select id="regDobDay"><option value="">Day</option></select></div>
+                        <div class="input-wrapper"><i class="fas fa-calendar-alt"></i><select id="regDobMonth"><option value="">Month</option></select></div>
+                        <div class="input-wrapper"><i class="fas fa-calendar-week"></i><select id="regDobYear"><option value="">Year</option></select></div>
+                    </div>
+                </div>
+
+                <div class="input-group"><label>Email</label><div class="input-wrapper"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="user@nextgen.com"></div></div>
+                <div class="input-group"><label>Password</label><div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="create password"><i class="fas fa-eye-slash toggle-password" data-target="regPassword"></i></div></div>
+                <div class="input-group"><label>Phone Number</label><div class="input-wrapper"><i class="fas fa-phone-alt"></i><input type="tel" id="regPhone" placeholder="+123456789"></div></div>
+                <div id="refMessage" style="font-size:0.75rem; background:rgba(255,215,0,0.2); padding:8px; border-radius:20px; margin-bottom:12px; display:none;"></div>
+                <button id="registerBtn" class="gradient-btn">Create Account →</button>
+                <button id="googleRegisterBtn" class="social-btn"><i class="fab fa-google"></i> Continue with Google</button>
+                <div class="switch-text">Already have an account? <span class="switch-link" id="showLoginLink">Sign in</span></div>
             </div>
         </div>
     </div>
-    
-    <!-- Reset Password Modal -->
-    <div class="overlay" id="resetOverlay" onclick="hideResetPasswordModal()"></div>
-    <div class="reset-modal" id="resetModal">
-        <span class="close-modal" onclick="hideResetPasswordModal()">&times;</span>
-        <h2>Reset Password</h2>
-        <p>Enter your email address and we'll send you a link to reset your password.</p>
-        <div class="input-group">
-            <input type="email" id="resetEmail" placeholder="Your email address">
-        </div>
-        <button class="btn btn-primary" onclick="handlePasswordReset()">Send Reset Link</button>
-        <div class="link" style="margin-top: 1.5rem;">
-            <a onclick="hideResetPasswordModal()">Back to login</a>
-        </div>
-    </div>
-    
-    <!-- Alert Dialog -->
-    <div class="overlay" id="overlay" onclick="hideAlert()"></div>
-    <div class="alert-dialog" id="alertDialog">
-        <i class="fas" id="alertIcon"></i>
-        <h3 id="alertTitle"></h3>
-        <p id="alertMessage"></p>
-        <button class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem;" onclick="hideAlert()">OK</button>
-    </div>
-    
-    <script>
-        // Fade out intro after animation
-        window.addEventListener('load', function() {
-            const intro = document.getElementById('introOverlay');
-            setTimeout(() => {
-                intro.classList.add('fade-out');
-                setTimeout(() => intro.style.display = 'none', 1200);
-            }, 3000);
-        });
 
-        // Firebase Config
+    <!-- Loading Overlay (while auth init) -->
+    <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:3000; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:white;">
+        <div class="spinner" style="width:40px; height:40px;"></div>
+        <p>Securing access...</p>
+    </div>
+
+    <script>
+        // FIREBASE CONFIG (exact)
         const firebaseConfig = {
             apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
             authDomain: "nextgen-5fb6f.firebaseapp.com",
@@ -516,343 +429,267 @@
             messagingSenderId: "100132076455",
             appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+
+        // Global flags
+        let authInitialized = false;
+        let currentReferralCode = null;
+        let splashFinished = false;
+
+        // DOM elements
+        const splashDiv = document.getElementById('splash');
+        const authContainerDiv = document.getElementById('authContainer');
+        const loadingDiv = document.getElementById('loadingOverlay');
+        const loginFormDiv = document.getElementById('loginForm');
+        const registerFormDiv = document.getElementById('registerForm');
+        const showRegisterLink = document.getElementById('showRegisterLink');
+        const showLoginLink = document.getElementById('showLoginLink');
+        const forgotBtn = document.getElementById('forgotPasswordBtn');
         
-        function generateReferralCode(userId) {
-            return userId.substring(0, 8).toUpperCase();
+        // Parse referral param
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('ref')) currentReferralCode = urlParams.get('ref');
+
+        // Helper: generate unique referral code (8 chars alphanum)
+        function generateReferralCode(uidPart) {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+            let code = '';
+            for(let i=0; i<8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+            return code;
         }
-        
-        // Get referral code from URL (supports ?ref=CODE or /ref/CODE)
-        function getReferralCodeFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const queryRef = urlParams.get('ref');
-            if (queryRef) return queryRef;
-            const path = window.location.pathname;
-            const match = path.match(/\/(?:register|join|signup|ref|r)\/([a-zA-Z0-9_-]+)/i);
-            if (match && match[1]) return match[1];
-            if (path.split('/').length === 2 && path !== '/') {
-                const code = path.substring(1);
-                if (code.length >= 4 && code.length <= 20 && /^[a-zA-Z0-9_-]+$/.test(code)) return code;
+
+        // Populate DOB selects (Day, Month, Year) with year from 2008 down to current year
+        function populateDOBSelects() {
+            const daySelect = document.getElementById('regDobDay');
+            const monthSelect = document.getElementById('regDobMonth');
+            const yearSelect = document.getElementById('regDobYear');
+            
+            // Days 1-31
+            for(let i=1; i<=31; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                daySelect.appendChild(option);
             }
-            return null;
-        }
-        
-        // Query Firestore for a user by referralCode (efficient)
-        async function getUserByReferralCode(code) {
-            const snapshot = await db.collection('users')
-                .where('referralCode', '==', code)
-                .limit(1)
-                .get();
-            if (!snapshot.empty) {
-                const doc = snapshot.docs[0];
-                return { id: doc.id, ...doc.data() };
-            }
-            return null;
-        }
-        
-        async function checkForReferrer() {
-            const refCode = getReferralCodeFromUrl();
-            if (!refCode) return;
-            sessionStorage.setItem('pendingReferral', refCode);
-            const user = await getUserByReferralCode(refCode);
-            if (user) {
-                const name = user.displayName || 'a NextGen user';
-                showReferrerMessage(name);
-            } else {
-                showReferrerMessage('a NextGen user');
-            }
-        }
-        
-        function showReferrerMessage(name) {
-            document.getElementById('referrerMessageContainer').innerHTML = `
-                <div class="referrer-message">
-                    <i class="fas fa-user-check" style="color:#b4945a;"></i>
-                    <div>Referred by <strong>${escapeHtml(name)}</strong> <span class="bonus-badge">+$0.5 bonus</span></div>
-                </div>
-            `;
-        }
-        
-        // Simple escape to prevent XSS
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
+            // Months
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            months.forEach((m, idx) => {
+                const option = document.createElement('option');
+                option.value = idx+1;
+                option.textContent = m;
+                monthSelect.appendChild(option);
             });
-        }
-        
-        document.addEventListener('DOMContentLoaded', checkForReferrer);
-        
-        // UI helpers
-        function showAlert(msg, type='error') {
-            const d = document.getElementById('alertDialog');
-            document.getElementById('overlay').classList.add('show');
-            d.classList.add('show');
-            document.getElementById('alertIcon').className = 'fas ' + (type==='error' ? 'fa-exclamation-circle' : 'fa-check-circle');
-            document.getElementById('alertTitle').innerText = type==='error' ? 'Error' : 'Success';
-            document.getElementById('alertMessage').innerText = msg;
-        }
-        function hideAlert() {
-            document.getElementById('alertDialog').classList.remove('show');
-            document.getElementById('overlay').classList.remove('show');
-        }
-        
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
-            document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
-            document.getElementById('verifyMessage').classList.add('hidden');
-            hideResetPasswordModal();
-        }
-        
-        function showVerifyView(email) {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('registerForm').classList.add('hidden');
-            document.getElementById('verifyMessage').classList.remove('hidden');
-            document.getElementById('verifyEmail').innerText = email;
-        }
-        
-        // Password toggle function
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            const icon = field.nextElementSibling.querySelector('i');
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            } else {
-                field.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+            // Years from current year down to 2008
+            const currentYear = new Date().getFullYear();
+            for(let y = currentYear; y >= 2008; y--) {
+                const option = document.createElement('option');
+                option.value = y;
+                option.textContent = y;
+                yearSelect.appendChild(option);
             }
         }
-        
-        // Reset Password Functions
-        function showResetPasswordModal() {
-            document.getElementById('resetModal').classList.add('show');
-            document.getElementById('resetOverlay').classList.add('show');
-            document.getElementById('resetEmail').value = '';
+        populateDOBSelects();
+
+        // Helper: get formatted DOB string from selects (YYYY-MM-DD)
+        function getFormattedDOB() {
+            const day = document.getElementById('regDobDay').value;
+            const month = document.getElementById('regDobMonth').value;
+            const year = document.getElementById('regDobYear').value;
+            if(!day || !month || !year) return '';
+            return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
         }
-        
-        function hideResetPasswordModal() {
-            document.getElementById('resetModal').classList.remove('show');
-            document.getElementById('resetOverlay').classList.remove('show');
+
+        // Show/Hide password toggles
+        document.querySelectorAll('.toggle-password').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if(input.type === 'password') { input.type = 'text'; this.classList.remove('fa-eye-slash'); this.classList.add('fa-eye'); }
+                else { input.type = 'password'; this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash'); }
+            });
+        });
+
+        // UI switching with smooth fade
+        function showLogin() {
+            loginFormDiv.style.display = 'block';
+            registerFormDiv.style.display = 'none';
+            document.getElementById('formSubtitle').innerText = 'Sign in to continue to NextGen Hub';
         }
-        
-        async function handlePasswordReset() {
-            const email = document.getElementById('resetEmail').value;
-            if (!email) {
-                showAlert('Please enter your email address', 'error');
-                return;
+        function showRegister() {
+            loginFormDiv.style.display = 'none';
+            registerFormDiv.style.display = 'block';
+            document.getElementById('formSubtitle').innerText = 'Join the NextGen community';
+            if(currentReferralCode) {
+                const refMsgDiv = document.getElementById('refMessage');
+                refMsgDiv.innerHTML = `🎁 Referred by: ${currentReferralCode} — you'll get bonus!`;
+                refMsgDiv.style.display = 'block';
+            } else document.getElementById('refMessage').style.display = 'none';
+        }
+        showRegisterLink.addEventListener('click', () => showRegister());
+        showLoginLink.addEventListener('click', () => showLogin());
+
+        // Error display
+        function setError(formType, message) {
+            const errDiv = formType === 'login' ? document.getElementById('loginError') : document.getElementById('registerError');
+            errDiv.innerText = message;
+            errDiv.style.display = 'block';
+            setTimeout(() => errDiv.style.display = 'none', 4000);
+        }
+
+        // Firestore create user doc (email/password registration)
+        async function createUserDocument(user, additionalData) {
+            const userRef = db.collection('users').doc(user.uid);
+            const existing = await userRef.get();
+            if(existing.exists) return;
+            let referralCodeFinal = generateReferralCode(user.uid);
+            let referredByUid = null;
+            if(currentReferralCode) {
+                const referrerQuery = await db.collection('users').where('referralCode', '==', currentReferralCode).limit(1).get();
+                if(!referrerQuery.empty) referredByUid = referrerQuery.docs[0].id;
             }
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showAlert('Please enter a valid email address', 'error');
-                return;
-            }
+            const userData = {
+                displayName: additionalData.fullName || user.displayName || '',
+                email: user.email,
+                phone: additionalData.phone || '',
+                role: 'user',
+                wallet: 0,
+                referralCode: referralCodeFinal,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                nationality: additionalData.nationality || '',
+                dateOfBirth: additionalData.dateOfBirth || '',
+                referredBy: referredByUid || null
+            };
+            await userRef.set(userData);
+        }
+
+        // after login redirect logic
+        async function handleRedirectAfterLogin(user) {
+            const doc = await db.collection('users').doc(user.uid).get();
+            let role = 'user';
+            if(doc.exists && doc.data().role) role = doc.data().role;
+            if(role === 'admin') window.location.replace('admin-dashboard.html');
+            else window.location.replace('user-dashboard.html');
+        }
+
+        // Login standard
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            if(!email || !password) { setError('login', 'Please fill all fields'); return; }
             try {
-                await auth.sendPasswordResetEmail(email);
-                hideResetPasswordModal();
-                showAlert(`Password reset email sent to ${email}. Please check your inbox.`, 'success');
-            } catch (error) {
-                console.error('Password reset error:', error);
-                switch (error.code) {
-                    case 'auth/user-not-found':
-                        showAlert('No account found with this email address.', 'error');
-                        break;
-                    case 'auth/invalid-email':
-                        showAlert('Invalid email address format.', 'error');
-                        break;
-                    case 'auth/too-many-requests':
-                        showAlert('Too many requests. Please try again later.', 'error');
-                        break;
-                    default:
-                        showAlert('Failed to send reset email. Please try again.', 'error');
-                }
-            }
-        }
-        
-        async function handleRegister() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const pwd = document.getElementById('regPassword').value;
-            const phone = document.getElementById('regPhone').value;
+                const cred = await auth.signInWithEmailAndPassword(email, password);
+                await handleRedirectAfterLogin(cred.user);
+            } catch(err) { setError('login', err.message); }
+        });
+
+        // Register email/password
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const fullName = document.getElementById('regFullName').value.trim();
+            const nationality = document.getElementById('regNationality').value.trim();
+            const dobFormatted = getFormattedDOB();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const phone = document.getElementById('regPhone').value.trim();
             
-            if (!name || !email || !pwd) {
-                showAlert('Please fill in all required fields', 'error');
-                return;
-            }
-            if (!phone) {
-                showAlert('Phone number is required', 'error');
-                return;
-            }
-            if (pwd.length < 6) {
-                showAlert('Password must be at least 6 characters', 'error');
-                return;
-            }
-            
+            if(!fullName || !nationality || !dobFormatted || !email || !password || !phone) { setError('register', 'All fields required'); return; }
+            if(password.length < 6) { setError('register', 'Password min 6 characters'); return; }
             try {
-                const cred = await auth.createUserWithEmailAndPassword(email, pwd);
-                await cred.user.sendEmailVerification();
-                
-                const referralCode = sessionStorage.getItem('pendingReferral');
-                let referredBy = null;
-                if (referralCode) {
-                    const referrer = await getUserByReferralCode(referralCode);
-                    if (referrer) referredBy = referrer.id;
-                    sessionStorage.removeItem('pendingReferral');
-                }
-                
-                const userData = {
-                    email,
-                    displayName: name,
-                    phone,
-                    role: 'user',
-                    wallet: 0,
-                    active: true,
-                    verified: false,
-                    membershipType: 'basic',
-                    membershipPaid: false,
-                    membershipStatus: 'pending',
-                    totalFeesPaid: 0,
-                    unreadMessages: 0,
-                    totalReferrals: 0,
-                    referralEarnings: 0,
-                    referralCode: generateReferralCode(cred.user.uid),
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                if (referredBy) userData.referredBy = referredBy;
-                
-                await db.collection('users').doc(cred.user.uid).set(userData);
-                
-                if (referredBy) {
-                    await db.collection('referrals').add({
-                        referrerId: referredBy,
-                        referredId: cred.user.uid,
-                        referredEmail: email,
-                        referredName: name,
-                        status: 'pending',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).catch(() => {});
-                }
-                
-                showVerifyView(email);
-                showAlert('Verification email sent!', 'success');
-            } catch (e) {
-                showAlert(e.message, 'error');
-            }
-        }
-        
-        async function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const pwd = document.getElementById('loginPassword').value;
-            if (!email || !pwd) {
-                showAlert('Please enter email and password', 'error');
-                return;
-            }
+                const userCred = await auth.createUserWithEmailAndPassword(email, password);
+                await userCred.user.updateProfile({ displayName: fullName });
+                await createUserDocument(userCred.user, { fullName, nationality, dateOfBirth: dobFormatted, phone });
+                await handleRedirectAfterLogin(userCred.user);
+            } catch(err) { setError('register', err.message); }
+        });
+
+        // Google Auth (common function)
+        async function handleGoogleSignIn(isRegisterFlow = false) {
+            const provider = new firebase.auth.GoogleAuthProvider();
             try {
-                await auth.signInWithEmailAndPassword(email, pwd);
-            } catch (e) {
-                showAlert(e.message, 'error');
-            }
-        }
-        
-        async function handleGoogleLogin() {
-            try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                const res = await auth.signInWithPopup(provider);
-                const user = res.user;
-                const userRef = db.collection('users').doc(user.uid);
-                const doc = await userRef.get();
-                if (!doc.exists) {
-                    let referredBy = null;
-                    const referralCode = sessionStorage.getItem('pendingReferral');
-                    if (referralCode) {
-                        const referrer = await getUserByReferralCode(referralCode);
-                        if (referrer) referredBy = referrer.id;
-                        sessionStorage.removeItem('pendingReferral');
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if(!userDoc.exists) {
+                    let referredByUid = null;
+                    if(currentReferralCode) {
+                        const refQuery = await db.collection('users').where('referralCode', '==', currentReferralCode).limit(1).get();
+                        if(!refQuery.empty) referredByUid = refQuery.docs[0].id;
                     }
-                    const data = {
+                    const newReferralCode = generateReferralCode(user.uid);
+                    await db.collection('users').doc(user.uid).set({
+                        displayName: user.displayName || '',
                         email: user.email,
-                        displayName: user.displayName || 'User',
                         phone: '',
                         role: 'user',
                         wallet: 0,
-                        active: true,
-                        verified: true,
-                        membershipType: 'basic',
-                        membershipPaid: false,
-                        membershipStatus: 'pending',
-                        totalFeesPaid: 0,
-                        unreadMessages: 0,
-                        totalReferrals: 0,
-                        referralEarnings: 0,
-                        referralCode: generateReferralCode(user.uid),
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    };
-                    if (referredBy) data.referredBy = referredBy;
-                    await userRef.set(data);
-                    if (referredBy) {
-                        await db.collection('referrals').add({
-                            referrerId: referredBy,
-                            referredId: user.uid,
-                            referredEmail: user.email,
-                            referredName: user.displayName,
-                            status: 'pending',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        }).catch(() => {});
-                    }
+                        referralCode: newReferralCode,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        nationality: '',
+                        dateOfBirth: '',
+                        referredBy: referredByUid || null
+                    });
                 }
-            } catch (e) {
-                showAlert(e.message, 'error');
-            }
+                await handleRedirectAfterLogin(user);
+            } catch(err) { setError(isRegisterFlow ? 'register' : 'login', err.message); }
         }
-        
-        async function checkVerification() {
-            if (!auth.currentUser) return;
-            await auth.currentUser.reload();
-            if (auth.currentUser.emailVerified) {
-                await db.collection('users').doc(auth.currentUser.uid).update({ verified: true });
-                window.location.href = 'user-dashboard.html';
-            } else {
-                showAlert('Email not verified yet', 'error');
-            }
-        }
-        
-        async function resendVerification() {
-            if (auth.currentUser) {
-                await auth.currentUser.sendEmailVerification();
-                showAlert('Verification resent!', 'success');
-            }
-        }
-        
+        document.getElementById('googleLoginBtn').addEventListener('click', () => handleGoogleSignIn(false));
+        document.getElementById('googleRegisterBtn').addEventListener('click', () => handleGoogleSignIn(true));
+
+        // Forgot password
+        forgotBtn.addEventListener('click', async () => {
+            const email = prompt('Enter your email address to reset password:');
+            if(email && email.includes('@')) {
+                try {
+                    await auth.sendPasswordResetEmail(email);
+                    alert('Password reset email sent! Check your inbox.');
+                } catch(e) { alert('Error: ' + e.message); }
+            } else if(email) alert('Invalid email');
+        });
+
+        // ---- Critical: single auth state observer with redirect loop prevention ----
+        let observerFired = false;
         auth.onAuthStateChanged(async (user) => {
-            if (!user) return;
-            const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
-            if (!user.emailVerified && !isGoogle) {
-                showVerifyView(user.email);
+            if(observerFired) return;
+            observerFired = true;
+            if(user) {
+                // Already logged in -> redirect accordingly, no splash intermission
+                try {
+                    const docSnap = await db.collection('users').doc(user.uid).get();
+                    let role = 'user';
+                    if(docSnap.exists && docSnap.data().role) role = docSnap.data().role;
+                    if(role === 'admin') window.location.replace('admin-dashboard.html');
+                    else window.location.replace('user-dashboard.html');
+                } catch(e) { console.warn(e); window.location.replace('user-dashboard.html'); }
                 return;
             }
-            try {
-                const udoc = await db.collection('users').doc(user.uid).get();
-                if (!udoc.exists) return;
-                const data = udoc.data();
-                if (data.active === false) {
-                    await auth.signOut();
-                    showAlert('Account disabled', 'error');
-                    return;
+            // Not logged in: hide loading, show splash + after splash reveal auth
+            loadingDiv.style.display = 'none';
+            // Start splash timer
+            setTimeout(() => {
+                if(splashDiv) {
+                    splashDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        if(splashDiv) splashDiv.style.display = 'none';
+                        authContainerDiv.style.opacity = '1';
+                    }, 800);
+                } else {
+                    authContainerDiv.style.opacity = '1';
                 }
-                window.location.href = data.role === 'admin' ? 'admin-dashboard.html' : 'user-dashboard.html';
-            } catch (e) {
-                console.error(e);
-            }
+            }, 2500);
         });
+
+        // Also avoid infinite loading: if no splash removal after 3 sec fallback
+        setTimeout(() => {
+            if(loadingDiv.style.display !== 'none') loadingDiv.style.display = 'none';
+            if(splashDiv && splashDiv.style.display !== 'none') {
+                splashDiv.style.opacity = '0';
+                setTimeout(() => { if(splashDiv) splashDiv.style.display = 'none'; authContainerDiv.style.opacity = '1'; }, 500);
+            }
+        }, 4000);
+        
+        // set default form view (login)
+        showLogin();
     </script>
 </body>
 </html>
