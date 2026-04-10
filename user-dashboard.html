@@ -3125,6 +3125,15 @@
             border: 1px solid var(--silver-dark);
             flex: 1;
         }
+        /* Crypto payment button style */
+        .crypto-payment-btn {
+            display: inline-block;
+            margin: 1rem 0;
+        }
+        .crypto-payment-btn img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
@@ -3724,22 +3733,24 @@
             }
         }
 
-        // ==================== FETCH ADMIN ID ====================
+        // ==================== FETCH ADMIN ID (FIXED) ====================
         async function getAdminId() {
             if (adminId) return adminId;
             try {
+                // First try settings/admin document
                 const doc = await db.collection('settings').doc('admin').get();
-                if (doc.exists) {
+                if (doc.exists && doc.data().uid) {
                     adminId = doc.data().uid;
-                } else {
-                    const snapshot = await db.collection('users').where('role', '==', 'admin').limit(1).get();
-                    if (!snapshot.empty) {
-                        adminId = snapshot.docs[0].id;
-                    } else {
-                        console.error('No admin found');
-                    }
+                    return adminId;
                 }
-                return adminId;
+                // Fallback: find first user with role == 'admin'
+                const snapshot = await db.collection('users').where('role', '==', 'admin').limit(1).get();
+                if (!snapshot.empty) {
+                    adminId = snapshot.docs[0].id;
+                    return adminId;
+                }
+                console.warn('No admin found in database');
+                return null;
             } catch (e) {
                 console.error('Error fetching admin ID:', e);
                 return null;
@@ -3767,6 +3778,18 @@
             } catch (e) {
                 console.error('Error loading payment settings, using default', e);
                 paymentUrl = "https://lipana.dev/pay/nextgen-membership";
+            }
+        }
+
+        // ==================== RESEND VERIFICATION EMAIL ====================
+        async function resendVerificationEmail() {
+            if (!currentUser) return;
+            try {
+                await currentUser.sendEmailVerification();
+                showAlert('Verification email sent! Please check your inbox.', 'success');
+            } catch (e) {
+                console.error('Error sending verification email:', e);
+                showAlert('Failed to send verification email. Please try again later.', 'error');
             }
         }
 
@@ -3977,10 +4000,9 @@
         // ==================== REFERRAL CODE GENERATION ====================
         function generateReferralCode(uid) { return uid.substring(0, 8).toUpperCase(); }
 
-        // ==================== PROCESS REFERRAL BONUS ON UPGRADE (UPDATED WITH LEVEL 2) ====================
+        // ==================== PROCESS REFERRAL BONUS ON UPGRADE ====================
         async function processReferralBonus(userId, membershipType) {
             try {
-                // First, get the user's document to find their referrer
                 const userDoc = await db.collection('users').doc(userId).get();
                 if (!userDoc.exists) return;
                 const userDataRef = userDoc.data();
@@ -3988,17 +4010,15 @@
                 
                 if (!referrerId) return;
 
-                // Determine bonus amounts
                 let referrerBonus = 0;
                 if (membershipType === MEMBERSHIP_TYPES.PREMIUM) {
-                    referrerBonus = REFERRER_BONUS_PREMIUM; // $2
+                    referrerBonus = REFERRER_BONUS_PREMIUM;
                 } else if (membershipType === MEMBERSHIP_TYPES.ELITE) {
-                    referrerBonus = REFERRER_BONUS_ELITE; // $4
+                    referrerBonus = REFERRER_BONUS_ELITE;
                 } else {
-                    return; // Only premium/elite trigger referral bonuses
+                    return;
                 }
 
-                // Check if the referrer already received a bonus for this referred user (avoid double)
                 const referralSnap = await db.collection('referrals')
                     .where('referrerId', '==', referrerId)
                     .where('referredId', '==', userId)
@@ -4006,7 +4026,6 @@
                     .get();
                 
                 if (referralSnap.empty) {
-                    // This should not happen if referral was recorded at signup, but just in case
                     console.warn('Referral record not found for', userId, 'under referrer', referrerId);
                     return;
                 }
@@ -4014,23 +4033,19 @@
                 const referralDoc = referralSnap.docs[0];
                 const referralData = referralDoc.data();
                 
-                // Check if this membership type bonus has already been awarded
                 const bonusesGiven = referralData.bonusesGiven || [];
                 if (bonusesGiven.includes(membershipType)) {
-                    return; // Already awarded
+                    return;
                 }
                 
-                // Award the bonus
                 const batch = db.batch();
                 
-                // Update referrer wallet
                 const referrerRef = db.collection('users').doc(referrerId);
                 batch.update(referrerRef, {
                     wallet: firebase.firestore.FieldValue.increment(referrerBonus),
                     referralEarnings: firebase.firestore.FieldValue.increment(referrerBonus)
                 });
                 
-                // Add transaction for referrer
                 const txReferrer = db.collection('transactions').doc();
                 batch.set(txReferrer, {
                     userId: referrerId,
@@ -4040,14 +4055,12 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // Update referred user's wallet (they always get $0.5)
                 const referredRef = db.collection('users').doc(userId);
                 batch.update(referredRef, {
                     wallet: firebase.firestore.FieldValue.increment(REFERRED_BONUS),
                     referralEarnings: firebase.firestore.FieldValue.increment(REFERRED_BONUS)
                 });
                 
-                // Add transaction for referred user
                 const txReferred = db.collection('transactions').doc();
                 batch.set(txReferred, {
                     userId: userId,
@@ -4057,16 +4070,14 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // Update referral document with the awarded bonus
                 batch.update(referralDoc.ref, {
                     bonusesGiven: firebase.firestore.FieldValue.arrayUnion(membershipType),
-                    status: 'upgraded', // if not already
+                    status: 'upgraded',
                     upgradedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
                 await batch.commit();
                 
-                // Notify referrer
                 await db.collection('notifications').add({
                     userId: referrerId,
                     title: 'Referral Bonus Earned!',
@@ -4076,7 +4087,6 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // Notify referred user
                 await db.collection('notifications').add({
                     userId: userId,
                     title: 'Welcome Bonus!',
@@ -4086,12 +4096,9 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                // ---- LEVEL 2 REFERRAL BONUS ----
-                // If the referrer has a referrer (level 2), give them a bonus
                 const referrerDoc = await db.collection('users').doc(referrerId).get();
                 const level2ReferrerId = referrerDoc.exists ? referrerDoc.data().referredBy : null;
                 if (level2ReferrerId) {
-                    // Determine level 2 bonus: for premium upgrade: $0.5, for elite upgrade: $1
                     let level2Bonus = 0;
                     if (membershipType === MEMBERSHIP_TYPES.PREMIUM) {
                         level2Bonus = 0.5;
@@ -4132,7 +4139,7 @@
             }
         }
 
-        // ==================== LOAD REFERRALS DASHBOARD (WITH LEVEL 1 & 2) ====================
+        // ==================== LOAD REFERRALS DASHBOARD ====================
         async function loadReferrals() {
             currentTaskViewed = null;
             refreshMirror();
@@ -4146,7 +4153,6 @@
                 }
                 const inviteLink = `${window.location.origin}/signup?ref=${userRefCode}`;
                 
-                // Get Level 1 referrals
                 const level1Snap = await db.collection('referrals')
                     .where('referrerId', '==', currentUser.uid)
                     .orderBy('createdAt', 'desc')
@@ -4159,11 +4165,10 @@
                     level1Ids.push(data.referredId);
                 });
                 
-                // Get Level 2 referrals (referrals of level1)
                 let level2 = [];
                 if (level1Ids.length > 0) {
                     const level2Snap = await db.collection('referrals')
-                        .where('referrerId', 'in', level1Ids.slice(0, 10)) // Firestore 'in' limited to 10, but we can fetch in batches if needed. For demo, we'll fetch up to 10. In practice you might need multiple queries.
+                        .where('referrerId', 'in', level1Ids.slice(0, 10))
                         .orderBy('createdAt', 'desc')
                         .get();
                     level2Snap.forEach(doc => {
@@ -4171,7 +4176,6 @@
                     });
                 }
                 
-                // Compute stats
                 const totalReferrals = level1.length;
                 const upgradedReferrals = level1.filter(r => r.status === 'upgraded').length;
                 const pendingReferrals = totalReferrals - upgradedReferrals;
@@ -4182,7 +4186,6 @@
                 html += `<div class="referral-code-box"><div><i class="fas fa-link"></i> Invite Link: <span class="invite-link">${inviteLink}</span></div><button class="copy-btn" onclick="copyToClipboard('${inviteLink}')"><i class="fas fa-copy"></i> Copy Link</button></div>`;
                 html += `<div class="referral-stats-grid"><div class="referral-stat-card"><i class="fas fa-user-plus"></i><div class="referral-stat-value">${totalReferrals}</div><div class="referral-stat-label">Level 1 Invites</div></div><div class="referral-stat-card"><i class="fas fa-check-circle"></i><div class="referral-stat-value">${upgradedReferrals}</div><div class="referral-stat-label">Upgraded</div></div><div class="referral-stat-card"><i class="fas fa-hourglass-half"></i><div class="referral-stat-value">${pendingReferrals}</div><div class="referral-stat-label">Pending</div></div><div class="referral-stat-card"><i class="fas fa-dollar-sign"></i><div class="referral-stat-value">${formatBoth(totalEarnings)}</div><div class="referral-stat-label">Earnings</div></div></div>`;
                 
-                // Level 1 list
                 if (level1.length === 0) {
                     html += '<div class="empty-state"><i class="fas fa-user-friends"></i><p>No referrals yet. Share your link and start earning!</p></div>';
                 } else {
@@ -4197,7 +4200,6 @@
                     html += '</div>';
                 }
                 
-                // Level 2 list
                 if (level2.length > 0) {
                     html += '<h4 style="margin-top:2rem;"><i class="fas fa-user-friends"></i> Level 2 Referrals (Invited by your referrals)</h4><div class="referrals-list">';
                     level2.forEach(ref => {
@@ -4227,7 +4229,7 @@
             });
         }
 
-        // ==================== TAB SWITCHING (UPDATED: added invite) ====================
+        // ==================== TAB SWITCHING (UPDATED) ====================
         function switchTab(tab) {
             currentTab = tab;
             currentTaskViewed = null;
@@ -4543,7 +4545,7 @@
             `;
         }
 
-        // ==================== FILTER BAR WITH DEBOUNCE ====================
+        // ==================== FILTER BAR ====================
         function filterBarHTML() {
             function options(arr) { return arr.map(v => `<option value="${v}">${v}</option>`).join(''); }
             return `<div class="filter-bar">
@@ -4601,7 +4603,7 @@
             applyFilters();
         }
 
-        // ==================== TASK DETAILS (UPDATED WITH OPEN BOOK STYLE) ====================
+        // ==================== TASK DETAILS (OPEN BOOK) ====================
         async function viewTaskDetails(taskId) {
             try {
                 const doc = await db.collection('tasks').doc(taskId).get();
@@ -4610,7 +4612,6 @@
                 currentTaskViewed = task;
                 refreshMirror();
 
-                // Left page content
                 let leftPage = `
                     <div class="book-page">
                         <h3><i class="fas fa-book-open"></i> Task Brief</h3>
@@ -4626,7 +4627,6 @@
                         </div>
                 `;
 
-                // Add audio/video embed on left page if applicable
                 if (task.category === 'transcription' && task.audioUrl) {
                     leftPage += `
                         <div class="book-meta">
@@ -4661,9 +4661,8 @@
                     }
                 }
 
-                leftPage += `</div>`; // close left page
+                leftPage += `</div>`;
 
-                // Right page: instructions
                 let rightPage = `
                     <div class="book-page">
                         <h3><i class="fas fa-feather-alt"></i> Instructions</h3>
@@ -5380,7 +5379,7 @@
             }
         }
 
-        // ==================== WITHDRAWALS ====================
+        // ==================== WITHDRAWALS (WITH EMAIL VERIFICATION) ====================
         async function loadWithdrawals() { 
             currentTaskViewed = null; refreshMirror(); 
             try { 
@@ -5391,6 +5390,22 @@
                 updateWalletDisplay(); 
                 const canWithdraw = (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE) && !userData.frozen; 
                 let ws = ''; 
+
+                // Email verification check
+                const isEmailVerified = currentUser.emailVerified;
+                if (!isEmailVerified) {
+                    ws = `
+                        <div class="withdrawal-section">
+                            <h4><i class="fas fa-envelope"></i> Email Verification Required</h4>
+                            <p>You must verify your email address before you can withdraw funds.</p>
+                            <p>A verification link was sent to <strong>${escapeHtml(currentUser.email)}</strong>. Please check your inbox and click the link.</p>
+                            <button class="btn btn-primary" onclick="resendVerificationEmail()">Resend Verification Email</button>
+                            <button class="btn btn-secondary" onclick="switchTab('profile')">Go to Profile</button>
+                        </div>
+                    `;
+                    document.getElementById('content').innerHTML = ws;
+                    return;
+                }
 
                 let cooldownHtml = '';
                 let cooldownActive = false;
@@ -5651,7 +5666,7 @@
             }
         }
 
-        // ==================== MEMBERSHIP OPTIONS (UPDATED WITH PAYMENT LINKS) ====================
+        // ==================== MEMBERSHIP OPTIONS (UPDATED WITH CRYPTO BUTTON) ====================
         function showMembershipOptions(usingOffer = false) {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
             const offer = currentOfferMap['premium'];
@@ -5659,39 +5674,48 @@
             const offerPrice = hasOffer ? offer.newAmount : premiumPkg.price;
             const originalPrice = hasOffer ? offer.originalPrice : premiumPkg.price;
             const offerId = hasOffer ? offer.id : null;
-            // Use dedicated payment link for premium, fallback to old paymentUrl
+            // Use dedicated payment link for premium
             const premiumPaymentLink = paymentLinks.premiumMembership || paymentUrl;
 
-            showModal(`<div class="modal-content" style="text-align:center;">
-                <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;">
-                    <i class="fas fa-bolt" style="font-size:2rem;"></i>
-                    <h3 style="color:white;">Ready to Upgrade?</h3>
-                    <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('${premiumPaymentLink}','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
-                </div>
-                <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i>
-                <h3>Upgrade Your Membership</h3>
-                <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
-                    <div style="background:#f8fafc; padding:2rem; border:2px solid #6366f1; border-radius:1.5rem;">
-                        <h4 style="color:#6366f1; font-size:1.8rem;">${escapeHtml(premiumPkg.name)}</h4>
-                        ${hasOffer ? `
-                            <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b; text-decoration:line-through;">${formatBoth(originalPrice)}</span></p>
-                            <p style="font-size:0.9rem; color:#f97316;">${offer.savingsPercentage}% OFF – Limited time!</p>
-                        ` : `
-                            <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(premiumPkg.price)}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
-                        `}
-                        <p style="color:#475569;">✓ Access to all tasks<br>✓ Withdrawals enabled<br>✓ Priority support</p>
+            // Crypto button from NOWPayments
+            const cryptoButtonHtml = `<a href="https://nowpayments.io/payment/?iid=4696290443&source=button" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setPaymentMethod('Crypto')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments"> </a>`;
+
+            showModal(`
+                <div class="modal-content" style="text-align:center;">
+                    <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#667eea,#764ba2); padding:1.5rem; border-radius:1rem; color:white;">
+                        <i class="fas fa-bolt" style="font-size:2rem;"></i>
+                        <h3 style="color:white;">Ready to Upgrade?</h3>
+                        <div style="display:flex; flex-direction:column; gap:1rem; margin:1rem 0;">
+                            <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="setPaymentMethod('M-Pesa'); window.open('${premiumPaymentLink}','_blank')"><i class="fas fa-credit-card"></i> Pay with M-Pesa</button>
+                            ${cryptoButtonHtml}
+                        </div>
                     </div>
+                    <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i>
+                    <h3>Upgrade Your Membership</h3>
+                    <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
+                        <div style="background:#f8fafc; padding:2rem; border:2px solid #6366f1; border-radius:1.5rem;">
+                            <h4 style="color:#6366f1; font-size:1.8rem;">${escapeHtml(premiumPkg.name)}</h4>
+                            ${hasOffer ? `
+                                <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b; text-decoration:line-through;">${formatBoth(originalPrice)}</span></p>
+                                <p style="font-size:0.9rem; color:#f97316;">${offer.savingsPercentage}% OFF – Limited time!</p>
+                            ` : `
+                                <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(premiumPkg.price)}<span style="font-size:1rem; color:#64748b;">/${premiumPkg.duration}</span></p>
+                            `}
+                            <p style="color:#475569;">✓ Access to all tasks<br>✓ Withdrawals enabled<br>✓ Priority support</p>
+                        </div>
+                    </div>
+                    <div style="margin-top:2rem; padding:1.5rem; background:#f1f5f9;">
+                        <h4>Payment Verification</h4>
+                        <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code / ID" required>
+                        <input type="number" id="paymentAmount" class="smart-input" placeholder="Amount Paid (USD)" step="0.01" required>
+                        <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
+                        <input type="hidden" id="offerId" value="${offerId || ''}">
+                        <input type="hidden" id="membershipType" value="premium">
+                        <button class="btn btn-success" onclick="submitPaymentVerification()">Submit for Approval</button>
+                    </div>
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
                 </div>
-                <div style="margin-top:2rem; padding:1.5rem; background:#f1f5f9;">
-                    <h4>Payment Verification</h4>
-                    <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code / ID" required>
-                    <input type="number" id="paymentAmount" class="smart-input" placeholder="Amount Paid (USD)" step="0.01" required>
-                    <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
-                    <input type="hidden" id="offerId" value="${offerId || ''}">
-                    <button class="btn btn-success" onclick="submitPaymentVerification()">Submit for Approval</button>
-                </div>
-                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-            </div>`);
+            `);
         }
 
         function showEliteUpgradeOptions(usingOffer = false) {
@@ -5701,44 +5725,57 @@
             const offerPrice = hasOffer ? offer.newAmount : elitePkg.price;
             const originalPrice = hasOffer ? offer.originalPrice : elitePkg.price;
             const offerId = hasOffer ? offer.id : null;
-            // Use dedicated payment link for elite, fallback to old paymentUrl
             const elitePaymentLink = paymentLinks.eliteMembership || paymentUrl;
 
-            showModal(`<div class="modal-content" style="text-align:center;">
-                <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#f59e0b,#d97706); padding:1.5rem; border-radius:1rem; color:white;">
-                    <i class="fas fa-crown" style="font-size:2rem;"></i>
-                    <h3 style="color:white;">Go Elite!</h3>
-                    <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="window.open('${elitePaymentLink}','_blank')"><i class="fas fa-credit-card"></i> PAY NOW</button>
-                </div>
-                <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i>
-                <h3>Upgrade to Elite Membership</h3>
-                <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
-                    <div style="background:#f8fafc; padding:2rem; border:2px solid #f59e0b; border-radius:1.5rem;">
-                        <h4 style="color:#f59e0b; font-size:1.8rem;">${escapeHtml(elitePkg.name)}</h4>
-                        ${hasOffer ? `
-                            <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b; text-decoration:line-through;">${formatBoth(originalPrice)}</span></p>
-                            <p style="font-size:0.9rem; color:#f97316;">${offer.savingsPercentage}% OFF – Limited time!</p>
-                        ` : `
-                            <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(elitePkg.price)}<span style="font-size:1rem; color:#64748b;">/${elitePkg.duration}</span></p>
-                        `}
-                        <p style="color:#475569;">
-                            ✓ Access to all tasks including Design & Projects & Transcription<br>
-                            ✓ Withdrawals enabled<br>
-                            ✓ Priority support<br>
-                            ✓ Welcome bonus: ${formatBoth(elitePkg.welcomeBonus || 10)}
-                        </p>
+            const cryptoButtonHtml = `<a href="https://nowpayments.io/payment/?iid=4696290443&source=button" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setPaymentMethod('Crypto')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments"> </a>`;
+
+            showModal(`
+                <div class="modal-content" style="text-align:center;">
+                    <div style="margin-bottom:1.5rem; background:linear-gradient(135deg,#f59e0b,#d97706); padding:1.5rem; border-radius:1rem; color:white;">
+                        <i class="fas fa-crown" style="font-size:2rem;"></i>
+                        <h3 style="color:white;">Go Elite!</h3>
+                        <div style="display:flex; flex-direction:column; gap:1rem; margin:1rem 0;">
+                            <button class="btn" style="background:#10b981; color:white; font-size:1.2rem; padding:1rem 3rem;" onclick="setPaymentMethod('M-Pesa'); window.open('${elitePaymentLink}','_blank')"><i class="fas fa-credit-card"></i> Pay with M-Pesa</button>
+                            ${cryptoButtonHtml}
+                        </div>
                     </div>
+                    <i class="fas fa-crown" style="font-size:4rem; color:#f59e0b;"></i>
+                    <h3>Upgrade to Elite Membership</h3>
+                    <div style="display:flex; flex-direction:column; gap:1rem; max-width:400px; margin:0 auto;">
+                        <div style="background:#f8fafc; padding:2rem; border:2px solid #f59e0b; border-radius:1.5rem;">
+                            <h4 style="color:#f59e0b; font-size:1.8rem;">${escapeHtml(elitePkg.name)}</h4>
+                            ${hasOffer ? `
+                                <p style="font-size:2rem; font-weight:800; color:#f97316;">${formatBoth(offerPrice)} <span style="font-size:1rem; color:#64748b; text-decoration:line-through;">${formatBoth(originalPrice)}</span></p>
+                                <p style="font-size:0.9rem; color:#f97316;">${offer.savingsPercentage}% OFF – Limited time!</p>
+                            ` : `
+                                <p style="font-size:2rem; font-weight:800; color:#0f172a;">${formatBoth(elitePkg.price)}<span style="font-size:1rem; color:#64748b;">/${elitePkg.duration}</span></p>
+                            `}
+                            <p style="color:#475569;">
+                                ✓ Access to all tasks including Design & Projects & Transcription<br>
+                                ✓ Withdrawals enabled<br>
+                                ✓ Priority support<br>
+                                ✓ Welcome bonus: ${formatBoth(elitePkg.welcomeBonus || 10)}
+                            </p>
+                        </div>
+                    </div>
+                    <div style="margin-top:2rem; padding:1.5rem; background:#f1f5f9;">
+                        <h4>Payment Verification</h4>
+                        <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code / ID" required>
+                        <input type="number" id="paymentAmount" class="smart-input" placeholder="Amount Paid (USD)" step="0.01" required>
+                        <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
+                        <input type="hidden" id="offerId" value="${offerId || ''}">
+                        <input type="hidden" id="membershipType" value="elite">
+                        <button class="btn btn-success" onclick="submitPaymentVerification()">Submit for Approval</button>
+                    </div>
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
                 </div>
-                <div style="margin-top:2rem; padding:1.5rem; background:#f1f5f9;">
-                    <h4>Payment Verification</h4>
-                    <input type="text" id="transactionCode" class="smart-input" placeholder="Transaction Code / ID" required>
-                    <input type="number" id="paymentAmount" class="smart-input" placeholder="Amount Paid (USD)" step="0.01" required>
-                    <textarea id="paymentNotes" class="smart-textarea" placeholder="Additional notes (optional)"></textarea>
-                    <input type="hidden" id="offerId" value="${offerId || ''}">
-                    <button class="btn btn-success" onclick="submitPaymentVerification()">Submit for Approval</button>
-                </div>
-                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-            </div>`);
+            `);
+        }
+
+        // Store payment method temporarily
+        let selectedPaymentMethod = 'M-Pesa';
+        function setPaymentMethod(method) {
+            selectedPaymentMethod = method;
         }
 
         async function submitPaymentVerification() {
@@ -5746,6 +5783,7 @@
             const amount = parseFloat(document.getElementById('paymentAmount')?.value);
             const notes = document.getElementById('paymentNotes')?.value || '';
             const offerId = document.getElementById('offerId')?.value || null;
+            const membershipType = document.getElementById('membershipType')?.value || 'premium';
             if (!txCode) { showAlert('Please enter transaction code', 'error'); return; }
             if (!amount || amount <= 0) { showAlert('Please enter a valid amount', 'error'); return; }
 
@@ -5775,7 +5813,9 @@
                     amount: amount,
                     notes: notes,
                     status: 'pending',
-                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    paymentMethod: selectedPaymentMethod,
+                    membershipType: membershipType
                 };
                 if (offerId) {
                     paymentData.offerId = offerId;
@@ -5788,7 +5828,7 @@
             }
         }
 
-        // ==================== TRAINING CENTER (UPDATED WITH TRAINING PAYMENT LINK) ====================
+        // ==================== TRAINING CENTER ====================
         async function loadTrainings() { 
             currentTaskViewed = null; refreshMirror(); 
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading trainings...</p></div>'; 
@@ -5838,7 +5878,6 @@
                         if (t.type === 'free') { 
                             actionHtml = `<button class="btn btn-success" onclick="applyForTraining('${doc.id}', 'free')">Apply Now</button>`; 
                         } else { 
-                            // Use the training payment link
                             const trainingPaymentLink = paymentLinks.training || paymentUrl;
                             actionHtml = `<button class="btn btn-warning" onclick="showPrepaidPayment('${doc.id}', ${t.price})">Apply (Prepaid)</button>`; 
                         } 
@@ -6156,7 +6195,7 @@
             }
         }
 
-        // ==================== MESSAGES ====================
+        // ==================== MESSAGES (FIXED ADMIN ERROR) ====================
         async function loadMessages() { 
             currentTaskViewed = null; refreshMirror(); 
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading messages...</p></div>'; 
@@ -6209,7 +6248,10 @@
             const msg = document.getElementById('messageContent')?.value;
             if (!subj || !msg) { showAlert('Please fill all fields','error'); return; }
             const admin = await getAdminId();
-            if (!admin) { showAlert('Cannot send message: admin not found','error'); return; }
+            if (!admin) {
+                showAlert('Admin not found. Please contact support or try again later.', 'error');
+                return;
+            }
             try {
                 const threadId = db.collection('messages').doc().id;
                 await db.collection('messages').doc(threadId).set({
@@ -6238,7 +6280,10 @@
             const reply = document.getElementById('replyMessage')?.value;
             if (!reply) { showAlert('Please enter a reply','error'); return; }
             const admin = await getAdminId();
-            if (!admin) { showAlert('Cannot send reply: admin not found','error'); return; }
+            if (!admin) {
+                showAlert('Admin not found. Please contact support or try again later.', 'error');
+                return;
+            }
             try {
                 await db.collection('messages').add({
                     senderId: currentUser.uid,
@@ -6400,7 +6445,7 @@
         document.addEventListener('click', (e) => { const panel = document.getElementById('notificationsPanel'); const bell = document.querySelector('.notification-bell'); if (notificationsPanelVisible && panel && !panel.contains(e.target) && bell && !bell.contains(e.target)) { panel.classList.remove('active'); notificationsPanelVisible = false; } });
 
         // ==================== PROFILE ====================
-        function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Pending Balance (upgrade):</strong> ${formatBoth(pendingBalance)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p><p><strong>Newbie Qualified:</strong> ${userData.newbieQualified ? '✅ Yes' : '❌ No'}</p></div>`; }
+        function loadProfile() { currentTaskViewed = null; refreshMirror(); const join = userData.createdAt?.seconds ? new Date(userData.createdAt.seconds*1000).toLocaleDateString() : 'N/A'; document.getElementById('content').innerHTML = `<h3>Profile Settings</h3><div style="background:#f8fafc; padding:1rem; border-radius:0.5rem;"><input type="text" id="profileName" value="${escapeHtml(userData.displayName||'')}" placeholder="Display Name"><input type="tel" id="profilePhone" value="${escapeHtml(userData.phone||'')}" placeholder="Phone Number"><button class="btn btn-primary" onclick="updateProfile()">Update Profile</button></div><div style="margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:0.5rem;"><p><strong>Email:</strong> ${escapeHtml(userData.email)}</p><p><strong>Email Verified:</strong> ${currentUser.emailVerified ? '✅ Yes' : '❌ No'}</p><p><strong>Member since:</strong> ${join}</p><p><strong>Wallet Balance:</strong> ${formatBoth(userData.wallet||0)}</p><p><strong>Pending Balance (upgrade):</strong> ${formatBoth(pendingBalance)}</p><p><strong>Productivity Score:</strong> ${userData.productivityScore || 0}</p><p><strong>Newbie Qualified:</strong> ${userData.newbieQualified ? '✅ Yes' : '❌ No'}</p></div>`; }
         async function updateProfile() { const name = document.getElementById('profileName').value; const phone = document.getElementById('profilePhone').value; if (!name) { showAlert('Name is required','error'); return; } await db.collection('users').doc(currentUser.uid).update({ displayName: name, phone: phone||'' }); userData.displayName = name; document.getElementById('userName').textContent = name; showAlert('Profile updated!','success'); refreshMirror(); }
 
         // ==================== LOAD FEE & MEMBERSHIP ====================
@@ -6446,11 +6491,12 @@
             return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
 
-        // ==================== LEADERBOARD ====================
+        // ==================== LEADERBOARD (FIXED) ====================
         async function loadLeaderboard() {
             currentTaskViewed = null; refreshMirror();
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading leaderboard...</p></div>';
             try {
+                // Try to fetch from leaderboard collection first
                 const leaderboardSnap = await db.collection('leaderboard').orderBy('rank', 'asc').get();
                 if (!leaderboardSnap.empty) {
                     const leaderboardMap = new Map();
@@ -6465,16 +6511,23 @@
                     
                     let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table">';
                     html += '<thead>   <th>Rank</th><th>User</th><th>Points</th> </thead><tbody>';
-                    uniqueEntries.forEach(entry => {
-                        html += `   .<td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td> `;
-                    });
+                    if (uniqueEntries.length === 0) {
+                        html += '<tr><td colspan="3" class="empty-state">No data available</td></tr>';
+                    } else {
+                        uniqueEntries.forEach(entry => {
+                            html += `   .<td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td> `;
+                        });
+                    }
                     html += '</tbody> </div>';
                     document.getElementById('content').innerHTML = html;
                 } else {
+                    // Fallback: compute from users and approved submissions
+                    console.log('Leaderboard collection empty, computing from users...');
                     const usersSnap = await db.collection('users').get();
                     const leaderboard = [];
                     for (const doc of usersSnap.docs) {
                         const u = { id: doc.id, ...doc.data() };
+                        // Count approved submissions efficiently
                         const approvedSnap = await db.collection('submissions').where('userId','==',u.id).where('status','==','approved').get();
                         const points = (u.wallet || 0) * 10 + approvedSnap.size * 5;
                         leaderboard.push({ name: u.displayName || u.email, points, wallet: u.wallet });
@@ -6482,12 +6535,19 @@
                     leaderboard.sort((a,b) => b.points - a.points);
                     let html = '<h3>🏆 Leaderboard (by earnings & approvals)</h3><table class="leaderboard-table">';
                     html += '<thead>   <th>Rank</th><th>User</th><th>Points</th><th>Wallet</th> </thead><tbody>';
-                    leaderboard.slice(0, 20).forEach((u, idx) => { html += `   .<td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td> `; });
+                    if (leaderboard.length === 0) {
+                        html += '<tr><td colspan="4" class="empty-state">No users found</td></tr>';
+                    } else {
+                        leaderboard.slice(0, 20).forEach((u, idx) => { 
+                            html += `   .<td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td> `; 
+                        });
+                    }
                     html += '</tbody> </div>';
                     document.getElementById('content').innerHTML = html;
                 }
             } catch (e) {
-                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
+                console.error('Leaderboard error:', e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadLeaderboard()">Retry</button></div>`;
             }
         }
 
@@ -6545,7 +6605,7 @@
             }
         }
 
-        // ==================== MEMBERSHIP PAYMENTS LISTENER (ENHANCED WITH REFERRAL) ====================
+        // ==================== MEMBERSHIP PAYMENTS LISTENER (ENHANCED WITH MEMBERSHIP UPGRADE) ====================
         function setupMembershipPaymentsListener() {
             if (membershipPaymentsListener) membershipPaymentsListener();
             membershipPaymentsListener = db.collection('membershipPayments')
@@ -6562,8 +6622,40 @@
                                 const bonus = (payment.amount || 0) * 0.1;
                                 showPaymentApprovedPopup(payment.amount || 0, bonus);
                                 newPendingBalance -= (payment.amount || 0);
-                                // Process referral bonus when payment approved (user upgraded)
-                                await processReferralBonus(currentUser.uid, payment.membershipType || 'premium');
+                                
+                                // Upgrade user membership
+                                const membershipType = payment.membershipType || 'premium';
+                                const updateData = {
+                                    membershipType: membershipType,
+                                    membershipStatus: 'active',
+                                    wallet: firebase.firestore.FieldValue.increment(payment.amount + bonus)
+                                };
+                                if (membershipType === 'premium') {
+                                    // Premium is annual
+                                    const expiryDate = new Date();
+                                    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                                    updateData.membershipExpiry = expiryDate;
+                                } else if (membershipType === 'elite') {
+                                    // Elite is lifetime
+                                    updateData.membershipExpiry = null;
+                                    // Add welcome bonus if not already added
+                                    const welcomeBonus = getWelcomeBonus('elite');
+                                    if (welcomeBonus > 0 && !userData.welcomeBonusGiven) {
+                                        updateData.wallet = firebase.firestore.FieldValue.increment(welcomeBonus);
+                                        updateData.welcomeBonusGiven = true;
+                                        await db.collection('transactions').add({
+                                            userId: currentUser.uid,
+                                            type: 'welcome_bonus',
+                                            description: `Elite membership welcome bonus`,
+                                            amount: welcomeBonus,
+                                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                                        });
+                                    }
+                                }
+                                await db.collection('users').doc(currentUser.uid).update(updateData);
+                                
+                                // Process referral bonus
+                                await processReferralBonus(currentUser.uid, membershipType);
                             } else if (payment.status === 'pending') {
                                 newPendingBalance += (payment.amount || 0);
                             }
@@ -7236,7 +7328,7 @@
             }
         }
 
-        // ==================== INVESTOR SECTION (UPDATED WITH INVESTMENT PAYMENT LINK) ====================
+        // ==================== INVESTOR SECTION ====================
         async function loadInvestor() {
             currentTaskViewed = null;
             refreshMirror();
@@ -7487,7 +7579,6 @@
         }
 
         async function showAddFunds() {
-            // Use the investment payment link from the new paymentLinks object
             const investmentPaymentLink = paymentLinks.investment || (await db.collection('settings').doc('investment').get()).data()?.paymentLink || 'https://lipana.dev/pay/nextgen-invest';
 
             showModal(`
@@ -7827,7 +7918,7 @@
             }
         }
 
-        // ==================== AUTH STATE LISTENER (MODIFIED WITH REFERRAL) ====================
+        // ==================== AUTH STATE LISTENER ====================
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
             const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
@@ -7878,7 +7969,7 @@
                             referredName: user.displayName || user.email,
                             status: 'pending',
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            bonusesGiven: [] // track which membership types have given bonus
+                            bonusesGiven: []
                         });
                         await db.collection('users').doc(referredBy).update({
                             totalReferrals: firebase.firestore.FieldValue.increment(1)
@@ -7893,7 +7984,6 @@
                         await db.collection('users').doc(user.uid).update({ referralCode: newCode });
                         userData.referralCode = newCode;
                     }
-                    // Note: initialReferralBonusGiven is not needed because bonuses are per upgrade type
                 }
                 if (userData.active === false) { await auth.signOut(); window.location.href = 'index.html'; return; }
                 currentUser = user;
@@ -8036,7 +8126,6 @@
                 const icon = header.querySelector('.toggle-icon');
                 
                 header.addEventListener('click', (e) => {
-                    // Close all other categories
                     categories.forEach(other => {
                         if (other !== cat) {
                             const otherItems = other.querySelector('.mobile-nav-category-items');
@@ -8046,7 +8135,6 @@
                             if (otherIcon) otherIcon.classList.add('fa-chevron-down');
                         }
                     });
-                    // Toggle current category
                     const isOpen = items.style.display === 'block';
                     items.style.display = isOpen ? 'none' : 'block';
                     if (icon) {
