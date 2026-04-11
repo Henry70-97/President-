@@ -1,677 +1,372 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>NextGen Hub | Modern Authentication</title>
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <!-- Font Awesome 6 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 35%, #43e97b 70%, #f9a826 100%);
-            background-attachment: fixed;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Animated gradient blobs for depth */
-        .blob {
-            position: fixed;
-            width: 50vw;
-            height: 50vw;
-            background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 70%);
-            border-radius: 50%;
-            filter: blur(70px);
-            z-index: 0;
-            pointer-events: none;
-            animation: floatBlob 18s infinite alternate ease-in-out;
-        }
-
-        .blob-1 { top: -15vh; left: -10vw; background: radial-gradient(circle, rgba(255,140,200,0.4), rgba(0,255,200,0.1)); }
-        .blob-2 { bottom: -10vh; right: -5vw; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(255,220,100,0.3), rgba(0,150,255,0.1)); animation-duration: 22s; }
-        .blob-3 { top: 40vh; left: 60vw; width: 35vw; height: 35vw; background: radial-gradient(circle, rgba(100,255,180,0.3), rgba(255,90,200,0.1)); animation-duration: 14s; }
-
-        @keyframes floatBlob {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(5%, 5%) scale(1.1); }
-        }
-
-        /* Splash Overlay */
-        .splash-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.65);
-            backdrop-filter: blur(15px);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            opacity: 1;
-        }
-
-        .splash-logo {
-            text-align: center;
-            animation: floatLogo 2s infinite alternate ease-in-out;
-        }
-
-        .splash-logo img {
-            width: 180px;  /* Increased size for logo.jpg */
-            height: 180px;
-            object-fit: contain;
-            filter: drop-shadow(0 20px 25px rgba(0,0,0,0.2));
-        }
-
-        .splash-logo h2 {
-            color: white;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            margin-top: 1rem;
-            background: linear-gradient(135deg, #fff, #ffec99);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        @keyframes floatLogo {
-            0% { transform: translateY(0px); }
-            100% { transform: translateY(-12px); }
-        }
-
-        /* Main Auth Container */
-        .auth-container {
-            width: 100%;
-            max-width: 520px;
-            z-index: 10;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        /* Glassmorphism Card */
-        .glass-card {
-            background: rgba(20, 20, 35, 0.45);
-            backdrop-filter: blur(14px);
-            border-radius: 42px;
-            padding: 2rem 2rem 2.2rem;
-            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255,255,255,0.15);
-            transition: all 0.3s ease;
-        }
-
-        @media (prefers-color-scheme: light) {
-            .glass-card {
-                background: rgba(245, 245, 255, 0.6);
-                backdrop-filter: blur(16px);
-                box-shadow: 0 20px 35px rgba(0,0,0,0.1);
-            }
-            .glass-card input, .glass-card .input-wrapper input, .glass-card select {
-                background: rgba(255,255,255,0.85);
-                color: #1e1e2f;
-            }
-            .glass-card label {
-                color: #1e1e2f;
-            }
-            .greeting-title, .subtitle {
-                color: #1e1e2a;
-            }
-            .chip {
-                background: rgba(0,0,0,0.08);
-                color: #1e1e2a;
-            }
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .glass-card input, .glass-card .input-wrapper input, .glass-card select {
-                background: rgba(30,30,45,0.8);
-                color: #f0f0f0;
-            }
-            .chip {
-                background: rgba(255,255,255,0.12);
-                color: #eee;
-            }
-        }
-
-        .greeting-title {
-            font-size: 1.9rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #FFFFFF, #f0b7ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            letter-spacing: -0.5px;
-            margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-            font-size: 0.95rem;
-            opacity: 0.85;
-            margin-bottom: 1rem;
-        }
-
-        .earning-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 1rem 0 1.5rem 0;
-        }
-
-        .chip {
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(4px);
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-
-        .input-group {
-            margin-bottom: 1.2rem;
-        }
-
-        .input-group label {
-            font-size: 0.8rem;
-            font-weight: 500;
-            display: block;
-            margin-bottom: 6px;
-            letter-spacing: 0.3px;
-        }
-
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            background: rgba(30,30,45,0.7);
-            border-radius: 28px;
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: all 0.2s;
-        }
-        .input-wrapper:focus-within {
-            border-color: #f9a826;
-            box-shadow: 0 0 0 3px rgba(249,168,38,0.3);
-        }
-        .input-wrapper i {
-            padding: 0 14px;
-            color: #ccc;
-            font-size: 1rem;
-        }
-        .input-wrapper input, .input-wrapper select {
-            width: 100%;
-            background: transparent;
-            border: none;
-            padding: 14px 14px 14px 0;
-            font-size: 0.95rem;
-            outline: none;
-        }
-        .dob-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .dob-group .input-wrapper {
-            flex: 1;
-        }
-        .toggle-password {
-            cursor: pointer;
-            padding-right: 16px;
-        }
-
-        .forgot-link {
-            text-align: right;
-            margin-bottom: 1.5rem;
-        }
-        .forgot-link a, .switch-link {
-            font-size: 0.75rem;
-            color: #ffdb8e;
-            text-decoration: none;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .forgot-link a:hover, .switch-link:hover {
-            text-decoration: underline;
-        }
-
-        .gradient-btn {
-            width: 100%;
-            background: linear-gradient(95deg, #a855f7, #f97316);
-            border: none;
-            padding: 14px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 1rem;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-bottom: 1.2rem;
-        }
-        .gradient-btn:hover {
-            transform: scale(1.01);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        .social-btn {
-            width: 100%;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 12px;
-            border-radius: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            color: white;
-        }
-        .social-btn:hover {
-            background: rgba(255,255,255,0.25);
-        }
-
-        .switch-text {
-            text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.85rem;
-        }
-
-        .error-message {
-            background: rgba(255,70,70,0.2);
-            border-left: 4px solid #ff4d4d;
-            padding: 10px;
-            border-radius: 16px;
-            font-size: 0.75rem;
-            margin-bottom: 1rem;
-            color: #ffb3b3;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 550px) {
-            .glass-card { padding: 1.6rem; }
-            .greeting-title { font-size: 1.6rem; }
-            .dob-group { flex-direction: column; gap: 8px; }
-            .splash-logo img { width: 140px; height: 140px; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>NextGen Hub - Earn Your Way</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html,body{margin:0;padding:0;height:100%;width:100%;font-family:'DM Sans',sans-serif;scroll-behavior:smooth}
+    *{box-sizing:border-box}
+    .font-display{font-family:'Outfit',sans-serif}
+    .gradient-bg{background:linear-gradient(135deg,#0a0e1a 0%,#111832 40%,#0d1a2d 70%,#0a0e1a 100%)}
+    .card-glass{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(12px)}
+    .glow-teal{box-shadow:0 0 40px rgba(0,210,190,0.15),0 0 80px rgba(0,210,190,0.05)}
+    .glow-btn{background:linear-gradient(135deg,#00d2be,#00b4d8);box-shadow:0 4px 24px rgba(0,210,190,0.35)}
+    .glow-btn:hover{box-shadow:0 6px 32px rgba(0,210,190,0.5);transform:translateY(-2px)}
+    .input-dark{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#fff;transition:all .2s}
+    .input-dark:focus{border-color:#00d2be;outline:none;box-shadow:0 0 0 3px rgba(0,210,190,0.15)}
+    .input-dark::placeholder{color:rgba(255,255,255,0.35)}
+    .grid-pattern{background-image:radial-gradient(rgba(0,210,190,0.08) 1px,transparent 1px);background-size:32px 32px}
+    .fade-in{opacity:0;transform:translateY(30px);transition:all .7s cubic-bezier(.16,1,.3,1)}
+    .fade-in.visible{opacity:1;transform:translateY(0)}
+    .service-card{transition:all .3s cubic-bezier(.16,1,.3,1)}
+    .service-card:hover{transform:translateY(-6px);border-color:rgba(0,210,190,0.3);box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+    .step-line{position:absolute;left:24px;top:50px;bottom:-10px;width:2px;background:linear-gradient(to bottom,#00d2be,transparent)}
+    .float-anim{animation:floatY 6s ease-in-out infinite}
+    @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    .nav-link{position:relative}
+    .nav-link::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:#00d2be;transition:width .3s}
+    .nav-link:hover::after{width:100%}
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:#0a0e1a}
+    ::-webkit-scrollbar-thumb{background:#00d2be33;border-radius:3px}
+    .overlay-modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px}
+    .overlay-modal.active{display:flex}
+    .toast{position:fixed;top:20px;right:20px;z-index:200;padding:14px 24px;border-radius:12px;color:#fff;font-weight:600;transform:translateX(120%);transition:transform .4s cubic-bezier(.16,1,.3,1)}
+    .toast.show{transform:translateX(0)}
+    .toast-success{background:linear-gradient(135deg,#00d2be,#00b4d8)}
+    .toast-error{background:linear-gradient(135deg,#ff4757,#ff6b81)}
+    /* custom earnings banner */
+    .earnings-banner {
+      background: linear-gradient(115deg, rgba(0,210,190,0.12), rgba(0,180,216,0.08));
+      border-radius: 20px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 1.5rem;
+      border-left: 3px solid #00d2be;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .earnings-banner span {
+      display: inline-block;
+      background: rgba(0,210,190,0.2);
+      padding: 0.2rem 0.7rem;
+      border-radius: 40px;
+      margin: 0.2rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+  </style>
 </head>
-<body>
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
+<body class="h-full gradient-bg text-white overflow-x-hidden">
+<div id="app" class="w-full h-full overflow-auto">
+  <!-- Toast -->
+  <div id="toast" class="toast" role="alert"></div>
 
-    <!-- Splash Screen -->
-    <div id="splash" class="splash-overlay">
-        <div class="splash-logo">
-            <!-- logo.jpg from same folder, increased size -->
-            <img src="logo.jpg" alt="NextGen Hub Logo">
-            <h2>NextGen Hub</h2>
+  <!-- Navbar -->
+  <header class="fixed top-0 left-0 w-full z-50 transition-all duration-300" id="navbar">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#" onclick="showSection('landing'); return false;" class="flex items-center gap-3">
+        <img src="logo.jpg" alt="NextGen Hub Logo" class="w-10 h-10 rounded-lg object-cover" onerror="this.style.display='none';document.getElementById('fallback-logo').style.display='flex'" loading="lazy">
+        <span id="fallback-logo" class="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-400 to-cyan-500 items-center justify-center text-white font-bold font-display text-lg" style="display:none">N</span>
+        <span class="font-display font-bold text-xl tracking-tight">NextGen<span class="text-teal-400">Hub</span></span>
+      </a>
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#services" class="nav-link text-sm text-gray-300 hover:text-white transition">Services</a>
+        <a href="#how-it-works" class="nav-link text-sm text-gray-300 hover:text-white transition">How It Works</a>
+        <a href="#contact" class="nav-link text-sm text-gray-300 hover:text-white transition">Contact</a>
+        <button onclick="showSection('register')" class="glow-btn text-sm font-semibold px-5 py-2.5 rounded-full text-black transition-all">Get Started</button>
+      </nav>
+      <button class="md:hidden text-white" onclick="toggleMobileMenu()" aria-label="Toggle menu"><i data-lucide="menu" class="w-6 h-6"></i></button>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden bg-gray-900/95 backdrop-blur-lg border-t border-white/10 px-6 py-4 space-y-3">
+      <a href="#services" class="block py-2 text-gray-300 hover:text-white" onclick="toggleMobileMenu()">Services</a>
+      <a href="#how-it-works" class="block py-2 text-gray-300 hover:text-white" onclick="toggleMobileMenu()">How It Works</a>
+      <a href="#contact" class="block py-2 text-gray-300 hover:text-white" onclick="toggleMobileMenu()">Contact</a>
+      <button onclick="showSection('register');toggleMobileMenu()" class="w-full glow-btn text-sm font-semibold px-5 py-2.5 rounded-full text-black">Get Started</button>
+    </div>
+  </header>
+
+  <!-- LANDING PAGE -->
+  <div id="landing-page">
+    <!-- Hero section etc. (shortened for brevity but fully functional) -->
+    <section id="hero" class="relative min-h-screen flex items-center grid-pattern pt-20">
+      <div class="max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center relative z-10">
+        <div class="fade-in">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-sm font-medium mb-6"><i data-lucide="zap" class="w-4 h-4"></i> Empowering Your Earning Potential</div>
+          <h1 id="hero-title" class="font-display font-900 text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-6">Earn Doing<br>What You<br><span class="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">Love</span></h1>
+          <p id="hero-subtitle" class="text-gray-400 text-lg md:text-xl max-w-lg mb-10 leading-relaxed">Join thousands of professionals earning through academic writing, design, trading, transcription, data annotation and many more opportunities.</p>
+          <div class="flex flex-wrap gap-4"><button onclick="showSection('register')" class="glow-btn px-8 py-4 rounded-full text-black font-bold text-lg transition-all flex items-center gap-2"> Get Started <i data-lucide="arrow-right" class="w-5 h-5"></i> </button> <a href="#how-it-works" class="px-8 py-4 rounded-full border border-white/15 text-white font-semibold hover:bg-white/5 transition flex items-center gap-2"> Learn More <i data-lucide="chevron-down" class="w-5 h-5"></i> </a></div>
+          <div class="flex items-center gap-8 mt-10 text-sm text-gray-500"><div class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-teal-400"></i> 10K+ Members</div><div class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-teal-400"></i> Verified Platform</div><div class="flex items-center gap-2"><i data-lucide="globe" class="w-4 h-4 text-teal-400"></i> 30+ Countries</div></div>
         </div>
-    </div>
+        <div class="hidden lg:flex justify-center float-anim"><div class="relative"><div class="w-80 h-80 rounded-3xl bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border border-teal-500/20 flex items-center justify-center glow-teal"><div class="text-center space-y-4"><div class="text-6xl">💰</div><div class="font-display font-bold text-2xl">Start Earning Today</div><div class="text-gray-400 text-sm">Multiple income streams await</div></div></div><div class="absolute -top-4 -right-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center shadow-lg"><i data-lucide="trending-up" class="w-8 h-8 text-black"></i></div><div class="absolute -bottom-4 -left-4 w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg"><i data-lucide="star" class="w-7 h-7 text-white"></i></div></div></div>
+      </div>
+    </section>
+    <section id="services" class="py-24 relative"><div class="max-w-7xl mx-auto px-6"><div class="text-center mb-16 fade-in"><span class="text-teal-400 text-sm font-semibold uppercase tracking-widest">Our Services</span><h2 class="font-display font-800 text-4xl md:text-5xl mt-3 mb-4">Ways to Earn</h2><p class="text-gray-400 max-w-2xl mx-auto">Explore diverse earning opportunities tailored to your skills and interests.</p></div><div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" id="services-grid"></div></div></section>
+    <section id="how-it-works" class="py-24 relative"><div class="max-w-4xl mx-auto px-6 relative z-10"><div class="text-center mb-16 fade-in"><span class="text-teal-400 text-sm font-semibold uppercase tracking-widest">How It Works</span><h2 class="font-display font-800 text-4xl md:text-5xl mt-3 mb-4">Simple Steps to Start</h2></div><div class="space-y-12"><div class="relative flex gap-6 fade-in"><div class="flex-shrink-0 relative"><div class="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center font-display font-bold text-black text-lg">1</div><div class="step-line"></div></div><div class="card-glass rounded-2xl p-6 flex-1"><h3 class="font-display font-bold text-xl mb-2">Create Your Account</h3><p class="text-gray-400">Sign up for free using your email or Google account. Fill in your details and set up your profile in minutes.</p></div></div><div class="relative flex gap-6 fade-in"><div class="flex-shrink-0 relative"><div class="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center font-display font-bold text-black text-lg">2</div><div class="step-line"></div></div><div class="card-glass rounded-2xl p-6 flex-1"><h3 class="font-display font-bold text-xl mb-2">Choose Your Services</h3><p class="text-gray-400">Browse available earning categories — academic writing, design, trading, transcription, data annotation and more.</p></div></div><div class="relative flex gap-6 fade-in"><div class="flex-shrink-0 relative"><div class="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center font-display font-bold text-black text-lg">3</div><div class="step-line"></div></div><div class="card-glass rounded-2xl p-6 flex-1"><h3 class="font-display font-bold text-xl mb-2">Complete Tasks & Earn</h3><p class="text-gray-400">Start working on available tasks. Complete them with quality and earn competitive payouts.</p></div></div><div class="relative flex gap-6 fade-in"><div class="flex-shrink-0"><div class="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center font-display font-bold text-black text-lg">4</div></div><div class="card-glass rounded-2xl p-6 flex-1"><h3 class="font-display font-bold text-xl mb-2">Withdraw Your Earnings</h3><p class="text-gray-400">Cash out via M-Pesa, bank transfer, PayPal — fast and reliable payouts.</p></div></div></div></div></section>
+    <section id="contact" class="py-24"><div class="max-w-7xl mx-auto px-6"><div class="text-center mb-16 fade-in"><span class="text-teal-400 text-sm font-semibold uppercase tracking-widest">Contact Us</span><h2 class="font-display font-800 text-4xl md:text-5xl mt-3 mb-4">Get In Touch</h2></div><div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto"><div class="card-glass rounded-2xl p-8 text-center fade-in"><div class="w-14 h-14 mx-auto rounded-2xl bg-teal-500/10 flex items-center justify-center mb-4"><i data-lucide="map-pin" class="w-7 h-7 text-teal-400"></i></div><h3 class="font-display font-bold text-lg mb-2">Our Office</h3><p class="text-gray-400 text-sm">Karen Road, Nairobi, Kenya</p></div><div class="card-glass rounded-2xl p-8 text-center fade-in"><div class="w-14 h-14 mx-auto rounded-2xl bg-teal-500/10 flex items-center justify-center mb-4"><i data-lucide="mail" class="w-7 h-7 text-teal-400"></i></div><h3 class="font-display font-bold text-lg mb-2">Email Support</h3><p class="text-gray-400 text-sm break-all" id="support-email-display">empoweringminds556@gmail.com</p><p class="text-gray-400 text-sm mt-1">support@joblify.top</p></div><div class="card-glass rounded-2xl p-8 text-center fade-in"><div class="w-14 h-14 mx-auto rounded-2xl bg-teal-500/10 flex items-center justify-center mb-4"><i data-lucide="clock" class="w-7 h-7 text-teal-400"></i></div><h3 class="font-display font-bold text-lg mb-2">Working Hours</h3><p class="text-gray-400 text-sm">Mon – Fri: 8AM – 6PM<br>Sat: 9AM – 1PM</p></div></div></div></section>
+    <footer class="border-t border-white/5 py-10"><div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500"><span>© 2025 NextGen Hub. All rights reserved.</span><div class="flex gap-6"><button onclick="openTermsModal()" class="hover:text-teal-400 transition">Terms & Conditions</button><a href="#contact" class="hover:text-teal-400 transition">Contact</a></div></div></footer>
+  </div>
 
-    <!-- Main Auth Panel -->
-    <div id="authContainer" class="auth-container" style="opacity:0;">
-        <div class="glass-card">
-            <div>
-                <h1 class="greeting-title">Hello, Welcome To NextGen</h1>
-                <div class="earning-chips">
-                    <span class="chip">📝 Transcription</span>
-                    <span class="chip">📊 Trading</span>
-                    <span class="chip">💳 Gropay</span>
-                    <span class="chip">✍️ Academic writing</span>
-                    <span class="chip">📈 Data annotations</span>
-                    <span class="chip">📁 Projects</span>
-                    <span class="chip">📰 Article writing</span>
-                    <span class="chip">🎨 Design</span>
-                    <span class="chip">🤖 AI Engineering</span>
-                    <span class="chip">✨ + more</span>
-                </div>
-                <p class="subtitle" id="formSubtitle">Sign in to continue to NextGen Hub</p>
-            </div>
-
-            <!-- Login Form -->
-            <div id="loginForm">
-                <div id="loginError" class="error-message" style="display:none;"></div>
-                <div class="input-group">
-                    <label>Email</label>
-                    <div class="input-wrapper"><i class="fas fa-envelope"></i><input type="email" id="loginEmail" placeholder="hello@nextgen.com"></div>
-                </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="••••••"><i class="fas fa-eye-slash toggle-password" data-target="loginPassword"></i></div>
-                </div>
-                <div class="forgot-link"><a id="forgotPasswordBtn">Forgot password?</a></div>
-                <button id="loginBtn" class="gradient-btn">Sign In →</button>
-                <button id="googleLoginBtn" class="social-btn"><i class="fab fa-google"></i> Continue with Google</button>
-                <div class="switch-text">Don't have an account? <span class="switch-link" id="showRegisterLink">Sign up</span></div>
-            </div>
-
-            <!-- Registration Form -->
-            <div id="registerForm" style="display:none;">
-                <div id="registerError" class="error-message" style="display:none;"></div>
-                <div class="input-group"><label>Full Name</label><div class="input-wrapper"><i class="fas fa-user"></i><input type="text" id="regFullName" placeholder="John Doe"></div></div>
-                <div class="input-group"><label>Nationality</label><div class="input-wrapper"><i class="fas fa-globe"></i><input type="text" id="regNationality" placeholder="e.g., American"></div></div>
-                
-                <!-- Date of Birth: scrollable selects with year >= 18 years old -->
-                <div class="input-group">
-                    <label>Date of birth (must be 18+)</label>
-                    <div class="dob-group">
-                        <div class="input-wrapper"><i class="fas fa-calendar-day"></i><select id="regDobDay"><option value="">Day</option></select></div>
-                        <div class="input-wrapper"><i class="fas fa-calendar-alt"></i><select id="regDobMonth"><option value="">Month</option></select></div>
-                        <div class="input-wrapper"><i class="fas fa-calendar-week"></i><select id="regDobYear"><option value="">Year</option></select></div>
-                    </div>
-                </div>
-
-                <div class="input-group"><label>Email</label><div class="input-wrapper"><i class="fas fa-envelope"></i><input type="email" id="regEmail" placeholder="user@nextgen.com"></div></div>
-                <div class="input-group"><label>Password</label><div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="create password"><i class="fas fa-eye-slash toggle-password" data-target="regPassword"></i></div></div>
-                <div class="input-group"><label>Phone Number</label><div class="input-wrapper"><i class="fas fa-phone-alt"></i><input type="tel" id="regPhone" placeholder="+123456789"></div></div>
-                <div id="refMessage" style="font-size:0.75rem; background:rgba(255,215,0,0.2); padding:8px; border-radius:20px; margin-bottom:12px; display:none;"></div>
-                <button id="registerBtn" class="gradient-btn">Create Account →</button>
-                <button id="googleRegisterBtn" class="social-btn"><i class="fab fa-google"></i> Continue with Google</button>
-                <div class="switch-text">Already have an account? <span class="switch-link" id="showLoginLink">Sign in</span></div>
-            </div>
+  <!-- AUTHENTICATION PAGE (Login + Register Tabs) -->
+  <div id="auth-page" class="hidden min-h-screen flex items-center justify-center py-24 px-6 grid-pattern relative">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl"></div>
+    <div class="w-full max-w-md relative z-10">
+      <div class="text-center mb-6">
+        <a href="#" onclick="showSection('landing');return false" class="inline-flex items-center gap-2 mb-4">
+          <img src="logo.jpg" alt="NextGen Hub Logo" class="w-9 h-9 rounded-lg object-cover" onerror="this.style.background='linear-gradient(135deg,#14b8a6,#06b6d4)';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center';this.alt='N'">
+          <span class="font-display font-bold text-xl">NextGen<span class="text-teal-400">Hub</span></span>
+        </a>
+        <div class="flex gap-3 bg-white/5 p-1 rounded-full mb-4">
+          <button id="login-tab-btn" class="flex-1 py-2 rounded-full font-semibold transition-all text-sm" onclick="switchAuthTab('login')">Log in</button>
+          <button id="register-tab-btn" class="flex-1 py-2 rounded-full font-semibold transition-all text-sm" onclick="switchAuthTab('register')">Create Account</button>
         </div>
-    </div>
+      </div>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:3000; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:white;">
-        <div class="spinner" style="width:40px; height:40px;"></div>
-        <p>Securing access...</p>
-    </div>
+      <!-- LOGIN FORM -->
+      <div id="login-form-container" class="card-glass rounded-3xl p-8 glow-teal">
+        <form id="login-form" onsubmit="return false;">
+          <div class="mb-4"><label class="block text-sm text-gray-300 mb-1.5 font-medium">Email</label><div class="relative"><i data-lucide="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i><input type="email" id="login-email" placeholder="your@email.com" required class="w-full input-dark rounded-xl py-3 pl-10 pr-4 text-sm"></div></div>
+          <div class="mb-5"><label class="block text-sm text-gray-300 mb-1.5 font-medium">Password</label><div class="relative"><i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i><input type="password" id="login-password" placeholder="Your password" required class="w-full input-dark rounded-xl py-3 pl-10 pr-4 text-sm"></div></div>
+          <button onclick="handleLogin()" class="w-full glow-btn py-3.5 rounded-xl text-black font-bold text-base transition-all mt-2">Sign In</button>
+          <div class="flex items-center gap-4 my-5"><div class="flex-1 h-px bg-white/10"></div><span class="text-gray-500 text-xs">or</span><div class="flex-1 h-px bg-white/10"></div></div>
+          <button onclick="handleGoogleAuth()" class="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-white/10 border border-white/15 hover:bg-white/15 transition font-semibold"><svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google</button>
+          <p class="text-center text-sm text-gray-400 mt-6">Don't have an account? <button onclick="switchAuthTab('register')" class="text-teal-400 hover:underline font-semibold">Register now</button></p>
+        </form>
+      </div>
 
-    <script>
-        // Firebase Config (exact)
-        const firebaseConfig = {
-            apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
-            authDomain: "nextgen-5fb6f.firebaseapp.com",
-            projectId: "nextgen-5fb6f",
-            storageBucket: "nextgen-5fb6f.firebasestorage.app",
-            messagingSenderId: "100132076455",
-            appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
+      <!-- REGISTER FORM -->
+      <div id="register-form-container" class="card-glass rounded-3xl p-8 glow-teal hidden">
+        <form id="register-form" onsubmit="return false;">
+          <!-- Earnings banner as requested -->
+          <div class="earnings-banner">
+            <i class="text-teal-400 inline-block mr-1">✨</i> Dear user, welcome to NextGen! Ways of earning:<br>
+            <div class="flex flex-wrap justify-center gap-1 mt-2">
+              <span>📝 Transcription</span> <span>💸 Gropay</span> <span>✍️ Academic writing</span>
+              <span>🎨 Design</span> <span>📁 Projects</span> <span>🏷️ Data annotations</span>
+              <span>📊 Trading</span>
+            </div>
+          </div>
+          <div class="mb-4"><label class="block text-sm text-gray-300 mb-1.5 font-medium">Full Name</label><div class="relative"><i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i><input type="text" id="reg-name" placeholder="John Doe" required class="w-full input-dark rounded-xl py-3 pl-10 pr-4 text-sm"></div></div>
+          <div class="mb-4"><label class="block text-sm text-gray-300 mb-1.5 font-medium">Email</label><div class="relative"><i data-lucide="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i><input type="email" id="reg-email" placeholder="your@email.com" required class="w-full input-dark rounded-xl py-3 pl-10 pr-4 text-sm"></div></div>
+          <div class="mb-4"><label class="block text-sm text-gray-300 mb-1.5 font-medium">Phone Number</label><div class="relative"><i data-lucide="phone" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i><input type="tel" id="reg-phone" placeholder="+254 700 000 000" required class="w-full input-dark rounded-xl py-3 pl-10 pr-4 text-sm"></div></div>
+          <div class="mb-5"><label class="block text-sm text-gray-300 mb-1.5 font-medium">Password (min 6 characters)</label><div class="relative"><i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i><input type="password" id="reg-password" placeholder="Create a strong password" required minlength="6" class="w-full input-dark rounded-xl py-3 pl-10 pr-4 text-sm"></div></div>
+          <div class="flex items-start gap-3 mb-5"><input type="checkbox" id="terms-check-reg" class="mt-1 accent-teal-400 w-4 h-4 rounded" required><label class="text-sm text-gray-400">I agree to the <button type="button" onclick="openTermsModal()" class="text-teal-400 hover:underline font-medium">Terms and Conditions</button></label></div>
+          <button onclick="handleRegister()" class="w-full glow-btn py-3.5 rounded-xl text-black font-bold text-base transition-all">Create Account → Start Earning</button>
+          <div class="flex items-center gap-4 my-5"><div class="flex-1 h-px bg-white/10"></div><span class="text-gray-500 text-xs">or</span><div class="flex-1 h-px bg-white/10"></div></div>
+          <button onclick="handleGoogleAuth()" class="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-white/10 border border-white/15 hover:bg-white/15 transition font-semibold"><svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Sign up with Google</button>
+          <p class="text-center text-sm text-gray-400 mt-6">Already have an account? <button onclick="switchAuthTab('login')" class="text-teal-400 hover:underline font-semibold">Log in</button></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMS MODAL -->
+  <div id="terms-modal" class="overlay-modal" onclick="if(event.target===this)closeTermsModal()"><div class="w-full max-w-2xl max-h-[85%] bg-gray-900 border border-white/10 rounded-3xl overflow-hidden flex flex-col"><div class="flex items-center justify-between p-6 border-b border-white/10"><h2 class="font-display font-bold text-xl">Terms and Conditions</h2><button onclick="closeTermsModal()" class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 overflow-y-auto text-sm text-gray-300 space-y-5 leading-relaxed" id="terms-content"></div><div class="p-4 border-t border-white/10"><button onclick="closeTermsModal()" class="w-full py-3 rounded-xl glow-btn text-black font-bold transition-all">I Understand</button></div></div></div>
+</div>
+
+<script>
+  // ---------- FIREBASE CONFIG (from provided credentials) ----------
+  const firebaseConfig = {
+    apiKey: "AIzaSyChk2JA68-I5s1D0S10r9WK71LgTNi4hRQ",
+    authDomain: "nextgen-5fb6f.firebaseapp.com",
+    projectId: "nextgen-5fb6f",
+    storageBucket: "nextgen-5fb6f.firebasestorage.app",
+    messagingSenderId: "100132076455",
+    appId: "1:100132076455:web:c5aea1f6e1a5ebbea99482"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Helper: generate referral code
+  function generateReferralCode(uid) { return uid.substring(0,8).toUpperCase(); }
+
+  // Get referral from URL (?ref=CODE)
+  function getReferralCodeFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('ref');
+  }
+
+  // UI Toast
+  function showToast(msg, type='success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast toast-${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // Auth section toggle
+  function switchAuthTab(tab) {
+    const loginContainer = document.getElementById('login-form-container');
+    const regContainer = document.getElementById('register-form-container');
+    const loginBtn = document.getElementById('login-tab-btn');
+    const regBtn = document.getElementById('register-tab-btn');
+    if (tab === 'login') {
+      loginContainer.classList.remove('hidden');
+      regContainer.classList.add('hidden');
+      loginBtn.classList.add('bg-teal-500/20', 'text-white');
+      regBtn.classList.remove('bg-teal-500/20', 'text-white');
+      regBtn.classList.add('text-gray-400');
+    } else {
+      loginContainer.classList.add('hidden');
+      regContainer.classList.remove('hidden');
+      regBtn.classList.add('bg-teal-500/20', 'text-white');
+      loginBtn.classList.remove('bg-teal-500/20', 'text-white');
+      loginBtn.classList.add('text-gray-400');
+    }
+  }
+
+  // Show landing or auth
+  function showSection(section) {
+    const landing = document.getElementById('landing-page');
+    const authPage = document.getElementById('auth-page');
+    if (section === 'register') {
+      landing.classList.add('hidden');
+      authPage.classList.remove('hidden');
+      switchAuthTab('register');
+      window.scrollTo(0,0);
+    } else if (section === 'login') {
+      landing.classList.add('hidden');
+      authPage.classList.remove('hidden');
+      switchAuthTab('login');
+      window.scrollTo(0,0);
+    } else {
+      landing.classList.remove('hidden');
+      authPage.classList.add('hidden');
+      window.scrollTo(0,0);
+    }
+    setTimeout(() => lucide.createIcons(), 50);
+  }
+
+  // REGISTER (No email verification)
+  async function handleRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const termsChecked = document.getElementById('terms-check-reg').checked;
+
+    if (!name || !email || !phone || !password) return showToast('Please fill all fields', 'error');
+    if (password.length < 6) return showToast('Password must be at least 6 characters', 'error');
+    if (!termsChecked) return showToast('You must accept Terms & Conditions', 'error');
+
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      const user = cred.user;
+      // No verification email sent
+      let referredBy = null;
+      const refCode = getReferralCodeFromUrl();
+      if (refCode) {
+        const snapshot = await db.collection('users').where('referralCode', '==', refCode).limit(1).get();
+        if (!snapshot.empty) referredBy = snapshot.docs[0].id;
+      }
+      const userData = {
+        email, displayName: name, phone, role: 'user', wallet: 0, active: true,
+        verified: false, membershipType: 'basic', membershipPaid: false, membershipStatus: 'pending',
+        totalFeesPaid: 0, unreadMessages: 0, totalReferrals: 0, referralEarnings: 0,
+        referralCode: generateReferralCode(user.uid), createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (referredBy) userData.referredBy = referredBy;
+      await db.collection('users').doc(user.uid).set(userData);
+      if (referredBy) {
+        await db.collection('referrals').add({ referrerId: referredBy, referredId: user.uid, referredEmail: email, referredName: name, status: 'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+      }
+      showToast('Account created! Redirecting...', 'success');
+      setTimeout(() => { window.location.href = 'user-dashboard.html'; }, 1500);
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  // LOGIN
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return showToast('Enter email and password', 'error');
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      // onAuthStateChanged handles redirect
+    } catch (err) { showToast(err.message, 'error'); }
+  }
+
+  // GOOGLE AUTH (both login/register)
+  async function handleGoogleAuth() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+      const result = await auth.signInWithPopup(provider);
+      const user = result.user;
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        let referredBy = null;
+        const refCode = getReferralCodeFromUrl();
+        if (refCode) {
+          const snap = await db.collection('users').where('referralCode', '==', refCode).limit(1).get();
+          if (!snap.empty) referredBy = snap.docs[0].id;
+        }
+        const newUser = {
+          email: user.email, displayName: user.displayName || 'User', phone: '', role: 'user', wallet: 0, active: true,
+          verified: true, membershipType: 'basic', membershipPaid: false, membershipStatus: 'pending',
+          totalFeesPaid: 0, unreadMessages: 0, totalReferrals: 0, referralEarnings: 0,
+          referralCode: generateReferralCode(user.uid), createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        let currentReferralCode = null;
-        const urlParams = new URLSearchParams(window.location.search);
-        if(urlParams.has('ref')) currentReferralCode = urlParams.get('ref');
-
-        function generateReferralCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
-            let code = '';
-            for(let i=0; i<8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-            return code;
+        if (referredBy) newUser.referredBy = referredBy;
+        await db.collection('users').doc(user.uid).set(newUser);
+        if (referredBy) {
+          await db.collection('referrals').add({ referrerId: referredBy, referredId: user.uid, referredEmail: user.email, referredName: user.displayName, status: 'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
         }
+      }
+    } catch (err) { showToast(err.message, 'error'); }
+  }
 
-        // Populate DOB selects: years from (currentYear - 18) down to (currentYear - 100) to enforce age >=18
-        function populateDOB() {
-            const daySelect = document.getElementById('regDobDay');
-            for(let i=1; i<=31; i++) {
-                const opt = document.createElement('option');
-                opt.value = i; opt.textContent = i;
-                daySelect.appendChild(opt);
-            }
-            const monthSelect = document.getElementById('regDobMonth');
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            months.forEach((m, idx) => {
-                const opt = document.createElement('option');
-                opt.value = idx+1; opt.textContent = m;
-                monthSelect.appendChild(opt);
-            });
-            const yearSelect = document.getElementById('regDobYear');
-            const currentYear = new Date().getFullYear();
-            const maxYear = currentYear - 18;  // oldest allowed birth year for being at least 18
-            const minYear = currentYear - 100; // reasonable lower bound
-            for(let y = maxYear; y >= minYear; y--) {
-                const opt = document.createElement('option');
-                opt.value = y; opt.textContent = y;
-                yearSelect.appendChild(opt);
-            }
-        }
-        populateDOB();
+  // AUTH STATE & ROLE-BASED REDIRECT (no email verification block)
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) return;
+    const uid = user.uid;
+    const docRef = db.collection('users').doc(uid);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) return;
+    const data = docSnap.data();
+    if (data.active === false) {
+      await auth.signOut();
+      showToast('Account disabled. Contact support.', 'error');
+      return;
+    }
+    const role = data.role || 'user';
+    const redirectTo = role === 'admin' ? 'admin-dashboard.html' : 'user-dashboard.html';
+    if (!window.location.pathname.includes('dashboard.html')) {
+      window.location.href = redirectTo;
+    }
+  });
 
-        function getFormattedDOB() {
-            const day = document.getElementById('regDobDay').value;
-            const month = document.getElementById('regDobMonth').value;
-            const year = document.getElementById('regDobYear').value;
-            if(!day || !month || !year) return '';
-            return `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
-        }
-
-        // Toggle password visibility
-        document.querySelectorAll('.toggle-password').forEach(icon => {
-            icon.addEventListener('click', function() {
-                const targetId = this.getAttribute('data-target');
-                const input = document.getElementById(targetId);
-                if(input.type === 'password') {
-                    input.type = 'text';
-                    this.classList.remove('fa-eye-slash');
-                    this.classList.add('fa-eye');
-                } else {
-                    input.type = 'password';
-                    this.classList.remove('fa-eye');
-                    this.classList.add('fa-eye-slash');
-                }
-            });
-        });
-
-        function showLogin() {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('formSubtitle').innerText = 'Sign in to continue to NextGen Hub';
-        }
-        function showRegister() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-            document.getElementById('formSubtitle').innerText = 'Join the NextGen community';
-            const refMsg = document.getElementById('refMessage');
-            if(currentReferralCode) {
-                refMsg.innerHTML = `🎁 Referred by: ${currentReferralCode} — you'll get bonus!`;
-                refMsg.style.display = 'block';
-            } else refMsg.style.display = 'none';
-        }
-        document.getElementById('showRegisterLink').addEventListener('click', showRegister);
-        document.getElementById('showLoginLink').addEventListener('click', showLogin);
-
-        function setError(formType, message) {
-            const errDiv = formType === 'login' ? document.getElementById('loginError') : document.getElementById('registerError');
-            errDiv.innerText = message;
-            errDiv.style.display = 'block';
-            setTimeout(() => errDiv.style.display = 'none', 4000);
-        }
-
-        async function createUserDocument(user, additionalData) {
-            const userRef = db.collection('users').doc(user.uid);
-            const existing = await userRef.get();
-            if(existing.exists) return;
-            let referralCodeFinal = generateReferralCode();
-            let referredByUid = null;
-            if(currentReferralCode) {
-                const referrerQuery = await db.collection('users').where('referralCode', '==', currentReferralCode).limit(1).get();
-                if(!referrerQuery.empty) referredByUid = referrerQuery.docs[0].id;
-            }
-            await userRef.set({
-                displayName: additionalData.fullName || user.displayName || '',
-                email: user.email,
-                phone: additionalData.phone || '',
-                role: 'user',
-                wallet: 0,
-                referralCode: referralCodeFinal,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                nationality: additionalData.nationality || '',
-                dateOfBirth: additionalData.dateOfBirth || '',
-                referredBy: referredByUid || null
-            });
-        }
-
-        async function handleRedirectAfterLogin(user) {
-            const doc = await db.collection('users').doc(user.uid).get();
-            let role = 'user';
-            if(doc.exists && doc.data().role) role = doc.data().role;
-            if(role === 'admin') window.location.replace('admin-dashboard.html');
-            else window.location.replace('user-dashboard.html');
-        }
-
-        // Login
-        document.getElementById('loginBtn').addEventListener('click', async () => {
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            if(!email || !password) { setError('login', 'Please fill all fields'); return; }
-            try {
-                const cred = await auth.signInWithEmailAndPassword(email, password);
-                await handleRedirectAfterLogin(cred.user);
-            } catch(err) { setError('login', err.message); }
-        });
-
-        // Register
-        document.getElementById('registerBtn').addEventListener('click', async () => {
-            const fullName = document.getElementById('regFullName').value.trim();
-            const nationality = document.getElementById('regNationality').value.trim();
-            const dob = getFormattedDOB();
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const phone = document.getElementById('regPhone').value.trim();
-            
-            // Validate age >= 18 by checking year
-            const currentYear = new Date().getFullYear();
-            const yearSelected = parseInt(document.getElementById('regDobYear').value);
-            if(yearSelected && (currentYear - yearSelected < 18)) {
-                setError('register', 'You must be at least 18 years old to register.');
-                return;
-            }
-            
-            if(!fullName || !nationality || !dob || !email || !password || !phone) {
-                setError('register', 'All fields required');
-                return;
-            }
-            if(password.length < 6) { setError('register', 'Password min 6 characters'); return; }
-            try {
-                const userCred = await auth.createUserWithEmailAndPassword(email, password);
-                await userCred.user.updateProfile({ displayName: fullName });
-                await createUserDocument(userCred.user, { fullName, nationality, dateOfBirth: dob, phone });
-                await handleRedirectAfterLogin(userCred.user);
-            } catch(err) { setError('register', err.message); }
-        });
-
-        // Google Auth
-        async function handleGoogleSignIn() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                const result = await auth.signInWithPopup(provider);
-                const user = result.user;
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if(!userDoc.exists) {
-                    let referredByUid = null;
-                    if(currentReferralCode) {
-                        const refQuery = await db.collection('users').where('referralCode', '==', currentReferralCode).limit(1).get();
-                        if(!refQuery.empty) referredByUid = refQuery.docs[0].id;
-                    }
-                    await db.collection('users').doc(user.uid).set({
-                        displayName: user.displayName || '',
-                        email: user.email,
-                        phone: '',
-                        role: 'user',
-                        wallet: 0,
-                        referralCode: generateReferralCode(),
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        nationality: '',
-                        dateOfBirth: '',
-                        referredBy: referredByUid || null
-                    });
-                }
-                await handleRedirectAfterLogin(user);
-            } catch(err) { setError('login', err.message); }
-        }
-        document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleSignIn);
-        document.getElementById('googleRegisterBtn').addEventListener('click', handleGoogleSignIn);
-
-        // Forgot password
-        document.getElementById('forgotPasswordBtn').addEventListener('click', async () => {
-            const email = prompt('Enter your email address to reset password:');
-            if(email && email.includes('@')) {
-                try {
-                    await auth.sendPasswordResetEmail(email);
-                    alert('Password reset email sent! Check your inbox.');
-                } catch(e) { alert('Error: ' + e.message); }
-            } else if(email) alert('Invalid email');
-        });
-
-        // Single auth state observer (no redirect loop)
-        let observerFired = false;
-        auth.onAuthStateChanged(async (user) => {
-            if(observerFired) return;
-            observerFired = true;
-            if(user) {
-                try {
-                    const docSnap = await db.collection('users').doc(user.uid).get();
-                    let role = 'user';
-                    if(docSnap.exists && docSnap.data().role) role = docSnap.data().role;
-                    if(role === 'admin') window.location.replace('admin-dashboard.html');
-                    else window.location.replace('user-dashboard.html');
-                } catch(e) { window.location.replace('user-dashboard.html'); }
-                return;
-            }
-            // Not logged in: hide loading, show splash then auth card
-            document.getElementById('loadingOverlay').style.display = 'none';
-            setTimeout(() => {
-                const splash = document.getElementById('splash');
-                if(splash) {
-                    splash.style.opacity = '0';
-                    setTimeout(() => {
-                        splash.style.display = 'none';
-                        document.getElementById('authContainer').style.opacity = '1';
-                    }, 800);
-                } else {
-                    document.getElementById('authContainer').style.opacity = '1';
-                }
-            }, 2500);
-        });
-
-        // Fallback: ensure loading disappears and splash fades
-        setTimeout(() => {
-            const loading = document.getElementById('loadingOverlay');
-            if(loading.style.display !== 'none') loading.style.display = 'none';
-            const splash = document.getElementById('splash');
-            if(splash && splash.style.display !== 'none') {
-                splash.style.opacity = '0';
-                setTimeout(() => {
-                    splash.style.display = 'none';
-                    document.getElementById('authContainer').style.opacity = '1';
-                }, 500);
-            }
-        }, 4000);
-
-        showLogin();
-    </script>
+  // --- Static content for services and terms ---
+  const servicesList = [
+    { icon: 'pen-tool', title: 'Academic Writing', desc: 'Earn by writing essays, research papers, dissertations.' },
+    { icon: 'code', title: 'Projects', desc: 'Software, engineering, business projects with competitive pay.' },
+    { icon: 'palette', title: 'Design', desc: 'Logos, graphics, UI/UX designs for global clients.' },
+    { icon: 'database', title: 'Data Annotation', desc: 'Label, categorize data for AI model training.' },
+    { icon: 'trending-up', title: 'Trading', desc: 'Forex, crypto signals to learn and earn.' },
+    { icon: 'mic', title: 'Transcription', desc: 'Convert audio/video to accurate transcripts.' },
+    { icon: 'file-text', title: 'Blogging', desc: 'Write articles and earn per piece.' },
+    { icon: 'map-pin', title: 'GeoPay', desc: 'Location-based tasks and surveys.' }
+  ];
+  const grid = document.getElementById('services-grid');
+  servicesList.forEach(s => { grid.innerHTML += `<div class="service-card card-glass rounded-2xl p-6 fade-in"><div class="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center mb-4"><i data-lucide="${s.icon}" class="w-6 h-6 text-teal-400"></i></div><h3 class="font-display font-bold text-lg mb-2">${s.title}</h3><p class="text-gray-400 text-sm">${s.desc}</p></div>`; });
+  const termsData = [{t:'1. Acceptance', d:'By registering you agree to these terms.'},{t:'2. Eligibility', d:'Must be 18+.'},{t:'3. Conduct', d:'No plagiarism, fraud, or abuse.'},{t:'4. Payments', d:'Earnings based on completed tasks.'},{t:'5. Termination', d:'We reserve right to suspend accounts for violations.'}];
+  const tcDiv = document.getElementById('terms-content');
+  termsData.forEach(t => { tcDiv.innerHTML += `<div><h3 class="font-display font-bold text-white mb-1">${t.t}</h3><p>${t.d}</p></div>`; });
+  function openTermsModal() { document.getElementById('terms-modal').classList.add('active'); lucide.createIcons(); }
+  function closeTermsModal() { document.getElementById('terms-modal').classList.remove('active'); }
+  function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+  const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); observer.unobserve(e.target); } }); }, { threshold: 0.15 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  window.addEventListener('scroll', () => { const n = document.getElementById('navbar'); if(window.scrollY > 50){ n.style.background = 'rgba(10,14,26,0.9)'; n.style.backdropFilter = 'blur(16px)'; n.style.borderBottom = '1px solid rgba(255,255,255,0.05)'; } else { n.style.background = 'transparent'; n.style.backdropFilter = 'none'; n.style.borderBottom = 'none'; } });
+  lucide.createIcons();
+  // If user is already logged in, redirect from landing? not needed, onAuthStateChanged handles.
+</script>
 </body>
 </html>
