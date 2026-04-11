@@ -51,7 +51,7 @@
             --border-glow: rgba(255, 215, 0, 0.2);
         }
 
-        /* Ticker */
+        /* Ticker - slowed down */
         .ticker-container {
             background: #1c1c24;
             color: var(--gold);
@@ -67,7 +67,7 @@
 
         .ticker-content {
             display: inline-block;
-            animation: tickerMove 40s linear infinite;
+            animation: tickerMove 120s linear infinite; /* slowed from 40s to 120s */
             font-weight: 600;
             font-size: 0.9rem;
             letter-spacing: 0.5px;
@@ -3494,7 +3494,7 @@
         const REFERRER_BONUS_ELITE = 4;        // $4 for referrer when referred upgrades to Elite
         const REFERRED_BONUS = 0.5;            // $0.5 for new member upon any upgrade
         let paymentUrl = "https://lipana.dev/pay/nextgen-membership"; // legacy, kept for compatibility
-        let paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '' };
+        let paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '', cryptoPaymentLink: '' };
 
         // ==================== OFFER FEATURE ====================
         let currentOfferMap = {};  // map from membershipType to offer data
@@ -3609,11 +3609,11 @@
                 if (doc.exists) {
                     paymentLinks = doc.data();
                 } else {
-                    paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '' };
+                    paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '', cryptoPaymentLink: '' };
                 }
             } catch (e) {
                 console.error('Error loading payment links:', e);
-                paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '' };
+                paymentLinks = { investment: '', training: '', premiumMembership: '', eliteMembership: '', cryptoPaymentLink: '' };
             }
         }
 
@@ -5437,7 +5437,7 @@
             }
         }
 
-        // ==================== WITHDRAWALS (UPDATED: first membership, then email) ====================
+        // ==================== WITHDRAWALS (UPDATED: first membership, then email, with spinner simulation) ====================
         async function loadWithdrawals() { 
             currentTaskViewed = null; refreshMirror(); 
             try { 
@@ -5447,26 +5447,33 @@
                 userData.wallet = bal; 
                 updateWalletDisplay(); 
                 const hasUpgraded = (userData.membershipType === MEMBERSHIP_TYPES.PREMIUM || userData.membershipType === MEMBERSHIP_TYPES.ELITE) && !userData.frozen; 
-                let ws = ''; 
-
-                // First check: has user upgraded?
+                
+                // If not upgraded, show spinner then upgrade prompt
                 if (!hasUpgraded) {
-                    ws = `
-                        <div class="withdrawal-section">
-                            <h4><i class="fas fa-crown"></i> Upgrade Required</h4>
-                            <p>Withdrawals are only available for Premium and Elite members.</p>
-                            <button class="btn btn-primary" onclick="showMembershipOptions()">Upgrade to Premium</button>
-                            <button class="btn btn-warning" onclick="showEliteUpgradeOptions()">Upgrade to Elite</button>
+                    document.getElementById('content').innerHTML = `
+                        <div class="withdrawal-section" style="text-align:center;">
+                            <div class="loading-spinner"></div>
+                            <h3>Initiating withdrawal...</h3>
                         </div>
                     `;
-                    document.getElementById('content').innerHTML = ws;
+                    setTimeout(() => {
+                        document.getElementById('content').innerHTML = `
+                            <div class="withdrawal-section" style="text-align:center;">
+                                <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                                <h3 style="color:#ef4444;">Withdrawal initiation failed</h3>
+                                <p>Premium membership required.</p>
+                                <button class="btn btn-primary" onclick="showMembershipOptions()">Upgrade Now</button>
+                                <button class="btn btn-secondary" onclick="switchTab('tasks')">Cancel</button>
+                            </div>
+                        `;
+                    }, 2000);
                     return;
                 }
 
                 // Second check: email verification (only after membership is confirmed)
                 const isEmailVerified = currentUser.emailVerified;
                 if (!isEmailVerified) {
-                    ws = `
+                    let ws = `
                         <div class="withdrawal-section">
                             <h4><i class="fas fa-envelope"></i> Email Verification Required</h4>
                             <p>You have upgraded successfully, but you must verify your email address before you can withdraw funds.</p>
@@ -5526,7 +5533,7 @@
                     }
                 }
 
-                ws = `<div class="withdrawal-section">
+                let ws = `<div class="withdrawal-section">
                     <h4><i class="fas fa-money-bill-wave"></i> Withdraw Funds</h4>
                     ${cooldownHtml}
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
@@ -5733,18 +5740,23 @@
         }
 
         // ==================== MEMBERSHIP OPTIONS (UPDATED WITH CRYPTO BUTTON) ====================
-        function showMembershipOptions(usingOffer = false) {
+        // Load crypto payment link from Firestore or fallback to NOWPayments
+        async function getCryptoPaymentLink() {
+            if (paymentLinks.cryptoPaymentLink) return paymentLinks.cryptoPaymentLink;
+            // Fallback
+            return "https://nowpayments.io/payment/?iid=4696290443&source=button";
+        }
+
+        async function showMembershipOptions(usingOffer = false) {
             const premiumPkg = (membershipPackages && membershipPackages.premium) || DEFAULT_MEMBERSHIP_PACKAGES.premium;
             const offer = currentOfferMap['premium'];
             const hasOffer = offer && new Date(offer.endDateTime.seconds * 1000) > new Date();
             const offerPrice = hasOffer ? offer.newAmount : premiumPkg.price;
             const originalPrice = hasOffer ? offer.originalPrice : premiumPkg.price;
             const offerId = hasOffer ? offer.id : null;
-            // Use dedicated payment link for premium
             const premiumPaymentLink = paymentLinks.premiumMembership || paymentUrl;
-
-            // Crypto button from NOWPayments
-            const cryptoButtonHtml = `<a href="https://nowpayments.io/payment/?iid=4696290443&source=button" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setPaymentMethod('Crypto')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments"> </a>`;
+            const cryptoLink = await getCryptoPaymentLink();
+            const cryptoButtonHtml = `<a href="${cryptoLink}" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setPaymentMethod('Crypto')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments"> </a>`;
 
             showModal(`
                 <div class="modal-content" style="text-align:center;">
@@ -5784,7 +5796,7 @@
             `);
         }
 
-        function showEliteUpgradeOptions(usingOffer = false) {
+        async function showEliteUpgradeOptions(usingOffer = false) {
             const elitePkg = (membershipPackages && membershipPackages.elite) || DEFAULT_MEMBERSHIP_PACKAGES.elite;
             const offer = currentOfferMap['elite'];
             const hasOffer = offer && new Date(offer.endDateTime.seconds * 1000) > new Date();
@@ -5792,8 +5804,8 @@
             const originalPrice = hasOffer ? offer.originalPrice : elitePkg.price;
             const offerId = hasOffer ? offer.id : null;
             const elitePaymentLink = paymentLinks.eliteMembership || paymentUrl;
-
-            const cryptoButtonHtml = `<a href="https://nowpayments.io/payment/?iid=4696290443&source=button" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setPaymentMethod('Crypto')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments"> </a>`;
+            const cryptoLink = await getCryptoPaymentLink();
+            const cryptoButtonHtml = `<a href="${cryptoLink}" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setPaymentMethod('Crypto')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments"> </a>`;
 
             showModal(`
                 <div class="modal-content" style="text-align:center;">
@@ -7637,7 +7649,7 @@
                                     `;
                                 }).join('')}
                             </tbody>
-                        </table>
+                        </tr>
                     </div>
                 </div>
             `;
