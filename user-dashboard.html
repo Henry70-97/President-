@@ -7943,21 +7943,17 @@
             }
         }
 
-        // ==================== AUTH STATE LISTENER ====================
+        // ==================== AUTH STATE LISTENER (FIXED – NO REDIRECT FOR UNVERIFIED EMAIL) ====================
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
-            const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
-            if (!user.emailVerified && !isGoogle) { window.location.href = 'index.html'; return; }
+            // IMPORTANT: Do NOT redirect unverified email users.
+            // They can still use the dashboard, only withdrawals are blocked inside loadWithdrawals().
+            // Proceed normally.
             try {
                 const doc = await db.collection('users').doc(user.uid).get();
                 if (!doc.exists) {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const referralCode = urlParams.get('ref');
-                    let referredBy = null;
-                    if (referralCode) {
-                        const usersSnapshot = await db.collection('users').where('referralCode', '==', referralCode).limit(1).get();
-                        if (!usersSnapshot.empty) referredBy = usersSnapshot.docs[0].id;
-                    }
+                    // This should not happen because user document is created during registration.
+                    // But just in case, create a minimal document.
                     const newRefCode = generateReferralCode(user.uid);
                     await db.collection('users').doc(user.uid).set({
                         email: user.email,
@@ -7966,7 +7962,7 @@
                         role: 'user',
                         wallet: 0,
                         active: true,
-                        verified: user.emailVerified || isGoogle,
+                        verified: user.emailVerified,
                         frozen: false,
                         suspended: false,
                         suspendedReason: '',
@@ -7976,7 +7972,7 @@
                         membershipExpiry: null,
                         totalFeesPaid: 0,
                         unreadMessages: 0,
-                        referredBy: referredBy,
+                        referredBy: null,
                         totalReferrals: 0,
                         referralEarnings: 0,
                         referralCode: newRefCode,
@@ -7986,20 +7982,6 @@
                         lastAcceptedDate: null,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    if (referredBy) {
-                        await db.collection('referrals').add({
-                            referrerId: referredBy,
-                            referredId: user.uid,
-                            referredEmail: user.email,
-                            referredName: user.displayName || user.email,
-                            status: 'pending',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            bonusesGiven: []
-                        });
-                        await db.collection('users').doc(referredBy).update({
-                            totalReferrals: firebase.firestore.FieldValue.increment(1)
-                        });
-                    }
                     const newDoc = await db.collection('users').doc(user.uid).get();
                     userData = { id: user.uid, ...newDoc.data() };
                 } else {
