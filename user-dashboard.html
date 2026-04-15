@@ -67,7 +67,7 @@
 
         .ticker-content {
             display: inline-block;
-            animation: tickerMove 120s linear infinite; /* slowed from 40s to 120s */
+            animation: tickerMove 120s linear infinite;
             font-weight: 600;
             font-size: 0.9rem;
             letter-spacing: 0.5px;
@@ -5399,7 +5399,7 @@
             }
         }
 
-        // ==================== PENDING SUBMISSIONS ====================
+        // ==================== PENDING SUBMISSIONS (UPDATED WITH CANCEL BUTTON) ====================
         async function loadPendingSubmissions() {
             await cleanupCancelledTasks();
 
@@ -5411,8 +5411,27 @@
                     document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><h4>No pending tasks</h4><p>You have not accepted any tasks yet.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse Tasks</button></div>';
                     return;
                 }
+                // Filter out tasks that no longer have a valid taskAccepts document (admin cancelled)
+                const validTasks = [];
+                for (const doc of acceptedSnap.docs) {
+                    const taskId = doc.id;
+                    const acceptCheck = await db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid).get();
+                    if (acceptCheck.exists) {
+                        validTasks.push(doc);
+                    } else {
+                        // Remove orphaned accepted task
+                        await doc.ref.delete();
+                        console.log(`Removed orphaned accepted task ${taskId}`);
+                    }
+                }
+                
+                if (validTasks.length === 0) {
+                    document.getElementById('content').innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><h4>No pending tasks</h4><p>You have not accepted any tasks yet.</p><button class="btn btn-primary" onclick="switchTab(\'tasks\')">Browse Tasks</button></div>';
+                    return;
+                }
+                
                 let html = '<h3>📤 Tasks Ready to Submit</h3><div class="task-grid">';
-                acceptedSnap.forEach(doc => {
+                for (const doc of validTasks) {
                     const t = doc.data();
                     const deadline = t.deadline ? t.deadline.toDate() : null;
                     const expired = deadline ? new Date() > deadline : false;
@@ -5425,15 +5444,48 @@
                             ${expired ? '<div class="expired-message"><i class="fas fa-clock"></i> Deadline passed</div>' : ''}
                             <div style="display:flex; gap:0.5rem; margin-top:0.8rem;">
                                 <button class="btn btn-success" onclick="showSubmitForm('${doc.id}')" ${expired ? 'disabled' : ''} style="flex:1;">Continue Work</button>
-                                <button class="btn btn-danger" disabled style="flex:1;" title="You cannot cancel tasks yourself. Contact admin if needed.">Cancel (Admin only)</button>
+                                <button class="btn btn-danger" onclick="cancelAcceptedTask('${doc.id}')" style="flex:1;">Cancel Task</button>
                             </div>
                         </div>
                     `;
-                });
+                }
                 html += '</div>';
                 document.getElementById('content').innerHTML = html;
             } catch (e) {
-                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p></div>`;
+                console.error('Error loading pending submissions:', e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>${e.message}</p><button class="btn btn-primary" onclick="loadPendingSubmissions()">Retry</button></div>`;
+            }
+        }
+
+        // NEW: Function for user to cancel an accepted task
+        async function cancelAcceptedTask(taskId) {
+            if (!confirm('Are you sure you want to cancel this task? You will lose access to submit work for this task.')) return;
+            
+            try {
+                // Remove from user's acceptedTasks subcollection
+                const userAcceptedRef = db.collection('users').doc(currentUser.uid).collection('acceptedTasks').doc(taskId);
+                await userAcceptedRef.delete();
+                
+                // Remove from taskAccepts subcollection
+                const taskAcceptRef = db.collection('tasks').doc(taskId).collection('taskAccepts').doc(currentUser.uid);
+                await taskAcceptRef.delete();
+                
+                // Decrement task's acceptedCount
+                const taskRef = db.collection('tasks').doc(taskId);
+                const taskDoc = await taskRef.get();
+                if (taskDoc.exists && taskDoc.data().active === true) {
+                    await taskRef.update({
+                        acceptedCount: firebase.firestore.FieldValue.increment(-1)
+                    });
+                }
+                
+                showAlert('Task cancelled successfully. You can now accept other tasks.', 'success');
+                loadPendingSubmissions(); // refresh the list
+                // Also refresh tasks list in case the user was viewing tasks
+                if (currentTab === 'tasks') loadTasks();
+            } catch (e) {
+                console.error('Error cancelling task:', e);
+                showAlert('Failed to cancel task. Please try again.', 'error');
             }
         }
 
@@ -6590,7 +6642,7 @@
                     let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table">';
                     html += '<thead>   <th>Rank</th><th>User</th><th>Points</th> </thead><tbody>';
                     if (uniqueEntries.length === 0) {
-                        html += '<tr><td colspan="3" class="empty-state">No data available</td></tr>';
+                        html += '<tr><td colspan="3" class="empty-state">No data available</td><tr>';
                     } else {
                         uniqueEntries.forEach(entry => {
                             html += `   .<td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td> `;
@@ -7649,7 +7701,7 @@
                                     `;
                                 }).join('')}
                             </tbody>
-                        </tr>
+                        </table>
                     </div>
                 </div>
             `;
