@@ -5796,7 +5796,7 @@
         async function getCryptoPaymentLink() {
             if (paymentLinks.cryptoPaymentLink) return paymentLinks.cryptoPaymentLink;
             // Fallback
-            return "https://nowpayments.io/payment/?iid=4696290443&source=button";
+            return "https://nowpayments.io/payment/?iid=6209387089&paymentId=4703524588&source=button";
         }
 
         async function showMembershipOptions(usingOffer = false) {
@@ -7711,7 +7711,7 @@
         // UPDATED: Add Funds with M-Pesa and Crypto buttons
         async function showAddFunds() {
             const investmentPaymentLink = paymentLinks.investment || (await db.collection('settings').doc('investment').get()).data()?.paymentLink || 'https://lipana.dev/pay/nextgen-invest';
-            const cryptoButtonHtml = `<a href="https://nowpayments.io/payment/?iid=4696290443&source=button" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setDepositMethod('Cryptocurrency (NOWPayments)')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments" style="height:45px;"> </a>`;
+            const cryptoButtonHtml = `<a href="https://nowpayments.io/payment/?iid=6209387089&paymentId=4703524588&source=button" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setDepositMethod('Cryptocurrency (NOWPayments)')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments" style="height:45px;"> </a>`;
 
             showModal(`
                 <div class="modal-content" style="text-align:center;">
