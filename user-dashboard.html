@@ -3173,6 +3173,64 @@
             color: var(--silver);
             margin-top: 0.2rem;
         }
+
+        /* Floating Investor Banner */
+        .floating-investor-banner {
+            position: fixed;
+            z-index: 10000;
+            width: 220px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            border-radius: 2rem;
+            padding: 0.6rem 1rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(4px);
+            font-weight: bold;
+            color: #121217;
+        }
+        .floating-investor-banner:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+        }
+        .floating-investor-banner .banner-text {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .floating-investor-banner .banner-text i {
+            font-size: 1.2rem;
+        }
+        .floating-investor-banner .close-banner {
+            background: rgba(0,0,0,0.2);
+            border: none;
+            color: #121217;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .floating-investor-banner .close-banner:hover {
+            background: rgba(0,0,0,0.4);
+        }
+        @media (max-width: 600px) {
+            .floating-investor-banner {
+                width: 180px;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -3209,6 +3267,14 @@
                 frameborder="0"
             ></iframe>
         </div>
+    </div>
+
+    <!-- Floating Investor Banner -->
+    <div id="floatingInvestorBanner" class="floating-investor-banner" style="display: none;">
+        <div class="banner-text" onclick="switchTab('investor')">
+            <i class="fas fa-chart-line"></i> <span>Invest & Earn up to 35%</span>
+        </div>
+        <button class="close-banner" onclick="hideInvestorBanner()">✕</button>
     </div>
 
     <!-- Bottom Navigation Bar (Mobile) -->
@@ -5796,7 +5862,7 @@
         async function getCryptoPaymentLink() {
             if (paymentLinks.cryptoPaymentLink) return paymentLinks.cryptoPaymentLink;
             // Fallback
-            return "https://nowpayments.io/payment/?iid=6209387089&paymentId=4703524588&source=button";
+            return "https://nowpayments.io/payment/?iid=4696290443&source=button";
         }
 
         async function showMembershipOptions(usingOffer = false) {
@@ -6642,7 +6708,7 @@
                     let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table">';
                     html += '<thead>   <th>Rank</th><th>User</th><th>Points</th> </thead><tbody>';
                     if (uniqueEntries.length === 0) {
-                        html += '<tr><td colspan="3" class="empty-state">No data available</td><tr>';
+                        html += '<tr><td colspan="3" class="empty-state">No data available</td></tr>';
                     } else {
                         uniqueEntries.forEach(entry => {
                             html += `   .<td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td> `;
@@ -7458,7 +7524,7 @@
             }
         }
 
-        // ==================== INVESTOR SECTION (UPDATED WITH CRYPTO BUTTON) ====================
+        // ==================== INVESTOR SECTION (UPDATED WITH CRYPTO BUTTON AND WITHDRAWAL COOLDOWN) ====================
         async function loadInvestor() {
             currentTaskViewed = null;
             refreshMirror();
@@ -7711,7 +7777,7 @@
         // UPDATED: Add Funds with M-Pesa and Crypto buttons
         async function showAddFunds() {
             const investmentPaymentLink = paymentLinks.investment || (await db.collection('settings').doc('investment').get()).data()?.paymentLink || 'https://lipana.dev/pay/nextgen-invest';
-            const cryptoButtonHtml = `<a href="https://nowpayments.io/payment/?iid=6209387089&paymentId=4703524588&source=button" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setDepositMethod('Cryptocurrency (NOWPayments)')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments" style="height:45px;"> </a>`;
+            const cryptoButtonHtml = `<a href="https://nowpayments.io/payment/?iid=4696290443&source=button" target="_blank" rel="noreferrer noopener" class="crypto-payment-btn" onclick="setDepositMethod('Cryptocurrency (NOWPayments)')"> <img src="https://nowpayments.io/images/embeds/payment-button-white.svg" alt="Cryptocurrency & Bitcoin payment button by NOWPayments" style="height:45px;"> </a>`;
 
             showModal(`
                 <div class="modal-content" style="text-align:center;">
@@ -7771,32 +7837,88 @@
             }
         }
 
+        // UPDATED: Withdraw Funds with 3-hour cooldown and live timer
         async function showWithdrawFunds() {
             const settingsDoc = await db.collection('settings').doc('investment').get();
             const minWithdrawal = settingsDoc.exists && settingsDoc.data().minWithdrawal ? settingsDoc.data().minWithdrawal : 0.4;
+
+            // Check last withdrawal time
+            const lastWithdrawalSnap = await db.collection('investmentWithdrawals')
+                .where('userId', '==', currentUser.uid)
+                .where('status', '==', 'paid')
+                .orderBy('requestedAt', 'desc')
+                .limit(1)
+                .get();
+
+            let cooldownHtml = '';
+            let canWithdraw = true;
+            let cooldownEnd = null;
+
+            if (!lastWithdrawalSnap.empty) {
+                const lastWithdrawal = lastWithdrawalSnap.docs[0].data();
+                const lastTime = lastWithdrawal.requestedAt.toDate();
+                const nextAllowed = new Date(lastTime.getTime() + 3 * 60 * 60 * 1000);
+                const now = new Date();
+                if (nextAllowed > now) {
+                    canWithdraw = false;
+                    cooldownEnd = nextAllowed;
+                    const diffMs = nextAllowed - now;
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                    cooldownHtml = `
+                        <div class="cooldown-badge" style="background:rgba(255,215,0,0.2); margin-bottom:1rem;">
+                            ⏳ Next withdrawal available in <span id="investorCooldownTimer" class="cooldown-timer">${hours}h ${minutes}m ${seconds}s</span>
+                        </div>
+                        <script>
+                            (function() {
+                                const endTime = ${nextAllowed.getTime()};
+                                const timerElement = document.getElementById('investorCooldownTimer');
+                                if (!timerElement) return;
+                                const interval = setInterval(() => {
+                                    const now = Date.now();
+                                    const diff = endTime - now;
+                                    if (diff <= 0) {
+                                        clearInterval(interval);
+                                        timerElement.textContent = 'Ready!';
+                                        document.getElementById('withdrawSubmitBtn').disabled = false;
+                                        document.querySelectorAll('.investor-withdraw-input').forEach(el => el.disabled = false);
+                                    } else {
+                                        const h = Math.floor(diff / (1000 * 60 * 60));
+                                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                        const s = Math.floor((diff % (1000 * 60)) / 1000);
+                                        timerElement.textContent = \`\${h}h \${m}m \${s}s\`;
+                                    }
+                                }, 1000);
+                            })();
+                        <\/script>
+                    `;
+                }
+            }
 
             showModal(`
                 <div class="modal-content" style="text-align:center;">
                     <i class="fas fa-hand-holding-usd" style="font-size:3rem; color:var(--gold);"></i>
                     <h3>Withdraw Funds</h3>
                     <p>Available balance: ${formatBoth(investorAccount.balance)}</p>
-                    <input type="number" id="withdrawAmount" class="smart-input" placeholder="Amount" min="${minWithdrawal}" step="0.01" required>
-                    <select id="withdrawMethod" class="smart-input" onchange="toggleWithdrawFields()">
+                    ${cooldownHtml}
+                    <input type="number" id="withdrawAmount" class="smart-input investor-withdraw-input" placeholder="Amount" min="${minWithdrawal}" step="0.01" required ${!canWithdraw ? 'disabled' : ''}>
+                    <select id="withdrawMethod" class="smart-input investor-withdraw-input" onchange="toggleWithdrawFields()" ${!canWithdraw ? 'disabled' : ''}>
                         <option value="M-Pesa">M-Pesa</option>
                         <option value="Airtel Money">Airtel Money</option>
                         <option value="Bank Transfer">Bank Transfer</option>
                     </select>
                     <div id="withdrawMobileFields">
-                        <input type="text" id="withdrawAccountName" class="smart-input" placeholder="Account Name">
-                        <input type="tel" id="withdrawPhone" class="smart-input" placeholder="Phone Number">
+                        <input type="text" id="withdrawAccountName" class="smart-input investor-withdraw-input" placeholder="Account Name" ${!canWithdraw ? 'disabled' : ''}>
+                        <input type="tel" id="withdrawPhone" class="smart-input investor-withdraw-input" placeholder="Phone Number" ${!canWithdraw ? 'disabled' : ''}>
                     </div>
                     <div id="withdrawBankFields" style="display:none;">
-                        <input type="text" id="withdrawBankName" class="smart-input" placeholder="Bank Name">
-                        <input type="text" id="withdrawBankAccountName" class="smart-input" placeholder="Account Name">
-                        <input type="text" id="withdrawBankAccountNumber" class="smart-input" placeholder="Account Number">
+                        <input type="text" id="withdrawBankName" class="smart-input investor-withdraw-input" placeholder="Bank Name" ${!canWithdraw ? 'disabled' : ''}>
+                        <input type="text" id="withdrawBankAccountName" class="smart-input investor-withdraw-input" placeholder="Account Name" ${!canWithdraw ? 'disabled' : ''}>
+                        <input type="text" id="withdrawBankAccountNumber" class="smart-input investor-withdraw-input" placeholder="Account Number" ${!canWithdraw ? 'disabled' : ''}>
                     </div>
                     <div style="display:flex; gap:1rem; margin-top:1rem;">
-                        <button class="btn btn-success" onclick="submitWithdrawal(${minWithdrawal})">Submit</button>
+                        <button class="btn btn-success" id="withdrawSubmitBtn" onclick="submitWithdrawal(${minWithdrawal})" ${!canWithdraw ? 'disabled' : ''}>Submit</button>
                         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     </div>
                 </div>
@@ -7834,6 +7956,23 @@
             }
             if (amount > investorAccount.balance) {
                 showAlert('Insufficient balance', 'error'); return;
+            }
+
+            // Check cooldown again before final submission
+            const lastWithdrawalSnap = await db.collection('investmentWithdrawals')
+                .where('userId', '==', currentUser.uid)
+                .where('status', '==', 'paid')
+                .orderBy('requestedAt', 'desc')
+                .limit(1)
+                .get();
+            if (!lastWithdrawalSnap.empty) {
+                const lastWithdrawal = lastWithdrawalSnap.docs[0].data();
+                const lastTime = lastWithdrawal.requestedAt.toDate();
+                const nextAllowed = new Date(lastTime.getTime() + 3 * 60 * 60 * 1000);
+                if (nextAllowed > new Date()) {
+                    showAlert('You must wait 3 hours between withdrawals.', 'error');
+                    return;
+                }
             }
 
             try {
@@ -8221,6 +8360,66 @@
                 showAlert('Failed to send support message. Please try again.', 'error');
             }
         }
+
+        // ==================== FLOATING INVESTOR BANNER ====================
+        let bannerInterval = null;
+        let bannerVisible = true;
+
+        function initFloatingBanner() {
+            const banner = document.getElementById('floatingInvestorBanner');
+            // Check if banner was hidden previously
+            if (localStorage.getItem('investorBannerHidden') === 'true') {
+                banner.style.display = 'none';
+                bannerVisible = false;
+                return;
+            }
+            banner.style.display = 'flex';
+            // Random starting position (within viewport)
+            const randomX = Math.random() * (window.innerWidth - 250);
+            const randomY = Math.random() * (window.innerHeight - 100);
+            banner.style.left = Math.max(10, randomX) + 'px';
+            banner.style.top = Math.max(10, randomY) + 'px';
+            banner.style.position = 'fixed';
+
+            // Move every 5 seconds
+            if (bannerInterval) clearInterval(bannerInterval);
+            bannerInterval = setInterval(() => {
+                if (!bannerVisible) return;
+                const maxX = window.innerWidth - banner.offsetWidth - 10;
+                const maxY = window.innerHeight - banner.offsetHeight - 10;
+                const newX = Math.random() * maxX;
+                const newY = Math.random() * maxY;
+                banner.style.left = Math.max(10, newX) + 'px';
+                banner.style.top = Math.max(10, newY) + 'px';
+            }, 5000);
+        }
+
+        function hideInvestorBanner() {
+            const banner = document.getElementById('floatingInvestorBanner');
+            banner.style.display = 'none';
+            bannerVisible = false;
+            if (bannerInterval) clearInterval(bannerInterval);
+            localStorage.setItem('investorBannerHidden', 'true');
+        }
+
+        // Call init after DOM ready
+        window.addEventListener('load', () => {
+            initFloatingBanner();
+            // Also reinitialize on window resize to avoid going out of bounds
+            window.addEventListener('resize', () => {
+                if (bannerVisible && document.getElementById('floatingInvestorBanner').style.display !== 'none') {
+                    const banner = document.getElementById('floatingInvestorBanner');
+                    const maxX = window.innerWidth - banner.offsetWidth - 10;
+                    const maxY = window.innerHeight - banner.offsetHeight - 10;
+                    let left = parseFloat(banner.style.left);
+                    let top = parseFloat(banner.style.top);
+                    if (isNaN(left)) left = 20;
+                    if (isNaN(top)) top = 20;
+                    banner.style.left = Math.min(maxX, Math.max(10, left)) + 'px';
+                    banner.style.top = Math.min(maxY, Math.max(10, top)) + 'px';
+                }
+            });
+        });
 
         // ==================== AUTH STATE LISTENER (FIXED – NO REDIRECT FOR UNVERIFIED EMAIL) ====================
         auth.onAuthStateChanged(async (user) => {
