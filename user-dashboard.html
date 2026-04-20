@@ -6708,7 +6708,7 @@
                     let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table">';
                     html += '<thead>   <th>Rank</th><th>User</th><th>Points</th> </thead><tbody>';
                     if (uniqueEntries.length === 0) {
-                        html += '<tr><td colspan="3" class="empty-state">No data available</td></tr>';
+                        html += '<tr><td colspan="3" class="empty-state">No data available</td><tr>';
                     } else {
                         uniqueEntries.forEach(entry => {
                             html += `   .<td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td> `;
@@ -6735,7 +6735,7 @@
                         html += '<tr><td colspan="4" class="empty-state">No users found</td></tr>';
                     } else {
                         leaderboard.slice(0, 20).forEach((u, idx) => { 
-                            html += `   .<td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td> `; 
+                            html += `   .<td>#${idx+1}</td><td>${escapeHtml(u.name)}</td><td>${Math.round(u.points)}</td><td>${formatBoth(u.wallet)}</td> `;
                         });
                     }
                     html += '</tbody> </div>';
@@ -7757,7 +7757,7 @@
                                         details = `${w.accountName || ''} - ${w.phone || ''}`;
                                     }
                                     return `
-                                         <tr>
+                                         <td>
                                             <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
                                             <td class="tx-amount negative">-$${w.amount.toFixed(2)}</td>
                                             <td>${w.method}</td>
@@ -7837,6 +7837,21 @@
             }
         }
 
+        // Global toggle function for withdrawal method fields
+        function toggleInvestorWithdrawFields() {
+            const method = document.getElementById('withdrawMethod');
+            const mobileDiv = document.getElementById('withdrawMobileFields');
+            const bankDiv = document.getElementById('withdrawBankFields');
+            if (!method || !mobileDiv || !bankDiv) return;
+            if (method.value === 'Bank Transfer') {
+                mobileDiv.style.display = 'none';
+                bankDiv.style.display = 'block';
+            } else {
+                mobileDiv.style.display = 'block';
+                bankDiv.style.display = 'none';
+            }
+        }
+
         // UPDATED: Withdraw Funds with 3-hour cooldown and live timer
         async function showWithdrawFunds() {
             const settingsDoc = await db.collection('settings').doc('investment').get();
@@ -7870,40 +7885,19 @@
                         <div class="cooldown-badge" style="background:rgba(255,215,0,0.2); margin-bottom:1rem;">
                             ⏳ Next withdrawal available in <span id="investorCooldownTimer" class="cooldown-timer">${hours}h ${minutes}m ${seconds}s</span>
                         </div>
-                        <script>
-                            (function() {
-                                const endTime = ${nextAllowed.getTime()};
-                                const timerElement = document.getElementById('investorCooldownTimer');
-                                if (!timerElement) return;
-                                const interval = setInterval(() => {
-                                    const now = Date.now();
-                                    const diff = endTime - now;
-                                    if (diff <= 0) {
-                                        clearInterval(interval);
-                                        timerElement.textContent = 'Ready!';
-                                        document.getElementById('withdrawSubmitBtn').disabled = false;
-                                        document.querySelectorAll('.investor-withdraw-input').forEach(el => el.disabled = false);
-                                    } else {
-                                        const h = Math.floor(diff / (1000 * 60 * 60));
-                                        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                                        const s = Math.floor((diff % (1000 * 60)) / 1000);
-                                        timerElement.textContent = \`\${h}h \${m}m \${s}s\`;
-                                    }
-                                }, 1000);
-                            })();
-                        <\/script>
                     `;
                 }
             }
 
-            showModal(`
+            // Create modal HTML
+            const modalHtml = `
                 <div class="modal-content" style="text-align:center;">
                     <i class="fas fa-hand-holding-usd" style="font-size:3rem; color:var(--gold);"></i>
                     <h3>Withdraw Funds</h3>
                     <p>Available balance: ${formatBoth(investorAccount.balance)}</p>
                     ${cooldownHtml}
                     <input type="number" id="withdrawAmount" class="smart-input investor-withdraw-input" placeholder="Amount" min="${minWithdrawal}" step="0.01" required ${!canWithdraw ? 'disabled' : ''}>
-                    <select id="withdrawMethod" class="smart-input investor-withdraw-input" onchange="toggleWithdrawFields()" ${!canWithdraw ? 'disabled' : ''}>
+                    <select id="withdrawMethod" class="smart-input investor-withdraw-input" onchange="toggleInvestorWithdrawFields()" ${!canWithdraw ? 'disabled' : ''}>
                         <option value="M-Pesa">M-Pesa</option>
                         <option value="Airtel Money">Airtel Money</option>
                         <option value="Bank Transfer">Bank Transfer</option>
@@ -7918,44 +7912,72 @@
                         <input type="text" id="withdrawBankAccountNumber" class="smart-input investor-withdraw-input" placeholder="Account Number" ${!canWithdraw ? 'disabled' : ''}>
                     </div>
                     <div style="display:flex; gap:1rem; margin-top:1rem;">
-                        <button class="btn btn-success" id="withdrawSubmitBtn" onclick="submitWithdrawal(${minWithdrawal})" ${!canWithdraw ? 'disabled' : ''}>Submit</button>
+                        <button class="btn btn-success" id="withdrawSubmitBtn" onclick="submitInvestorWithdrawal(${minWithdrawal})" ${!canWithdraw ? 'disabled' : ''}>Submit</button>
                         <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     </div>
                 </div>
-            `);
-            document.getElementById('withdrawMethod').addEventListener('change', toggleWithdrawFields);
+            `;
+            
+            showModal(modalHtml);
+            
+            // Set up cooldown timer if needed
+            if (!canWithdraw && cooldownEnd) {
+                const timerElement = document.getElementById('investorCooldownTimer');
+                if (timerElement) {
+                    const updateTimer = () => {
+                        const now = Date.now();
+                        const diff = cooldownEnd.getTime() - now;
+                        if (diff <= 0) {
+                            clearInterval(timerInterval);
+                            timerElement.textContent = 'Ready!';
+                            const submitBtn = document.getElementById('withdrawSubmitBtn');
+                            const inputs = document.querySelectorAll('.investor-withdraw-input');
+                            if (submitBtn) submitBtn.disabled = false;
+                            inputs.forEach(input => input.disabled = false);
+                        } else {
+                            const h = Math.floor(diff / (1000 * 60 * 60));
+                            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            const s = Math.floor((diff % (1000 * 60)) / 1000);
+                            timerElement.textContent = `${h}h ${m}m ${s}s`;
+                        }
+                    };
+                    const timerInterval = setInterval(updateTimer, 1000);
+                    updateTimer();
+                    // Store interval to clear if modal closes
+                    window._investorTimerInterval = timerInterval;
+                }
+            }
         }
 
-        function toggleWithdrawFields() {
-            const method = document.getElementById('withdrawMethod').value;
-            document.getElementById('withdrawMobileFields').style.display = (method === 'Bank Transfer') ? 'none' : 'block';
-            document.getElementById('withdrawBankFields').style.display = (method === 'Bank Transfer') ? 'block' : 'none';
-        }
-
-        async function submitWithdrawal(minWithdrawal) {
+        async function submitInvestorWithdrawal(minWithdrawal) {
             const amount = parseFloat(document.getElementById('withdrawAmount').value);
             const method = document.getElementById('withdrawMethod').value;
             let accountName, phone, bankName, bankAccountName, bankAccountNumber;
+            
             if (method === 'Bank Transfer') {
                 bankName = document.getElementById('withdrawBankName').value.trim();
                 bankAccountName = document.getElementById('withdrawBankAccountName').value.trim();
                 bankAccountNumber = document.getElementById('withdrawBankAccountNumber').value.trim();
                 if (!bankName || !bankAccountName || !bankAccountNumber) {
-                    showAlert('Please fill all bank fields', 'error'); return;
+                    showAlert('Please fill all bank fields', 'error'); 
+                    return;
                 }
             } else {
                 accountName = document.getElementById('withdrawAccountName').value.trim();
                 phone = document.getElementById('withdrawPhone').value.trim();
                 if (!accountName || !phone) {
-                    showAlert('Please fill account name and phone', 'error'); return;
+                    showAlert('Please fill account name and phone', 'error'); 
+                    return;
                 }
             }
 
             if (!amount || amount < minWithdrawal) {
-                showAlert(`Minimum withdrawal is $${minWithdrawal}`, 'error'); return;
+                showAlert(`Minimum withdrawal is $${minWithdrawal}`, 'error'); 
+                return;
             }
             if (amount > investorAccount.balance) {
-                showAlert('Insufficient balance', 'error'); return;
+                showAlert('Insufficient balance', 'error'); 
+                return;
             }
 
             // Check cooldown again before final submission
@@ -7981,7 +8003,8 @@
                     .where('status', '==', 'pending')
                     .get();
                 if (!pendingSnap.empty) {
-                    showAlert('You already have a pending withdrawal request.', 'error'); return;
+                    showAlert('You already have a pending withdrawal request.', 'error'); 
+                    return;
                 }
 
                 const withdrawalData = {
@@ -8011,7 +8034,7 @@
                 loadInvestor();
             } catch (e) {
                 console.error('Withdrawal error:', e);
-                showAlert('Error requesting withdrawal', 'error');
+                showAlert('Error requesting withdrawal: ' + e.message, 'error');
             }
         }
 
