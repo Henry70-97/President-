@@ -3539,6 +3539,7 @@
         // NEW: Investor global variables
         let investorAccount = null;
         let activeInvestments = [];
+        let investorCooldownInterval = null;
 
         // ==================== PAGINATION & CACHING ====================
         const PAGE_SIZE = 5;                         // load 5 tasks at a time
@@ -5348,7 +5349,8 @@
                     submissions.sort((a, b) => (b.submittedAt?.seconds||0) - (a.submittedAt?.seconds||0));
                     html += '<div class="submissions-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1rem;">';
                     submissions.forEach(sub => {
-                        const statusClass = sub.status === 'approved' ? 'success' : sub.status === 'rejected' ? 'danger' : 'warning';
+                        const statusClass = sub.status === 'approved' ? 'success' : (sub.status === 'rejected' ? 'danger' : 'warning');
+                        const displayStatus = sub.status === 'rejected' ? 'Failed' : sub.status;
                         const date = sub.submittedAt?.toDate ? sub.submittedAt.toDate().toLocaleDateString() : 'N/A';
                         const earned = sub.earned ? formatBoth(sub.earned) : '';
                         let answersHtml = '';
@@ -5363,7 +5365,7 @@
                             <div class="submission-card" style="background:white; border-radius:1rem; padding:1.2rem; border:1px solid #e2e8f0;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
                                     <h4 style="font-size:1rem; font-weight:700; color:#0f172a;">${escapeHtml(sub.taskTitle || 'Untitled')}</h4>
-                                    <span class="badge ${statusClass}">${sub.status}</span>
+                                    <span class="badge ${statusClass}">${displayStatus}</span>
                                 </div>
                                 <p style="color:#475569; font-size:0.8rem; margin-bottom:0.5rem; line-height:1.5;">${escapeHtml((sub.workText || '').substring(0,100))}${(sub.workText||'').length>100?'...':''}</p>
                                 ${answersHtml}
@@ -5653,14 +5655,15 @@
                     hist += '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:0.8rem;">'; 
                     wds.forEach(w => { 
                         const date = w.requestedAt?.seconds ? new Date(w.requestedAt.seconds*1000).toLocaleDateString() : 'N/A'; 
-                        const sc = w.status === 'paid' ? 'success' : w.status === 'rejected' ? 'danger' : 'warning'; 
+                        const sc = w.status === 'paid' ? 'success' : (w.status === 'rejected' ? 'danger' : 'warning');
+                        const displayStatus = w.status === 'rejected' ? 'Failed' : w.status;
                         let details = '';
                         if (w.method === 'M-Pesa' || w.method === 'Airtel Money') {
                             details = `${w.accountName || ''} ${w.phone || ''}`.trim();
                         } else if (w.method === 'Bank Transfer') {
                             details = `${w.bankName || ''} ${w.accountName || ''} ${w.accountNumber || ''}`.trim();
                         }
-                        hist += `<div class="submission-card"><div style="display:flex; justify-content:space-between;"><strong>${formatBoth(w.amount)}</strong><span class="badge ${sc}">${w.status}</span></div><p style="font-size:0.7rem;">${w.method}<br>${details}<br>${date}</p></div>`; 
+                        hist += `<div class="submission-card"><div style="display:flex; justify-content:space-between;"><strong>${formatBoth(w.amount)}</strong><span class="badge ${sc}">${displayStatus}</span></div><p style="font-size:0.7rem;">${w.method}<br>${details}<br>${date}</p></div>`; 
                     }); 
                     hist += '</div>'; 
                 } 
@@ -6003,7 +6006,7 @@
                     } else if (status === 'pending') { 
                         actionHtml = `<div class="training-status pending"><i class="fas fa-hourglass-half"></i> Pending Approval</div>`; 
                     } else if (status === 'rejected') { 
-                        actionHtml = `<div class="training-status rejected"><i class="fas fa-times-circle"></i> Rejected</div>`; 
+                        actionHtml = `<div class="training-status rejected"><i class="fas fa-times-circle"></i> Failed</div>`; 
                     } else { 
                         if (t.type === 'free') { 
                             actionHtml = `<button class="btn btn-success" onclick="applyForTraining('${doc.id}', 'free')">Apply Now</button>`; 
@@ -6642,7 +6645,7 @@
                     let html = '<h3>🏆 Leaderboard (All users in your region)</h3><table class="leaderboard-table">';
                     html += '<thead>   <th>Rank</th><th>User</th><th>Points</th> </thead><tbody>';
                     if (uniqueEntries.length === 0) {
-                        html += '<tr><td colspan="3" class="empty-state">No data available</td><tr>';
+                        html += '<tr><td colspan="3" class="empty-state">No data available</td></tr>';
                     } else {
                         uniqueEntries.forEach(entry => {
                             html += `   .<td>#${entry.rank}</td><td>${escapeHtml(entry.userName)}</td><td>${entry.points || 0}</td> `;
@@ -7458,10 +7461,11 @@
             }
         }
 
-        // ==================== INVESTOR SECTION (UPDATED WITH CRYPTO BUTTON) ====================
+        // ==================== INVESTOR SECTION (UPDATED WITH 3-HOUR COOLDOWN) ====================
         async function loadInvestor() {
             currentTaskViewed = null;
             refreshMirror();
+            if (investorCooldownInterval) clearInterval(investorCooldownInterval);
             document.getElementById('content').innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><p>Loading investor section...</p></div>';
 
             try {
@@ -7493,6 +7497,18 @@
                     const deposits = [];
                     depositsSnap.forEach(doc => deposits.push({ id: doc.id, ...doc.data() }));
                     
+                    // Check last paid withdrawal for cooldown
+                    const lastWithdrawalSnap = await db.collection('investmentWithdrawals')
+                        .where('userId', '==', currentUser.uid)
+                        .where('status', '==', 'paid')
+                        .orderBy('requestedAt', 'desc')
+                        .limit(1)
+                        .get();
+                    let lastWithdrawalTime = null;
+                    if (!lastWithdrawalSnap.empty) {
+                        lastWithdrawalTime = lastWithdrawalSnap.docs[0].data().requestedAt.toDate();
+                    }
+                    
                     const withdrawalsSnap = await db.collection('investmentWithdrawals')
                         .where('userId', '==', currentUser.uid)
                         .orderBy('requestedAt', 'desc')
@@ -7500,7 +7516,7 @@
                     const withdrawals = [];
                     withdrawalsSnap.forEach(doc => withdrawals.push({ id: doc.id, ...doc.data() }));
                     
-                    showInvestorDashboardWithHistory(investorAccount, activeInvestments, completedInvestments, deposits, withdrawals);
+                    showInvestorDashboardWithHistory(investorAccount, activeInvestments, completedInvestments, deposits, withdrawals, lastWithdrawalTime);
                 }
             } catch (e) {
                 console.error('Error loading investor:', e);
@@ -7585,11 +7601,47 @@
             }
         }
 
-        function showInvestorDashboardWithHistory(account, activeInv, completedInv, deposits, withdrawals) {
+        function showInvestorDashboardWithHistory(account, activeInv, completedInv, deposits, withdrawals, lastWithdrawalTime) {
             const bal = account.balance || 0;
             const totalInv = account.totalInvested || 0;
             const totalEarn = account.totalEarnings || 0;
             const pendingReturns = activeInv.reduce((sum, inv) => sum + (inv.expectedReturn - inv.amount), 0);
+            
+            let cooldownHtml = '';
+            let cooldownActive = false;
+            let nextAllowedTime = null;
+            if (lastWithdrawalTime) {
+                const nextAllowed = new Date(lastWithdrawalTime.getTime() + 3 * 60 * 60 * 1000);
+                const now = new Date();
+                if (nextAllowed > now) {
+                    cooldownActive = true;
+                    nextAllowedTime = nextAllowed;
+                    const diffMs = nextAllowed - now;
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                    cooldownHtml = `
+                        <div class="cooldown-badge" style="margin-bottom:1rem;">
+                            ⏳ Next investor withdrawal available in <span id="investorCooldownTimer" class="cooldown-timer">${hours}h ${minutes}m ${seconds}s</span>
+                        </div>
+                    `;
+                    if (investorCooldownInterval) clearInterval(investorCooldownInterval);
+                    investorCooldownInterval = setInterval(() => {
+                        const now2 = new Date();
+                        const diff2 = nextAllowedTime - now2;
+                        if (diff2 <= 0) {
+                            clearInterval(investorCooldownInterval);
+                            loadInvestor();
+                            return;
+                        }
+                        const h = Math.floor(diff2 / (1000 * 60 * 60));
+                        const m = Math.floor((diff2 % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((diff2 % (1000 * 60)) / 1000);
+                        const timerSpan = document.getElementById('investorCooldownTimer');
+                        if (timerSpan) timerSpan.textContent = `${h}h ${m}m ${s}s`;
+                    }, 1000);
+                }
+            }
 
             let html = `
                 <div class="withdrawal-section">
@@ -7617,9 +7669,10 @@
                         </div>
                     </div>
 
+                    ${cooldownHtml}
                     <div style="display:flex; gap:1rem; margin-bottom:2rem;">
                         <button class="btn btn-success" onclick="showAddFunds()" style="flex:1;"><i class="fas fa-plus-circle"></i> Add Funds</button>
-                        <button class="btn btn-warning" onclick="showWithdrawFunds()" style="flex:1;"><i class="fas fa-money-bill-wave"></i> Withdraw</button>
+                        <button class="btn btn-warning" onclick="showWithdrawFunds()" style="flex:1;" ${cooldownActive ? 'disabled' : ''}><i class="fas fa-money-bill-wave"></i> Withdraw</button>
                         <button class="btn btn-primary" onclick="showInvestNow()" style="flex:1;"><i class="fas fa-rocket"></i> Invest Now</button>
                     </div>
 
@@ -7668,7 +7721,7 @@
                                         <td class="tx-amount positive">+$${d.amount.toFixed(2)}</td>
                                         <td>${d.paymentMethod || 'N/A'}</td>
                                         <td>${d.transactionCode || 'N/A'}</td>
-                                        <td><span class="badge ${d.status === 'approved' ? 'success' : d.status === 'pending' ? 'warning' : 'danger'}">${d.status || 'pending'}</span></td>
+                                        <td><span class="badge ${d.status === 'approved' ? 'success' : d.status === 'pending' ? 'warning' : 'danger'}">${d.status === 'rejected' ? 'Failed' : (d.status || 'pending')}</span></td>
                                      </tr>
                                 `).join('')}
                             </tbody>
@@ -7690,13 +7743,14 @@
                                     } else {
                                         details = `${w.accountName || ''} - ${w.phone || ''}`;
                                     }
+                                    const displayStatus = w.status === 'rejected' ? 'Failed' : w.status;
                                     return `
                                          <tr>
                                             <td>${w.requestedAt ? formatDate(w.requestedAt) : 'N/A'}</td>
                                             <td class="tx-amount negative">-$${w.amount.toFixed(2)}</td>
                                             <td>${w.method}</td>
                                             <td>${escapeHtml(details)}</td>
-                                            <td><span class="badge ${w.status === 'paid' ? 'success' : w.status === 'pending' ? 'warning' : 'danger'}">${w.status || 'pending'}</span></td>
+                                            <td><span class="badge ${w.status === 'paid' ? 'success' : w.status === 'pending' ? 'warning' : 'danger'}">${displayStatus}</span></td>
                                          </tr>
                                     `;
                                 }).join('')}
@@ -7772,6 +7826,26 @@
         }
 
         async function showWithdrawFunds() {
+            // Check cooldown again before opening modal
+            const lastWithdrawalSnap = await db.collection('investmentWithdrawals')
+                .where('userId', '==', currentUser.uid)
+                .where('status', '==', 'paid')
+                .orderBy('requestedAt', 'desc')
+                .limit(1)
+                .get();
+            if (!lastWithdrawalSnap.empty) {
+                const lastTime = lastWithdrawalSnap.docs[0].data().requestedAt.toDate();
+                const nextAllowed = new Date(lastTime.getTime() + 3 * 60 * 60 * 1000);
+                if (nextAllowed > new Date()) {
+                    const diff = nextAllowed - new Date();
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    showAlert(`You must wait ${hours}h ${minutes}m ${seconds}s before making another investor withdrawal.`, 'error');
+                    return;
+                }
+            }
+            
             const settingsDoc = await db.collection('settings').doc('investment').get();
             const minWithdrawal = settingsDoc.exists && settingsDoc.data().minWithdrawal ? settingsDoc.data().minWithdrawal : 0.4;
 
@@ -7834,6 +7908,22 @@
             }
             if (amount > investorAccount.balance) {
                 showAlert('Insufficient balance', 'error'); return;
+            }
+
+            // Double-check cooldown again before processing
+            const lastWithdrawalSnap = await db.collection('investmentWithdrawals')
+                .where('userId', '==', currentUser.uid)
+                .where('status', '==', 'paid')
+                .orderBy('requestedAt', 'desc')
+                .limit(1)
+                .get();
+            if (!lastWithdrawalSnap.empty) {
+                const lastTime = lastWithdrawalSnap.docs[0].data().requestedAt.toDate();
+                const nextAllowed = new Date(lastTime.getTime() + 3 * 60 * 60 * 1000);
+                if (nextAllowed > new Date()) {
+                    showAlert('You must wait 3 hours between investor withdrawals.', 'error');
+                    return;
+                }
             }
 
             try {
